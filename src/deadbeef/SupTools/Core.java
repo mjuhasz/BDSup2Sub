@@ -1,4 +1,4 @@
-package deadbeef.SupTools;
+package deadbeef.SupTools;
 
 import java.awt.image.BufferedImage;
 import java.io.BufferedOutputStream;
@@ -1433,13 +1433,13 @@ public class Core  extends Thread {
 			if (te == 0)
 				printWarn("missing end time of frame "+idx+" -> fixed\n");
 			else
-				printWarn("end time of frame "+idx+" < start time -> fixed\n");
+				printWarn("end time of frame "+idx+" <= start time -> fixed\n");
 			te = ts+delay;
 			if (te > ts_next)
 				te = ts_next;
 		} else if (te > ts_next) {
 			printWarn("end time of frame "+idx+" > start time of next frame -> fixed\n");
-			ts = ts_next;
+			te = ts_next;
 		}
 
 		if (te - ts < minTimePTS) {
