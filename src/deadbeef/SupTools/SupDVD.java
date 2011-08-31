@@ -526,7 +526,7 @@ class SupDVD implements Substream, SubstreamDVD {
 			int vidAttr = buf.getWord(0x200);
 			if ( (vidAttr & 0x3000) != 0) {
 				// PAL
-				switch ((vidAttr>>2) & 3) {
+				switch ((vidAttr>>3) & 3) {
 					case 0:
 						screenWidth = 720;
 						screenHeight = 576;
@@ -546,7 +546,7 @@ class SupDVD implements Substream, SubstreamDVD {
 				}
 			} else {
 				// NTSC
-				switch ((vidAttr>>2) & 3) {
+				switch ((vidAttr>>3) & 3) {
 					case 0:
 						screenWidth = 720;
 						screenHeight = 480;
