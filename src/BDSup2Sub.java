@@ -51,7 +51,7 @@ class BDSup2Sub {
 		"res", "atr", "ltr1", "ltr2", "lang", "pal", "forced",
 		"fps" , "dly", "tmin", "swap","movin", "movout", "cropy",
 		"palmode", "verbatim", "filter", "tmerge", "scale", "acrop",
-		"exppal", "fixinv", "movex", "forceall"
+		"exppal", "wdtv", "fixinv", "movex", "forceall"
 	};
 
 	/**
@@ -100,6 +100,8 @@ class BDSup2Sub {
 		ALPHA_CROP,
 		/** Export target palette in PGCEdit text format */
 		EXPORT_PAL,
+		/** workaround for wdtv live internal vobsub palette issue */
+		WDTV_WORKAROUND,
 		/** No fixing of zero alpha values (SUB/IDX and SUP/IFO import) */
 		FIX_ZERO_ALPHA,
 		/** move captions horizontally */
@@ -299,6 +301,7 @@ class BDSup2Sub {
 			System.out.println("    /acrop:<n>       : set alpha cropping threshold - default: 10");
 			System.out.println("    /scale:<x>,<y>   : scale captions with free factors - default: 1.0,1.0");
 			System.out.println("    /exppal[+/-]     : export target palette in PGCEdit format - default: off");
+			System.out.println("    /wdtv[+/-]       : workaround for wdtv live internal vobsub palette issue - default: off");
 			System.out.println("    /forced[+/-]     : export only forced subtitles - default: off (export all)");
 			System.out.println("    /forceall[+/-]   : set/clear forced flag for all subs - default: off (keep)");
 			System.out.println("    /swap[+/-]       : swap Cr/Cb components - default: off (don't swap)");
@@ -717,6 +720,11 @@ class BDSup2Sub {
 						Core.setWritePGCEditPal(switchOn);
 						System.out.println("OPTION: export target palette in PGCEDit text format: "+strSwitchOn);
 						break;
+					case WDTV_WORKAROUND:
+					    // fix wdtv live internal vobsub palette issue
+					    Core.setWdtvWorkaround(switchOn);
+					    System.out.println("OPTION: workaround wdtv live internal vobsub palette bug: "+strSwitchOn);
+					    break;
 					case FIX_ZERO_ALPHA:
 						// fix zero alpha frame palette for SUB/IDX and SUP/IFO
 						Core.setFixZeroAlpha(switchOn);

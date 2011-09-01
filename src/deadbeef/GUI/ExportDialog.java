@@ -66,6 +66,7 @@ public class ExportDialog extends JDialog {
 
 	private JCheckBox jCheckBoxWritePGCPal = null;
 
+	private JCheckBox jCheckBoxWdtvWorkaround = null;
 
 	/** reference to main window */
 	private JFrame  mainFrame;
@@ -77,6 +78,8 @@ public class ExportDialog extends JDialog {
 	private boolean exportForced;
 	/** export target palette in PGCEdit text format */
 	private boolean writePGCPal;
+	/** fix wdtv live internal vobsub palette issue */
+	private boolean wdtvWorkaround;
 	/** cancel state */
 	private boolean cancel;
 	/** semaphore to disable actions while changing component properties */
@@ -104,6 +107,7 @@ public class ExportDialog extends JDialog {
 		languageIdx = Core.getLanguageIdx();
 		exportForced = (Core.getNumForcedFrames() > 0) && Core.getExportForced();
 		writePGCPal = Core.getWritePGCEditPal();
+		wdtvWorkaround = Core.getWdtvWorkaround();
 		cancel = false;
 
 		// init components
@@ -122,8 +126,13 @@ public class ExportDialog extends JDialog {
 		if (Core.getOutputMode() == OutputMode.VOBSUB || Core.getOutputMode() == OutputMode.SUPIFO) {
 			jCheckBoxWritePGCPal.setEnabled(true);
 			jCheckBoxWritePGCPal.setSelected(writePGCPal);
-		} else
+
+			jCheckBoxWdtvWorkaround.setEnabled(Core.isWdtvWorkaroundApplicable());
+			jCheckBoxWdtvWorkaround.setSelected(wdtvWorkaround && Core.isWdtvWorkaroundApplicable());
+		} else {
 			jCheckBoxWritePGCPal.setEnabled(false);
+			jCheckBoxWdtvWorkaround.setEnabled(false);
+		}
 
 		if (Core.getNumForcedFrames() > 0)
 			setForced(true, exportForced);
@@ -157,9 +166,10 @@ public class ExportDialog extends JDialog {
 	private void initialize() {
 		this.setPreferredSize(new Dimension(350, 160));
 		this.setBounds(new Rectangle(0, 0, 350, 160));
-		this.setMaximumSize(new Dimension(350, 160));
-		this.setMinimumSize(new Dimension(350, 160));
+		this.setMaximumSize(new Dimension(350, 190));
+		this.setMinimumSize(new Dimension(350, 190));
 		this.setContentPane(getJContentPane());
+		this.pack();
 		this.addWindowListener(new java.awt.event.WindowAdapter() {
 			@Override
 			public void windowClosing(java.awt.event.WindowEvent e) {
@@ -181,14 +191,19 @@ public class ExportDialog extends JDialog {
 			gridBagConstraints.anchor = GridBagConstraints.WEST;
 			gridBagConstraints.gridwidth = 3;
 			gridBagConstraints.gridy = 4;
+			GridBagConstraints gridBagConstraintsWdtv = new GridBagConstraints();
+			gridBagConstraintsWdtv.gridx = 0;
+			gridBagConstraintsWdtv.anchor = GridBagConstraints.WEST;
+			gridBagConstraintsWdtv.gridwidth = 3;
+			gridBagConstraintsWdtv.gridy = 5;
 			GridBagConstraints gridBagButtonSave = new GridBagConstraints();
 			gridBagButtonSave.gridx = 2;
 			gridBagButtonSave.insets = new Insets(2, 4, 2, 0);
-			gridBagButtonSave.gridy = 7;
+			gridBagButtonSave.gridy = 8;
 			GridBagConstraints gridBagButtonCancel = new GridBagConstraints();
 			gridBagButtonCancel.gridx = 0;
 			gridBagButtonCancel.insets = new Insets(2, 4, 2, 0);
-			gridBagButtonCancel.gridy = 7;
+			gridBagButtonCancel.gridy = 8;
 			GridBagConstraints gridBagCheckBoxForced = new GridBagConstraints();
 			gridBagCheckBoxForced.gridx = 0;
 			gridBagCheckBoxForced.insets = new Insets(0, 0, 0, 0);
@@ -240,6 +255,7 @@ public class ExportDialog extends JDialog {
 			jContentPane.add(getJButtonSave(), gridBagButtonSave);
 			jContentPane.add(getJCheckBoxForced(), gridBagCheckBoxForced);
 			jContentPane.add(getJCheckBoxWritePGCPal(), gridBagConstraints);
+			jContentPane.add(getJCheckBoxWdtvWorkaround(), gridBagConstraintsWdtv);
 		}
 		return jContentPane;
 	}
@@ -363,8 +379,10 @@ public class ExportDialog extends JDialog {
 						// exit
 						Core.setExportForced(exportForced);
 						Core.setLanguageIdx(languageIdx);
-						if (Core.getOutputMode() == OutputMode.VOBSUB || Core.getOutputMode() == OutputMode.SUPIFO)
+						if (Core.getOutputMode() == OutputMode.VOBSUB || Core.getOutputMode() == OutputMode.SUPIFO) {
 							Core.setWritePGCEditPal(writePGCPal);
+							Core.setWdtvWorkaround(wdtvWorkaround);
+						}
 						cancel = false;
 						dispose();
 					}
@@ -455,5 +473,29 @@ public class ExportDialog extends JDialog {
 			});
 		}
 		return jCheckBoxWritePGCPal;
+	}
+
+	/**
+	 * This method initializes jCheckBoxWdtvWorkaround
+	 *
+	 * @return javax.swing.JCheckBox
+	 */
+	private JCheckBox getJCheckBoxWdtvWorkaround() {
+	    if (jCheckBoxWdtvWorkaround == null) {
+	        jCheckBoxWdtvWorkaround = new JCheckBox();
+	        jCheckBoxWdtvWorkaround.setToolTipText("Fix WDTV Live palette bug for internal sub/idx subtitles");
+	        jCheckBoxWdtvWorkaround.setText("                 Fix WDTV Live palette bug");
+	        jCheckBoxWdtvWorkaround.setMnemonic('w');
+	        jCheckBoxWdtvWorkaround.setDisplayedMnemonicIndex(21);
+	        jCheckBoxWdtvWorkaround.addItemListener(new java.awt.event.ItemListener() {
+	            @Override
+                public void itemStateChanged(java.awt.event.ItemEvent e) {
+	                if (isReady) {
+	                    wdtvWorkaround = jCheckBoxWdtvWorkaround.isSelected();
+	                }
+	            }
+	        });
+	    }
+	    return jCheckBoxWdtvWorkaround;
 	}
 }  //  @jve:decl-index=0:visual-constraint="10,10"

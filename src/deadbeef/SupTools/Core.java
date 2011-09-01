@@ -49,9 +49,9 @@ public class Core  extends Thread {
 	/** Program name */
 	final static String progName = "BDSup2Sub";
 	/** Program name to display in the main window, in the log, in the command line etc.  */
-	final static String progNameVer = progName + " 4.0.1";
+	final static String progNameVer = progName + " 4.0.1-wdtv";
 	/** Revision and release date for display in the log windows etc. */
-	final static String authorDate = "0xdeadbeef, mjuhasz 06-01-2012.";
+	final static String authorDate = "0xdeadbeef, mjuhasz 06-01/2012";
 	/** Name of the ini file to load and store properties */
 	final static String iniName = "bdsup2sup.ini";
 
@@ -649,6 +649,10 @@ public class Core  extends Thread {
 	private static boolean writePGCEditPalSet = false;
 	/** Write PGCEdit palette file on export */
 	private static boolean writePGCEditPal = false;
+	/** wdtvWorkaround was set from command line */
+	private static boolean wdtvWorkaroundSet = false;
+	/** Workaround for wdtv live internal vobsub palette issue */
+	private static boolean wdtvWorkaround = false;
 
 	/** Factor to calculate height of one cinemascope bar from screen height */
 	private static double cineBarFactor = 5.0/42;
@@ -782,6 +786,11 @@ public class Core  extends Thread {
 				writePGCEditPal = Core.props.get("writePGCEditPal", "false").equals("true");
 			else
 				props.set("writePGCEditPal", writePGCEditPal?"true":"false");
+
+			if (!wdtvWorkaroundSet)
+			    wdtvWorkaround = Core.props.get("wdtvWorkaround", "false").equals("true");
+			else
+			    props.set("wdtvWorkaround", wdtvWorkaround?"true":"false");
 
 			if (!mergePTSdiffSet)
 				mergePTSdiff = Core.props.get("mergePTSdiff", 18000);
@@ -2023,7 +2032,7 @@ public class Core  extends Thread {
 						offsets.add(offset);
 						convertSup(i, frameNum/2+1, maxNum);
 						subVobTrg.copyInfo(subPictures[i]);
-						byte buf[] = SubDVD.createSubFrame(subVobTrg, trgBitmap);
+						byte buf[] = SubDVD.createSubFrame(subVobTrg, trgBitmap, wdtvWorkaround && isWdtvWorkaroundApplicable());
 						out.write(buf);
 						offset += buf.length;
 						timestamps.add((int)subPictures[i].startTime);
@@ -3746,6 +3755,23 @@ public class Core  extends Thread {
 	}
 
 	/**
+	 * Get: workaround for WDTV live internal vobsub palette issue
+	 * @return True: fix
+	 */
+	public static boolean getWdtvWorkaround() {
+	    return wdtvWorkaround;
+	}
+
+	/**
+     * Get: wdtv workaround is only applicable if the existing palette is kept
+     * @return True: applicable
+     */
+    public static boolean isWdtvWorkaroundApplicable() {
+        return PaletteMode.KEEP_EXISTING.equals(paletteMode);
+    }
+
+
+	/**
 	 * Set: write PGCEdit palette file on export.
 	 * @param e True: write
 	 */
@@ -3755,6 +3781,18 @@ public class Core  extends Thread {
 			props.set("writePGCEditPal", e?"true":"false");
 		else
 			writePGCEditPalSet = true;
+	}
+
+	/**
+	 * Set: workaround for wdtv live internal vobsub palette issue
+	 * @param e True: apply the workaround
+	 */
+	public static void setWdtvWorkaround(final boolean e) {
+	    wdtvWorkaround = e;
+	    if (props != null)
+	        props.set("wdtvWorkaround", e?"true":"false");
+	    else
+	        wdtvWorkaroundSet = true;
 	}
 
 	/**

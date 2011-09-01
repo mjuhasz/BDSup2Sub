@@ -5,8 +5,8 @@
 <h1><a name="Intro"></a>BDSup2Sub</h1>
 <h2><strong>A tool to convert and tweak bitmap based
 subtitle streams</strong></h2>
-<h3>Version 4.0.1 &nbsp;released 06.01.2012</h3>
-BDSup2Sub is a tool I wrote initially to convert captions
+<h3>Version 4.0.1-wdtv &nbsp;released 06.01.2012</h3>
+BDSup2Sub is a tool 0xdeadbeef wrote initially to convert captions
 demuxed from a Blu-Ray transport stream (M2TS) into the DVD VobSub
 format (SUB/IDX) used by many DVD authoring tools - hence the
 name.&nbsp;Many more features were added over time as was support
@@ -74,7 +74,7 @@ HD-DVD SUPs is supported, BDSup2Sub can't export this format currently
 - and with the commercial death of HD-DVD I think adding this feature
 would be a waste of time.&nbsp;
 <h3>Author</h3>
-0xdeadbeef<br>
+0xdeadbeef; wdtv related modifications by mjuhasz<br>
 <h3>Home</h3>
 <a href="http://forum.doom9.org/showthread.php?t=145277">Official
 thread on Doom9.org</a><br>
@@ -87,7 +87,9 @@ SubtitleCreator or TsMuxer to discuss compatibility issues. To report
 problems with a subtitle stream, please either post the stream (if it is
 compliant with the forum rules) or upload it to a "one click hoster"
 and send me a PM with the link. And don't forget a detailed error
-description.<br>
+description.
+If you have a question concerning the WDTV Live workaround please DO NOT contact
+0xdeadbeef but contact mjuhasz.<br>
 <h3>Credits</h3>
 I
 dug through hundreds of postings, mainly on Doom9 (started by
@@ -600,7 +602,10 @@ SUP/IFO).<br>
 If
 selected, a file with the same name as the output stream, but with the
 extension "txt" will be created that contains the palette in a format
-that can be imported into <a href="http://download.videohelp.com/r0lz/pgcedit/">PGCEdit</a>.</li><br>
+that can be imported into <a href="http://download.videohelp.com/r0lz/pgcedit/">PGCEdit</a>.</li>
+<li>Fix WDTV Live palette bug<br>
+If this checkbox is checked, subtitle colors will be reorganized so that the fully transparent
+will be the last one.</li><br>
 </ul>
 
 <h2><a name="Conversion_Dialog"></a>Conversion
@@ -1226,6 +1231,11 @@ right)</td>
 &nbsp; /exppal[+/-]</td>
 <td style="background-color: rgb(239, 239, 239);">export
 target palette in PGCEdit text format - default: off (don't export)</td>
+</tr>
+<tr>
+<td style="font-family: monospace; background-color: rgb(239, 239, 239);">&nbsp;
+&nbsp; /wdtv[+/-]</td>
+<td style="background-color: rgb(239, 239, 239);">workaround for wdtv live internal vobsub palette issue - default: off</td>
 </tr>
 <tr>
 <td style="font-family: monospace;">&nbsp;
@@ -2182,5 +2192,13 @@ stripping the extension from file names.</li>
 <li>Fixed: Flashing subtitles - if the end time of the current subtitle picture is beyond the start time of the next one the subtitle was set to zero length.</li>
 <li>Fixed: Resolution incorrectly read from the dvd ifo file in cases other than 720x576/720x480 16:9.</li>
 <li>Fixed: Incorrect (too short) subtitle duration for dvd subtitle frames using subtitle effects</li>
+</ul>
+06.01.2011: 4.0.1 -&gt; 4.0.1-wdtv<br>
+<ul>
+<li>Changed: added option to apply a workaround for the WDTV Live devices. The option is
+available from the export dialog and as a command line switch as well.
+WDTV Live (at least up to 1.05.04_V) sets the alpha value of the last color on the
+subframe to 0 causing hardly legible vobsub subtitles if they are embedded in mkv.
+</li>
 </ul>
 </body></html>

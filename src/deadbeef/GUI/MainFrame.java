@@ -2160,6 +2160,11 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 							// start conversion
 							Core.createSubThreaded(fn, mainFrame);
 							warningDialog();
+
+							if (Core.getWdtvWorkaround() && Core.isWdtvWorkaroundApplicable()) {
+							    Core.close();
+							    closeSub();
+							}
 						}
 					} catch (CoreException ex) {
 						if (showException)

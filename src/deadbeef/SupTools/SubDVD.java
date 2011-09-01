@@ -303,9 +303,14 @@ class SubDVD implements Substream, SubstreamDVD {
 	 * Create the binary stream representation of one caption
 	 * @param pic SubPicture object containing caption info
 	 * @param bm bitmap
+	 * @param wdtvFixEnabled
 	 * @return byte buffer containing the binary stream representation of one caption
 	 */
-	static byte[] createSubFrame(final SubPictureDVD pic, final Bitmap bm) {
+	static byte[] createSubFrame(final SubPictureDVD pic, final Bitmap bm, boolean wdtvFixEnabled) {
+	    if (wdtvFixEnabled) {
+	        swapATransparentColorWithTheLastOne(pic, bm);
+	    }
+
 		/* create RLE buffers */
 		final byte even[] = encodeLines(bm, true);
 		final byte odd[]  = encodeLines(bm, false);
@@ -533,6 +538,45 @@ class SubDVD implements Substream, SubstreamDVD {
 
 		return buf;
 	}
+
+    private static void swapATransparentColorWithTheLastOne(final SubPictureDVD pic, final Bitmap bm) {
+        if (pic.alpha[3] != 0) { // wdtv live sets the opacity for color 3 to 0
+            Core.print("WDTV fix is needed to workaround color 3 opacity bug\n");
+
+            //find a transparent color
+            byte tranparentIndex = -1;
+            for (int i = 0; i < pic.alpha.length; i++) {
+                if (pic.alpha[i] == 0) {
+                    tranparentIndex = (byte)i;
+                    break;
+                }
+            }
+
+            if (tranparentIndex != -1) {
+                //swap image indexes
+                byte[] img = bm.getImg();
+                for (int i=0; i<img.length; i++) {
+                    if (img[i] == tranparentIndex) {
+                        img[i] = 3;
+                    } else if (img[i] == 3) {
+                        img[i] = tranparentIndex;
+                    }
+                }
+
+                //swap alpha values
+                int alpha3 = pic.alpha[3];
+                pic.alpha[3] = pic.alpha[tranparentIndex];
+                pic.alpha[tranparentIndex] = alpha3;
+
+                //swap palette references
+                int pal3 = pic.pal[3];
+                pic.pal[3] = pic.pal[tranparentIndex];
+                pic.pal[tranparentIndex] = pal3;
+            } else {
+                Core.printErr("Fix for WDTV is not applicable - no transparent color on sub frame \n");
+            }
+        }
+    }
 
 	/**
 	 * Read and parse IDX file
