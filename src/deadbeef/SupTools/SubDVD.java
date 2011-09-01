@@ -251,9 +251,9 @@ class SubDVD implements Substream, SubstreamDVD {
 		for (; y < bm.getHeight(); y+=2) {
 			ofs = y*bm.getWidth();
 			for (int x=0; x < bm.getWidth(); x+=len, ofs+=len) {
-				color = bm.getImg()[ofs];
+				color = bm.getInternalBuffer()[ofs];
 				for (len=1; x+len < bm.getWidth(); len++)
-					if (bm.getImg()[ofs+len] != color)
+					if (bm.getInternalBuffer()[ofs+len] != color)
 						break;
 				if (len < 4) {
 					nibbles.add((byte)((len << 2)|(color&3)));
@@ -795,7 +795,7 @@ class SubDVD implements Substream, SubstreamDVD {
 			Core.printWarn("Subpicture too large: "+w+"x"+h+
 					" at offset "+ToolBox.hex(startOfs, 8)+"\n");
 
-		final Bitmap bm = new Bitmap(w, h, transIdx);
+		final Bitmap bm = new Bitmap(w, h, (byte)transIdx);
 
 		// copy buffer(s)
 		final byte buf[] = new byte[pic.rleSize];
@@ -830,13 +830,13 @@ class SubDVD implements Substream, SubstreamDVD {
 			}
 			// decode even lines
 			try {
-				decodeLine(buf, pic.evenOfs, sizeEven, bm.getImg(), 0, w,  w*(h/2+(h&1)));
+				decodeLine(buf, pic.evenOfs, sizeEven, bm.getInternalBuffer(), 0, w,  w*(h/2+(h&1)));
 			} catch (ArrayIndexOutOfBoundsException ex) {
 				warnings++;
 			}
 			// decode odd lines
 			try {
-				decodeLine(buf, pic.oddOfs, sizeOdd, bm.getImg(), w, w, (h/2)*w);
+				decodeLine(buf, pic.oddOfs, sizeOdd, bm.getInternalBuffer(), w, w, (h/2)*w);
 			} catch (ArrayIndexOutOfBoundsException ex) {
 				warnings++;
 			}

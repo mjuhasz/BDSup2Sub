@@ -1956,7 +1956,7 @@ public class Core  extends Thread {
 				trgBitmapUnpatched = new Bitmap(tBm);
 				int col = tPal.getTransparentIndex();
 				for (ErasePatch ep : picTrg.erasePatch)
-					tBm.fillRect(ep.x, ep.y, ep.w, ep.h, col);
+					tBm.fillRectangularWithColor(ep.x, ep.y, ep.w, ep.h, (byte)col);
 			} else
 				trgBitmapUnpatched = tBm;
 			trgBitmap = tBm;
@@ -3042,7 +3042,7 @@ public class Core  extends Thread {
 				Bitmap trgBitmapPatched = new Bitmap(trgBitmapUnpatched);
 				int col = trgPal.getTransparentIndex();
 				for (ErasePatch ep : pic.erasePatch)
-					trgBitmapPatched.fillRect(ep.x, ep.y, ep.w, ep.h, col);
+					trgBitmapPatched.fillRectangularWithColor(ep.x, ep.y, ep.w, ep.h, (byte)col);
 				return trgBitmapPatched.getImage(trgPal);
 			} else return trgBitmapUnpatched.getImage(trgPal);
 		}

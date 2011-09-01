@@ -268,7 +268,7 @@ class SupHD implements Substream {
 			throw new CoreException("Subpicture too large: "+w+"x"+h+
 					" at offset "+ToolBox.hex(pic.imageBufferOfsEven, 8));
 
-		final Bitmap bm = new Bitmap(w, h, transIdx);
+		final Bitmap bm = new Bitmap(w, h, (byte)transIdx);
 
 		final int sizeEven = pic.imageBufferOfsOdd-pic.imageBufferOfsEven;
 		final int sizeOdd = pic.imageBufferSize+pic.imageBufferOfsEven-pic.imageBufferOfsOdd;
@@ -296,14 +296,14 @@ class SupHD implements Substream {
 			// decode even lines
 			try {
 				BitStream even = new BitStream(evenBuf);
-				decodeLine(bm.getImg(), 0, w, w*(h/2+(h&1)), even);
+				decodeLine(bm.getInternalBuffer(), 0, w, w*(h/2+(h&1)), even);
 			} catch (ArrayIndexOutOfBoundsException ex) {
 				warnings++;
 			}
 			// decode odd lines
 			try {
 				BitStream odd  = new BitStream(oddBuf);
-				decodeLine(bm.getImg(), w, w, (h/2)*w, odd);
+				decodeLine(bm.getInternalBuffer(), w, w, (h/2)*w, odd);
 			} catch (ArrayIndexOutOfBoundsException ex) {
 				warnings++;
 			}

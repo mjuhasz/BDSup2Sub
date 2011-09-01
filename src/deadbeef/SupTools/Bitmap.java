@@ -7,6 +7,7 @@ import java.awt.image.Raster;
 import java.awt.image.SampleModel;
 import java.awt.image.SinglePixelPackedSampleModel;
 import java.awt.image.WritableRaster;
+import java.util.Arrays;
 import java.util.HashMap;
 
 import deadbeef.Filters.Filter;
@@ -36,128 +37,66 @@ import deadbeef.Tools.QuantizeFilter;
  *
  */
 public class Bitmap {
+	
 	/** Bitmap width in pixels */
 	private final int width;
 	/** Bitmap height in pixels */
 	private final int height;
 	/** Byte array containing image data */
-	private final byte img[];
+	private final byte buffer[];
 
-	/**
-	 * Constructor (with clearing of bitmap).
-	 * @param w Width
-	 * @param h Height
-	 * @param col Color index to use for initial clearing
-	 */
-	public Bitmap(final int w, final int h, final int col) {
-		width = w;
-		height = h;
-		img = new byte[width*height];
-		clear(col);
+	
+	public Bitmap(int width, int height) {
+		this.width = width;
+		this.height = height;
+		buffer = new byte[width * height];
 	}
 
-	/**
-	 * Constructor (without clearing of bitmap).
-	 * @param w Width
-	 * @param h Height
-	 */
-	public Bitmap(final int w, final int h) {
-		width = w;
-		height = h;
-		img = new byte[width*height];
+	public Bitmap(int width, int height, byte fillerColor) {
+		this(width, height);
+		fillWithColorValue(fillerColor);
 	}
 
-	/**
-	 * Constructor (without clearing of bitmap).
-	 * @param w Width
-	 * @param h Height
-	 * @param buf Image buffer
-	 */
-	public Bitmap(final int w, final int h, final byte[] buf) {
-		width = w;
-		height = h;
-		img = buf;
+	public Bitmap(int width, int height, byte[] buffer) {
+		this.width = width;
+		this.height = height;
+		this.buffer = buffer;
 	}
 
-	/**
-	 * Constructor (to create deep copy from existing Bitmap).
-	 * @param bm Bitmap to create deep copy from
-	 */
-	public Bitmap(final Bitmap bm) {
-		width = bm.width;
-		height = bm.height;
-		img = new byte[width*height];
-		for (int i=0; i<img.length; i++)
-			img[i] = bm.img[i];
+	public Bitmap(Bitmap bitmap) {
+		width = bitmap.width;
+		height = bitmap.height;
+		buffer = Arrays.copyOf(bitmap.buffer, bitmap.buffer.length);
 	}
 
-	/**
-	 * Clear bitmap with color index.
-	 * @param color Color index to use for clearing
-	 */
-	public void clear(final int color) {
-		final byte b = (byte)color;
+	private void fillWithColorValue(byte color) {
 		for (int i=0; i<width*height; i++)
-			img[i] = b;
+			buffer[i] = color;
 	}
 
-	/**
-	 * Fill rectangular range inside bitmap with color index.
-	 * @param x X coordinate of rectangle
-	 * @param y Y coordinate of rectangle
-	 * @param w Width of rectangle
-	 * @param h Height of rectangle
-	 * @param color Color index to use for filling.
-	 */
-	public void fillRect(final int x, final int y, final int w, final int h, final int color) {
-		final byte b = (byte)color;
-
-		int xMax = x+w;
-		if (xMax > width)
+	public void fillRectangularWithColor(int rectX, int rectY, int rectWidth, int rectHeight, byte color) {
+		int xMax = rectX + rectWidth;
+		if (xMax > width) {
 			xMax = width;
-
-		int yMax = y+h;
-		if (yMax > height)
+		}
+		
+		int yMax = rectY+rectHeight;
+		if (yMax > height) {
 			yMax = height;
+		}
 
-		for (int yt = y; yt < yMax; yt++) {
-			int yOfs = yt*width;
-			for (int xt = x; xt < xMax; xt++)
-				img[yOfs+xt] = b;
+		for (int y = rectY; y < yMax; y++) {
+			int yOfs = y * width;
+			for (int x = rectX; x < xMax; x++) {
+				buffer[yOfs + x] = color;
+			}
 		}
 	}
 
-	/**
-	 * Set color index of pixel at position x,y.
-	 * @param x X position
-	 * @param y Y position
-	 * @param color Color index
-	 */
-	public void setPixel(final int x, final int y, final byte color) {
-		img[x+width*y] = color;
-	}
-
-	/**
-	 * Get color index of pixel at position x,y.
-	 * @param x X position
-	 * @param y Y position
-	 * @return Color index pi pixel at position x,y
-	 */
-	public byte getPixel(final int x, final int y) {
-		return img[x+width*y];
-	}
-
-	/**
-	 * Convert Bitmap to buffered image that can be used for display.
-	 * @param pal Palette
-	 * @return Image as BufferedImage
-	 */
-	public BufferedImage getImage(final Palette pal) {
-		// convert byte array into BufferedImage
-		DataBuffer dbuf = new DataBufferByte(img, width*height, 0);
-		SampleModel sampleModel = new SinglePixelPackedSampleModel(
-				DataBuffer.TYPE_BYTE, width, height, new int[]{0xff});
-		WritableRaster raster = Raster.createWritableRaster(sampleModel, dbuf, null);
+	public BufferedImage getImage(Palette pal) {
+		DataBuffer dataBuffer = new DataBufferByte(buffer, width * height);
+		SampleModel sampleModel = new SinglePixelPackedSampleModel(DataBuffer.TYPE_BYTE, width, height, new int[]{0xff});
+		WritableRaster raster = Raster.createWritableRaster(sampleModel, dataBuffer, null);
 		return new BufferedImage(pal.getColorModel(), raster, false, null);
 	}
 
@@ -173,9 +112,9 @@ public class Bitmap {
 		int hist[] = new int[pal.getSize()];
 		for (int i=0; i<hist.length; i++)
 			hist[i] = 0;
-		for (int i=0; i<img.length; i++) {
+		for (int i=0; i<buffer.length; i++) {
 			// for each pixel of the bitmap
-			hist[(img[i]&0xff)]++;
+			hist[(buffer[i]&0xff)]++;
 		}
 		// conditioning of histogramm
 		// the primary color should be light and opaque
@@ -208,9 +147,9 @@ public class Bitmap {
 	public int getHighestColorIndex(final Palette p) {
 		// create histogram for palette
 		int maxIdx = 0;
-		for (int i=0; i<img.length; i++) {
+		for (int i=0; i<buffer.length; i++) {
 			// for each pixel of the bitmap
-			int idx = img[i]&0xff;
+			int idx = buffer[i]&0xff;
 			if (p.getAlpha(idx) > 0)
 				if ( idx > maxIdx) {
 					maxIdx = idx;
@@ -240,9 +179,9 @@ public class Bitmap {
 		// select nearest colors in existing palette
 		HashMap<Integer,Integer> p = new HashMap<Integer,Integer>();
 
-		for (int i=0; i<img.length; i++) {
+		for (int i=0; i<buffer.length; i++) {
 			int colIdx;
-			int idx = img[i] & 0xff;
+			int idx = buffer[i] & 0xff;
 			int alpha = a[idx] & 0xff;
 			int cyp   = cy[idx] & 0xff;
 
@@ -267,7 +206,7 @@ public class Bitmap {
 				p.put((alpha<<8) | cyp, colIdx);
 			}
 			// write target pixel
-			bm.img[i] = (byte)colIdx;
+			bm.buffer[i] = (byte)colIdx;
 		}
 		return bm;
 	}
@@ -426,7 +365,7 @@ public class Bitmap {
 				p.put(color, colIdx);
 			}
 			// write target pixel
-			bm.img[i] = (byte)colIdx;
+			bm.buffer[i] = (byte)colIdx;
 		}
 		return bm;
 	}
@@ -638,7 +577,7 @@ public class Bitmap {
 		// quantize image
 		QuantizeFilter qf = new QuantizeFilter();
 		final Bitmap bm = new Bitmap(sizeX, sizeY);
-		int ct[] = qf.quantize(trg, bm.img, sizeX, sizeY, 255, dither, dither);
+		int ct[] = qf.quantize(trg, bm.buffer, sizeX, sizeY, 255, dither, dither);
 		int size = ct.length;
 		if (size > 255) {
 			size = 255;
@@ -705,7 +644,7 @@ public class Bitmap {
 				p.put(color, colIdx);
 			}
 			// write target pixel
-			bm.img[i] = (byte)colIdx;
+			bm.buffer[i] = (byte)colIdx;
 		}
 		return bm;
 	}
@@ -727,7 +666,7 @@ public class Bitmap {
 		// quantize image
 		QuantizeFilter qf = new QuantizeFilter();
 		final Bitmap bm = new Bitmap(sizeX, sizeY);
-		int ct[] = qf.quantize(trg, bm.img, sizeX, sizeY, 255, dither, dither);
+		int ct[] = qf.quantize(trg, bm.buffer, sizeX, sizeY, 255, dither, dither);
 		int size = ct.length;
 		if (size > 255) {
 			size = 255;
@@ -747,9 +686,9 @@ public class Bitmap {
 	 * @return Integer array filled with ARGB values.
 	 */
 	public int[] toARGB(final Palette pal) {
-		int t[] = new int[img.length];
+		int t[] = new int[buffer.length];
 		for (int i=0; i<t.length; i++)
-			t[i] = pal.getARGB(img[i]&0xff);
+			t[i] = pal.getARGB(buffer[i]&0xff);
 		return t;
 	}
 
@@ -768,7 +707,7 @@ public class Bitmap {
 		int yOfsTrg = 0;
 		for (int yt=0; yt < h; yt++, yOfsSrc+=width, yOfsTrg+=w) {
 			for (int xt=0; xt < w; xt++)
-				bm.img[xt+yOfsTrg] = img[x+xt+yOfsSrc];
+				bm.buffer[xt+yOfsTrg] = buffer[x+xt+yOfsSrc];
 		}
 		return bm;
 	}
@@ -790,7 +729,7 @@ public class Bitmap {
 		for (int y=height-1; y > 0; y--, yOfs-=width) {
 			yMax = y;
 			for (int x=0; x< width; x++) {
-				int idx = img[x+yOfs] & 0xff;
+				int idx = buffer[x+yOfs] & 0xff;
 				if ( (a[idx]&0xff) >= alphaThr )
 					break loop1;
 			}
@@ -803,7 +742,7 @@ public class Bitmap {
 		for (int y=0; y < yMax; y++, yOfs+=width) {
 			yMin = y;
 			for (int x=0; x< width; x++) {
-				int idx = img[x+yOfs] & 0xff;
+				int idx = buffer[x+yOfs] & 0xff;
 				if ( (a[idx]&0xff) >= alphaThr )
 					break loop2;
 			}
@@ -816,7 +755,7 @@ public class Bitmap {
 			xMax = x;
 			yOfs = yMin*width;
 			for (int y=yMin; y < yMax; y++, yOfs+=width) {
-				int idx = img[x+yOfs] & 0xff;
+				int idx = buffer[x+yOfs] & 0xff;
 				if ( (a[idx]&0xff) >= alphaThr )
 					break loop3;
 			}
@@ -830,7 +769,7 @@ public class Bitmap {
 			xMin = x;
 			yOfs = yMin*width;
 			for (int y=yMin; y < yMax; y++, yOfs+=width) {
-				int idx = img[x+yOfs] & 0xff;
+				int idx = buffer[x+yOfs] & 0xff;
 				if ( (a[idx]&0xff) >= alphaThr )
 					break loop4;
 			}
@@ -839,28 +778,23 @@ public class Bitmap {
 		return new BitmapBounds(xMin, xMax, yMin, yMax);
 	}
 
-	/**
-	 * Get width of bitmap.
-	 * @return Width of bitmap
-	 */
 	public int getWidth() {
 		return width;
 	}
 
-	/**
-	 * Get height of bitmap.
-	 * @return Height of bitmap.
-	 */
 	public int getHeight() {
 		return height;
 	}
 
-	/**
-	 * Get image buffer of bitmap.
-	 * @return Image buffer as array of byte (internal resource, changing it will change the Bitmap)
-	 */
-	public byte[] getImg() {
-		return img;
+	public byte[] getInternalBuffer() {
+		return buffer;
+	}
+	
+	private byte getPixel(int x, int y) {
+		return buffer[x + width * y];
 	}
 
+	private void setPixel(int x, int y, byte color) {
+		buffer[x + width * y] = color;
+	}
 }

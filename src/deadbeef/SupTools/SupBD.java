@@ -461,9 +461,9 @@ class SupBD implements Substream {
 			//eol = false;
 			int x;
 			for (x=0; x < bm.getWidth(); x+=len, ofs+=len) {
-				color = bm.getImg()[ofs];
+				color = bm.getInternalBuffer()[ofs];
 				for (len=1; x+len < bm.getWidth(); len++)
-					if (bm.getImg()[ofs+len] != color)
+					if (bm.getInternalBuffer()[ofs+len] != color)
 						break;
 				if (len<=2 && color != 0) {
 					// only a single occurrence -> add color
@@ -524,7 +524,7 @@ class SupBD implements Substream {
 			// quantize image
 			final QuantizeFilter qf = new QuantizeFilter();
 			final Bitmap bmQ = new Bitmap(bm.getWidth(), bm.getHeight());
-			int ct[] = qf.quantize(bm.toARGB(pal), bmQ.getImg(), bm.getWidth(), bm.getHeight(), 255, false, false);
+			int ct[] = qf.quantize(bm.toARGB(pal), bmQ.getInternalBuffer(), bm.getWidth(), bm.getHeight(), 255, false, false);
 			int size = ct.length;
 			if (size > 255) {
 				size = 255;
@@ -902,7 +902,7 @@ class SupBD implements Substream {
 			throw new CoreException("Subpicture too large: "+w+"x"+h+
 					" at offset "+ToolBox.hex(startOfs, 8));
 
-		final Bitmap bm = new Bitmap(w, h, transIdx);
+		final Bitmap bm = new Bitmap(w, h, (byte)transIdx);
 
 		int b;
 		int index = 0;
@@ -940,31 +940,31 @@ class SupBD implements Substream {
 							// 00 4x xx -> xxx zeroes
 							size = ((b-0x40)<<8)+(buf[index++]&0xff);
 							for (int i=0; i<size; i++)
-								bm.getImg()[ofs++] = 0; /*(byte)b;*/
+								bm.getInternalBuffer()[ofs++] = 0; /*(byte)b;*/
 							xpos += size;
 						} else if ((b & 0xC0) == 0x80) {
 							// 00 8x yy -> x times value y
 							size = (b-0x80);
 							b = buf[index++]&0xff;
 							for (int i=0; i<size; i++)
-								bm.getImg()[ofs++] = (byte)b;
+								bm.getInternalBuffer()[ofs++] = (byte)b;
 							xpos += size;
 						} else if  ((b & 0xC0) != 0) {
 							// 00 cx yy zz -> xyy times value z
 							size = ((b-0xC0)<<8)+(buf[index++]&0xff);
 							b = buf[index++]&0xff;
 							for (int i=0; i<size; i++)
-								bm.getImg()[ofs++] = (byte)b;
+								bm.getInternalBuffer()[ofs++] = (byte)b;
 							xpos += size;
 						}  else {
 							// 00 xx -> xx times 0
 							for (int i=0; i<b; i++)
-								bm.getImg()[ofs++] = 0;
+								bm.getInternalBuffer()[ofs++] = 0;
 							xpos += b;
 						}
 					}
 				} else {
-					bm.getImg()[ofs++] = (byte)b;
+					bm.getInternalBuffer()[ofs++] = (byte)b;
 					xpos++;
 				}
 			} while (index < buf.length);

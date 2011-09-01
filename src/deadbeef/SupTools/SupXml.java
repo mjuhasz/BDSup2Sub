@@ -172,7 +172,7 @@ class SupXml implements Substream {
 				// quantize image
 				QuantizeFilter qf = new QuantizeFilter();
 				bitmap = new Bitmap(img.getWidth(), img.getHeight());
-				int ct[] = qf.quantize(pixels, bitmap.getImg(), w, h, 255, false, false);
+				int ct[] = qf.quantize(pixels, bitmap.getInternalBuffer(), w, h, 255, false, false);
 				int size = ct.length;
 				if (size > 255) {
 					Core.printWarn("Quantizer failed.\n");

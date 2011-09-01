@@ -112,7 +112,7 @@ public class FilterOp {
 		verticalSubsamplingData = createSubSampling(srcHeight, dstHeight, yscale);
 
 		final int[] workPixels = new int[srcHeight*dstWidth];
-		filterHorizontally(src.getImg(), workPixels);
+		filterHorizontally(src.getInternalBuffer(), workPixels);
 
 		final int[] outPixels = new int[dstHeight*dstWidth];
 		filterVertically(workPixels, outPixels);
