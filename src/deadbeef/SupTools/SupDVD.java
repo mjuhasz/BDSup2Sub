@@ -631,7 +631,7 @@ class SupDVD implements Substream, SubstreamDVD {
 		bitmap  = SubDVD.decodeImage(pic, buffer, palette.getTransparentIndex());
 
 		// crop
-		final BitmapBounds bounds = bitmap.getBounds(palette, Core.getAlphaCrop());
+		final BitmapBounds bounds = bitmap.getCroppingBounds(palette.getAlpha(), Core.getAlphaCrop());
 		if (bounds.yMin>0 || bounds.xMin > 0 || bounds.xMax<bitmap.getWidth()-1 || bounds.yMax<bitmap.getHeight()-1) {
 			int w = bounds.xMax - bounds.xMin + 1;
 			int h = bounds.yMax - bounds.yMin + 1;
@@ -647,7 +647,7 @@ class SupDVD implements Substream, SubstreamDVD {
 			pic.setOfsY(pic.originalY + bounds.yMin);
 		}
 
-		primaryColorIndex = bitmap.getPrimaryColorIndex(palette, Core.getAlphaThr());
+		primaryColorIndex = bitmap.getPrimaryColorIndex(palette.getAlpha(), Core.getAlphaThr(), palette.getY());
 	}
 
 	/* (non-Javadoc)
@@ -702,7 +702,7 @@ class SupDVD implements Substream, SubstreamDVD {
 	 * @see Substream#getImage(Bitmap)
 	 */
 	public BufferedImage getImage(final Bitmap bm) {
-		return bm.getImage(palette);
+		return bm.getImage(palette.getColorModel());
 	}
 
 	/* (non-Javadoc)
@@ -723,7 +723,7 @@ class SupDVD implements Substream, SubstreamDVD {
 	 * @see Substream#getImage()
 	 */
 	public BufferedImage getImage() {
-		return bitmap.getImage(palette);
+		return bitmap.getImage(palette.getColorModel());
 	}
 
 	/* (non-Javadoc)

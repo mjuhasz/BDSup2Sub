@@ -1909,7 +1909,7 @@ public class Core  extends Thread {
 					if ( (inMode == InputMode.VOBSUB || inMode == InputMode.SUPIFO) && paletteMode == PaletteMode.KEEP_EXISTING)
 						tBm = substream.getBitmap(); // no conversion
 					else
-						tBm = substream.getBitmap().convertLm(substream.getPalette(), alphaThr, lumThr); // reduce palette
+						tBm = substream.getBitmap().getBitmapWithNormalizedPalette(substream.getPalette().getAlpha(), alphaThr, substream.getPalette().getY(), lumThr); // reduce palette
 				} else {
 					// scale up/down
 					if ((inMode == InputMode.VOBSUB || inMode == InputMode.SUPIFO) && paletteMode == PaletteMode.KEEP_EXISTING) {
@@ -1956,7 +1956,7 @@ public class Core  extends Thread {
 				trgBitmapUnpatched = new Bitmap(tBm);
 				int col = tPal.getTransparentIndex();
 				for (ErasePatch ep : picTrg.erasePatch)
-					tBm.fillRectangularWithColor(ep.x, ep.y, ep.w, ep.h, (byte)col);
+					tBm.fillRectangularWithColorIndex(ep.x, ep.y, ep.w, ep.h, (byte)col);
 			} else
 				trgBitmapUnpatched = tBm;
 			trgBitmap = tBm;
@@ -2044,7 +2044,7 @@ public class Core  extends Thread {
 						//File file = new File(fnp);
 						//ImageIO.write(trgBitmap.getImage(trgPal), "png", file);
 						out = new BufferedOutputStream(new FileOutputStream(fnp));
-						PngEncoderB pngEncoder= new PngEncoderB(trgBitmap.getImage(trgPal));
+						PngEncoderB pngEncoder= new PngEncoderB(trgBitmap.getImage(trgPal.getColorModel()));
 						byte buf[] = pngEncoder.pngEncode(true);
 						out.write(buf);
 						out.close();
@@ -3027,7 +3027,7 @@ public class Core  extends Thread {
 	 */
 	public static BufferedImage getTrgImage() {
 		synchronized (semaphore) {
-			return trgBitmap.getImage(trgPal);
+			return trgBitmap.getImage(trgPal.getColorModel());
 		}
 	}
 
@@ -3042,9 +3042,9 @@ public class Core  extends Thread {
 				Bitmap trgBitmapPatched = new Bitmap(trgBitmapUnpatched);
 				int col = trgPal.getTransparentIndex();
 				for (ErasePatch ep : pic.erasePatch)
-					trgBitmapPatched.fillRectangularWithColor(ep.x, ep.y, ep.w, ep.h, (byte)col);
-				return trgBitmapPatched.getImage(trgPal);
-			} else return trgBitmapUnpatched.getImage(trgPal);
+					trgBitmapPatched.fillRectangularWithColorIndex(ep.x, ep.y, ep.w, ep.h, (byte)col);
+				return trgBitmapPatched.getImage(trgPal.getColorModel());
+			} else return trgBitmapUnpatched.getImage(trgPal.getColorModel());
 		}
 	}
 

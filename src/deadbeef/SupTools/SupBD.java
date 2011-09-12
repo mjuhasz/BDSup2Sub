@@ -557,7 +557,7 @@ class SupBD implements Substream {
 
 		// a typical frame consists of 8 packets. It can be enlonged by additional
 		// object frames
-		int palSize = bm.getHighestColorIndex(pal)+1;
+		int palSize = bm.getHighestVisibleColorIndex(pal.getAlpha())+1;
 		int size = packetHeader.length*(8+numAddPackets);
 		size += headerPCSStart.length+headerPCSEnd.length;
 		size += 2*headerWDS.length+headerODSFirst.length;
@@ -1156,7 +1156,7 @@ class SupBD implements Substream {
 	private void decode(final SubPictureBD pic)  throws CoreException {
 		palette = decodePalette(pic);
 		bitmap  = decodeImage(pic, palette.getTransparentIndex());
-		primaryColorIndex = bitmap.getPrimaryColorIndex(palette, Core.getAlphaThr());
+		primaryColorIndex = bitmap.getPrimaryColorIndex(palette.getAlpha(), Core.getAlphaThr(), palette.getY());
 	}
 
 	/* (non-Javadoc)
@@ -1189,14 +1189,14 @@ class SupBD implements Substream {
 	 * @see Substream#getImage()
 	 */
 	public BufferedImage getImage() {
-		return bitmap.getImage(palette);
+		return bitmap.getImage(palette.getColorModel());
 	}
 
 	/* (non-Javadoc)
 	 * @see Substream#getImage(Bitmap)
 	 */
 	public BufferedImage getImage(final Bitmap bm) {
-		return bm.getImage(palette);
+		return bm.getImage(palette.getColorModel());
 	}
 
 	/* (non-Javadoc)

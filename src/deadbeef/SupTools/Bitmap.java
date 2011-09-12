@@ -1,6 +1,7 @@
 package deadbeef.SupTools;
 
 import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
 import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferByte;
 import java.awt.image.Raster;
@@ -52,9 +53,9 @@ public class Bitmap {
 		buffer = new byte[width * height];
 	}
 
-	public Bitmap(int width, int height, byte fillerColor) {
+	public Bitmap(int width, int height, byte fillerColorIndex) {
 		this(width, height);
-		fillWithColorValue(fillerColor);
+		fillWithColorIndexValue(fillerColorIndex);
 	}
 
 	public Bitmap(int width, int height, byte[] buffer) {
@@ -69,12 +70,12 @@ public class Bitmap {
 		buffer = Arrays.copyOf(bitmap.buffer, bitmap.buffer.length);
 	}
 
-	private void fillWithColorValue(byte color) {
-		for (int i=0; i<width*height; i++)
-			buffer[i] = color;
+	private void fillWithColorIndexValue(byte colorIndex) {
+		for (int i = 0; i < width * height; i++)
+			buffer[i] = colorIndex;
 	}
 
-	public void fillRectangularWithColor(int rectX, int rectY, int rectWidth, int rectHeight, byte color) {
+	public void fillRectangularWithColorIndex(int rectX, int rectY, int rectWidth, int rectHeight, byte colorIndex) {
 		int xMax = rectX + rectWidth;
 		if (xMax > width) {
 			xMax = width;
@@ -88,125 +89,115 @@ public class Bitmap {
 		for (int y = rectY; y < yMax; y++) {
 			int yOfs = y * width;
 			for (int x = rectX; x < xMax; x++) {
-				buffer[yOfs + x] = color;
+				buffer[yOfs + x] = colorIndex;
 			}
 		}
 	}
 
-	public BufferedImage getImage(Palette pal) {
+	public BufferedImage getImage(ColorModel colorModel) {
 		DataBuffer dataBuffer = new DataBufferByte(buffer, width * height);
-		SampleModel sampleModel = new SinglePixelPackedSampleModel(DataBuffer.TYPE_BYTE, width, height, new int[]{0xff});
+		SampleModel sampleModel = new SinglePixelPackedSampleModel(DataBuffer.TYPE_BYTE, width, height, new int[]{ 0xff });
 		WritableRaster raster = Raster.createWritableRaster(sampleModel, dataBuffer, null);
-		return new BufferedImage(pal.getColorModel(), raster, false, null);
+		return new BufferedImage(colorModel, raster, false, null);
 	}
 
-	/**
-	 * Find the most common color that is as light and opaque as possible<br>
-	 * (the darker and more transparent a color is, the smaller is its influence).
-	 * @param pal Palette
-	 * @param alphaThr Alpha threshold (all colors with alpha < alphaThr will be ignored)
-	 * @return Color index of the most common, lightest and most opaque color
-	 */
-	public int getPrimaryColorIndex(final Palette pal, final int alphaThr) {
-		// create histogram for palette
-		int hist[] = new int[pal.getSize()];
-		for (int i=0; i<hist.length; i++)
-			hist[i] = 0;
-		for (int i=0; i<buffer.length; i++) {
-			// for each pixel of the bitmap
-			hist[(buffer[i]&0xff)]++;
+	public int getPrimaryColorIndex(byte[] alpha, int alphaThreshold, byte[] luma) {
+		int colorIndexCount = alpha.length;
+		int[] histogram = createHistogram(colorIndexCount);
+		weightHistogramWithAlphaAndLumaValues(histogram, alpha, alphaThreshold, luma);
+		return getColorIndexWithTheHighestValue(histogram);
+	}
+
+	private int[] createHistogram(int colorIndexCount) {
+		int histogram[] = new int[colorIndexCount];
+		Arrays.fill(histogram, 0);
+		for (int i=0; i < buffer.length; i++) {
+			histogram[(buffer[i] & 0xff)]++;
 		}
-		// conditioning of histogramm
-		// the primary color should be light and opaque
-		for (int i=0; i<hist.length; i++) {
-			int alpha = pal.getAlpha(i);
-			if (alpha < alphaThr)
+		return histogram;
+	}
+
+	private void weightHistogramWithAlphaAndLumaValues(int[] histogram, byte[] alphaValues, int alphaThreshold, byte[] lumaValues) {
+		for (int i = 0; i < histogram.length; i++) {
+			int alpha = alphaValues[i] & 0xff;
+			if (alpha < alphaThreshold) {
 				alpha = 0;
-			// use alpha as weight factor for histogram
-			hist[i] = (hist[i]*alpha+128)/256;
-			// use Y component as weight factor for histogram (partially)
-			hist[i] = (hist[i]*((pal.getY()[i]&0xff))+128)/256;
+			}
+			histogram[i] = (histogram[i] * alpha + 128) / 256; // prefer opaque
+			
+			int luma = lumaValues[i] & 0xff;
+			histogram[i] = (histogram[i] * luma + 128) / 256; // prefer light
 		}
-		// detect histogram index (=color) with highest value
-		int max = 0; // only used as max value
-		int col = 0;
-		for (int i=0; i<hist.length; i++) {
-			if (hist[i] > max) {
-				max = hist[i];
-				col = i;
+	}
+
+	private int getColorIndexWithTheHighestValue(int[] histogram) {
+		int maxValue = 0;
+		int colorIndex = 0;
+		for (int i=0; i < histogram.length; i++) {
+			if (histogram[i] > maxValue) {
+				maxValue = histogram[i];
+				colorIndex = i;
 			}
 		}
-		return col;
+		return colorIndex;
 	}
 
-	/**
-	 * Return the highest used palette entry.
-	 * @param p Palette
-	 * @return Index of highest palette entry used in Bitmap
-	 */
-	public int getHighestColorIndex(final Palette p) {
-		// create histogram for palette
-		int maxIdx = 0;
-		for (int i=0; i<buffer.length; i++) {
-			// for each pixel of the bitmap
-			int idx = buffer[i]&0xff;
-			if (p.getAlpha(idx) > 0)
-				if ( idx > maxIdx) {
-					maxIdx = idx;
-					if (maxIdx == 255)
+	public int getHighestVisibleColorIndex(byte[] alphaValues) {
+		int maxColorIndex = 0;
+		for (int i = 0; i < buffer.length; i++) {
+			int colorIndex = buffer[i] & 0xff;
+			if ((alphaValues[colorIndex] & 0xff) > 0) {
+				if (colorIndex > maxColorIndex) {
+					maxColorIndex = colorIndex;
+					if (maxColorIndex == 255) {
 						break;
-				}
-		}
-		return maxIdx;
-	}
-
-	/**
-	 * Convert a palletized Bitmap (where each palette entry has individual alpha)
-	 * to a Bitmap with N color palette, where:<br>
-	 * index0 = transparent, index1 = light color, ... , indexN-2 = dark color, indexN-1 = black.
-	 * @param pal 		Palette of the source Bitmap
-	 * @param alphaThr	Threshold for alpha (transparency), lower = more transparent
-	 * @param lumThr    Threshold for luminances. For N-1 luminances, N-2 thresholds are needed
-	 *                  lumThr[0] is the threshold for the lightest color (-> idx 1)
-	 *                  lumThr[N-2] is the threshold for the darkest color (-> idx N-1)
-	 * @return Bitmap which uses a fixed frame Palette.
-	 */
-	public Bitmap convertLm(final Palette pal, final int alphaThr, final int lumThr[]) {
-		final byte cy[] = pal.getY();
-		final byte a[] = pal.getAlpha();
-		Bitmap bm = new Bitmap(width, height);
-
-		// select nearest colors in existing palette
-		HashMap<Integer,Integer> p = new HashMap<Integer,Integer>();
-
-		for (int i=0; i<buffer.length; i++) {
-			int colIdx;
-			int idx = buffer[i] & 0xff;
-			int alpha = a[idx] & 0xff;
-			int cyp   = cy[idx] & 0xff;
-
-			Integer idxEx = p.get((alpha<<8) | cyp);
-
-			if (idxEx != null)
-				colIdx = idxEx;
-			else {
-				colIdx = 0;
-
-				// determine index in target
-				if (alpha < alphaThr) {
-					colIdx = 0; // transparent color
-				} else {
-					colIdx = 1; // default: lightest color
-					for (int n=0; n<lumThr.length; n++) {
-						if (cyp > lumThr[n])
-							break;
-						colIdx++; // try next darker color
 					}
 				}
-				p.put((alpha<<8) | cyp, colIdx);
 			}
-			// write target pixel
-			bm.buffer[i] = (byte)colIdx;
+		}
+		return maxColorIndex;
+	}
+
+	/**
+	 * Convert a palettized Bitmap (where each palette entry has individual alpha)
+	 * to a Bitmap with N color palette, where:
+	 * index0 = transparent (background), index1 = light color (pattern), ... , indexN-2 = dark color, indexN-1 = black.
+	 * 
+	 * For N-1 luminances, N-2 thresholds are needed
+	 *                  lumaThreshold[0] is the threshold for the lightest color (-> index 1)
+	 *                  lumaThreshold[N-2] is the threshold for the darkest color (-> index N-1)
+	 */
+	public Bitmap getBitmapWithNormalizedPalette(byte[] alphaValues, int alphaThreshold, byte[] lumaValues, int lumaThreshold[]) {
+		Bitmap bm = new Bitmap(width, height);
+		HashMap<Integer, Integer> p = new HashMap<Integer, Integer>();
+
+		int newColorIndex;
+		for (int i = 0; i < buffer.length; i++) {
+			int colorIndex = buffer[i] & 0xff;
+			int alpha = alphaValues[colorIndex] & 0xff;
+			int luma = lumaValues[colorIndex] & 0xff;
+
+			Integer existingColorIndex = p.get((alpha << 8) | luma);
+
+			if (existingColorIndex != null) {
+				newColorIndex = existingColorIndex;
+			}
+			else {
+				newColorIndex = 0;
+				if (alpha < alphaThreshold) {
+					newColorIndex = 0; // transparent color
+				} else {
+					newColorIndex = 1; // default: lightest color
+					for (int n = 0; n < lumaThreshold.length; n++) {
+						if (luma > lumaThreshold[n]) {
+							break;
+						}
+						newColorIndex++; // try next darker color
+					}
+				}
+				p.put((alpha << 8) | luma, newColorIndex);
+			}
+			bm.buffer[i] = (byte)newColorIndex;
 		}
 		return bm;
 	}
@@ -658,7 +649,6 @@ public class Bitmap {
 	 * @return Scaled Bitmap and new Palette
 	 */
 	public PaletteBitmap scaleFilter(final int sizeX, final int sizeY, final Palette pal, final Filter f, final boolean dither) {
-
 		FilterOp fOp = new FilterOp();
 		fOp.setFilter(f);
 		final int trg[] = fOp.filter(this, pal, sizeX, sizeY);
@@ -680,102 +670,93 @@ public class Bitmap {
 		return new PaletteBitmap(bm, trgPal);
 	}
 
-	/**
-	 * Convert Bitmap to Integer array filled with ARGB values.
-	 * @param pal Palette
-	 * @return Integer array filled with ARGB values.
-	 */
-	public int[] toARGB(final Palette pal) {
-		int t[] = new int[buffer.length];
-		for (int i=0; i<t.length; i++)
-			t[i] = pal.getARGB(buffer[i]&0xff);
-		return t;
-	}
-
-	/**
-	 * Create cropped Bitmap.
-	 * @param x X offset in source bitmap
-	 * @param y Y offset in source bitmap
-	 * @param w Width of cropping window
-	 * @param h Height of cropping window
-	 * @return Cropped Bitmap sized w*h
-	 */
-	public Bitmap crop(final int x, final int y, final int w, final int h) {
-		final Bitmap bm = new Bitmap(w,h);
-
-		int yOfsSrc = y*width;
-		int yOfsTrg = 0;
-		for (int yt=0; yt < h; yt++, yOfsSrc+=width, yOfsTrg+=w) {
-			for (int xt=0; xt < w; xt++)
-				bm.buffer[xt+yOfsTrg] = buffer[x+xt+yOfsSrc];
+	public int[] toARGB(Palette pal) {
+		int[] argbValues = new int[buffer.length];
+		for (int i = 0; i < argbValues.length; i++) {
+			argbValues[i] = pal.getARGB(buffer[i] & 0xff);
 		}
-		return bm;
+		return argbValues;
 	}
 
-	/**
-	 * Get cropping bounds of Bitmap (first/last x/y coordinates that contain visible pixels).
-	 * @param pal      Palette
-	 * @param alphaThr Alpha threshold (only pixels with alpha >= alphaThr will be treated as visible)
-	 * @return BitmapBounds containing bounds
-	 */
-	public BitmapBounds getBounds(final Palette pal, final int alphaThr) {
-		final byte a[] = pal.getAlpha();
+	public Bitmap crop(int xOffset, int yOffset, int croppedBitmapWidth, int croppedBitmapHeight) {
+		Bitmap bitmap = new Bitmap(croppedBitmapWidth, croppedBitmapHeight);
+
+		int yOfsSrc = yOffset * width;
+		int yOfsTrg = 0;
+		for (int i = 0; i < croppedBitmapHeight; i++, yOfsSrc += width, yOfsTrg += croppedBitmapWidth) {
+			for (int xTrg = 0; xTrg < croppedBitmapWidth; xTrg++) {
+				bitmap.buffer[xTrg + yOfsTrg] = buffer[xOffset + xTrg + yOfsSrc];
+			}
+		}
+		return bitmap;
+	}
+
+	public BitmapBounds getCroppingBounds(byte[] alpha, int alphaThreshold) {
 		int xMin, xMax, yMin, yMax;
 
 		// search lower bound
-		yMax = (height-1);
-		int yOfs = yMax*width;
-		loop1:
-		for (int y=height-1; y > 0; y--, yOfs-=width) {
+		yMax = height - 1;
+		int yOfs = yMax * width;
+		for (int y = height - 1; y > 0; y--, yOfs -= width) {
 			yMax = y;
-			for (int x=0; x< width; x++) {
-				int idx = buffer[x+yOfs] & 0xff;
-				if ( (a[idx]&0xff) >= alphaThr )
-					break loop1;
+			if (isRowWithColorAboveAlphaThreshold(yOfs, alpha, alphaThreshold)) {
+				break;
 			}
 		}
 
 		// search upper bound
 		yMin = 0;
 		yOfs = 0;
-		loop2:
-		for (int y=0; y < yMax; y++, yOfs+=width) {
+		for (int y = 0; y < yMax; y++, yOfs += width) {
 			yMin = y;
-			for (int x=0; x< width; x++) {
-				int idx = buffer[x+yOfs] & 0xff;
-				if ( (a[idx]&0xff) >= alphaThr )
-					break loop2;
+			if (isRowWithColorAboveAlphaThreshold(yOfs, alpha, alphaThreshold)) {
+				break;
 			}
 		}
 
 		// search right bound
 		xMax = width-1;
-		loop3:
-		for (int x=width-1; x>0 ; x--) {
+		for (int x = width - 1; x > 0; x--) {
 			xMax = x;
-			yOfs = yMin*width;
-			for (int y=yMin; y < yMax; y++, yOfs+=width) {
-				int idx = buffer[x+yOfs] & 0xff;
-				if ( (a[idx]&0xff) >= alphaThr )
-					break loop3;
+			if (isColumnWithColorAboveAlphaThreshold(x, yMin, yMax, alpha, alphaThreshold)) {
+				break;
 			}
 		}
 
-
 		// search left bound
 		xMin = 0;
-		loop4:
-		for (int x=0; x< xMax; x++) {
+		for (int x = 0; x < xMax; x++) {
 			xMin = x;
-			yOfs = yMin*width;
-			for (int y=yMin; y < yMax; y++, yOfs+=width) {
-				int idx = buffer[x+yOfs] & 0xff;
-				if ( (a[idx]&0xff) >= alphaThr )
-					break loop4;
+			if (isColumnWithColorAboveAlphaThreshold(x, yMin, yMax, alpha, alphaThreshold)) {
+				break;
 			}
 		}
 
 		return new BitmapBounds(xMin, xMax, yMin, yMax);
+	}
+
+	private boolean isRowWithColorAboveAlphaThreshold(int yOfs, byte[] alpha, int alphaThreshold) {
+		for (int x = 0; x < width; x++) {
+			if (isColorAboveAlphaThreshold(yOfs + x, alpha, alphaThreshold)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean isColumnWithColorAboveAlphaThreshold(int x, int yMin, int yMax, byte[] alpha, int alphaThreshold) {
+		int yOfs = yMin * width;
+		for (int i = yMin; i < yMax; i++, yOfs += width) {
+			if (isColorAboveAlphaThreshold(yOfs + x, alpha, alphaThreshold)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean isColorAboveAlphaThreshold(int bufferIndex, byte[] alpha, int alphaThreshold) {
+		int idx = buffer[bufferIndex] & 0xff;
+		return (alpha[idx] & 0xff) >= alphaThreshold;
 	}
 
 	public int getWidth() {

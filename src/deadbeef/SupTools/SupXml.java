@@ -188,9 +188,9 @@ class SupXml implements Substream {
 						palette.setARGB(i,0);
 				}
 			}
-			primaryColorIndex = bitmap.getPrimaryColorIndex(palette,Core.getAlphaThr());
+			primaryColorIndex = bitmap.getPrimaryColorIndex(palette.getAlpha(), Core.getAlphaThr(), palette.getY());
 			// crop
-			BitmapBounds bounds = bitmap.getBounds(palette, Core.getAlphaCrop());
+			BitmapBounds bounds = bitmap.getCroppingBounds(palette.getAlpha(), Core.getAlphaCrop());
 			if (bounds.yMin>0 || bounds.xMin > 0 || bounds.xMax<bitmap.getWidth()-1 || bounds.yMax<bitmap.getHeight()-1) {
 				w = bounds.xMax - bounds.xMin + 1;
 				h = bounds.yMax - bounds.yMin + 1;
@@ -304,14 +304,14 @@ class SupXml implements Substream {
 	 * @see Substream#getImage()
 	 */
 	public BufferedImage getImage() {
-		return bitmap.getImage(palette);
+		return bitmap.getImage(palette.getColorModel());
 	}
 
 	/* (non-Javadoc)
 	 * @see Substream#getImage(Bitmap)
 	 */
 	public BufferedImage getImage(final Bitmap bm) {
-		return bm.getImage(palette);
+		return bm.getImage(palette.getColorModel());
 	}
 
 	/* (non-Javadoc)

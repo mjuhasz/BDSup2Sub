@@ -364,7 +364,7 @@ class SupHD implements Substream {
 	private void decode(final SubPictureHD pic) throws CoreException {
 		palette = decodePalette(pic);
 		bitmap  = decodeImage(pic, palette.getTransparentIndex());
-		primaryColorIndex = bitmap.getPrimaryColorIndex(palette, Core.getAlphaThr());
+		primaryColorIndex = bitmap.getPrimaryColorIndex(palette.getAlpha(), Core.getAlphaThr(), palette.getY());
 	}
 
 	/* (non-Javadoc)
@@ -397,14 +397,14 @@ class SupHD implements Substream {
 	 * @see Substream#getImage()
 	 */
 	public BufferedImage getImage() {
-		return bitmap.getImage(palette);
+		return bitmap.getImage(palette.getColorModel());
 	}
 
 	/* (non-Javadoc)
 	 * @see Substream#getImage(Bitmap)
 	 */
 	public BufferedImage getImage(final Bitmap bm) {
-		return bm.getImage(palette);
+		return bm.getImage(palette.getColorModel());
 	}
 
 	/* (non-Javadoc)
