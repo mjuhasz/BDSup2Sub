@@ -395,12 +395,24 @@ class SupDVD implements Substream, SubstreamDVD {
 							break;
 					}
 				}
+				
 				if (endSeqOfs != ctrlSize) {
-					index = endSeqOfs;
-					delay = ToolBox.getWord(ctrlHeader, index)*1024;
+					int ctrlSeqCount = 1;
+					index = -1;
+					int nextIndex = endSeqOfs;
+					while (nextIndex != index) {
+						index = nextIndex;
+						delay = ToolBox.getWord(ctrlHeader, index) * 1024;
+						nextIndex = ToolBox.getWord(ctrlHeader, index + 2) - ctrlOfsRel - 2;
+						ctrlSeqCount++;
+					}
+					if (ctrlSeqCount > 2) {
+						Core.printWarn("Control sequence(s) ignored - result may be erratic.");
+					}
 					pic.endTime = pic.startTime + delay;
-				} else
+				} else {
 					pic.endTime = pic.startTime;
+				}
 
 				pic.setOriginal();
 
