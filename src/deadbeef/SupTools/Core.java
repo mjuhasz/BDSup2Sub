@@ -1935,7 +1935,7 @@ public class Core  extends Thread {
 					} else {
 						// create new palette
 						boolean dither = paletteMode == PaletteMode.CREATE_DITHERED;
-						PaletteBitmap pb;
+						BitmapWithPalette pb;
 						if (f != null)
 							pb = substream.getBitmap().scaleFilter(trgWidth, trgHeight, substream.getPalette(), f, dither);
 						else
@@ -1947,7 +1947,7 @@ public class Core  extends Thread {
 			}
 			if (picTrg.erasePatch != null) {
 				trgBitmapUnpatched = new Bitmap(tBm);
-				int col = tPal.getTransparentIndex();
+				int col = tPal.getIndexOfMostTransparentPaletteEntry();
 				for (ErasePatch ep : picTrg.erasePatch)
 					tBm.fillRectangularWithColorIndex(ep.x, ep.y, ep.width, ep.height, (byte)col);
 			} else
@@ -3033,7 +3033,7 @@ public class Core  extends Thread {
 		synchronized (semaphore) {
 			if (pic.erasePatch != null) {
 				Bitmap trgBitmapPatched = new Bitmap(trgBitmapUnpatched);
-				int col = trgPal.getTransparentIndex();
+				int col = trgPal.getIndexOfMostTransparentPaletteEntry();
 				for (ErasePatch ep : pic.erasePatch)
 					trgBitmapPatched.fillRectangularWithColorIndex(ep.x, ep.y, ep.width, ep.height, (byte)col);
 				return trgBitmapPatched.getImage(trgPal.getColorModel());

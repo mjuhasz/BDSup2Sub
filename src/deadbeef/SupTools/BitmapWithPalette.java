@@ -21,20 +21,19 @@ package deadbeef.SupTools;
  *
  * @author 0xdeadbeef
  */
-public class PaletteBitmap {
+public class BitmapWithPalette {
+
+	/** Bitmap containing one byte per pixel */
+	public final Bitmap bitmap;
+	/** Color palette */
+	public final Palette palette;
 
 	/**
-	 * Constructor
 	 * @param bm Bitmap
 	 * @param pal Palette
 	 */
-	public PaletteBitmap(Bitmap bm, Palette pal) {
-		bitmap = bm;
-		palette = pal;
+	public BitmapWithPalette(Bitmap bitmap, Palette palette) {
+		this.bitmap = bitmap;
+		this.palette = palette;
 	}
-
-	/** Bitmap containing one byte per pixel */
-	public Bitmap bitmap;
-	/** Color palette */
-	public Palette palette;
 }

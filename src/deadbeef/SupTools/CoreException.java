@@ -22,20 +22,13 @@ package deadbeef.SupTools;
  * @author 0xdeadbeef
  */
 public class CoreException extends Exception {
-	final static long serialVersionUID = 0x000000001;
+	
+	public static final long serialVersionUID = 0x000000001;
 
-	/**
-	 * Constructor.
-	 */
 	public CoreException() {
-		super();
 	}
 
-	/**
-	 * Constructor.
-	 * @param s Exception string
-	 */
-	public CoreException(final String s) {
+	public CoreException(String s) {
 		super(s);
 	}
 }

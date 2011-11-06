@@ -1,5 +1,7 @@
 package deadbeef.SupTools;
 
+import static deadbeef.SupTools.ColorSpaceUtils.*;
+
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.DataBuffer;
@@ -342,7 +344,7 @@ public class Bitmap {
 				int red   = (color >> 16) & 0xff;
 				int green = (color >>  8) & 0xff;
 				int blue  =  color        & 0xff;
-				int cyp   = Palette.RGB2YCbCr(red, green, blue, false)[0];
+				int cyp   = RGB2YCbCr(red, green, blue, false)[0];
 
 				// determine index in target
 				if (alpha < alphaThr) {
@@ -383,7 +385,7 @@ public class Bitmap {
 		int lastG = 0;
 		int lastB = 0;
 		int lastA = 0;
-		int lastColIdx = pal.getTransparentIndex();
+		int lastColIdx = pal.getIndexOfMostTransparentPaletteEntry();
 
 		final Bitmap trg = new Bitmap(sizeX, sizeY);
 
@@ -490,7 +492,7 @@ public class Bitmap {
 	 * @param dither True: apply dithering
 	 * @return Scaled Bitmap and new Palette
 	 */
-	public PaletteBitmap scaleBilinear(final int sizeX, final int sizeY, final Palette pal, final boolean dither) {
+	public BitmapWithPalette scaleBilinear(final int sizeX, final int sizeY, final Palette pal, final boolean dither) {
 		final byte[] r = pal.getR();
 		final byte[] g = pal.getG();
 		final byte[] b = pal.getB();
@@ -572,7 +574,7 @@ public class Bitmap {
 		// quantize image
 		QuantizeFilter qf = new QuantizeFilter();
 		final Bitmap bm = new Bitmap(sizeX, sizeY);
-		int ct[] = qf.quantize(trg, bm.buffer, sizeX, sizeY, 255, dither, dither);
+		int[] ct = qf.quantize(trg, bm.buffer, sizeX, sizeY, 255, dither, dither);
 		int size = ct.length;
 		if (size > 255) {
 			size = 255;
@@ -584,7 +586,7 @@ public class Bitmap {
 			trgPal.setARGB(i,ct[i]);
 		}
 
-		return new PaletteBitmap(bm, trgPal);
+		return new BitmapWithPalette(bm, trgPal);
 	}
 
 	/** Scales a palettized Bitmap to a Bitmap with the same Palette using a given scaling filter.
@@ -654,7 +656,7 @@ public class Bitmap {
 	 * @param dither True: apply dithering
 	 * @return Scaled Bitmap and new Palette
 	 */
-	public PaletteBitmap scaleFilter(final int sizeX, final int sizeY, final Palette pal, final Filter f, final boolean dither) {
+	public BitmapWithPalette scaleFilter(final int sizeX, final int sizeY, final Palette pal, final Filter f, final boolean dither) {
 		FilterOp fOp = new FilterOp();
 		fOp.setFilter(f);
 		final int[] trg = fOp.filter(this, pal, sizeX, sizeY);
@@ -674,7 +676,7 @@ public class Bitmap {
 			trgPal.setARGB(i, ct[i]);
 		}
 
-		return new PaletteBitmap(bm, trgPal);
+		return new BitmapWithPalette(bm, trgPal);
 	}
 
 	public int[] toARGB(Palette pal) {

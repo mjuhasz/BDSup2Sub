@@ -1214,7 +1214,7 @@ class SubDVD implements Substream, SubstreamDVD {
 	 */
 	private void decode(final SubPictureDVD pic)  throws CoreException {
 		palette = decodePalette(pic, srcPalette);
-		bitmap  = decodeImage(pic, buffer, palette.getTransparentIndex());
+		bitmap  = decodeImage(pic, buffer, palette.getIndexOfMostTransparentPaletteEntry());
 
 		// crop
 		BitmapBounds bounds = bitmap.getCroppingBounds(palette.getAlpha(), Core.getAlphaCrop());
