@@ -4,6 +4,8 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
+import deadbeef.bitmap.BitmapBounds;
+
 public class BitmapBoundsTest {
 
 	private BitmapBounds subject;

@@ -12,14 +12,15 @@ import java.util.Map;
 
 import javax.swing.UIManager;
 
-import deadbeef.GUI.MainFrame;
-import deadbeef.SupTools.Core;
-import deadbeef.SupTools.CoreException;
-import deadbeef.SupTools.Core.PaletteMode;
-import deadbeef.SupTools.Core.ScalingFilters;
-import deadbeef.SupTools.Core.StreamID;
-import deadbeef.Tools.Props;
-import deadbeef.Tools.ToolBox;
+
+import deadbeef.core.Core;
+import deadbeef.core.CoreException;
+import deadbeef.core.Core.PaletteMode;
+import deadbeef.core.Core.ScalingFilters;
+import deadbeef.core.Core.StreamID;
+import deadbeef.gui.MainFrame;
+import deadbeef.tools.Props;
+import deadbeef.tools.ToolBox;
 
 /*
  * Copyright 2009 Volker Oth (0xdeadbeef)

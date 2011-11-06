@@ -4,6 +4,10 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
+import deadbeef.bitmap.Bitmap;
+import deadbeef.bitmap.BitmapWithPalette;
+import deadbeef.bitmap.Palette;
+
 public class PaletteBitmapTest {
 
 	private BitmapWithPalette subject;

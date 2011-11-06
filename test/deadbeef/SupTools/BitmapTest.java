@@ -10,6 +10,9 @@ import java.util.Arrays;
 import org.junit.Before;
 import org.junit.Test;
 
+import deadbeef.bitmap.Bitmap;
+import deadbeef.bitmap.BitmapBounds;
+
 public class BitmapTest {
 
 	private static final int WIDTH = 10;

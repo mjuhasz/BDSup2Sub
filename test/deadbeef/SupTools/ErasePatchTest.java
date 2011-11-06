@@ -4,6 +4,8 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
+import deadbeef.bitmap.ErasePatch;
+
 public class ErasePatchTest {
 
 	private ErasePatch subject;
