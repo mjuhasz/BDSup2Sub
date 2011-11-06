@@ -23,26 +23,25 @@ package deadbeef.SupTools;
  */
 public class ErasePatch {
 
-	/**
-	 * Constructor.
-	 * @param xp X coordinate of patch
-	 * @param yp Y coordinate of patch
-	 * @param wp Width of patch
-	 * @param hp Height of patch
-	 */
-	public ErasePatch(int xp, int yp, int wp, int hp) {
-		x = xp;
-		y = yp;
-		w = wp;
-		h = hp;
-	}
-
 	/** X coordinate of patch */
-	public int x;
+	public final int x;
 	/** Y coordinate of patch */
-	public int y;
+	public final int y;
 	/** Width of patch */
-	public int w;
+	public final int width;
 	/** Height of patch */
-	public int h;
+	public final int height;
+
+	/**
+	 * @param x X coordinate of patch
+	 * @param y Y coordinate of patch
+	 * @param width Width of patch
+	 * @param height Height of patch
+	 */
+	public ErasePatch(int x, int y, int width, int height) {
+		this.x = x;
+		this.y = y;
+		this.width = width;
+		this.height = height;
+	}
 }

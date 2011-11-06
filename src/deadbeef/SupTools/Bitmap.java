@@ -203,8 +203,8 @@ public class Bitmap {
 	}
 
 	/**
-	 * Scales a palletized Bitmap (where each palette entry has individual alpha) using bilinear filtering
-	 * to a Bitmap with N color palette, where:<br>
+	 * Scales a palettized Bitmap (where each palette entry has individual alpha) using bilinear filtering
+	 * to a Bitmap with N color palette, where:
 	 * index0 = transparent, index1 = light color, ... , indexN-2 = dark color, indexN-1 = black.
 	 * @param sizeX		Target width
 	 * @param sizeY		Target height
@@ -216,11 +216,11 @@ public class Bitmap {
 	 * @return Scaled Bitmap which uses a fixed frame Palette.
 	 */
 	public Bitmap scaleBilinearLm(final int sizeX, final int sizeY, final Palette pal, final int alphaThr, final int lumThr[]) {
-		final byte cy[] = pal.getY();
-		final byte a[] = pal.getAlpha();
+		final byte[] cy = pal.getY();
+		final byte[] a = pal.getAlpha();
 
-		final double scaleX = (double)(width-1)/(sizeX-1);
-		final double scaleY = (double)(height-1)/(sizeY-1);
+		final double scaleX = (double)(width - 1) / (sizeX - 1);
+		final double scaleY = (double)(height - 1) / (sizeY - 1);
 
 		int lastCY = 0;
 		int lastA  = 0;
@@ -229,48 +229,48 @@ public class Bitmap {
 		Bitmap trg = new Bitmap(sizeX, sizeY);
 
 		for (int yt = 0; yt < sizeY; yt++) {
-			double ys = yt*scaleY;     // source coordinate
+			double ys = yt * scaleY; // source coordinate
 			int ysi = (int)ys;
-			double wy = (ys-ysi);
-			double wy1 = 1.0-wy;
+			double wy = (ys - ysi);
+			double wy1 = 1.0 - wy;
 
 			for (int xt = 0; xt < sizeX; xt++) {
-				double xs = xt*scaleX;     // source coordinate
+				double xs = xt * scaleX; // source coordinate
 				int xsi = (int)xs;
-				double wx = (xs-xsi);	// weight factor
+				double wx = (xs - xsi); // weight factor
 
-				double wx1 = 1.0-wx;
+				double wx1 = 1.0 - wx;
 
 				// interpolate pixel
 
 				// top left
-				double w = wx1*wy1;
-				int idx = getPixel(xsi, ysi)&0xff;
-				double at = (a[idx]&0xff)*w;
-				double cyt = (cy[idx]&0xff)*w;
+				double w = wx1 * wy1;
+				int idx = getPixel(xsi, ysi) & 0xff;
+				double at = (a[idx] & 0xff) * w;
+				double cyt = (cy[idx] & 0xff) * w;
 
 				// top right
-				if (xsi < width-1) {
-					w = wx*wy1;
-					idx = getPixel(xsi+1, ysi)&0xff;
-					at += (a[idx]&0xff)*w;
-					cyt += (cy[idx]&0xff)*w;
+				if (xsi < width - 1) {
+					w = wx * wy1;
+					idx = getPixel(xsi + 1, ysi) & 0xff;
+					at += (a[idx] & 0xff) * w;
+					cyt += (cy[idx] & 0xff) * w;
 				}  // else assume transparent black
 
 				// bottom left
 				if (ysi < height-1) {
-					w = wx1*wy;
-					idx = getPixel(xsi, ysi+1)&0xff;
-					at += (a[idx]&0xff)*w;
-					cyt += (cy[idx]&0xff)*w;
+					w = wx1 * wy;
+					idx = getPixel(xsi, ysi + 1) & 0xff;
+					at += (a[idx] & 0xff) * w;
+					cyt += (cy[idx] & 0xff) * w;
 				} // else assume transparent black
 
 				// bottom right
-				if ((ysi < height-1) && (xsi < width-1)) {
-					w = wx*wy;
-					idx = getPixel(xsi+1, ysi+1)&0xff;
-					at += (a[idx]&0xff)*w;
-					cyt += (cy[idx]&0xff)*w;
+				if ((ysi < height - 1) && (xsi < width - 1)) {
+					w = wx * wy;
+					idx = getPixel(xsi + 1, ysi + 1) & 0xff;
+					at += (a[idx] & 0xff) * w;
+					cyt += (cy[idx] & 0xff) * w;
 				} // else assume transparent black
 
 				int ati = (int)at;
@@ -286,9 +286,10 @@ public class Bitmap {
 						colIdx = 0; // transparent color
 					} else {
 						colIdx = 1; // default: lightest color
-						for (int n=0; n<lumThr.length; n++) {
-							if (cyti > lumThr[n])
+						for (int n = 0; n < lumThr.length; n++) {
+							if (cyti > lumThr[n]) {
 								break;
+							}
 							colIdx++; // try next darker color
 						}
 					}
@@ -305,8 +306,8 @@ public class Bitmap {
 	}
 
 	/**
-	 * Scales a palletized Bitmap (where each palette entry has individual alpha) using a given scaling filter
-	 * to a Bitmap with N color palette, where:<br>
+	 * Scales a palettized Bitmap (where each palette entry has individual alpha) using a given scaling filter
+	 * to a Bitmap with N color palette, where:
 	 * index0 = transparent, index1 = light color, ... , indexN-2 = dark color, indexN-1 = black
 	 * @param sizeX		Target width
 	 * @param sizeY		Target height
@@ -321,25 +322,26 @@ public class Bitmap {
 	public Bitmap scaleFilterLm(final int sizeX, final int sizeY, final Palette pal, final int alphaThr, final int lumThr[], final Filter f) {
 		FilterOp fOp = new FilterOp();
 		fOp.setFilter(f);
-		final int trg[] = fOp.filter(this, pal, sizeX, sizeY);
+		final int[] trg = fOp.filter(this, pal, sizeX, sizeY);
 
 		Bitmap bm = new Bitmap(sizeX, sizeY);
 
 		// select nearest colors in existing palette
-		HashMap<Integer,Integer> p = new HashMap<Integer,Integer>();
+		HashMap<Integer, Integer> p = new HashMap<Integer, Integer>();
 
-		for (int i=0; i<trg.length; i++) {
+		for (int i = 0; i < trg.length; i++) {
 			int color = trg[i];
 			int colIdx;
 			Integer idxEx = p.get(color);
-			if (idxEx != null)
+			if (idxEx != null) {
 				colIdx = idxEx;
+			}
 			else {
 				colIdx = 0;
-				int alpha = (color >> 24)& 0xff;
-				int red   = (color >> 16)& 0xff;
-				int green = (color >>  8)& 0xff;
-				int blue  =  color       & 0xff;
+				int alpha = (color >> 24) & 0xff;
+				int red   = (color >> 16) & 0xff;
+				int green = (color >>  8) & 0xff;
+				int blue  =  color        & 0xff;
 				int cyp   = Palette.RGB2YCbCr(red, green, blue, false)[0];
 
 				// determine index in target
@@ -347,9 +349,10 @@ public class Bitmap {
 					colIdx = 0; // transparent color
 				} else {
 					colIdx = 1; // default: lightest color
-					for (int n=0; n<lumThr.length; n++) {
-						if (cyp > lumThr[n])
+					for (int n = 0; n < lumThr.length; n++) {
+						if (cyp > lumThr[n]) {
 							break;
+						}
 						colIdx++; // try next darker color
 					}
 				}
@@ -361,20 +364,20 @@ public class Bitmap {
 		return bm;
 	}
 
-	/** Scales a palletized Bitmap to a Bitmap with the same palette using bilinear filtering.
+	/** Scales a palettized Bitmap to a Bitmap with the same palette using bilinear filtering.
 	 * @param sizeX Target width
 	 * @param sizeY Target height
 	 * @param pal   Palette of the source Bitmap
 	 * @return Scaled Bitmap which uses the same Palette as the source Bitmap.
 	 */
 	public Bitmap scaleBilinear(final int sizeX, final int sizeY, final Palette pal) {
-		final byte r[] = pal.getR();
-		final byte g[] = pal.getG();
-		final byte b[] = pal.getB();
-		final byte a[] = pal.getAlpha();
+		final byte[] r = pal.getR();
+		final byte[] g = pal.getG();
+		final byte[] b = pal.getB();
+		final byte[] a = pal.getAlpha();
 
-		final double scaleX = (double)(width-1)/(sizeX-1);
-		final double scaleY = (double)(height-1)/(sizeY-1);
+		final double scaleX = (double)(width - 1) / (sizeX - 1);
+		final double scaleY = (double)(height - 1) / (sizeY - 1);
 
 		int lastR = 0;
 		int lastG = 0;
@@ -385,56 +388,56 @@ public class Bitmap {
 		final Bitmap trg = new Bitmap(sizeX, sizeY);
 
 		for (int yt = 0; yt < sizeY; yt++) {
-			double ys = yt*scaleY;     // source coordinate
+			double ys = yt * scaleY; // source coordinate
 			int ysi = (int)ys;
-			double wy = (ys-ysi);
-			double wy1 = 1.0-wy;
+			double wy = (ys - ysi);
+			double wy1 = 1.0 - wy;
 
 			for (int xt = 0; xt < sizeX; xt++) {
-				double xs = xt*scaleX;     // source coordinate
+				double xs = xt * scaleX; // source coordinate
 				int xsi = (int)xs;
-				double wx = (xs-xsi);	// weight factor
+				double wx = (xs - xsi); // weight factor
 
-				double wx1 = 1.0-wx;
+				double wx1 = 1.0 - wx;
 
 				// interpolate pixel
 
 				// top left
-				double w = wx1*wy1;
-				int idx = getPixel(xsi, ysi)&0xff;
-				double at = (a[idx]&0xff)*w;
-				double rt = (r[idx]&0xff)*w;
-				double gt = (g[idx]&0xff)*w;
-				double bt = (b[idx]&0xff)*w;
+				double w = wx1 * wy1;
+				int idx = getPixel(xsi, ysi) & 0xff;
+				double at = (a[idx] & 0xff) * w;
+				double rt = (r[idx] & 0xff) * w;
+				double gt = (g[idx] & 0xff) * w;
+				double bt = (b[idx] & 0xff) * w;
 
 				// top right
-				if (xsi < width-1) {
-					w = wx*wy1;
-					idx = getPixel(xsi+1, ysi)&0xff;
-					at += (a[idx]&0xff)*w;
-					rt += (r[idx]&0xff)*w;
-					gt += (g[idx]&0xff)*w;
-					bt += (b[idx]&0xff)*w;
+				if (xsi < width - 1) {
+					w = wx * wy1;
+					idx = getPixel(xsi + 1, ysi) & 0xff;
+					at += (a[idx] & 0xff) * w;
+					rt += (r[idx] & 0xff) * w;
+					gt += (g[idx] & 0xff) * w;
+					bt += (b[idx] & 0xff) * w;
 				}  // else assume transparent black
 
 				// bottom left
-				if (ysi < height-1) {
-					w = wx1*wy;
-					idx = getPixel(xsi, ysi+1)&0xff;
-					at += (a[idx]&0xff)*w;
-					rt += (r[idx]&0xff)*w;
-					gt += (g[idx]&0xff)*w;
-					bt += (b[idx]&0xff)*w;
+				if (ysi < height - 1) {
+					w = wx1 * wy;
+					idx = getPixel(xsi, ysi + 1) & 0xff;
+					at += (a[idx] & 0xff) * w;
+					rt += (r[idx] & 0xff) * w;
+					gt += (g[idx] & 0xff) * w;
+					bt += (b[idx] & 0xff) * w;
 				} // else assume transparent black
 
 				// bottom right
-				if ((ysi < height-1) && (xsi < width-1)) {
-					w = wx*wy;
-					idx = getPixel(xsi+1, ysi+1)&0xff;
-					at += (a[idx]&0xff)*w;
-					rt += (r[idx]&0xff)*w;
-					gt += (g[idx]&0xff)*w;
-					bt += (b[idx]&0xff)*w;
+				if ((ysi < height - 1) && (xsi < width - 1)) {
+					w = wx * wy;
+					idx = getPixel(xsi + 1, ysi + 1) & 0xff;
+					at += (a[idx] & 0xff) * w;
+					rt += (r[idx] & 0xff) * w;
+					gt += (g[idx] & 0xff) * w;
+					bt += (b[idx] & 0xff) * w;
 
 				} // else assume transparent black
 
@@ -449,19 +452,20 @@ public class Bitmap {
 				int colIdx = lastColIdx;
 				if (ati != lastA || rti != lastR || gti != lastG || bti!=lastB) {
 					int minDistance = 0xffffff; // init > 0xff*0xff*4 = 0x03f804
-					for (idx=0; idx<pal.getSize(); idx++) {
+					for (idx = 0; idx < pal.getSize(); idx++) {
 						// distance vector (skip sqrt)
-						int ad = ati-(a[idx]&0xff);
-						int rd = rti-(r[idx]&0xff);
-						int gd = gti-(g[idx]&0xff);
-						int bd = bti-(b[idx]&0xff);
-						int distance = rd*rd+gd*gd+bd*bd+ad*ad;
+						int ad = ati - (a[idx] & 0xff);
+						int rd = rti - (r[idx] & 0xff);
+						int gd = gti - (g[idx] & 0xff);
+						int bd = bti - (b[idx] & 0xff);
+						int distance = rd * rd + gd * gd + bd * bd + ad * ad;
 						// new minimum distance ?
 						if ( distance < minDistance) {
 							colIdx = idx;
 							minDistance = distance;
-							if (minDistance == 0)
+							if (minDistance == 0) {
 								break;
+							}
 						}
 					}
 					// remember values
@@ -479,7 +483,7 @@ public class Bitmap {
 		return trg;
 	}
 
-	/** Scales a palletized Bitmap to a Bitmap with a new quantized Palette using bilinear filtering.
+	/** Scales a palettized Bitmap to a Bitmap with a new quantized Palette using bilinear filtering.
 	 * @param sizeX  Target width
 	 * @param sizeY  Target height
 	 * @param pal    Palette of the source Bitmap
@@ -487,74 +491,74 @@ public class Bitmap {
 	 * @return Scaled Bitmap and new Palette
 	 */
 	public PaletteBitmap scaleBilinear(final int sizeX, final int sizeY, final Palette pal, final boolean dither) {
-		final byte r[] = pal.getR();
-		final byte g[] = pal.getG();
-		final byte b[] = pal.getB();
-		final byte a[] = pal.getAlpha();
+		final byte[] r = pal.getR();
+		final byte[] g = pal.getG();
+		final byte[] b = pal.getB();
+		final byte[] a = pal.getAlpha();
 
-		final double scaleX = (double)(width-1)/(sizeX-1);
-		final double scaleY = (double)(height-1)/(sizeY-1);
+		final double scaleX = (double)(width - 1) / (sizeX - 1);
+		final double scaleY = (double)(height - 1) / (sizeY - 1);
 
-		final int trg[] = new int[sizeX*sizeY];
+		final int[] trg = new int[sizeX * sizeY];
 
 		for (int yt = 0; yt < sizeY; yt++) {
-			double ys = yt*scaleY;     // source coordinate
+			double ys = yt * scaleY; // source coordinate
 			int ysi = (int)ys;
-			double wy = (ys-ysi);
-			double wy1 = 1.0-wy;
-			int ofsY = yt*sizeX;
+			double wy = (ys - ysi);
+			double wy1 = 1.0 - wy;
+			int ofsY = yt * sizeX;
 
 			for (int xt = 0; xt < sizeX; xt++) {
-				double xs = xt*scaleX;     // source coordinate
+				double xs = xt * scaleX; // source coordinate
 				int xsi = (int)xs;
-				double wx = (xs-xsi);      // weight factor
+				double wx = (xs - xsi); // weight factor
 
 				int idx;
 
 				// interpolate pixel
-				double wx1 = 1.0-wx;
+				double wx1 = 1.0 - wx;
 				int x,y;
 
 				// top left
-				double w = wx1*wy1;
-				idx = getPixel(xsi, ysi)&0xff;
-				double at = (a[idx]&0xff)*w;
-				double rt = (r[idx]&0xff)*w;
-				double gt = (g[idx]&0xff)*w;
-				double bt = (b[idx]&0xff)*w;
+				double w = wx1 * wy1;
+				idx = getPixel(xsi, ysi) & 0xff;
+				double at = (a[idx] & 0xff) * w;
+				double rt = (r[idx] & 0xff) * w;
+				double gt = (g[idx] & 0xff) * w;
+				double bt = (b[idx] & 0xff) * w;
 
 				// top right
-				x = xsi+1;
+				x = xsi + 1;
 				if (x < width) {
-					w = wx*wy1;
-					idx = getPixel(x, ysi)&0xff;
-					at += (a[idx]&0xff)*w;
-					rt += (r[idx]&0xff)*w;
-					gt += (g[idx]&0xff)*w;
-					bt += (b[idx]&0xff)*w;
+					w = wx * wy1;
+					idx = getPixel(x, ysi) & 0xff;
+					at += (a[idx] & 0xff) * w;
+					rt += (r[idx] & 0xff) * w;
+					gt += (g[idx] & 0xff) * w;
+					bt += (b[idx] & 0xff) * w;
 				}  // else assume transparent black
 
 				// bottom left
-				y = ysi+1;
+				y = ysi + 1;
 				if (y < height) {
-					w = wx1*wy;
-					idx = getPixel(xsi, y)&0xff;
-					at += (a[idx]&0xff)*w;
-					rt += (r[idx]&0xff)*w;
-					gt += (g[idx]&0xff)*w;
-					bt += (b[idx]&0xff)*w;
+					w = wx1 * wy;
+					idx = getPixel(xsi, y) & 0xff;
+					at += (a[idx] & 0xff) * w;
+					rt += (r[idx] & 0xff) * w;
+					gt += (g[idx] & 0xff) * w;
+					bt += (b[idx] & 0xff) * w;
 				} // else assume transparent black
 
 				// bottom right
-				x = xsi+1;
-				y = ysi+1;
+				x = xsi + 1;
+				y = ysi + 1;
 				if ((x < width) && (y < height)) {
-					w = wx*wy;
-					idx = getPixel(x, y)&0xff;
-					at += (a[idx]&0xff)*w;
-					rt += (r[idx]&0xff)*w;
-					gt += (g[idx]&0xff)*w;
-					bt += (b[idx]&0xff)*w;
+					w = wx * wy;
+					idx = getPixel(x, y) & 0xff;
+					at += (a[idx] & 0xff) * w;
+					rt += (r[idx] & 0xff) * w;
+					gt += (g[idx] & 0xff) * w;
+					bt += (b[idx] & 0xff) * w;
 				} // else assume transparent black
 
 				int ati = (int)(at);
@@ -562,7 +566,7 @@ public class Bitmap {
 				int gti = (int)(gt);
 				int bti = (int)(bt);
 
-				trg[xt + ofsY] = ((ati<<24) | (rti<<16) | (gti << 8) | bti);
+				trg[xt + ofsY] = ((ati << 24) | (rti << 16) | (gti << 8) | bti);
 			}
 		}
 		// quantize image
@@ -576,13 +580,14 @@ public class Bitmap {
 		}
 		// create palette
 		Palette trgPal = new Palette(256);
-		for (int i=0; i<size; i++)
+		for (int i = 0; i < size; i++) {
 			trgPal.setARGB(i,ct[i]);
+		}
 
 		return new PaletteBitmap(bm, trgPal);
 	}
 
-	/** Scales a palletized Bitmap to a Bitmap with the same Palette using a given scaling filter.
+	/** Scales a palettized Bitmap to a Bitmap with the same Palette using a given scaling filter.
 	 * @param sizeX Target width
 	 * @param sizeY Target height
 	 * @param pal   Palette of the source Bitmap
@@ -590,46 +595,47 @@ public class Bitmap {
 	 * @return Scaled Bitmap which uses the same Palette as the source Bitmap.
 	 */
 	public Bitmap scaleFilter(final int sizeX, final int sizeY, final Palette pal, final Filter f) {
-		final byte r[] = pal.getR();
-		final byte g[] = pal.getG();
-		final byte b[] = pal.getB();
-		final byte a[] = pal.getAlpha();
+		final byte[] r = pal.getR();
+		final byte[] g = pal.getG();
+		final byte[] b = pal.getB();
+		final byte[] a = pal.getAlpha();
 
 		FilterOp fOp = new FilterOp();
 		fOp.setFilter(f);
-		final int trg[] = fOp.filter(this, pal, sizeX, sizeY);
+		final int[] trg = fOp.filter(this, pal, sizeX, sizeY);
 
 		final Bitmap bm = new Bitmap(sizeX, sizeY);
 
 		// select nearest colors in existing palette
-		HashMap<Integer,Integer> p = new HashMap<Integer,Integer>();
+		HashMap<Integer, Integer> p = new HashMap<Integer, Integer>();
 
-		for (int i=0; i<trg.length; i++) {
+		for (int i = 0; i < trg.length; i++) {
 			int color = trg[i];
 			int colIdx;
 			Integer idxEx = p.get(color);
-			if (idxEx != null)
+			if (idxEx != null) {
 				colIdx = idxEx;
-			else {
+			} else {
 				colIdx = 0;
 				int minDistance = 0xffffff; // init > 0xff*0xff*4 = 0x03f804
-				int alpha = (color >> 24)& 0xff;
-				int red   = (color >> 16)& 0xff;
-				int green = (color >>  8)& 0xff;
-				int blue  =  color       & 0xff;
-				for (int idx=0; idx<pal.getSize(); idx++) {
+				int alpha = (color >> 24) & 0xff;
+				int red   = (color >> 16) & 0xff;
+				int green = (color >>  8) & 0xff;
+				int blue  =  color        & 0xff;
+				for (int idx = 0; idx < pal.getSize(); idx++) {
 					// distance vector (skip sqrt)
-					int ad = alpha - (a[idx]&0xff);
-					int rd = red   - (r[idx]&0xff);
-					int gd = green - (g[idx]&0xff);
-					int bd = blue  - (b[idx]&0xff);
-					int distance = rd*rd+gd*gd+bd*bd+ad*ad;
+					int ad = alpha - (a[idx] & 0xff);
+					int rd = red   - (r[idx] & 0xff);
+					int gd = green - (g[idx] & 0xff);
+					int bd = blue  - (b[idx] & 0xff);
+					int distance = rd * rd + gd * gd + bd * bd + ad * ad;
 					// new minimum distance ?
 					if ( distance < minDistance) {
 						colIdx = idx;
 						minDistance = distance;
-						if (minDistance == 0)
+						if (minDistance == 0) {
 							break;
+						}
 					}
 				}
 				p.put(color, colIdx);
@@ -640,7 +646,7 @@ public class Bitmap {
 		return bm;
 	}
 
-	/** Scales a palletized Bitmap to a Bitmap with a new quantized Palette using a given scaling filter.
+	/** Scales a palettized Bitmap to a Bitmap with a new quantized Palette using a given scaling filter.
 	 * @param sizeX  Target width
 	 * @param sizeY  Target height
 	 * @param pal    Palette of the source Bitmap
@@ -651,12 +657,12 @@ public class Bitmap {
 	public PaletteBitmap scaleFilter(final int sizeX, final int sizeY, final Palette pal, final Filter f, final boolean dither) {
 		FilterOp fOp = new FilterOp();
 		fOp.setFilter(f);
-		final int trg[] = fOp.filter(this, pal, sizeX, sizeY);
+		final int[] trg = fOp.filter(this, pal, sizeX, sizeY);
 
 		// quantize image
 		QuantizeFilter qf = new QuantizeFilter();
 		final Bitmap bm = new Bitmap(sizeX, sizeY);
-		int ct[] = qf.quantize(trg, bm.buffer, sizeX, sizeY, 255, dither, dither);
+		int[] ct = qf.quantize(trg, bm.buffer, sizeX, sizeY, 255, dither, dither);
 		int size = ct.length;
 		if (size > 255) {
 			size = 255;
@@ -664,8 +670,9 @@ public class Bitmap {
 		}
 		// create palette
 		Palette trgPal = new Palette(256);
-		for (int i=0; i<size; i++)
-			trgPal.setARGB(i,ct[i]);
+		for (int i = 0; i < size; i++) {
+			trgPal.setARGB(i, ct[i]);
+		}
 
 		return new PaletteBitmap(bm, trgPal);
 	}

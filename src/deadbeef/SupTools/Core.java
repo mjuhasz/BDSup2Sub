@@ -11,7 +11,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.util.ArrayList;
-
+import java.util.Iterator;
 import javax.swing.JFrame;
 
 import deadbeef.Filters.Filter;
@@ -1800,14 +1800,7 @@ public class Core  extends Thread {
 			// fix erase patches
 			final double fx = factX * fsXNew / fsXOld;
 			final double fy = factY * fsYNew / fsYOld;
-			if (subPictures[i].erasePatch != null) {
-				for (ErasePatch ep : subPictures[i].erasePatch) {
-					ep.x = (int)(ep.x * fx + 0.5);
-					ep.y = (int)(ep.y * fy + 0.5);
-					ep.w = (int)(ep.w * fx + 0.5);
-					ep.h = (int)(ep.h * fy + 0.5);
-				}
-			}
+			ArrayList<ErasePatch> erasePatches = subPictures[i].erasePatch;			if (erasePatches != null) {				for (int j = 0; j < erasePatches.size(); j++) {					ErasePatch ep = erasePatches.get(j);					int x = (int)(ep.x * fx + 0.5);					int y = (int)(ep.y * fy + 0.5);					int width = (int)(ep.width * fx + 0.5);					int height = (int)(ep.height * fy + 0.5);					erasePatches.set(j, new ErasePatch(x, y, width, height));				}			}
 		}
 
 		// 2nd run: validate times (not fully necessary, but to avoid overlap due to truncation
@@ -1956,7 +1949,7 @@ public class Core  extends Thread {
 				trgBitmapUnpatched = new Bitmap(tBm);
 				int col = tPal.getTransparentIndex();
 				for (ErasePatch ep : picTrg.erasePatch)
-					tBm.fillRectangularWithColorIndex(ep.x, ep.y, ep.w, ep.h, (byte)col);
+					tBm.fillRectangularWithColorIndex(ep.x, ep.y, ep.width, ep.height, (byte)col);
 			} else
 				trgBitmapUnpatched = tBm;
 			trgBitmap = tBm;
@@ -3042,7 +3035,7 @@ public class Core  extends Thread {
 				Bitmap trgBitmapPatched = new Bitmap(trgBitmapUnpatched);
 				int col = trgPal.getTransparentIndex();
 				for (ErasePatch ep : pic.erasePatch)
-					trgBitmapPatched.fillRectangularWithColorIndex(ep.x, ep.y, ep.w, ep.h, (byte)col);
+					trgBitmapPatched.fillRectangularWithColorIndex(ep.x, ep.y, ep.width, ep.height, (byte)col);
 				return trgBitmapPatched.getImage(trgPal.getColorModel());
 			} else return trgBitmapUnpatched.getImage(trgPal.getColorModel());
 		}
