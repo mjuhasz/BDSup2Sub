@@ -42,16 +42,16 @@ import deadbeef.Tools.ToolBox;
  * This class contains the core functionality of BDSup2Sub.<br>
  * It's meant to be used from the command line as well as from the GUI.
  *
- * @author 0xdeadbeef
+ * @author 0xdeadbeef, mjuhasz
  */
 public class Core  extends Thread {
 
 	/** Program name */
 	final static String progName = "BDSup2Sub";
 	/** Program name to display in the main window, in the log, in the command line etc.  */
-	final static String progNameVer = progName + " 4.0.0";
+	final static String progNameVer = progName + " 4.0.1";
 	/** Revision and release date for display in the log windows etc. */
-	final static String authorDate = "0xdeadbeef 02-12/2009";
+	final static String authorDate = "0xdeadbeef, mjuhasz 06-01-2012.";
 	/** Name of the ini file to load and store properties */
 	final static String iniName = "bdsup2sup.ini";
 
@@ -459,7 +459,7 @@ public class Core  extends Thread {
 		{"Uzbek",        "uz", "uzb"},
 		{"Venda",        "ve", "ven"},
 		{"Vietnamese",   "vi", "vie"},
-		{"Volapük",      "vo", "vol"},
+		{"VolapÃ¼k",      "vo", "vol"},
 		{"Welsh",        "cy", "cym"},
 		{"Walloon",      "wa", "wln"},
 		{"Wolof",        "wo", "wol"},

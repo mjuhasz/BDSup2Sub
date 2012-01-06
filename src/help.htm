@@ -5,7 +5,7 @@
 <h1><a name="Intro"></a>BDSup2Sub</h1>
 <h2><strong>A tool to convert and tweak bitmap based
 subtitle streams</strong></h2>
-<h3>Version 4.0.0 &nbsp;released 14.12.2009</h3>
+<h3>Version 4.0.1 &nbsp;released 06.01.2012</h3>
 BDSup2Sub is a tool I wrote initially to convert captions
 demuxed from a Blu-Ray transport stream (M2TS) into the DVD VobSub
 format (SUB/IDX) used by many DVD authoring tools - hence the
@@ -2176,5 +2176,11 @@ either missing or set to false.</li>
 the file browser of the export dialog could lead to erratic behavior if
 the path contained dots. Generally, path separators were ignored when
 stripping the extension from file names.</li>
+</ul>
+06.01.2012: 4.0.0 -&gt; 4.0.1<br>
+<ul>
+<li>Fixed: Flashing subtitles - if the end time of the current subtitle picture is beyond the start time of the next one the subtitle was set to zero length.</li>
+<li>Fixed: Resolution incorrectly read from the dvd ifo file in cases other than 720x576/720x480 16:9.</li>
+<li>Fixed: Incorrect (too short) subtitle duration for dvd subtitle frames using subtitle effects</li>
 </ul>
 </body></html>

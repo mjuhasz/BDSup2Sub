@@ -29,7 +29,7 @@ import deadbeef.Tools.ToolBox;
 /**
  * Handling of DVD SUP/IFO streams.
  *
- * @author 0xdeadbeef
+ * @author 0xdeadbeef, mjuhasz
  */
 class SupDVD implements Substream, SubstreamDVD {
 

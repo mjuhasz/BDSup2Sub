@@ -32,7 +32,7 @@ import deadbeef.Tools.ToolBox;
 /**
  * Handling of SUB/IDX (VobSub) streams.
  *
- * @author 0xdeadbeef
+ * @author 0xdeadbeef, mjuhasz
  */
 class SubDVD implements Substream, SubstreamDVD {
 
