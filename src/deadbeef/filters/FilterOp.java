@@ -31,28 +31,28 @@ import deadbeef.bitmap.Palette;
 
 public class FilterOp {
 
-	private class SubSamplingData{
+	private class SubSamplingData {
 		/** Number of samples */
-		private final int[] numSamples;
+		private final int[] sampleCount;
 		/** 2D matrix of pixel positions */
-		private final int[] pixelPos;
+		private final int[] pixelPositions;
 		/** 2D matrix of weight factors */
-		private final float[] weight;
+		private final float[] weightFactors;
 		/** Width of 2D matrices pixelPos and weight */
 		private final int matrixWidth;
 
 		/**
 		 * Private storage class to hold precalculated values for subsampling or supersampling
-		 * @param s   Number of samples contributing to the pixel
-		 * @param p   2D matrix of pixel positions
-		 * @param w   2D matrix of weight factors
-		 * @param num Width of 2D matrices pixelPos and weight
+		 * @param sampleCount   Number of samples contributing to the pixel
+		 * @param pixelPositions   2D matrix of pixel positions
+		 * @param weightFactors   2D matrix of weight factors
+		 * @param matrixWidth Width of 2D matrices pixelPos and weight
 		 */
-		private SubSamplingData(final int[] s, final int[] p, final float[] w, final int num) {
-			numSamples = s;
-			pixelPos = p;
-			weight = w;
-			matrixWidth = num;
+		private SubSamplingData(int[] sampleCount, int[] pixelPositions, float[] weightFactors, int matrixWidth) {
+			this.sampleCount = sampleCount;
+			this.pixelPositions = pixelPositions;
+			this.weightFactors = weightFactors;
+			this.matrixWidth = matrixWidth;
 		}
 	}
 
@@ -70,51 +70,43 @@ public class FilterOp {
 	private SubSamplingData verticalSubsamplingData;
 	private Filter filter = new MitchellFilter();
 
-	/**
-	 * Get current filter
-	 * @return Current filter
-	 */
 	public Filter getFilter() {
 		return filter;
 	}
 
-	/**
-	 * Set current filter
-	 * @param filter Filter
-	 */
 	public void setFilter(final Filter filter) {
 		this.filter = filter;
 	}
 
 	/**
-	 * @param src Source bitmap
-	 * @param pal Palette
-	 * @param w Destination width
-	 * @param h Destination height
+	 * @param source Source bitmap
+	 * @param palette Palette
+	 * @param width Destination width
+	 * @param height Destination height
 	 * @return Destination integer array (filled with ARGB samples)
 	 */
-	public int[] filter(final Bitmap src, final Palette pal, final int w, final int h) {
-		dstWidth = w;
-		dstHeight = h;
-		srcWidth  = src.getWidth();
-		srcHeight = src.getHeight();
+	public int[] filter(Bitmap source, Palette palette, int width, int height) {
+		dstWidth = width;
+		dstHeight = height;
+		srcWidth  = source.getWidth();
+		srcHeight = source.getHeight();
 
-		r = pal.getR();
-		g = pal.getG();
-		b = pal.getB();
-		a = pal.getAlpha();
+		r = palette.getR();
+		g = palette.getG();
+		b = palette.getB();
+		a = palette.getAlpha();
 
-		final float xscale = (float)(dstWidth - 1) / (float)(srcWidth - 1);
-		final float yscale = (float)(dstHeight - 1) / (float)(srcHeight - 1);
+		float xscale = (float)(dstWidth - 1) / (float)(srcWidth - 1);
+		float yscale = (float)(dstHeight - 1) / (float)(srcHeight - 1);
 
 		// Precalculate  subsampling/supersampling
 		horizontalSubsamplingData = createSubSampling(srcWidth, dstWidth, xscale);
 		verticalSubsamplingData = createSubSampling(srcHeight, dstHeight, yscale);
 
-		final int[] workPixels = new int[srcHeight*dstWidth];
-		filterHorizontally(src.getInternalBuffer(), workPixels);
+		int[] workPixels = new int[srcHeight * dstWidth];
+		filterHorizontally(source.getInternalBuffer(), workPixels);
 
-		final int[] outPixels = new int[dstHeight*dstWidth];
+		int[] outPixels = new int[dstHeight * dstWidth];
 		filterVertically(workPixels, outPixels);
 
 		return outPixels;
@@ -124,62 +116,67 @@ public class FilterOp {
 	 * Create data structure holding precalculated values for subsampling or supersampling
 	 * @param srcSize Number of pixels in source data line (might be image line or column)
 	 * @param dstSize Number of pixels in destination data line (might be image line or column)
-	 * @param scale   Scaling factor
+	 * @param scalingFactor   Scaling factor
 	 * @return Data structure holding precalculated values for subsampling or supersampling
 	 */
-	private SubSamplingData createSubSampling(final int srcSize, final int dstSize, final float scale) {
-		final int[] arrN = new int[dstSize];
-		final int numContributors;
-		final float[] arrWeight;
-		final int[] arrPixel;
+	private SubSamplingData createSubSampling(int srcSize, int dstSize, float scalingFactor) {
+		int[] arrN = new int[dstSize];
+		int numContributors;
+		float[] arrWeight;
+		int[] arrPixel;
 
-		final float fwidth = filter.getRadius();
+		float fwidth = filter.getRadius();
 
-		if (scale < 1.0f) {
+		if (scalingFactor < 1.0f) {
 			// scale down -> subsampling
-			final float width = fwidth / scale;
+			float width = fwidth / scalingFactor;
 			numContributors= (int)(width * 2.0f + 2); // Heinz: added 1 to be save with the ceilling
-			arrWeight= new float[dstSize * numContributors];
-			arrPixel= new int[dstSize * numContributors];
+			arrWeight = new float[dstSize * numContributors];
+			arrPixel = new int[dstSize * numContributors];
 
-			final float fNormFac = (float)(1f / (Math.ceil(width) / fwidth));
-			//
-			for (int i= 0; i < dstSize; i++) {
+			float fNormFac = (float)(1f / (Math.ceil(width) / fwidth));
+			for (int i = 0; i < dstSize; i++) {
 				arrN[i]= 0;
-				final int subindex = i * numContributors;
-				final float center = i / scale;
-				final int left = (int)Math.floor(center - width);
-				final int right = (int)Math.ceil(center + width);
+				int subindex = i * numContributors;
+				float center = i / scalingFactor;
+				int left = (int)Math.floor(center - width);
+				int right = (int)Math.ceil(center + width);
 				for (int j=left; j <= right; j++) {
 					float weight;
 					weight= filter.value((center - j) * fNormFac);
 
-					if (weight == 0.0f)
+					if (weight == 0.0f) {
 						continue;
+					}
 					int n;
-					if (j < 0)
+					if (j < 0) {
 						n = -j;
-					else if (j >= srcSize)
+					} else if (j >= srcSize) {
 						n = srcSize - j + srcSize - 1;
-					else
+					} else {
 						n = j;
+					}
 
 					int k = arrN[i];
 					arrN[i]+= 1;
-					if (n < 0 || n >= srcSize)
-						weight= 0.0f;// Flag that cell should not be used
+					if (n < 0 || n >= srcSize) {
+						weight = 0.0f; // Flag that cell should not be used
+					}
 
-					arrPixel[subindex +k]= n;
-					arrWeight[subindex + k]= weight;
+					arrPixel[subindex + k] = n;
+					arrWeight[subindex + k] = weight;
 				}
+				
 				// normalize the filter's weight's so the sum equals to 1.0, very important for avoiding box type of artifacts
-				final int max= arrN[i];
+				int max= arrN[i];
 				float tot= 0;
-				for (int k= 0; k < max; k++)
+				for (int k = 0; k < max; k++) {
 					tot+= arrWeight[subindex + k];
+				}
 				if (tot != 0f) { // 0 should never happen except bug in filter
-					for (int k= 0; k < max; k++)
-						arrWeight[subindex + k]/= tot;
+					for (int k = 0; k < max; k++) {
+						arrWeight[subindex + k] /= tot;
+					}
 				}
 			}
 		} else {
@@ -188,41 +185,47 @@ public class FilterOp {
 			arrWeight = new float[dstSize * numContributors];
 			arrPixel = new int[dstSize * numContributors];
 			//
-			for (int i= 0; i < dstSize; i++) {
-				arrN[i]= 0;
-				final int subindex = i * numContributors;
-				final float center = i / scale;
-				final int left = (int)Math.floor(center - fwidth);
-				final int right = (int)Math.ceil(center + fwidth);
-				for (int j= left; j <= right; j++) {
-					float weight= filter.value(center - j);
-					if (weight == 0.0f)
+			for (int i = 0; i < dstSize; i++) {
+				arrN[i] = 0;
+				int subindex = i * numContributors;
+				float center = i / scalingFactor;
+				int left = (int)Math.floor(center - fwidth);
+				int right = (int)Math.ceil(center + fwidth);
+				for (int j = left; j <= right; j++) {
+					float weight = filter.value(center - j);
+					if (weight == 0.0f) {
 						continue;
+					}
 					int n;
-					if (j < 0)
+					if (j < 0) {
 						n = -j;
-					else if (j >= srcSize)
+					} else if (j >= srcSize) {
 						n = srcSize - j + srcSize - 1;
-					else
+					} else {
 						n = j;
+					}
 
-					int k= arrN[i];
-					arrN[i]+= 1;
-					if (n < 0 || n >= srcSize)
-						weight= 0.0f;// Flag that cell should not be used
+					int k = arrN[i];
+					arrN[i] += 1;
+					if (n < 0 || n >= srcSize) {
+						weight = 0.0f; // Flag that cell should not be used
+					}
 
-					arrPixel[subindex +k] = n;
+					arrPixel[subindex + k] = n;
 					arrWeight[subindex + k] = weight;
 				}
+				
 				// normalize the filter's weights so the sum equals to 1.0, very important for avoiding box type of artifacts
-				final int max= arrN[i];
-				float tot= 0;
-				for (int k= 0; k < max; k++)
-					tot+= arrWeight[subindex + k];
-				assert tot!=0:"should never happen except bug in filter";
+				int max = arrN[i];
+				float tot = 0;
+				for (int k = 0; k < max; k++) {
+					tot += arrWeight[subindex + k];
+				}
+				assert tot != 0:"should never happen except bug in filter";
 				if (tot != 0f) {
-					for (int k= 0; k < max; k++)
-						arrWeight[subindex + k]/= tot;
+					for (int k = 0; k < max; k++) {
+						arrWeight[subindex + k] /= tot;
+					}
 				}
 			}
 		}
@@ -234,21 +237,21 @@ public class FilterOp {
 	 * @param src Integer array holding result from filtering horizontally
 	 * @param trg Integer array for target bitmap
 	 */
-	private void filterVertically(final int[] src, final int[] trg) {
+	private void filterVertically(int[] src, int[] trg) {
 		for (int x = 0; x < dstWidth; x++) {
-			for (int y = dstHeight-1; y >=0 ; y--) {
-				final int yTimesNumContributors = y * verticalSubsamplingData.matrixWidth;
-				final int max = verticalSubsamplingData.numSamples[y];
-				final int ofsY = dstWidth*y;
+			for (int y = dstHeight-1; y >= 0 ; y--) {
+				int yTimesNumContributors = y * verticalSubsamplingData.matrixWidth;
+				int max = verticalSubsamplingData.sampleCount[y];
+				int ofsY = dstWidth * y;
 				float red   = 0;
 				float green = 0;
 				float blue  = 0;
 				float alpha = 0;
 
 				int index = yTimesNumContributors;
-				for (int j= max-1; j >=0 ; j--) {
-					final int color = src[x + dstWidth*verticalSubsamplingData.pixelPos[index]];
-					final float w = verticalSubsamplingData.weight[index];
+				for (int j = max-1; j >= 0 ; j--) {
+					int color = src[x + dstWidth * verticalSubsamplingData.pixelPositions[index]];
+					float w = verticalSubsamplingData.weightFactors[index];
 					alpha += ((color >> 24)&0xff) * w;
 					red   += ((color >> 16)&0xff) * w;
 					green += ((color >>  8)&0xff) * w;
@@ -256,25 +259,29 @@ public class FilterOp {
 					index++;
 				}
 				int ri = (int)(red);
-				if (ri < 0)
+				if (ri < 0) {
 					ri = 0;
-				else if (ri > 255)
+				} else if (ri > 255) {
 					ri = 255;
+				}
 				int gi = (int)(green);
-				if (gi < 0)
+				if (gi < 0) {
 					gi = 0;
-				else if (gi > 255)
+				} else if (gi > 255) {
 					gi = 255;
+				}
 				int bi = (int)(blue);
-				if (bi < 0)
+				if (bi < 0) {
 					bi = 0;
-				else if (bi > 255)
+				} else if (bi > 255) {
 					bi = 255;
+				}
 				int ai = (int)(alpha);
-				if (ai < 0)
+				if (ai < 0) {
 					ai = 0;
-				else if (ai > 255)
+				} else if (ai > 255) {
 					ai = 255;
+				}
 
 				trg[x + ofsY] = ( (ai<<24) | (ri<<16) | (gi << 8) | bi);
 			}
@@ -286,23 +293,23 @@ public class FilterOp {
 	 * @param src Byte array holding source image data
 	 * @param trg Integer array to store temporary result from filtering horizontally
 	 */
-	private void filterHorizontally(final byte[] src, final int[] trg) {
+	private void filterHorizontally(byte[] src, int[] trg) {
 		for (int k = 0; k < srcHeight; k++) {
-			final int destOfsY = dstWidth*k;
-			final int srcOfsY = srcWidth*k;
-			for (int i = dstWidth-1; i>=0 ; i--) {
+			int destOfsY = dstWidth * k;
+			int srcOfsY = srcWidth * k;
+			for (int i = dstWidth-1; i >= 0 ; i--) {
 				float red   = 0;
 				float green = 0;
 				float blue  = 0;
 				float alpha = 0;
 
-				final int max = horizontalSubsamplingData.numSamples[i];
+				int max = horizontalSubsamplingData.sampleCount[i];
 				int index = i * horizontalSubsamplingData.matrixWidth;
 
 				for (int j = max-1; j >= 0; j--) {
-					final int ofsX = horizontalSubsamplingData.pixelPos[index];
-					final int palIdx = src[srcOfsY+ofsX] & 0xff;
-					final float w = horizontalSubsamplingData.weight[index];
+					int ofsX = horizontalSubsamplingData.pixelPositions[index];
+					int palIdx = src[srcOfsY+ofsX] & 0xff;
+					float w = horizontalSubsamplingData.weightFactors[index];
 					red   += (r[palIdx] & 0xff) * w;
 					green += (g[palIdx] & 0xff) * w;
 					blue  += (b[palIdx] & 0xff) * w;
@@ -310,29 +317,32 @@ public class FilterOp {
 					index++;
 				}
 				int ri = (int)(red);
-				if (ri < 0)
+				if (ri < 0) {
 					ri = 0;
-				else if (ri > 255)
+				} else if (ri > 255) {
 					ri = 255;
+				}
 				int gi = (int)(green);
-				if (gi < 0)
+				if (gi < 0) {
 					gi = 0;
-				else if (gi > 255)
+				} else if (gi > 255) {
 					gi = 255;
+				}
 				int bi = (int)(blue);
-				if (bi < 0)
+				if (bi < 0) {
 					bi = 0;
-				else if (bi > 255)
+				} else if (bi > 255) {
 					bi = 255;
+				}
 				int ai = (int)(alpha);
-				if (ai < 0)
+				if (ai < 0) {
 					ai = 0;
-				else if (ai > 255)
+				} else if (ai > 255) {
 					ai = 255;
+				}
 
 				trg[i + destOfsY] = ( (ai<<24) | (ri<<16) | (gi << 8) | bi);
 			}
 		}
 	}
-
 }

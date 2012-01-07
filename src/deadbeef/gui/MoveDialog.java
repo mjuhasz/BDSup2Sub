@@ -8,7 +8,11 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Point;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 
 import javax.swing.ButtonGroup;
@@ -24,6 +28,8 @@ import javax.swing.UIManager;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import deadbeef.core.CaptionMoveModeX;
+import deadbeef.core.CaptionMoveModeY;
 import deadbeef.core.Core;
 import deadbeef.core.CoreException;
 import deadbeef.supstream.SubPicture;
@@ -58,87 +64,86 @@ public class MoveDialog extends JDialog {
 
 	private static final long serialVersionUID = 1L;
 
-	private JPanel jContentPane = null;
+	private JPanel jContentPane;
 
-	private JPanel jPanelUp = null;
+	private JPanel jPanelUp;
 
-	private JPanel jPanelLayout = null;
+	private JPanel jPanelLayout;
 
-	private JPanel jPanelOffsets = null;
+	private JPanel jPanelOffsets;
 
-	private JPanel jPanelMove = null;
+	private JPanel jPanelMove;
 
-	private JPanel jPanelButtons = null;
+	private JPanel jPanelButtons;
 
-	private JLabel jLabelInfo = null;
+	private JLabel jLabelInfo;
 
-	private JButton jButtonPrev = null;
+	private JButton jButtonPrev;
 
-	private JButton jButtonNext = null;
+	private JButton jButtonNext;
 
-	private EditPane jPanelPreview = null;
+	private EditPane jPanelPreview;
 
-	private JLabel jLabelRatio = null;
+	private JLabel jLabelRatio;
 
-	private JLabel jLabelOffsetY = null;
+	private JLabel jLabelOffsetY;
 
-	private JButton jButtonCancel = null;
+	private JButton jButtonCancel;
 
-	private JButton jButtonOk = null;
+	private JButton jButtonOk;
 
-	private JTextField jTextFieldRatio = null;
+	private JTextField jTextFieldRatio;
 
-	private JTextField jTextFieldOffsetY = null;
+	private JTextField jTextFieldOffsetY;
 
-	private JButton jButton21_9 = null;
+	private JButton jButton21_9;
 
-	private JLabel jLabelRatio1 = null;
+	private JLabel jLabelRatio1;
 
-	private JButton jButton240_1 = null;
+	private JButton jButton240_1;
 
-	private JButton jButton235_1 = null;
+	private JButton jButton235_1;
 
-	private JRadioButton jRadioButtonKeepY = null;
+	private JRadioButton jRadioButtonKeepY;
 
-	private JRadioButton jRadioButtonInside = null;
+	private JRadioButton jRadioButtonInside;
 
-	private JRadioButton jRadioButtonOutside = null;
+	private JRadioButton jRadioButtonOutside;
 
-	private ButtonGroup radioButtonsY = null;
+	private ButtonGroup radioButtonsY;
 
-	private ButtonGroup radioButtonsX = null;
+	private ButtonGroup radioButtonsX;
 
-	private JPanel jPanelCrop = null;
+	private JPanel jPanelCrop;
 
-	private JLabel jLabelCropOfsY = null;
+	private JLabel jLabelCropOfsY;
 
-	private JTextField jTextFieldCropOfsY = null;
+	private JTextField jTextFieldCropOfsY;
 
-	private JButton jButtonCropBars = null;
+	private JButton jButtonCropBars;
 
-	private JRadioButton jRadioButtonKeepX = null;
+	private JRadioButton jRadioButtonKeepX;
 
-	private JRadioButton jRadioButtonLeft = null;
+	private JRadioButton jRadioButtonLeft;
 
-	private JRadioButton jRadioButtonRight = null;
+	private JRadioButton jRadioButtonRight;
 
-	private JLabel jLabelOffsetX = null;
+	private JLabel jLabelOffsetX;
 
-	private JTextField jTextFieldOffsetX = null;
+	private JTextField jTextFieldOffsetX;
 
-	private JRadioButton jRadioButtonCenter = null;
+	private JRadioButton jRadioButtonCenter;
 
-	// user declared variables
 
 	/** width of preview pane */
-	private final static int miniWidth = 384;
+	private static final int MIN_WIDTH = 384;
 	/** height of preview pane */
-	private final static int miniHeight = 216;
+	private static final int MIN_HEIGHT = 216;
 
 	/** target screen ratio */
-	private static double screenRatioTrg = 21.0/9;
+	private static double aspectRatioTrg = 21.0/9;
 	/** aspect ratio of the screen */
-	private static final double screenRatio = 16.0/9;
+	private static final double ASPECT_RATIO = 16.0/9;
 
 	/** background color for errors */
 	private final Color errBgnd = new Color(0xffe1acac);
@@ -146,12 +151,12 @@ public class MoveDialog extends JDialog {
 	private final Color okBgnd = UIManager.getColor("TextField.background");
 
 	/** image of subpicture to display in preview pane */
-	private BufferedImage image = null;
+	private BufferedImage image;
 
 	/** move mode in Y direction */
-	private Core.MoveModeY moveModeY = Core.MoveModeY.KEEP;
+	private CaptionMoveModeY moveModeY = CaptionMoveModeY.KEEP_POSITION;
 	/** move mode in X direction */
-	private Core.MoveModeX moveModeX = Core.MoveModeX.KEEP;
+	private CaptionMoveModeX moveModeX = CaptionMoveModeX.KEEP_POSITION;
 
 	/** original X position */
 	private int originalX;
@@ -173,8 +178,8 @@ public class MoveDialog extends JDialog {
 	/** semaphore to disable actions while changing component properties */
 	private volatile boolean isReady = false;
 
-	private final static Dimension dimLabel = new Dimension(70,14);
-	private final static Dimension dimText  = new Dimension(40,20);
+	private static final Dimension DIMENSION_LABEL = new Dimension(70,14);
+	private static final Dimension DIMENSION_TEXT  = new Dimension(40,20);
 
 
 	/**
@@ -184,7 +189,6 @@ public class MoveDialog extends JDialog {
 	 */
 	public MoveDialog(Frame owner, boolean modal) {
 		super(owner, modal);
-		// TODO Auto-generated constructor stub
 		initialize();
 		// center dialog
 		Point p = owner.getLocation();
@@ -196,18 +200,18 @@ public class MoveDialog extends JDialog {
 		moveModeX = Core.getMoveModeX();
 		moveModeY = Core.getMoveModeY();
 		switch (moveModeY) {
-			case KEEP:
+			case KEEP_POSITION:
 				jRadioButtonKeepY.setSelected(true);
 				break;
-			case INSIDE:
+			case MOVE_INSIDE_BOUNDS:
 				jRadioButtonInside.setSelected(true);
 				break;
-			case OUTSIDE:
+			case MOVE_OUTSIDE_BOUNDS:
 				jRadioButtonOutside.setSelected(true);
 				break;
 		}
 		switch (moveModeX) {
-			case KEEP:
+			case KEEP_POSITION:
 				jRadioButtonKeepX.setSelected(true);
 				break;
 			case LEFT:
@@ -220,7 +224,7 @@ public class MoveDialog extends JDialog {
 				jRadioButtonCenter.setSelected(true);
 				break;
 		}
-		//
+
 		radioButtonsY = new ButtonGroup();
 		radioButtonsY.add( jRadioButtonKeepY );
 		radioButtonsY.add( jRadioButtonInside );
@@ -230,14 +234,13 @@ public class MoveDialog extends JDialog {
 		radioButtonsX.add( jRadioButtonLeft);
 		radioButtonsX.add( jRadioButtonRight);
 		radioButtonsX.add( jRadioButtonCenter);
-		//
-		jTextFieldRatio.setText(ToolBox.formatDouble(screenRatioTrg));
+
+		jTextFieldRatio.setText(ToolBox.formatDouble(aspectRatioTrg));
 		jTextFieldOffsetY.setText(""+offsetY);
 		jTextFieldOffsetX.setText(""+offsetX);
-		//
-		jTextFieldCropOfsY.setText(ToolBox.formatDouble(screenRatioTrg));
+
+		jTextFieldCropOfsY.setText(ToolBox.formatDouble(aspectRatioTrg));
 		jTextFieldCropOfsY.setText(""+cropOfsY);
-		//
 	}
 
 	/**
@@ -247,9 +250,9 @@ public class MoveDialog extends JDialog {
 		this.setSize(392, 546);
 		this.setTitle("Move all captions");
 		this.setContentPane(getJContentPane());
-		this.addWindowListener(new java.awt.event.WindowAdapter() {
+		this.addWindowListener(new WindowAdapter() {
 			@Override
-			public void windowClosing(java.awt.event.WindowEvent e) {
+			public void windowClosing(WindowEvent e) {
 				dispose();
 			}
 		});
@@ -416,10 +419,10 @@ public class MoveDialog extends JDialog {
 			gridBagTextRatio.gridx = 1;
 			jLabelOffsetY = new JLabel();
 			jLabelOffsetY.setText("Offset Y");
-			jLabelOffsetY.setPreferredSize(dimLabel);
-			jLabelOffsetY.setSize(dimLabel);
-			jLabelOffsetY.setMinimumSize(dimLabel);
-			jLabelOffsetY.setMaximumSize(dimLabel);
+			jLabelOffsetY.setPreferredSize(DIMENSION_LABEL);
+			jLabelOffsetY.setSize(DIMENSION_LABEL);
+			jLabelOffsetY.setMinimumSize(DIMENSION_LABEL);
+			jLabelOffsetY.setMaximumSize(DIMENSION_LABEL);
 			GridBagConstraints gridBagLabelRatio = new GridBagConstraints();
 			gridBagLabelRatio.gridx = 0;
 			gridBagLabelRatio.anchor = GridBagConstraints.WEST;
@@ -429,10 +432,10 @@ public class MoveDialog extends JDialog {
 			gridBagLabelRatio.gridy = 1;
 			jLabelRatio = new JLabel();
 			jLabelRatio.setText("Aspect ratio");
-			jLabelRatio.setPreferredSize(dimLabel);
-			jLabelRatio.setSize(dimLabel);
-			jLabelRatio.setMinimumSize(dimLabel);
-			jLabelRatio.setMaximumSize(dimLabel);
+			jLabelRatio.setPreferredSize(DIMENSION_LABEL);
+			jLabelRatio.setSize(DIMENSION_LABEL);
+			jLabelRatio.setMinimumSize(DIMENSION_LABEL);
+			jLabelRatio.setMaximumSize(DIMENSION_LABEL);
 			jPanelOffsets = new JPanel();
 			jPanelOffsets.setLayout(new GridBagLayout());
 			jPanelOffsets.setBorder(BorderFactory.createTitledBorder(null, "Screen Ratio", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, new Font("Tahoma", Font.PLAIN, 11), new Color(0, 70, 213)));
@@ -474,10 +477,10 @@ public class MoveDialog extends JDialog {
 			gridBagLabelOfsX.gridy = 4;
 			jLabelOffsetX = new JLabel();
 			jLabelOffsetX.setText("Offset X");
-			jLabelOffsetX.setPreferredSize(dimLabel);
-			jLabelOffsetX.setSize(dimLabel);
-			jLabelOffsetX.setMinimumSize(dimLabel);
-			jLabelOffsetX.setMaximumSize(dimLabel);
+			jLabelOffsetX.setPreferredSize(DIMENSION_LABEL);
+			jLabelOffsetX.setSize(DIMENSION_LABEL);
+			jLabelOffsetX.setMinimumSize(DIMENSION_LABEL);
+			jLabelOffsetX.setMaximumSize(DIMENSION_LABEL);
 			GridBagConstraints gridBagTextOfsY = new GridBagConstraints();
 			gridBagTextOfsY.anchor = GridBagConstraints.WEST;
 			gridBagTextOfsY.insets = new Insets(0, 0, 0, 0);
@@ -585,10 +588,11 @@ public class MoveDialog extends JDialog {
 			jButtonPrev.setText("  <  ");
 			jButtonPrev.setMnemonic(KeyEvent.VK_LEFT);
 			jButtonPrev.setToolTipText("Lose changes and skip to previous frame");
-			jButtonPrev.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
-					if (index > 0)
+			jButtonPrev.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					if (index > 0) {
 						setIndex(index-1);
+					}
 				}
 			});
 		}
@@ -606,10 +610,11 @@ public class MoveDialog extends JDialog {
 			jButtonNext.setText("  >  ");
 			jButtonNext.setMnemonic(KeyEvent.VK_RIGHT);
 			jButtonNext.setToolTipText("Lose changes and skip to next frame");
-			jButtonNext.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
-					if (index < Core.getNumFrames()-1)
+			jButtonNext.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					if (index < Core.getNumFrames()-1) {
 						setIndex(index+1);
+					}
 				}
 			});
 		}
@@ -625,7 +630,7 @@ public class MoveDialog extends JDialog {
 		if (jPanelPreview == null) {
 			jPanelPreview = new EditPane();
 			jPanelPreview.setLayout(new GridBagLayout());
-			Dimension dim = new Dimension(miniWidth, miniHeight);
+			Dimension dim = new Dimension(MIN_WIDTH, MIN_HEIGHT);
 			jPanelPreview.setPreferredSize(dim);
 			jPanelPreview.setSize(dim);
 			jPanelPreview.setMinimumSize(dim);
@@ -645,8 +650,8 @@ public class MoveDialog extends JDialog {
 			jButtonCancel.setText("Cancel");
 			jButtonCancel.setMnemonic('c');
 			jButtonCancel.setToolTipText("Lose changes and return");
-			jButtonCancel.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jButtonCancel.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					dispose();
 				}
 			});
@@ -666,8 +671,8 @@ public class MoveDialog extends JDialog {
 			jButtonOk.setMnemonic('m');
 			jButtonOk.setPreferredSize(new Dimension(79, 23));
 			jButtonOk.setToolTipText("Save changes and return");
-			jButtonOk.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jButtonOk.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					Core.setCropOfsY(cropOfsY);
 					Core.setMoveModeX(moveModeX);
 					Core.setMoveModeY(moveModeY);
@@ -690,26 +695,27 @@ public class MoveDialog extends JDialog {
 	private JTextField getJTextFieldRatio() {
 		if (jTextFieldRatio == null) {
 			jTextFieldRatio = new JTextField();
-			jTextFieldRatio.setPreferredSize(dimText);
-			jTextFieldRatio.setSize(dimText);
-			jTextFieldRatio.setMinimumSize(dimText);
-			jTextFieldRatio.setMaximumSize(dimText);
+			jTextFieldRatio.setPreferredSize(DIMENSION_TEXT);
+			jTextFieldRatio.setSize(DIMENSION_TEXT);
+			jTextFieldRatio.setMinimumSize(DIMENSION_TEXT);
+			jTextFieldRatio.setMaximumSize(DIMENSION_TEXT);
 			jTextFieldRatio.setToolTipText("Set inner frame ratio");
-			jTextFieldRatio.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jTextFieldRatio.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					if (isReady) {
 						double r = ToolBox.getDouble(jTextFieldRatio.getText());
-						if ( r == -1.0 )
-							r = screenRatioTrg; // invalid number -> keep old value
-						else if (r > 4.0)
+						if (r == -1.0 ) {
+							r = aspectRatioTrg; // invalid number -> keep old value
+						} else if (r > 4.0) {
 							r = 4.0;
-						else if (r < screenRatio)
-							r = screenRatio;
-						if (r != screenRatioTrg) {
-							screenRatioTrg = r;
-							setRatio(screenRatioTrg);
+						} else if (r < ASPECT_RATIO) {
+							r = ASPECT_RATIO;
 						}
-						jTextFieldRatio.setText(ToolBox.formatDouble(screenRatioTrg));
+						if (r != aspectRatioTrg) {
+							aspectRatioTrg = r;
+							setRatio(aspectRatioTrg);
+						}
+						jTextFieldRatio.setText(ToolBox.formatDouble(aspectRatioTrg));
 					}
 				}
 			});
@@ -717,12 +723,12 @@ public class MoveDialog extends JDialog {
 				private void check(DocumentEvent e) {
 					if (isReady) {
 						double r = ToolBox.getDouble(jTextFieldRatio.getText());
-						if ( r < screenRatio || r > 4.0 )
+						if (r < ASPECT_RATIO || r > 4.0 ) {
 							jTextFieldRatio.setBackground(errBgnd);
-						else {
-							if (!ToolBox.formatDouble(r).equalsIgnoreCase(ToolBox.formatDouble(screenRatioTrg))) {
-								screenRatioTrg = r;
-								setRatio(screenRatioTrg);
+						} else {
+							if (!ToolBox.formatDouble(r).equalsIgnoreCase(ToolBox.formatDouble(aspectRatioTrg))) {
+								aspectRatioTrg = r;
+								setRatio(aspectRatioTrg);
 							}
 							jTextFieldRatio.setBackground(okBgnd);
 						}
@@ -755,26 +761,27 @@ public class MoveDialog extends JDialog {
 	private JTextField getJTextFieldOffsetY() {
 		if (jTextFieldOffsetY == null) {
 			jTextFieldOffsetY = new JTextField();
-			jTextFieldOffsetY.setPreferredSize(dimText);
-			jTextFieldOffsetY.setSize(dimText);
-			jTextFieldOffsetY.setMinimumSize(dimText);
-			jTextFieldOffsetY.setMaximumSize(dimText);
+			jTextFieldOffsetY.setPreferredSize(DIMENSION_TEXT);
+			jTextFieldOffsetY.setSize(DIMENSION_TEXT);
+			jTextFieldOffsetY.setMinimumSize(DIMENSION_TEXT);
+			jTextFieldOffsetY.setMaximumSize(DIMENSION_TEXT);
 			jTextFieldOffsetY.setToolTipText("Set offset from lower/upper border in pixels");
-			jTextFieldOffsetY.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jTextFieldOffsetY.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					if (isReady) {
 						int y = ToolBox.getInt(jTextFieldOffsetY.getText());
 
-						if (y==-1)
+						if (y==-1) {
 							y = offsetY;  // invalid number -> keep old value
-						else if (y < 0)
+						} else if (y < 0) {
 							y = 0;
-						else if (y > subPic.height/3)
+						} else if (y > subPic.height/3) {
 							y = subPic.height/3;
+						}
 
 						if ( y != offsetY ) {
 							offsetY = y;
-							setRatio(screenRatioTrg);
+							setRatio(aspectRatioTrg);
 						}
 						jTextFieldOffsetY.setText(""+offsetY);
 					}
@@ -785,12 +792,12 @@ public class MoveDialog extends JDialog {
 					if (isReady) {
 						int y = ToolBox.getInt(jTextFieldOffsetY.getText());
 
-						if ( y < 0 || y > subPic.height/3 )
+						if ( y < 0 || y > subPic.height/3 ) {
 							jTextFieldOffsetY.setBackground(errBgnd);
-						else {
+						} else {
 							if (y != offsetY) {
 								offsetY = y;
-								setRatio(screenRatioTrg);
+								setRatio(aspectRatioTrg);
 							}
 							jTextFieldOffsetY.setBackground(okBgnd);
 						}
@@ -819,9 +826,9 @@ public class MoveDialog extends JDialog {
 	 * error handler
 	 * @param s error string to display
 	 */
-	public void error (final String s) {
+	public void error(String s) {
 		Core.printErr(s);
-		JOptionPane.showMessageDialog(this,s,"Error!", JOptionPane.WARNING_MESSAGE);
+		JOptionPane.showMessageDialog(this, s, "Error!", JOptionPane.WARNING_MESSAGE);
 	}
 
 	/**
@@ -836,7 +843,7 @@ public class MoveDialog extends JDialog {
 	 * set current subtitle index, update all components
 	 * @param idx subtitle index
 	 */
-	public void setIndex(final int idx) {
+	public void setIndex(int idx) {
 		isReady = false;
 		index = idx;
 		// update components
@@ -853,7 +860,7 @@ public class MoveDialog extends JDialog {
 			jPanelPreview.setOffsets(subPic.getOfsX(), subPic.getOfsY());
 			jPanelPreview.setDim(subPic.width, subPic.height);
 			jPanelPreview.setImage(image,subPic.getImageWidth(), subPic.getImageHeight());
-			jPanelPreview.setScreenRatio(screenRatioTrg);
+			jPanelPreview.setAspectRatio(aspectRatioTrg);
 			jPanelPreview.setCropOfsY(cropOfsY);
 			jPanelPreview.setExcluded(subPic.exclude);
 			jPanelPreview.repaint();
@@ -878,8 +885,8 @@ public class MoveDialog extends JDialog {
 			jButton21_9 = new JButton();
 			jButton21_9.setText("21:9");
 			jButton21_9.setToolTipText("Set inner frame ratio to 21:9");
-			jButton21_9.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jButton21_9.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					setRatio(21.0/9);
 				}
 			});
@@ -897,8 +904,8 @@ public class MoveDialog extends JDialog {
 			jButton240_1 = new JButton();
 			jButton240_1.setText("2.40:1");
 			jButton240_1.setToolTipText("Set inner frame ratio to 2.40:1");
-			jButton240_1.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jButton240_1.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					setRatio(2.4);
 				}
 			});
@@ -916,8 +923,8 @@ public class MoveDialog extends JDialog {
 			jButton235_1 = new JButton();
 			jButton235_1.setText("2.35:1");
 			jButton235_1.setToolTipText("Set inner frame ratio to 2.35:1");
-			jButton235_1.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jButton235_1.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					setRatio(2.35);
 				}
 			});
@@ -936,10 +943,10 @@ public class MoveDialog extends JDialog {
 			jRadioButtonInside.setText("move inside bounds");
 			jRadioButtonInside.setToolTipText("Move the subtitles inside the inner frame");
 			jRadioButtonInside.setMnemonic('i');
-			jRadioButtonInside.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
-					moveModeY = Core.MoveModeY.INSIDE;
-					setRatio(screenRatioTrg);
+			jRadioButtonInside.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					moveModeY = CaptionMoveModeY.MOVE_INSIDE_BOUNDS;
+					setRatio(aspectRatioTrg);
 				}
 			});
 		}
@@ -958,10 +965,10 @@ public class MoveDialog extends JDialog {
 			jRadioButtonOutside.setToolTipText("Move the subtitles outside the inner frame as much as possible");
 			jRadioButtonOutside.setMnemonic('o');
 			jRadioButtonOutside.setDisplayedMnemonicIndex(5);
-			jRadioButtonOutside.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
-					moveModeY = Core.MoveModeY.OUTSIDE;
-					setRatio(screenRatioTrg);
+			jRadioButtonOutside.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					moveModeY = CaptionMoveModeY.MOVE_OUTSIDE_BOUNDS;
+					setRatio(aspectRatioTrg);
 				}
 			});
 		}
@@ -979,11 +986,11 @@ public class MoveDialog extends JDialog {
 			jRadioButtonKeepY.setText("keep Y position");
 			jRadioButtonKeepY.setToolTipText("Don't alter current Y position");
 			jRadioButtonKeepY.setMnemonic('y');
-			jRadioButtonKeepY.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
-					moveModeY = Core.MoveModeY.KEEP;
+			jRadioButtonKeepY.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					moveModeY = CaptionMoveModeY.KEEP_POSITION;
 					subPic.setOfsY(originalY);
-					setRatio(screenRatioTrg);
+					setRatio(aspectRatioTrg);
 				}
 			});
 		}
@@ -991,12 +998,13 @@ public class MoveDialog extends JDialog {
 	}
 
 	private void setRatio(double ratio) {
-		if (!ToolBox.formatDouble(screenRatioTrg).equalsIgnoreCase(ToolBox.formatDouble(ratio)))
+		if (!ToolBox.formatDouble(aspectRatioTrg).equalsIgnoreCase(ToolBox.formatDouble(ratio))) {
 			jTextFieldRatio.setText(ToolBox.formatDouble(ratio));
-		screenRatioTrg = ratio;
-		cineBarFactor = (1.0 - screenRatio/screenRatioTrg)/2.0;
+		}
+		aspectRatioTrg = ratio;
+		cineBarFactor = (1.0 - ASPECT_RATIO/aspectRatioTrg)/2.0;
 		move();
-		jPanelPreview.setScreenRatio(screenRatioTrg);
+		jPanelPreview.setAspectRatio(aspectRatioTrg);
 		jPanelPreview.setOffsets(subPic.getOfsX(), subPic.getOfsY());
 		jPanelPreview.repaint();
 	}
@@ -1026,10 +1034,10 @@ public class MoveDialog extends JDialog {
 			gridBagTextCropY.anchor = GridBagConstraints.WEST;
 			gridBagTextCropY.weightx = 2.0;
 			jLabelCropOfsY = new JLabel();
-			jLabelCropOfsY.setPreferredSize(dimLabel);
-			jLabelCropOfsY.setSize(dimLabel);
-			jLabelCropOfsY.setMinimumSize(dimLabel);
-			jLabelCropOfsY.setMaximumSize(dimLabel);
+			jLabelCropOfsY.setPreferredSize(DIMENSION_LABEL);
+			jLabelCropOfsY.setSize(DIMENSION_LABEL);
+			jLabelCropOfsY.setMinimumSize(DIMENSION_LABEL);
+			jLabelCropOfsY.setMaximumSize(DIMENSION_LABEL);
 			jLabelCropOfsY.setText("Crop Offset Y");
 			jPanelCrop = new JPanel();
 			jPanelCrop.setLayout(new GridBagLayout());
@@ -1049,27 +1057,28 @@ public class MoveDialog extends JDialog {
 	private JTextField getJTextFieldCropOfsY() {
 		if (jTextFieldCropOfsY == null) {
 			jTextFieldCropOfsY = new JTextField();
-			jTextFieldCropOfsY.setPreferredSize(dimText);
-			jTextFieldCropOfsY.setSize(dimText);
-			jTextFieldCropOfsY.setMinimumSize(dimText);
-			jTextFieldCropOfsY.setMaximumSize(dimText);
+			jTextFieldCropOfsY.setPreferredSize(DIMENSION_TEXT);
+			jTextFieldCropOfsY.setSize(DIMENSION_TEXT);
+			jTextFieldCropOfsY.setMinimumSize(DIMENSION_TEXT);
+			jTextFieldCropOfsY.setMaximumSize(DIMENSION_TEXT);
 			jTextFieldCropOfsY.setToolTipText("Set number of lines to be cropped from upper and lower border");
 			jTextFieldCropOfsY.addActionListener(new java.awt.event.ActionListener() {
 				public void actionPerformed(java.awt.event.ActionEvent e) {
 					if (isReady) {
 						int y = ToolBox.getInt(jTextFieldCropOfsY.getText());
 
-						if (y==-1)
+						if (y==-1) {
 							y = cropOfsY;   // invalid number -> keep old value
-						else if (y<0)
+						} else if (y<0) {
 							y = 0;
-						else if (y > subPic.height/3)
+						} else if (y > subPic.height/3) {
 							y = subPic.height/3;
+						}
 
 						if (y != cropOfsY) {
 							cropOfsY = y;
 							jPanelPreview.setCropOfsY(cropOfsY);
-							setRatio(screenRatioTrg);
+							setRatio(aspectRatioTrg);
 						}
 						jTextFieldCropOfsY.setText(""+cropOfsY);
 					}
@@ -1080,13 +1089,13 @@ public class MoveDialog extends JDialog {
 					if (isReady) {
 						int y = ToolBox.getInt(jTextFieldCropOfsY.getText());
 
-						if ( y < 0 || y > subPic.height/3 )
+						if (y < 0 || y > subPic.height/3) {
 							jTextFieldCropOfsY.setBackground(errBgnd);
-						else {
+						} else {
 							if (y != cropOfsY) {
 								cropOfsY = y;
 								jPanelPreview.setCropOfsY(cropOfsY);
-								setRatio(screenRatioTrg);
+								setRatio(aspectRatioTrg);
 							}
 							jTextFieldCropOfsY.setBackground(okBgnd);
 						}
@@ -1123,11 +1132,11 @@ public class MoveDialog extends JDialog {
 			jButtonCropBars.setText("Crop Bars");
 			jButtonCropBars.setPreferredSize(new Dimension(79, 23));
 			jButtonCropBars.setMnemonic('c');
-			jButtonCropBars.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jButtonCropBars.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					cropOfsY = (int)(subPic.height*cineBarFactor+0.5); // height of one cinemascope bar in pixels
 					jPanelPreview.setCropOfsY(cropOfsY);
-					setRatio(screenRatioTrg);
+					setRatio(aspectRatioTrg);
 					jTextFieldCropOfsY.setText(""+cropOfsY);
 				}
 			});
@@ -1140,7 +1149,7 @@ public class MoveDialog extends JDialog {
 	 * @return screen ratio used for displaying the cinemascopic bars
 	 */
 	public double getTrgRatio() {
-		return screenRatioTrg;
+		return aspectRatioTrg;
 	}
 
 	/**
@@ -1154,11 +1163,11 @@ public class MoveDialog extends JDialog {
 			jRadioButtonKeepX.setText("keep X position");
 			jRadioButtonKeepX.setToolTipText("Don't alter current X position");
 			jRadioButtonKeepX.setMnemonic('x');
-			jRadioButtonKeepX.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
-					moveModeX = Core.MoveModeX.KEEP;
+			jRadioButtonKeepX.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					moveModeX = CaptionMoveModeX.KEEP_POSITION;
 					subPic.setOfsX(originalX);
-					setRatio(screenRatioTrg);
+					setRatio(aspectRatioTrg);
 				}
 			});
 		}
@@ -1176,10 +1185,10 @@ public class MoveDialog extends JDialog {
 			jRadioButtonLeft.setText("move left");
 			jRadioButtonLeft.setToolTipText("Move to the left");
 			jRadioButtonLeft.setMnemonic('l');
-			jRadioButtonLeft.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
-					moveModeX = Core.MoveModeX.LEFT;
-					setRatio(screenRatioTrg);
+			jRadioButtonLeft.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					moveModeX = CaptionMoveModeX.LEFT;
+					setRatio(aspectRatioTrg);
 				}
 			});
 		}
@@ -1197,10 +1206,10 @@ public class MoveDialog extends JDialog {
 			jRadioButtonRight.setText("move right");
 			jRadioButtonRight.setToolTipText("Move to the right");
 			jRadioButtonRight.setMnemonic('r');
-			jRadioButtonRight.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
-					moveModeX = Core.MoveModeX.RIGHT;
-					setRatio(screenRatioTrg);
+			jRadioButtonRight.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					moveModeX = CaptionMoveModeX.RIGHT;
+					setRatio(aspectRatioTrg);
 				}
 			});
 		}
@@ -1218,10 +1227,10 @@ public class MoveDialog extends JDialog {
 			jRadioButtonCenter.setText("move to center");
 			jRadioButtonCenter.setToolTipText("Move to center");
 			jRadioButtonCenter.setMnemonic('c');
-			jRadioButtonCenter.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
-					moveModeX = Core.MoveModeX.CENTER;
-					setRatio(screenRatioTrg);
+			jRadioButtonCenter.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					moveModeX = CaptionMoveModeX.CENTER;
+					setRatio(aspectRatioTrg);
 				}
 			});
 		}
@@ -1236,26 +1245,27 @@ public class MoveDialog extends JDialog {
 	private JTextField getJTextFieldOffsetX() {
 		if (jTextFieldOffsetX == null) {
 			jTextFieldOffsetX = new JTextField();
-			jTextFieldOffsetX.setPreferredSize(dimText);
-			jTextFieldOffsetX.setSize(dimText);
-			jTextFieldOffsetX.setMinimumSize(dimText);
-			jTextFieldOffsetX.setMaximumSize(dimText);
+			jTextFieldOffsetX.setPreferredSize(DIMENSION_TEXT);
+			jTextFieldOffsetX.setSize(DIMENSION_TEXT);
+			jTextFieldOffsetX.setMinimumSize(DIMENSION_TEXT);
+			jTextFieldOffsetX.setMaximumSize(DIMENSION_TEXT);
 			jTextFieldOffsetX.setToolTipText("Set offset from left/right border in pixels");
-			jTextFieldOffsetX.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jTextFieldOffsetX.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					if (isReady) {
 						int x = ToolBox.getInt(jTextFieldOffsetX.getText());
 
-						if (x==-1)
+						if (x==-1) {
 							x = offsetX;  // invalid number -> keep old value
-						else if (x < 0)
+						} else if (x < 0) {
 							x = 0;
-						else if (x > subPic.width/3)
+						} else if (x > subPic.width/3) {
 							x = subPic.width/3;
+						}
 
 						if ( x != offsetX ) {
 							offsetX = x;
-							setRatio(screenRatioTrg);
+							setRatio(aspectRatioTrg);
 						}
 						jTextFieldOffsetX.setText(""+offsetX);
 					}
@@ -1266,12 +1276,12 @@ public class MoveDialog extends JDialog {
 					if (isReady) {
 						int x = ToolBox.getInt(jTextFieldOffsetX.getText());
 
-						if ( x < 0 || x > subPic.width/3 )
+						if ( x < 0 || x > subPic.width/3 ) {
 							jTextFieldOffsetX.setBackground(errBgnd);
-						else {
+						} else {
 							if (x != offsetX) {
 								offsetX = x;
-								setRatio(screenRatioTrg);
+								setRatio(aspectRatioTrg);
 							}
 							jTextFieldOffsetX.setBackground(okBgnd);
 						}
@@ -1295,5 +1305,4 @@ public class MoveDialog extends JDialog {
 		}
 		return jTextFieldOffsetX;
 	}
-
-}  //  @jve:decl-index=0:visual-constraint="10,10"
+}

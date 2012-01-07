@@ -69,7 +69,9 @@ public class BitStream {
 				if (byteOfs<buffer.length-1) {
 					b = buffer[++byteOfs] & 0xff;
 					bits = 8;
-				} else bits = 0;
+				} else {
+					bits = 0;
+				}
 			}
 		}
 		return retval;
@@ -80,7 +82,7 @@ public class BitStream {
 	 */
 	public void syncToByte() {
 		if (bits !=8) {
-			if (byteOfs<buffer.length-1) {
+			if (byteOfs < buffer.length-1) {
 				b = buffer[++byteOfs] & 0xff;
 				bits = 8;
 			} else {

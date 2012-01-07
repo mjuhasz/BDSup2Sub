@@ -9,6 +9,7 @@ import deadbeef.bitmap.Bitmap;
 import deadbeef.bitmap.Palette;
 import deadbeef.core.Core;
 import deadbeef.core.CoreException;
+import deadbeef.core.Framerate;
 import deadbeef.tools.FileBuffer;
 import deadbeef.tools.FileBufferException;
 import deadbeef.tools.QuantizeFilter;
@@ -37,8 +38,7 @@ import deadbeef.tools.ToolBox;
  */
 public class SupBD implements Substream {
 
-	/** PGS composition state */
-	private enum CompositionState {
+	private enum PGSCompositionState {
 		/** normal: doesn't have to be complete */
 		NORMAL,
 		/** acquisition point */
@@ -52,19 +52,19 @@ public class SupBD implements Substream {
 	}
 
 	/** ArrayList of captions contained in the current file  */
-	private final ArrayList<SubPictureBD> subPictures;
+	private ArrayList<SubPictureBD> subPictures;
 	/** color palette of the last decoded caption  */
 	private Palette palette;
 	/** bitmap of the last decoded caption  */
 	private Bitmap bitmap;
 	/** FileBuffer to read from the file  */
-	private final FileBuffer buffer;
+	private FileBuffer buffer;
 	/** index of dominant color for the current caption  */
 	private int primaryColorIndex;
 	/** number of forced captions in the current file  */
 	private int numForcedFrames;
 
-	private static  byte packetHeader[] = {
+	private static byte packetHeader[] = {
 		0x50, 0x47,				// 0:  "PG"
 		0x00, 0x00, 0x00, 0x00,	// 2:  PTS - presentation time stamp
 		0x00, 0x00, 0x00, 0x00,	// 6:  DTS - decoding time stamp
@@ -124,7 +124,7 @@ public class SupBD implements Substream {
 	 * @param fn file name of SUP file to read
 	 * @throws CoreException
 	 */
-	public SupBD(final String fn) throws CoreException {
+	public SupBD(String fn) throws CoreException {
 		//int tFrame = (int)(90000/Core.getFPSSrc());
 		int index = 0;
 		try {
@@ -132,7 +132,7 @@ public class SupBD implements Substream {
 		} catch (FileBufferException ex) {
 			throw new CoreException(ex.getMessage());
 		}
-		final int bufsize = (int)buffer.getSize();
+		int bufsize = (int)buffer.getSize();
 		SupSegment segment;
 		SubPictureBD pic = null;
 		SubPictureBD picLast = null;
@@ -147,109 +147,118 @@ public class SupBD implements Substream {
 		int compCount = 0;
 		long ptsPCS = 0;
 		boolean paletteUpdate = false;
-		CompositionState cs = CompositionState.INVALID;
+		PGSCompositionState cs = PGSCompositionState.INVALID;
 
 		try {
 			while (index < bufsize) {
 				// for threaded version
-				if (Core.isCancelled())
+				if (Core.isCancelled()) {
 					throw new CoreException("Cancelled by user!");
+				}
 				Core.setProgress(index);
-				//
 				segment = readSegment(index);
 				String out;
 				String so[] = new String[1]; // hack to return string
-				switch (segment.type) {
+				switch (segment.segmentType) {
 					case 0x14:
 						out = "PDS ofs:"+ToolBox.hex(index,8)+
-						", size:"+ToolBox.hex(segment.size,4);
+						", size:"+ToolBox.hex(segment.segmentSize,4);
 						if (compNum != compNumOld) {
 							if (pic != null) {
 								so[0] = null;
 								int ps = parsePDS(segment, pic, so);
 								if (ps >= 0) {
-									Core.print(out+", "+so[0]+"\n");
-									if (ps > 0) // don't count empty palettes
+									Core.print(out+", "+so[0] + "\n");
+									if (ps > 0) { // don't count empty palettes
 										pdsCtr++;
+									}
 								} else {
-									Core.print(out+"\n");
-									Core.printWarn(so[0]+"\n");
+									Core.print(out + "\n");
+									Core.printWarn(so[0] + "\n");
 								}
 							} else {
-								Core.print(out+"\n");
+								Core.print(out + "\n");
 								Core.printWarn("missing PTS start -> ignored\n");
 							}
 						} else {
-							Core.print(out+", comp # unchanged -> ignored\n");
+							Core.print(out + ", comp # unchanged -> ignored\n");
 						}
 						break;
 					case 0x15:
-						out = "ODS ofs:"+ToolBox.hex(index,8)+
-						", size:"+ToolBox.hex(segment.size,4);
+						out = "ODS ofs:" + ToolBox.hex(index,8)
+						+ ", size:" + ToolBox.hex(segment.segmentSize,4);
 						if (compNum != compNumOld) {
 							if (!paletteUpdate) {
 								if (pic != null) {
 									so[0] = null;
-									if (parseODS(segment, pic, so))
+									if (parseODS(segment, pic, so)) {
 										odsCtr++;
-									if (so[0] != null)
-										out += ", "+so[0];
-									Core.print(out+", img size: "+pic.getImageWidth()+"*"+pic.getImageHeight()+"\n");
+									}
+									if (so[0] != null) {
+										out += ", " + so[0];
+									}
+									Core.print(out + ", img size: " + pic.getImageWidth() + "*" + pic.getImageHeight() + "\n");
 								} else {
-									Core.print(out+"\n");
+									Core.print(out + "\n");
 									Core.printWarn("missing PTS start -> ignored\n");
 								}
 							} else {
-								Core.print(out+"\n");
+								Core.print(out + "\n");
 								Core.printWarn("palette update only -> ignored\n");
 							}
 						} else {
-							Core.print(out+", comp # unchanged -> ignored\n");
+							Core.print(out + ", comp # unchanged -> ignored\n");
 						}
 						break;
 					case 0x16:
 						compNum = getCompositionNumber(segment);
 						cs = getCompositionState(segment);
 						paletteUpdate = getPaletteUpdateFlag(segment);
-						ptsPCS = segment.timestamp;
-						if (segment.size >= 0x13)
+						ptsPCS = segment.segmentPTSTimestamp;
+						if (segment.segmentSize >= 0x13) {
 							compCount = 1; // could be also 2, but we'll ignore this for the moment
-						else
+						}
+						else {
 							compCount = 0;
-						if (cs == CompositionState.INVALID) {
+						}
+						if (cs == PGSCompositionState.INVALID) {
 							Core.printWarn("Illegal composition state at offset "+ToolBox.hex(index,8)+"\n");
-						} else if (cs == CompositionState.EPOCH_START) {
+						} else if (cs == PGSCompositionState.EPOCH_START) {
 							// new frame
 							if (subPictures.size() > 0 && (odsCtr==0 || pdsCtr==0)) {
 								Core.printWarn("missing PDS/ODS: last epoch is discarded\n");
 								subPictures.remove(subPictures.size()-1);
 								compNumOld = compNum-1;
-								if (subPictures.size() > 0)
+								if (subPictures.size() > 0) {
 									picLast = subPictures.get(subPictures.size()-1);
-								else
+								} else {
 									picLast = null;
-							} else
+								}
+							} else {
 								picLast = pic;
+							}
 							pic = new SubPictureBD();
 							subPictures.add(pic); // add to list
-							pic.startTime = segment.timestamp;
-							Core.printX("#> "+(subPictures.size())+" ("+ToolBox.ptsToTimeStr(pic.startTime)+")\n");
+							pic.startTime = segment.segmentPTSTimestamp;
+							Core.printX("#> " + (subPictures.size()) + " (" + ToolBox.ptsToTimeStr(pic.startTime) + ")\n");
 
 							so[0] = null;
 							parsePCS(segment, pic, so);
 							// fix end time stamp of previous pic if still missing
-							if (picLast != null && picLast.endTime == 0)
+							if (picLast != null && picLast.endTime == 0) {
 								picLast.endTime = pic.startTime;
+							}
 
-							out = "PCS ofs:"+ToolBox.hex(index,8)+
-							", START, size:"+ToolBox.hex(segment.size,4)+
-							", comp#: "+compNum+", forced: "+pic.isforced;
-							if (so[0] != null)
-								out+=", "+so[0]+"\n";
-							else
-								out+="\n";
-							out += "PTS start: "+ToolBox.ptsToTimeStr(pic.startTime);
-							out += ", screen size: "+pic.width+"*"+pic.height+"\n";
+							out = "PCS ofs:" + ToolBox.hex(index,8)
+							+ ", START, size:" + ToolBox.hex(segment.segmentSize,4)
+							+ ", comp#: " + compNum + ", forced: " + pic.isforced;
+							if (so[0] != null) {
+								out += ", " + so[0] + "\n";
+							} else {
+								out += "\n";
+							}
+							out += "PTS start: " + ToolBox.ptsToTimeStr(pic.startTime);
+							out += ", screen size: " + pic.width + "*" + pic.height + "\n";
 							odsCtr = 0;
 							pdsCtr = 0;
 							odsCtrOld = 0;
@@ -261,7 +270,7 @@ public class SupBD implements Substream {
 								Core.printWarn("missing start of epoch at offset "+ToolBox.hex(index,8)+"\n");
 								break;
 							}
-							out = "PCS ofs:"+ToolBox.hex(index,8)+", ";
+							out = "PCS ofs:" + ToolBox.hex(index,8) + ", ";
 							switch (cs) {
 								case EPOCH_CONTINUE:
 									out += "CONT, ";
@@ -273,8 +282,8 @@ public class SupBD implements Substream {
 									out += "NORM, ";
 									break;
 							}
-							out += " size: "+ToolBox.hex(segment.size,4)+
-							", comp#: "+compNum+", forced: "+pic.isforced;;
+							out += " size: " + ToolBox.hex(segment.segmentSize,4)
+							+ ", comp#: " + compNum + ", forced: " + pic.isforced;
 							if (compNum != compNumOld) {
 								so[0] = null;
 								// store state to be able to revert to it
@@ -283,38 +292,39 @@ public class SupBD implements Substream {
 								// create new pic
 								parsePCS(segment, pic, so);
 							}
-							if (so[0] != null)
-								out+=", "+so[0];
-							out += ", pal update: "+paletteUpdate+"\n";
-							out += "PTS: "+ToolBox.ptsToTimeStr(segment.timestamp)+"\n";
+							if (so[0] != null) {
+								out += ", " + so[0];
+							}
+							out += ", pal update: " + paletteUpdate + "\n";
+							out += "PTS: " + ToolBox.ptsToTimeStr(segment.segmentPTSTimestamp) + "\n";
 							Core.print(out);
 						}
 						break;
 					case 0x17:
-						out = "WDS ofs:"+ToolBox.hex(index,8)+
-						", size:"+ToolBox.hex(segment.size,4);
+						out = "WDS ofs:"+ToolBox.hex(index,8)
+						+ ", size:"+ToolBox.hex(segment.segmentSize,4);
 						if (pic != null) {
 							parseWDS(segment, pic);
-							Core.print(out+", dim: "+pic.winWidth+"*"+pic.winHeight+"\n");
+							Core.print(out + ", dim: " + pic.winWidth + "*" + pic.winHeight + "\n");
 						} else {
-							Core.print(out+"\n");
+							Core.print(out + "\n");
 							Core.printWarn("Missing PTS start -> ignored\n");
 						}
 						break;
 					case 0x80:
-						Core.print("END ofs:"+ToolBox.hex(index,8)+"\n");
+						Core.print("END ofs:" + ToolBox.hex(index,8) + "\n");
 						// decide whether to store this last composition section as caption or merge it
-						if (cs == CompositionState.EPOCH_START) {
-							if (compCount>0 && odsCtr>odsCtrOld && compNum!=compNumOld
-									&& picMergable(picLast, pic)) {
+						if (cs == PGSCompositionState.EPOCH_START) {
+							if (compCount>0 && odsCtr>odsCtrOld && compNum!=compNumOld && picMergable(picLast, pic)) {
 								// the last start epoch did not contain any (new) content
 								// and should be merged to the previous frame
 								subPictures.remove(subPictures.size()-1);
 								pic = picLast;
-								if (subPictures.size() > 0)
+								if (subPictures.size() > 0) {
 									picLast = subPictures.get(subPictures.size()-1);
-								else
+								} else {
 									picLast = null;
+								}
 								Core.printX("#< caption merged\n");
 							}
 						} else {
@@ -324,16 +334,16 @@ public class SupBD implements Substream {
 								pic.startTime = ptsPCS;    // set for testing merge
 							}
 
-							if (compCount>0 && odsCtr>odsCtrOld && compNum!=compNumOld
-									&& !picMergable(picTmp, pic)) {
+							if (compCount>0 && odsCtr>odsCtrOld && compNum!=compNumOld && !picMergable(picTmp, pic)) {
 								// last PCS should be stored as separate caption
-								if (odsCtr-odsCtrOld>1 || pdsCtr-pdsCtrOld>1)
+								if (odsCtr-odsCtrOld>1 || pdsCtr-pdsCtrOld>1) {
 									Core.printWarn("multiple PDS/ODS definitions: result may be erratic\n");
+								}
 								// replace pic with picTmp (deepCopy created before new PCS)
-								subPictures.set(subPictures.size()-1,picTmp); // replace in list
+								subPictures.set(subPictures.size()-1, picTmp); // replace in list
 								picLast = picTmp;
 								subPictures.add(pic); // add to list
-								Core.printX("#< "+(subPictures.size())+" ("+ToolBox.ptsToTimeStr(pic.startTime)+")\n");
+								Core.printX("#< " + (subPictures.size()) + " (" + ToolBox.ptsToTimeStr(pic.startTime) + ")\n");
 								odsCtrOld = odsCtr;
 
 							} else {
@@ -342,30 +352,32 @@ public class SupBD implements Substream {
 									pic.startTime = startTime; // restore
 									pic.endTime = ptsPCS;
 									// for the unlikely case that forced flag changed during one captions
-									if (picTmp != null && picTmp.isforced)
+									if (picTmp != null && picTmp.isforced) {
 										pic.isforced = true;
+									}
 
-									if (pdsCtr > pdsCtrOld || paletteUpdate)
+									if (pdsCtr > pdsCtrOld || paletteUpdate) {
 										Core.printWarn("palette animation: result may be erratic\n");
-								} else
+									}
+								} else {
 									Core.printWarn("end without at least one epoch start\n");
-
+								}
 							}
 						}
-
 						pdsCtrOld = pdsCtr;
 						compNumOld = compNum;
 						break;
 					default:
-						Core.printWarn("<unknown> "+ToolBox.hex(segment.type,2)+" ofs:"+ToolBox.hex(index,8)+"\n");
+						Core.printWarn("<unknown> " + ToolBox.hex(segment.segmentType, 2) + " ofs:" + ToolBox.hex(index, 8) + "\n");
 					break;
 				}
 				index += 13; // header size
-				index += segment.size;
+				index += segment.segmentSize;
 			}
 		} catch (CoreException ex) {
-			if (subPictures.size() == 0)
+			if (subPictures.size() == 0) {
 				throw ex;
+			}
 			Core.printErr(ex.getMessage()+"\n");
 			Core.print("Probably not all caption imported due to error.\n");
 		}
@@ -380,10 +392,11 @@ public class SupBD implements Substream {
 		// count forced frames
 		numForcedFrames = 0;
 		for (SubPictureBD p : subPictures) {
-			if (p.isforced)
+			if (p.isforced) {
 				numForcedFrames++;
+			}
 		}
-		Core.printX("\nDetected "+numForcedFrames+" forced captions.\n");
+		Core.printX("\nDetected " + numForcedFrames + " forced captions.\n");
 	}
 
 	/**
@@ -393,15 +406,16 @@ public class SupBD implements Substream {
 	 * @param b 2nd SubPicture object (later)
 	 * @return true if the SubPictures can be merged
 	 */
-	private static boolean picMergable(final SubPictureBD a, final SubPictureBD b) {
+	private static boolean picMergable(SubPictureBD a, SubPictureBD b) {
 		boolean eq = false;
 		if (a != null && b != null) {
-			if (a.endTime == 0 || b.startTime-a.endTime < Core.getMergePTSdiff()) {
+			if (a.endTime == 0 || b.startTime - a.endTime < Core.getMergePTSdiff()) {
 			ImageObject ao = a.getImgObj();
 			ImageObject bo = b.getImgObj();
 			if (ao != null && bo != null)
-				if (ao.bufferSize == bo.bufferSize && ao.width == bo.width && ao.height == bo.height)
+				if (ao.bufferSize == bo.bufferSize && ao.width == bo.width && ao.height == bo.height) {
 					eq = true;
+				}
 			}
 		}
 		return eq;
@@ -412,18 +426,18 @@ public class SupBD implements Substream {
 	 * @param fps frame rate
 	 * @return byte ID for the given frame rate
 	 */
-	private static int getFpsId(final double fps) {
-		if (fps == Core.FPS_24HZ)
+	private static int getFpsId(double fps) {
+		if (fps == Framerate.FPS_24.getValue())
 			return 0x20;
-		if (fps == Core.FPS_PAL)
+		if (fps == Framerate.PAL.getValue())
 			return 0x30;
-		if (fps == Core.FPS_NTSC)
+		if (fps == Framerate.NTSC.getValue())
 			return 0x40;
-		if (fps == Core.FPS_PAL_I)
+		if (fps == Framerate.PAL_I.getValue())
 			return 0x60;
-		if (fps == Core.FPS_NTSC_I)
+		if (fps == Framerate.NTSC_I.getValue())
 			return 0x70;
-		// assume FPS_24P (also for FPS_23_975)
+		// assume FPS_23_976 (24p) (also for FPS_23_975)
 		return 0x10;
 	}
 
@@ -435,17 +449,17 @@ public class SupBD implements Substream {
 	private static double getFpsFromID(final int id) {
 		switch (id) {
 			case 0x20:
-				return Core.FPS_24HZ;
+				return Framerate.FPS_24.getValue();
 			case 0x30:
-				return Core.FPS_PAL;
+				return Framerate.PAL.getValue();
 			case 0x40:
-				return Core.FPS_NTSC;
+				return Framerate.NTSC.getValue();
 			case 0x60:
-				return Core.FPS_PAL_I;
+				return Framerate.PAL_I.getValue();
 			case 0x70:
-				return Core.FPS_NTSC_I;
+				return Framerate.NTSC_I.getValue();
 			default:
-				return Core.FPS_24P; // assume FPS_24P (also for FPS_23_975)
+				return Framerate.FPS_23_976.getValue(); // assume FPS_23_976 (24p) (also for FPS_23_975)
 		}
 	}
 
@@ -454,30 +468,34 @@ public class SupBD implements Substream {
 	 * @param bm bitmap to compress
 	 * @return RLE buffer
 	 */
-	private static byte[] encodeImage(final Bitmap bm) {
-		final ArrayList<Byte> bytes = new ArrayList<Byte>();
+	private static byte[] encodeImage(Bitmap bm) {
+		ArrayList<Byte> bytes = new ArrayList<Byte>();
 		byte color;
 		int ofs;
 		int len;
 		//boolean eol;
 
 		for (int y=0; y < bm.getHeight(); y++) {
-			ofs = y*bm.getWidth();
+			ofs = y * bm.getWidth();
 			//eol = false;
 			int x;
 			for (x=0; x < bm.getWidth(); x+=len, ofs+=len) {
 				color = bm.getInternalBuffer()[ofs];
-				for (len=1; x+len < bm.getWidth(); len++)
-					if (bm.getInternalBuffer()[ofs+len] != color)
+				for (len=1; x+len < bm.getWidth(); len++) {
+					if (bm.getInternalBuffer()[ofs+len] != color) {
 						break;
+					}
+				}
 				if (len<=2 && color != 0) {
 					// only a single occurrence -> add color
 					bytes.add(color);
-					if (len==2)
+					if (len==2) {
 						bytes.add(color);
+					}
 				} else {
-					if (len > 0x3fff)
+					if (len > 0x3fff) {
 						len = 0x3fff;
+					}
 					bytes.add((byte)0); // rle id
 					// commented out due to bug in SupRip
 					/*if (color == 0 && x+len == bm.getWidth()) {
@@ -511,8 +529,9 @@ public class SupBD implements Substream {
 		int size =  bytes.size();
 		byte[] retval = new byte[size];
 		Iterator<Byte> it = bytes.iterator();
-		for (int i=0; i<size; i++)
+		for (int i=0; i < size; i++) {
 			retval[i] = it.next();
+		}
 		return retval;
 	}
 
@@ -527,20 +546,22 @@ public class SupBD implements Substream {
 		// the last palette entry must be transparent
 		if (pal.getSize() > 255 && pal.getAlpha(255) > 0) {
 			// quantize image
-			final QuantizeFilter qf = new QuantizeFilter();
-			final Bitmap bmQ = new Bitmap(bm.getWidth(), bm.getHeight());
+			QuantizeFilter qf = new QuantizeFilter();
+			Bitmap bmQ = new Bitmap(bm.getWidth(), bm.getHeight());
 			int ct[] = qf.quantize(bm.toARGB(pal), bmQ.getInternalBuffer(), bm.getWidth(), bm.getHeight(), 255, false, false);
 			int size = ct.length;
 			if (size > 255) {
 				size = 255;
-				Core.print("Palette had to be reduced from "+pal.getSize()+" to "+size+" entries.\n");
+				Core.print("Palette had to be reduced from " + pal.getSize() + " to " + size + " entries.\n");
 				Core.printWarn("Quantizer failed.\n");
-			} else
-				Core.print("Palette had to be reduced from "+pal.getSize()+" to "+size+" entries.\n");
+			} else {
+				Core.print("Palette had to be reduced from " + pal.getSize() + " to " + size + " entries.\n");
+			}
 			// create palette
 			pal = new Palette(size);
-			for (int i=0; i<size; i++)
+			for (int i=0; i < size; i++) {
 				pal.setARGB(i,ct[i]);
+			}
 			// use new bitmap
 			bm = bmQ;
 		}
@@ -555,55 +576,58 @@ public class SupBD implements Substream {
 		// first package can store only 0xffe4 RLE buffer bytes and the
 		// following packets can store 0xffeb RLE buffer bytes
 		int numAddPackets;
-		if (rleBuf.length <= 0xffe4)
+		if (rleBuf.length <= 0xffe4) {
 			numAddPackets = 0; // no additional packets needed;
-		else
-			numAddPackets = 1 + (rleBuf.length - 0xffe4)/0xffeb;
+		} else {
+			numAddPackets = 1 + (rleBuf.length - 0xffe4) / 0xffeb;
+		}
 
 		// a typical frame consists of 8 packets. It can be enlonged by additional
 		// object frames
-		int palSize = bm.getHighestVisibleColorIndex(pal.getAlpha())+1;
-		int size = packetHeader.length*(8+numAddPackets);
-		size += headerPCSStart.length+headerPCSEnd.length;
-		size += 2*headerWDS.length+headerODSFirst.length;
-		size += numAddPackets*headerODSNext.length;
-		size += (2+palSize*5) /* PDS */;
+		int palSize = bm.getHighestVisibleColorIndex(pal.getAlpha()) + 1;
+		int size = packetHeader.length * (8 + numAddPackets);
+		size += headerPCSStart.length + headerPCSEnd.length;
+		size += 2*headerWDS.length + headerODSFirst.length;
+		size += numAddPackets * headerODSNext.length;
+		size += (2 + palSize * 5) /* PDS */;
 		size += rleBuf.length;
 
 		int yOfs = pic.getOfsY() - Core.getCropOfsY();
-		if (yOfs < 0)
+		if (yOfs < 0) {
 			yOfs = 0;
-		else {
+		} else {
 			int yMax = pic.height - pic.getImageHeight() - 2*Core.getCropOfsY();
-			if (yOfs > yMax)
+			if (yOfs > yMax) {
 				yOfs = yMax;
+			}
 		}
 
-		final int h = pic.height-2*Core.getCropOfsY();
+		int h = pic.height-2 * Core.getCropOfsY();
 
-		final byte buf[] = new byte[size];
+		byte buf[] = new byte[size];
 		int index = 0;
 
 		int fpsId = getFpsId(Core.getFPSTrg());
 
 		/* time (in 90kHz resolution) needed to initialize (clear) the screen buffer
 		   based on the composition pixel rate of 256e6 bit/s - always rounded up */
-		int frameInitTime = (pic.width*pic.height*9+3199)/3200; // better use default height here
+		int frameInitTime = (pic.width * pic.height * 9 + 3199) / 3200; // better use default height here
 		/* time (in 90kHz resolution) needed to initialize (clear) the window area
 		   based on the composition pixel rate of 256e6 bit/s - always rounded up
 		   Note: no cropping etc. -> window size == image size */
-		int windowInitTime = (bm.getWidth()*bm.getHeight()*9+3199)/3200;
+		int windowInitTime = (bm.getWidth() * bm.getHeight() * 9 + 3199) / 3200;
 		/* time (in 90kHz resolution) needed to decode the image
 		   based on the decoding pixel rate of 128e6 bit/s - always rounded up  */
-		int imageDecodeTime = (bm.getWidth()*bm.getHeight()*9+1599)/1600;
+		int imageDecodeTime = (bm.getWidth() * bm.getHeight() * 9 + 1599) / 1600;
 		// write PCS start
 		packetHeader[10] = 0x16;											// ID
-		int dts = (int)pic.startTime - (frameInitTime+windowInitTime);
+		int dts = (int)pic.startTime - (frameInitTime + windowInitTime);
 		ToolBox.setDWord(packetHeader, 2, (int)pic.startTime);				// PTS
 		ToolBox.setDWord(packetHeader, 6, dts);								// DTS
 		ToolBox.setWord(packetHeader, 11, headerPCSStart.length);			// size
-		for (int i=0; i<packetHeader.length; i++)
+		for (int i=0; i < packetHeader.length; i++) {
 			buf[index++] = packetHeader[i];
+		}
 		ToolBox.setWord(headerPCSStart,0, pic.width);
 		ToolBox.setWord(headerPCSStart,2, h);								// cropped height
 		ToolBox.setByte(headerPCSStart,4, fpsId);
@@ -611,33 +635,37 @@ public class SupBD implements Substream {
 		headerPCSStart[14] = (pic.isforced ? (byte)0x40 : 0);
 		ToolBox.setWord(headerPCSStart,15, pic.getOfsX());
 		ToolBox.setWord(headerPCSStart,17, yOfs);
-		for (int i=0; i<headerPCSStart.length; i++)
+		for (int i=0; i<headerPCSStart.length; i++) {
 			buf[index++] = headerPCSStart[i];
+		}
 
 		// write WDS
 		packetHeader[10] = 0x17;											// ID
 		int timeStamp = (int)pic.startTime - windowInitTime;
 		ToolBox.setDWord(packetHeader, 2, timeStamp);						// PTS (keep DTS)
 		ToolBox.setWord(packetHeader, 11, headerWDS.length);				// size
-		for (int i=0; i<packetHeader.length; i++)
+		for (int i=0; i<packetHeader.length; i++) {
 			buf[index++] = packetHeader[i];
+		}
 		ToolBox.setWord(headerWDS, 2, pic.getOfsX());
 		ToolBox.setWord(headerWDS, 4, yOfs);
 		ToolBox.setWord(headerWDS, 6, bm.getWidth());
 		ToolBox.setWord(headerWDS, 8, bm.getHeight());
-		for (int i=0; i<headerWDS.length; i++)
+		for (int i=0; i<headerWDS.length; i++) {
 			buf[index++] = headerWDS[i];
+		}
 
 		// write PDS
 		packetHeader[10] = 0x14;											// ID
 		ToolBox.setDWord(packetHeader, 2, dts);								// PTS (=DTS of PCS/WDS)
 		ToolBox.setDWord(packetHeader, 6, 0);								// DTS (0)
 		ToolBox.setWord(packetHeader, 11, (2+palSize*5));					// size
-		for (int i=0; i<packetHeader.length; i++)
+		for (int i=0; i<packetHeader.length; i++) {
 			buf[index++] = packetHeader[i];
+		}
 		buf[index++] = 0;
 		buf[index++] = 0;
-		for (int i=0; i<palSize; i++) {
+		for (int i=0; i < palSize; i++) {
 			buf[index++] = (byte)i;											// index
 			buf[index++] = pal.getY()[i];									// Y
 			buf[index++] = pal.getCr()[i];									// Cr
@@ -648,38 +676,46 @@ public class SupBD implements Substream {
 		// write first OBJ
 		int bufSize = rleBuf.length;
 		int rleIndex = 0;
-		if (bufSize > 0xffe4)
+		if (bufSize > 0xffe4) {
 			bufSize = 0xffe4;
+		}
 		packetHeader[10] = 0x15;											// ID
-		timeStamp = dts+imageDecodeTime;
+		timeStamp = dts + imageDecodeTime;
 		ToolBox.setDWord(packetHeader, 2, timeStamp);						// PTS
 		ToolBox.setDWord(packetHeader, 6, dts);								// DTS
 		ToolBox.setWord(packetHeader, 11, headerODSFirst.length+bufSize);	// size
-		for (int i=0; i<packetHeader.length; i++)
+		for (int i=0; i < packetHeader.length; i++) {
 			buf[index++] = packetHeader[i];
+		}
 		int marker = ((numAddPackets == 0) ? 0xC0000000 : 0x80000000);
 		ToolBox.setDWord(headerODSFirst, 3, marker | (rleBuf.length+4));
 		ToolBox.setWord(headerODSFirst, 7, bm.getWidth());
 		ToolBox.setWord(headerODSFirst, 9, bm.getHeight());
-		for (int i=0; i<headerODSFirst.length; i++)
+		for (int i=0; i < headerODSFirst.length; i++) {
 			buf[index++] = headerODSFirst[i];
-		for (int i=0; i<bufSize; i++)
+		}
+		for (int i=0; i < bufSize; i++) {
 			buf[index++] = rleBuf[rleIndex++];
+		}
 
 		// write additional OBJ packets
 		bufSize = rleBuf.length-bufSize; // remaining bytes to write
-		for (int p=0; p<numAddPackets; p++) {
+		for (int p=0; p < numAddPackets; p++) {
 			int psize = bufSize;
-			if (psize > 0xffeb)
+			if (psize > 0xffeb) {
 				psize = 0xffeb;
+			}
 			packetHeader[10] = 0x15;										// ID (keep DTS & PTS)
-			ToolBox.setWord(packetHeader, 11, headerODSNext.length+psize);	// size
-			for (int i=0; i<packetHeader.length; i++)
+			ToolBox.setWord(packetHeader, 11, headerODSNext.length + psize);	// size
+			for (int i=0; i < packetHeader.length; i++) {
 				buf[index++] = packetHeader[i];
-			for (int i=0; i<headerODSNext.length; i++)
+			}
+			for (int i=0; i < headerODSNext.length; i++) {
 				buf[index++] = headerODSNext[i];
-			for (int i=0; i<psize; i++)
+			}
+			for (int i=0; i < psize; i++) {
 				buf[index++] = rleBuf[rleIndex++];
+			}
 			bufSize -= psize;
 		}
 
@@ -687,8 +723,9 @@ public class SupBD implements Substream {
 		packetHeader[10] = (byte)0x80;										// ID
 		ToolBox.setDWord(packetHeader, 6, 0);								// DTS (0) (keep PTS of ODS)
 		ToolBox.setWord(packetHeader, 11, 0);								// size
-		for (int i=0; i<packetHeader.length; i++)
+		for (int i=0; i < packetHeader.length; i++) {
 			buf[index++] = packetHeader[i];
+		}
 
 		// write PCS end
 		packetHeader[10] = 0x16;											// ID
@@ -696,36 +733,41 @@ public class SupBD implements Substream {
 		dts = (int)pic.startTime - 1;
 		ToolBox.setDWord(packetHeader, 6, dts);								// DTS
 		ToolBox.setWord(packetHeader, 11, headerPCSEnd.length);				// size
-		for (int i=0; i<packetHeader.length; i++)
+		for (int i=0; i<packetHeader.length; i++) {
 			buf[index++] = packetHeader[i];
+		}
 		ToolBox.setWord(headerPCSEnd,0, pic.width);
 		ToolBox.setWord(headerPCSEnd,2, h);									// cropped height
 		ToolBox.setByte(headerPCSEnd,4, fpsId);
 		ToolBox.setWord(headerPCSEnd,5, pic.compNum+1);
-		for (int i=0; i<headerPCSEnd.length; i++)
+		for (int i=0; i<headerPCSEnd.length; i++) {
 			buf[index++] = headerPCSEnd[i];
+		}
 
 		// write WDS
 		packetHeader[10] = 0x17;											// ID
 		timeStamp = (int)pic.endTime - windowInitTime;
 		ToolBox.setDWord(packetHeader, 2, timeStamp);						// PTS (keep DTS of PCS)
 		ToolBox.setWord(packetHeader, 11, headerWDS.length);				// size
-		for (int i=0; i<packetHeader.length; i++)
+		for (int i=0; i < packetHeader.length; i++) {
 			buf[index++] = packetHeader[i];
+		}
 		ToolBox.setWord(headerWDS, 2, pic.getOfsX());
 		ToolBox.setWord(headerWDS, 4, yOfs);
 		ToolBox.setWord(headerWDS, 6, bm.getWidth());
 		ToolBox.setWord(headerWDS, 8, bm.getHeight());
-		for (int i=0; i<headerWDS.length; i++)
+		for (int i=0; i < headerWDS.length; i++) {
 			buf[index++] = headerWDS[i];
+		}
 
 		// write END
 		packetHeader[10] = (byte)0x80;										// ID
 		ToolBox.setDWord(packetHeader, 2, dts);								// PTS (DTS of end PCS)
 		ToolBox.setDWord(packetHeader, 6, 0);								// DTS (0)
 		ToolBox.setWord(packetHeader, 11, 0);								// size
-		for (int i=0; i<packetHeader.length; i++)
+		for (int i=0; i < packetHeader.length; i++) {
 			buf[index++] = packetHeader[i];
+		}
 
 		return buf;
 	}
@@ -738,13 +780,14 @@ public class SupBD implements Substream {
 	 */
 	private SupSegment readSegment(int offset) throws CoreException {
 		try {
-			final SupSegment segment = new SupSegment();
-			if (buffer.getWord(offset) != 0x5047)
-				throw new CoreException("PG missing at index "+ToolBox.hex(offset,8)+"\n");
-			segment.timestamp = buffer.getDWord(offset+=2); // read PTS
+			SupSegment segment = new SupSegment();
+			if (buffer.getWord(offset) != 0x5047) {
+				throw new CoreException("PG missing at index " + ToolBox.hex(offset,8) + "\n");
+			}
+			segment.segmentPTSTimestamp = buffer.getDWord(offset+=2); // read PTS
 			offset += 4; /* ignore DTS */
-			segment.type = buffer.getByte(offset+=4);
-			segment.size = buffer.getWord(++offset);
+			segment.segmentType = buffer.getByte(offset+=4);
+			segment.segmentSize = buffer.getWord(++offset);
 			segment.offset = offset+2;
 			return segment;
 		} catch (FileBufferException ex) {
@@ -758,21 +801,21 @@ public class SupBD implements Substream {
 	 * @return CompositionState
 	 * @throws CoreException
 	 */
-	private CompositionState getCompositionState(final SupSegment segment) throws CoreException {
+	private PGSCompositionState getCompositionState(SupSegment segment) throws CoreException {
 		int type;
 		try {
 			type = buffer.getByte(segment.offset+7);
 			switch (type) {
 				case 0x00:
-					return CompositionState.NORMAL;
+					return PGSCompositionState.NORMAL;
 				case 0x40:
-					return CompositionState.ACQU_POINT;
+					return PGSCompositionState.ACQU_POINT;
 				case 0x80:
-					return CompositionState.EPOCH_START;
+					return PGSCompositionState.EPOCH_START;
 				case 0xC0:
-					return CompositionState.EPOCH_CONTINUE;
+					return PGSCompositionState.EPOCH_CONTINUE;
 				default:
-					return CompositionState.INVALID;
+					return PGSCompositionState.INVALID;
 			}
 		} catch (FileBufferException ex) {
 			throw new CoreException (ex.getMessage());
@@ -785,7 +828,7 @@ public class SupBD implements Substream {
 	 * @return composition number as integer
 	 * @throws CoreException
 	 */
-	private int getCompositionNumber(final SupSegment segment) throws CoreException {
+	private int getCompositionNumber(SupSegment segment) throws CoreException {
 		try {
 			return buffer.getWord(segment.offset+5);
 		} catch (FileBufferException ex) {
@@ -799,7 +842,7 @@ public class SupBD implements Substream {
 	 * @return true: this is only a palette update - ignore ODS
 	 * @throws CoreException
 	 */
-	private boolean getPaletteUpdateFlag(final SupSegment segment) throws CoreException {
+	private boolean getPaletteUpdateFlag(SupSegment segment) throws CoreException {
 		try {
 			return buffer.getByte(segment.offset+8) == 0x80;
 		} catch (FileBufferException ex) {
@@ -814,37 +857,39 @@ public class SupBD implements Substream {
 	 * @param msg reference to message string
 	 * @throws CoreException
 	 */
-	private void parsePCS(final SupSegment segment, final SubPictureBD pic, final String msg[]) throws CoreException {
+	private void parsePCS(SupSegment segment, SubPictureBD pic, String msg[]) throws CoreException {
 		int index = segment.offset;
 		try {
-			if (segment.size >= 4) {
+			if (segment.segmentSize >= 4) {
 				pic.width  = buffer.getWord(index);			// video_width
 				pic.height = buffer.getWord(index+2);		// video_height
-				final int type = buffer.getByte(index+4);	// hi nibble: frame_rate, lo nibble: reserved
-				final int num  = buffer.getWord(index+5); 	// composition_number
+				int type = buffer.getByte(index+4);	// hi nibble: frame_rate, lo nibble: reserved
+				int num  = buffer.getWord(index+5); 	// composition_number
 				// skipped:
 				// 8bit  composition_state: 0x00: normal, 		0x40: acquisition point
 				//							0x80: epoch start,	0xC0: epoch continue, 6bit reserved
 				// 8bit  palette_update_flag (0x80), 7bit reserved
-				final int palID = buffer.getByte(index+9);	// 8bit  palette_id_ref
-				final int coNum = buffer.getByte(index+10);	// 8bit  number_of_composition_objects (0..2)
+				int palID = buffer.getByte(index+9);	// 8bit  palette_id_ref
+				int coNum = buffer.getByte(index+10);	// 8bit  number_of_composition_objects (0..2)
 				if (coNum > 0) {
 					// composition_object:
 					int objID = buffer.getWord(index+11);	// 16bit object_id_ref
 					msg[0] = "palID: "+palID+", objID: "+objID;
-					if (pic.imageObjectList == null)
+					if (pic.imageObjectList == null) {
 						pic.imageObjectList = new ArrayList<ImageObject>();
+					}
 					ImageObject imgObj;
 					if (objID >= pic.imageObjectList.size()) {
 						imgObj = new ImageObject();
 						pic.imageObjectList.add(imgObj);
-					} else
+					} else {
 						imgObj = pic.getImgObj(objID);
+					}
 					imgObj.paletteID = palID;
 					pic.objectID = objID;
 
 					// skipped:  8bit  window_id_ref
-					if (segment.size >= 0x13) {
+					if (segment.segmentSize >= 0x13) {
 						pic.type = type;
 						// object_cropped_flag: 0x80, forced_on_flag = 0x040, 6bit reserved
 						int forcedCropped = buffer.getByte(index+14);
@@ -872,10 +917,10 @@ public class SupBD implements Substream {
 	 * @param pic SubPicture object containing info about the current caption
 	 * @throws CoreException
 	 */
-	private void parseWDS(final SupSegment segment, final SubPictureBD pic) throws CoreException {
-		final int index = segment.offset;
+	private void parseWDS(SupSegment segment, SubPictureBD pic) throws CoreException {
+		int index = segment.offset;
 		try {
-			if (segment.size >= 10) {
+			if (segment.segmentSize >= 10) {
 				// skipped:
 				// 8bit: number of windows (currently assumed 1, 0..2 is legal)
 				// 8bit: window id (0..1)
@@ -885,7 +930,7 @@ public class SupBD implements Substream {
 				pic.winHeight = buffer.getWord(index+8);	// window_height
 			}
 		} catch (FileBufferException ex) {
-			throw new CoreException (ex.getMessage());
+			throw new CoreException(ex.getMessage());
 		}
 	}
 
@@ -896,18 +941,18 @@ public class SupBD implements Substream {
 	 * @return bitmap of the decoded caption
 	 * @throws CoreException
 	 */
-	private Bitmap decodeImage(final SubPictureBD pic, final int transIdx) throws CoreException {
-		final int w = pic.getImageWidth();
-		final int h = pic.getImageHeight();
+	private Bitmap decodeImage(SubPictureBD pic, int transIdx) throws CoreException {
+		int w = pic.getImageWidth();
+		int h = pic.getImageHeight();
 		// always decode image obj 0, start with first entry in fragment list
 		ImageObjectFragment info = pic.getImgObj().fragmentList.get(0);
-		final long startOfs = info.imageBufferOfs;
+		long startOfs = info.imageBufferOfs;
 
-		if (w > pic.width || h > pic.height)
-			throw new CoreException("Subpicture too large: "+w+"x"+h+
-					" at offset "+ToolBox.hex(startOfs, 8));
+		if (w > pic.width || h > pic.height) {
+			throw new CoreException("Subpicture too large: " + w + "x" + h + " at offset " + ToolBox.hex(startOfs, 8));
+		}
 
-		final Bitmap bm = new Bitmap(w, h, (byte)transIdx);
+		Bitmap bm = new Bitmap(w, h, (byte)transIdx);
 
 		int b;
 		int index = 0;
@@ -937,34 +982,39 @@ public class SupBD implements Substream {
 					if (b == 0) {
 						// next line
 						ofs = (ofs/w)*w;
-						if (xpos < w)
+						if (xpos < w) {
 							ofs+=w;
+						}
 						xpos = 0;
 					} else {
 						if ( (b & 0xC0) == 0x40) {
 							// 00 4x xx -> xxx zeroes
 							size = ((b-0x40)<<8)+(buf[index++]&0xff);
-							for (int i=0; i<size; i++)
+							for (int i=0; i < size; i++) {
 								bm.getInternalBuffer()[ofs++] = 0; /*(byte)b;*/
+							}
 							xpos += size;
 						} else if ((b & 0xC0) == 0x80) {
 							// 00 8x yy -> x times value y
 							size = (b-0x80);
 							b = buf[index++]&0xff;
-							for (int i=0; i<size; i++)
+							for (int i=0; i<size; i++) {
 								bm.getInternalBuffer()[ofs++] = (byte)b;
+							}
 							xpos += size;
 						} else if  ((b & 0xC0) != 0) {
 							// 00 cx yy zz -> xyy times value z
-							size = ((b-0xC0)<<8)+(buf[index++]&0xff);
-							b = buf[index++]&0xff;
-							for (int i=0; i<size; i++)
+							size = ((b - 0xC0) << 8) + (buf[index++] & 0xff);
+							b = buf[index++] & 0xff;
+							for (int i=0; i < size; i++) {
 								bm.getInternalBuffer()[ofs++] = (byte)b;
+							}
 							xpos += size;
 						}  else {
 							// 00 xx -> xx times 0
-							for (int i=0; i<b; i++)
+							for (int i=0; i < b; i++) {
 								bm.getInternalBuffer()[ofs++] = 0;
+							}
 							xpos += b;
 						}
 					}
@@ -978,8 +1028,7 @@ public class SupBD implements Substream {
 		} catch (FileBufferException ex) {
 			throw new CoreException (ex.getMessage());
 		} catch (ArrayIndexOutOfBoundsException ex) {
-			Core.printWarn("problems during RLE decoding of picture OBJ at offset "+
-					ToolBox.hex(startOfs+index,8)+"\n");
+			Core.printWarn("problems during RLE decoding of picture OBJ at offset " + ToolBox.hex(startOfs+index, 8)+"\n");
 			return bm;
 		}
 	}
@@ -992,43 +1041,45 @@ public class SupBD implements Substream {
 	 * @return true if this is a valid new object (neither invalid nor a fragment)
 	 * @throws CoreException
 	 */
-	private boolean parseODS(final SupSegment segment, final SubPictureBD pic, final String msg[]) throws CoreException {
-		final int index = segment.offset;
+	private boolean parseODS(SupSegment segment, SubPictureBD pic, String msg[]) throws CoreException {
+		int index = segment.offset;
 		ImageObjectFragment info;
 		try {
-			final int objID = buffer.getWord(index);		// 16bit object_id
-			final int objVer = buffer.getByte(index+1);		// 16bit object_id
-			final int objSeq = buffer.getByte(index+3);		// 8bit  first_in_sequence (0x80),
+			int objID = buffer.getWord(index);		// 16bit object_id
+			int objVer = buffer.getByte(index+1);		// 16bit object_id
+			int objSeq = buffer.getByte(index+3);		// 8bit  first_in_sequence (0x80),
 															// last_in_sequence (0x40), 6bits reserved
-			final boolean first = (objSeq & 0x80) == 0x80;
-			final boolean last  = (objSeq & 0x40) == 0x40;
+			boolean first = (objSeq & 0x80) == 0x80;
+			boolean last  = (objSeq & 0x40) == 0x40;
 
-			if (pic.imageObjectList == null)
+			if (pic.imageObjectList == null) {
 				pic.imageObjectList = new ArrayList<ImageObject>();
+			}
 			ImageObject imgObj;
 			if (objID >= pic.imageObjectList.size()) {
 				imgObj = new ImageObject();
 				pic.imageObjectList.add(imgObj);
-			} else
+			} else {
 				imgObj = pic.getImgObj(objID);
+			}
 
 			if (imgObj.fragmentList == null || first) {			// 8bit  object_version_number
 				// skipped:
 				//  24bit object_data_length - full RLE buffer length (including 4 bytes size info)
-				final int width  = buffer.getWord(index+7);		// object_width
-				final int height = buffer.getWord(index+9);		// object_height
+				int width  = buffer.getWord(index+7);		// object_width
+				int height = buffer.getWord(index+9);		// object_height
 
 				if (width <= pic.width && height <= pic.height) {
 					imgObj.fragmentList = new ArrayList<ImageObjectFragment>();
 					info = new ImageObjectFragment();
 					info.imageBufferOfs = index+11;
-					info.imagePacketSize = segment.size - (index+11-segment.offset);
+					info.imagePacketSize = segment.segmentSize - (index+11-segment.offset);
 					imgObj.fragmentList.add(info);
 					imgObj.bufferSize = info.imagePacketSize;
 					imgObj.height = height;
 					imgObj.width  = width;
-					msg[0] = "ID: "+objID+", update: "+objVer+", seq: "+(first?"first":"")+
-						((first&&last)?"/":"")+(last?"" + "last":"");
+					msg[0] = "ID: " + objID + ", update: " + objVer + ", seq: " + (first ? "first" : "")
+						+ ((first && last) ? "/" : "") + (last ? "" + "last" : "");
 					return true;
 				} else {
 					Core.printWarn("Invalid image size - ignored\n");
@@ -1042,16 +1093,15 @@ public class SupBD implements Substream {
 				//  8bit  first_in_sequence (0x80), last_in_sequence (0x40), 6bits reserved
 				info = new ImageObjectFragment();
 				info.imageBufferOfs = index+4;
-				info.imagePacketSize = segment.size - (index+4-segment.offset);
+				info.imagePacketSize = segment.segmentSize - (index+4-segment.offset);
 				imgObj.fragmentList.add(info);
 				imgObj.bufferSize += info.imagePacketSize;
-				msg[0] = "ID: "+objID+", update: "+objVer+", seq: "+(first?"first":"")+
-					((first&&last)?"/":"")+(last?"" + "last":"");
+				msg[0] = "ID: " + objID + ", update: " + objVer + ", seq: " + (first ? "first" : "")
+					+ ((first && last) ? "/" : "") + (last ? "" + "last" : "");
 				return false;
 			}
-
 		} catch (FileBufferException ex) {
-			throw new CoreException (ex.getMessage());
+			throw new CoreException(ex.getMessage());
 		}
 	}
 
@@ -1061,14 +1111,15 @@ public class SupBD implements Substream {
 	 * @return
 	 * @throws CoreException
 	 */
-	private Palette decodePalette(final SubPictureBD pic) throws CoreException {
+	private Palette decodePalette(SubPictureBD pic) throws CoreException {
 		boolean fadeOut = false;
 		int palIndex = 0;
 		ArrayList<PaletteInfo> pl = pic.palettes.get(pic.getImgObj().paletteID);
-		if (pl == null)
+		if (pl == null) {
 			throw new CoreException("Palette ID out of bounds.");
+		}
 
-		final Palette palette = new Palette(256, Core.usesBT601());
+		Palette palette = new Palette(256, Core.usesBT601());
 		// by definition, index 0xff is always completely transparent
 		// also all entries must be fully transparent after initialization
 
@@ -1076,7 +1127,7 @@ public class SupBD implements Substream {
 			for (int j=0; j<pl.size(); j++) {
 				PaletteInfo p = pl.get(j);
 				int index = p.paletteOfs;
-				for (int i=0; i<p.paletteSize; i++) {
+				for (int i=0; i < p.paletteSize; i++) {
 					// each palette entry consists of 5 bytes
 					palIndex = buffer.getByte(index);
 					int y = buffer.getByte(++index);
@@ -1099,14 +1150,17 @@ public class SupBD implements Substream {
 							cb = 128;
 						}
 						palette.setAlpha(palIndex, alpha);
-					} else fadeOut = true;
+					} else {
+						fadeOut = true;
+					}
 
 					palette.setYCbCr(palIndex, y, cb, cr);
 					index++;
 				}
 			}
-			if (fadeOut)
+			if (fadeOut) {
 				Core.printWarn("fade out detected -> patched palette\n");
+			}
 			return palette;
 		} catch (FileBufferException ex) {
 			throw new CoreException (ex.getMessage());
@@ -1123,30 +1177,32 @@ public class SupBD implements Substream {
 	 * @throws CoreException
 	 * @returns number of valid palette entries (-1 for fault)
 	 */
-	private int parsePDS(final SupSegment segment, final SubPictureBD pic, final String msg[]) throws CoreException {
-		final int index = segment.offset;
+	private int parsePDS(SupSegment segment, SubPictureBD pic, String msg[]) throws CoreException {
+		int index = segment.offset;
 		try {
-			final int paletteID = buffer.getByte(index);	// 8bit palette ID (0..7)
+			int paletteID = buffer.getByte(index);	// 8bit palette ID (0..7)
 			// 8bit palette version number (incremented for each palette change)
-			final int paletteUpdate = buffer.getByte(index+1);
+			int paletteUpdate = buffer.getByte(index+1);
 			if (pic.palettes == null) {
 				pic.palettes = new ArrayList<ArrayList <PaletteInfo>>();
-				for (int i=0; i<8; i++)
+				for (int i=0; i<8; i++) {
 					pic.palettes.add(new ArrayList<PaletteInfo>());
+				}
 			}
 			if (paletteID > 7) {
-				msg[0] = "Illegal palette id at offset "+ToolBox.hex(index, 8);
+				msg[0] = "Illegal palette id at offset " + ToolBox.hex(index, 8);
 				return -1;
 			}
-			//
+
 			ArrayList<PaletteInfo> al = pic.palettes.get(paletteID);
-			if (al == null)
+			if (al == null) {
 				al = new ArrayList<PaletteInfo>();
-			final PaletteInfo p = new PaletteInfo();
-			p.paletteSize = (segment.size-2)/5;
+			}
+			PaletteInfo p = new PaletteInfo();
+			p.paletteSize = (segment.segmentSize-2)/5;
 			p.paletteOfs = index+2;
 			al.add(p);
-			msg[0] = "ID: "+paletteID+", update: "+paletteUpdate+", "+p.paletteSize+" entries";
+			msg[0] = "ID: " + paletteID + ", update: " + paletteUpdate + ", " + p.paletteSize + " entries";
 			return p.paletteSize;
 		} catch (FileBufferException ex) {
 			throw new CoreException (ex.getMessage());
@@ -1158,7 +1214,7 @@ public class SupBD implements Substream {
 	 * @param pic SubPicture object containing info about caption
 	 * @throws CoreException
 	 */
-	private void decode(final SubPictureBD pic)  throws CoreException {
+	private void decode(SubPictureBD pic)  throws CoreException {
 		palette = decodePalette(pic);
 		bitmap  = decodeImage(pic, palette.getIndexOfMostTransparentPaletteEntry());
 		primaryColorIndex = bitmap.getPrimaryColorIndex(palette.getAlpha(), Core.getAlphaThr(), palette.getY());
@@ -1167,11 +1223,12 @@ public class SupBD implements Substream {
 	/* (non-Javadoc)
 	 * @see Substream#decode(int)
 	 */
-	public void decode(final int index) throws CoreException {
-		if (index < subPictures.size())
+	public void decode(int index) throws CoreException {
+		if (index < subPictures.size()) {
 			decode(subPictures.get(index));
-		else
+		} else {
 			throw new CoreException("Index "+index+" out of bounds\n");
+		}
 	}
 
 	/* setters / getters */
@@ -1200,7 +1257,7 @@ public class SupBD implements Substream {
 	/* (non-Javadoc)
 	 * @see Substream#getImage(Bitmap)
 	 */
-	public BufferedImage getImage(final Bitmap bm) {
+	public BufferedImage getImage(Bitmap bm) {
 		return bm.getImage(palette.getColorModel());
 	}
 
@@ -1214,7 +1271,7 @@ public class SupBD implements Substream {
 	/* (non-Javadoc)
 	 * @see Substream#getSubPicture(int)
 	 */
-	public SubPicture getSubPicture(final int index) {
+	public SubPicture getSubPicture(int index) {
 		return subPictures.get(index);
 	}
 
@@ -1236,35 +1293,36 @@ public class SupBD implements Substream {
 	 * @see Substream#close()
 	 */
 	public void close() {
-		if (buffer != null)
+		if (buffer != null) {
 			buffer.close();
+		}
 	}
 
 	/* (non-Javadoc)
 	 * @see Substream#getEndTime(int)
 	 */
-	public long getEndTime(final int index) {
+	public long getEndTime(int index) {
 		return subPictures.get(index).endTime;
 	}
 
 	/* (non-Javadoc)
 	 * @see Substream#getStartTime(int)
 	 */
-	public long getStartTime(final int index) {
+	public long getStartTime(int index) {
 		return subPictures.get(index).startTime;
 	}
 
 	/* (non-Javadoc)
 	 * @see Substream#isForced(int)
 	 */
-	public boolean isForced(final int index) {
+	public boolean isForced(int index) {
 		return subPictures.get(index).isforced;
 	}
 
 	/* (non-Javadoc)
 	 * @see Substream#getStartOffset(int)
 	 */
-	public long getStartOffset(final int index) {
+	public long getStartOffset(int index) {
 		SubPictureBD pic = subPictures.get(index);
 		return pic.getImgObj().fragmentList.get(0).imageBufferOfs;
 	}
@@ -1274,19 +1332,15 @@ public class SupBD implements Substream {
 	 * @param index index of caption
 	 * @return frame rate
 	 */
-	public double getFps(final int index) {
+	public double getFps(int index) {
 		return getFpsFromID(subPictures.get(index).type);
 	}
 }
 
 class SupSegment {
-	/** type of segment (segment_type) */
-	int   type;
-	/** segment size in bytes (segment_length) */
-	int   size;
-	/** segment PTS time stamp */
-	long  timestamp;
+	int segmentType;
+	int segmentSize;
+	long segmentPTSTimestamp;
 	/** file offset of segment */
-	int   offset;
+	int  offset;
 }
-

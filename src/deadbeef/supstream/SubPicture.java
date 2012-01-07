@@ -52,8 +52,6 @@ public class SubPicture implements Cloneable {
 	/** list of erase patches */
 	public ArrayList<ErasePatch> erasePatch;
 
-	/* member functions */
-
 	/**
 	 * Allows to get a clone of the parent object even for SubPictureBD objects.
 	 * @return clone of the parent object
@@ -81,15 +79,13 @@ public class SubPicture implements Cloneable {
 		sp.wasDecoded = wasDecoded;
 		if (erasePatch != null && erasePatch.size()>0) {
 			ArrayList<ErasePatch> epl = new ArrayList<ErasePatch>();
-			for (ErasePatch ep : erasePatch)
+			for (ErasePatch ep : erasePatch) {
 				epl.add(ep);
+			}
 			sp.erasePatch = epl;
 		}
-
 		return sp;
 	}
-
-	/* setters / getters */
 
 	/**
 	 * get image width
@@ -127,7 +123,7 @@ public class SubPicture implements Cloneable {
 	 * Set image width
 	 * @param w width in pixels
 	 */
-	public void setImageWidth(final int w) {
+	public void setImageWidth(int w) {
 		imageWidth = w;
 	}
 
@@ -135,7 +131,7 @@ public class SubPicture implements Cloneable {
 	 * Set image height
 	 * @param h height in pixels
 	 */
-	public void setImageHeight(final int h) {
+	public void setImageHeight(int h) {
 		imageHeight = h;
 	}
 
@@ -143,7 +139,7 @@ public class SubPicture implements Cloneable {
 	 * Set image x offset
 	 * @param ofs offset in pixels
 	 */
-	public void setOfsX(final int ofs) {
+	public void setOfsX(int ofs) {
 		xOfs = ofs;
 	}
 
@@ -151,7 +147,7 @@ public class SubPicture implements Cloneable {
 	 * Set image y offset
 	 * @param ofs offset in pixels
 	 */
-	public void setOfsY(final int ofs) {
+	public void setOfsY(int ofs) {
 		yOfs = ofs;
 	}
 
@@ -190,8 +186,6 @@ class SubPictureBD extends SubPicture implements Cloneable {
 	/** list of (list of) palette info - there are up to 8 palettes per epoch, each can be updated several times */
 	ArrayList<ArrayList<PaletteInfo>> palettes;
 
-	/* member functions */
-
 	/* (non-Javadoc)
 	 * @see SubPicture#clone()
 	 */
@@ -215,8 +209,9 @@ class SubPictureBD extends SubPicture implements Cloneable {
 			for (ArrayList<PaletteInfo> pi : palettes) {
 				ArrayList<PaletteInfo> cpi = new ArrayList<PaletteInfo>();
 				c.palettes.add(cpi);
-				for (PaletteInfo p : pi)
+				for (PaletteInfo p : pi) {
 					cpi.add(p.clone());
+				}
 			}
 		}
 		// (not so) deep copy of objects (cloning of the fragment lists is not needed)
@@ -272,7 +267,7 @@ class SubPictureBD extends SubPicture implements Cloneable {
 	 * @param index index of subtitle
 	 * @return image object containing RLE data
 	 */
-	ImageObject getImgObj(final int index) {
+	ImageObject getImgObj(int index) {
 		return imageObjectList.get(index);
 	}
 
@@ -329,8 +324,6 @@ class ImageObject implements Cloneable  {
 	/** upper left corner of subtitle y */
 	int yOfs;
 
-	/* member functions */
-
 	/* (non-Javadoc)
 	 * @see java.lang.Object#clone()
 	 */
@@ -354,8 +347,6 @@ class ImageObjectFragment implements Cloneable  {
 	/** size of this part of the RLE buffer */
 	int imagePacketSize;
 
-	/* member functions */
-
 	/* (non-Javadoc)
 	 * @see java.lang.Object#clone()
 	 */
@@ -378,8 +369,6 @@ class PaletteInfo implements Cloneable {
 	int paletteOfs;
 	/** number of palette entries */
 	int paletteSize;
-
-	/* member functions */
 
 	/* (non-Javadoc)
 	 * @see java.lang.Object#clone()
@@ -405,8 +394,6 @@ class SubPictureXml extends SubPicture implements Cloneable {
 	int originalY;
 	/** file name of Xml file */
 	String fileName;
-
-	/* member functions */
 
 	/* (non-Javadoc)
 	 * @see SubPicture#clone()

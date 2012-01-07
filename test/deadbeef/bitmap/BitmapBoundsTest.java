@@ -1,4 +1,4 @@
-package deadbeef.SupTools;
+package deadbeef.bitmap;
 
 import static org.junit.Assert.*;
 

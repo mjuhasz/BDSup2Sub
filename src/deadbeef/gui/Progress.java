@@ -8,6 +8,10 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -20,6 +24,7 @@ import javax.swing.JProgressBar;
 import javax.swing.SwingUtilities;
 
 import deadbeef.core.Core;
+import deadbeef.core.CoreThreadState;
 
 
 /*
@@ -47,13 +52,13 @@ public class Progress extends JDialog {
 
 	private static final long serialVersionUID = 1L;
 
-	private JPanel jContentPane = null;
+	private JPanel jContentPane;
 
-	private JButton jButtonCancel = null;
+	private JButton jButtonCancel;
 
-	private JProgressBar jProgressBar = null;
+	private JProgressBar jProgressBar;
 
-	private JLabel jLabelProgress = null;
+	private JLabel jLabelProgress;
 
 	/** timer used to dispose when thread was canceled */
 	private Timer timer;
@@ -65,7 +70,6 @@ public class Progress extends JDialog {
 	 */
 	public Progress(Frame owner, boolean modal) {
 		super(owner, modal);
-		// TODO Auto-generated constructor stub
 		initialize();
 
 		Point p = owner.getLocation();
@@ -103,9 +107,9 @@ public class Progress extends JDialog {
 		this.setBounds(new Rectangle(0, 0, 224, 139));
 		this.setMaximumSize(new Dimension(224, 139));
 		this.setContentPane(getJContentPane());
-		this.addWindowListener(new java.awt.event.WindowAdapter() {
+		this.addWindowListener(new WindowAdapter() {
 			@Override
-			public void windowClosing(java.awt.event.WindowEvent e) {
+			public void windowClosing(WindowEvent e) {
 				Core.cancel();
 			}
 		});
@@ -152,8 +156,8 @@ public class Progress extends JDialog {
 		if (jButtonCancel == null) {
 			jButtonCancel = new JButton();
 			jButtonCancel.setText("Cancel");
-			jButtonCancel.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jButtonCancel.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					Core.cancel();
 				}
 			});
@@ -194,10 +198,8 @@ public class Progress extends JDialog {
 		try {
 			SwingUtilities.invokeAndWait(new Runnable() { public void run() { jProgressBar.setValue( val ); jProgressBar.repaint();} } );
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (InvocationTargetException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -209,7 +211,7 @@ public class Progress extends JDialog {
 	class progressTimer extends TimerTask {
 		@Override
 		public void run() {
-			if (Core.getStatus() != Core.State.ACTIVE) {
+			if (Core.getStatus() != CoreThreadState.ACTIVE) {
 				timer.cancel();
 				dispose();
 			}

@@ -1,6 +1,4 @@
-package deadbeef.core;
-
-import java.awt.image.BufferedImage;
+package deadbeef.core;import static deadbeef.core.Constants.*;import java.awt.image.BufferedImage;
 import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -14,7 +12,7 @@ import java.util.ArrayList;
 
 import javax.swing.JFrame;
 
-import deadbeef.bitmap.Bitmap;import deadbeef.bitmap.BitmapWithPalette;import deadbeef.bitmap.ErasePatch;import deadbeef.bitmap.Palette;import deadbeef.filters.Filter;import deadbeef.filters.Filters;
+import deadbeef.bitmap.Bitmap;import deadbeef.bitmap.BitmapWithPalette;import deadbeef.bitmap.ErasePatch;import deadbeef.bitmap.Palette;import deadbeef.filters.BSplineFilter;import deadbeef.filters.BellFilter;import deadbeef.filters.BiCubicFilter;import deadbeef.filters.Filter;import deadbeef.filters.HermiteFilter;import deadbeef.filters.Lanczos3Filter;import deadbeef.filters.MitchellFilter;import deadbeef.filters.TriangleFilter;
 /*
  * Copyright 2009 Volker Oth (0xdeadbeef)
  *
@@ -30,7 +28,7 @@ import deadbeef.bitmap.Bitmap;import deadbeef.bitmap.BitmapWithPalette;import 
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import deadbeef.gui.MainFrame;import deadbeef.gui.Progress;import deadbeef.supstream.SubDVD;import deadbeef.supstream.SubPicture;import deadbeef.supstream.SubPictureDVD;import deadbeef.supstream.Substream;import deadbeef.supstream.SubstreamDVD;import deadbeef.supstream.SupBD;import deadbeef.supstream.SupDVD;import deadbeef.supstream.SupHD;import deadbeef.supstream.SupXml;import deadbeef.tools.PngEncoderB;import deadbeef.tools.Props;import deadbeef.tools.ToolBox;
+import deadbeef.gui.MainFrame;import deadbeef.gui.Progress;import deadbeef.supstream.SubDVD;import deadbeef.supstream.SubPicture;import deadbeef.supstream.SubPictureDVD;import deadbeef.supstream.Substream;import deadbeef.supstream.SubstreamDVD;import deadbeef.supstream.SupBD;import deadbeef.supstream.SupDVD;import deadbeef.supstream.SupHD;import deadbeef.supstream.SupXml;import deadbeef.tools.EnhancedPngEncoder;import deadbeef.tools.Props;import deadbeef.tools.ToolBox;
 /**
  * This class contains the core functionality of BDSup2Sub.<br>
  * It's meant to be used from the command line as well as from the GUI.
@@ -39,64 +37,10 @@ import deadbeef.gui.MainFrame;import deadbeef.gui.Progress;import deadbeef.sup
  */
 public class Core  extends Thread {
 
-	/** Program name */
-	final static String progName = "BDSup2Sub";
-	/** Program name to display in the main window, in the log, in the command line etc.  */
-	public final static String progNameVer = progName + " 4.0.1";
-	/** Revision and release date for display in the log windows etc. */
-	final static String authorDate = "0xdeadbeef, mjuhasz 06-01-2012.";
-	/** Name of the ini file to load and store properties */
-	final static String iniName = "bdsup2sup.ini";
-
-	/** Enumeration of filters that can be applied for scaling */
-	public enum ScalingFilters {
-		/** Bilinear filter */
-		BILINEAR,
-		/** Triangle filter */
-		TRIANGLE,
-		/** Bicubic filter */
-		BICUBIC,
-		/** Bell filter */
-		BELL,
-		/** Bicubic spline filter */
-		BSPLINE,
-		/** Hermite filter */
-		HERMITE,
-		/** Lanczos3 filter */
-		LANCZOS3,
-		/** Mitchell filter */
-		MITCHELL,
-	};
-
-	/** Enumeration for set/clear/keep states */
-	public enum SetState {
-		/** keep (no change) */
-		KEEP,
-		/** set */
-		SET,
-		/** clear */
-		CLEAR
-	}
-
-	/** String names of filters - order must be as in enumeration {@link ScalingFilters} */
-	private final static String scalingFilters[] = {
-		"Bilinear", "Triangle", "Bicubic", "Bell", "B-Spline", "Hermite", "Lanczos3", "Mitchell"
-	};
-
-	/** Enumeration of run states (used for threaded reading/converting) */
-	public enum State {
-		/** thread is inactive */
-		INACTIVE,
-		/** thread is currently running */
-		ACTIVE,
-		/** thread was canceled */
-		CANCELED,
-		/** thread successfully finished */
-		FINISHED
-	};
+	private static final String INI_FILE = "bdsup2sup.ini";
 
 	/** Enumeration of functionalities executed in the started thread */
-	public enum RunType {
+	private enum RunType {
 		/** read a SUP stream */
 		READSUP,
 		/** read a SUP stream */
@@ -113,95 +57,6 @@ public class Core  extends Thread {
 		MOVEALL
 	};
 
-	/**
-	 * Enumeration of input stream identifiers
-	 * @author 0xdeadbeef
-	 */
-	public enum StreamID {
-		/** Blu-Ray SUP stream */
-		BDSUP,
-		/** HD-DVD SUP or DVD SUP stream (same ID) */
-		SUP,
-		/** DVD VobSub SUB stream*/
-		DVDSUB,
-		/** Sony BDN XML */
-		XML,
-		/** DVD IFO */
-		IFO,
-		/** DVD VobSub IDX */
-		IDX,
-		/** UNKNOWN */
-		UNKNOWN
-	}
-
-	/** Enumeration of input modes */
-	public enum InputMode {
-		/** DVD SUB/IDX (VobSub) stream */
-		VOBSUB,
-		/** Blu-Ray SUP stream */
-		BDSUP,
-		/** Sony BDN XML (+PNGs) */
-		XML,
-		/** HD-DVD SUP stream */
-		HDDVDSUP,
-		/** DVD SUP/IFO stream */
-		SUPIFO
-	};
-
-	/** Enumeration of output modes */
-	public enum OutputMode {
-		/** DVD SUB/IDX (VobSub) stream */
-		VOBSUB,
-		/** DVD SUP/IFO stream */
-		SUPIFO,
-		/** Blu-Ray SUP stream */
-		BDSUP,
-		/** Sony BDN XML (+PNGs) */
-		XML
-	};
-
-	/** String names of output modes - order must be as in enumeration {@link OutputMode} */
-	private final static String modes[] = { "SUB/IDX", "SUP/IFO", "SUP(BD)", "XML/PNG"};
-
-	/** Enumeration of palette modes */
-	public enum PaletteMode {
-		/** keep existing palette */
-		KEEP_EXISTING,
-		/** create new */
-		CREATE_NEW,
-		/** create new dithered */
-		CREATE_DITHERED
-	};
-
-	/** String names of palette modes - order must be as in enumeration {@link PaletteMode} */
-	private final static String paletteModeNames[] = {
-		"keep existing",
-		"create new",
-		"dithered"
-	};
-
-	/** Enumeration of modes for moving of captions in Y direction */
-	public enum MoveModeY {
-		/** keep position - don't move */
-		KEEP,
-		/** move inside bounds */
-		INSIDE,
-		/** move outside bounds */
-		OUTSIDE
-	}
-
-	/** Enumeration of modes for moving of captions in X direction */
-	public enum MoveModeX {
-		/** keep position - don't move */
-		KEEP,
-		/** move to center */
-		CENTER,
-		/** move to left border */
-		LEFT,
-		/** move to right border */
-		RIGHT,
-	}
-
 	/** Enumeration of caption types (used for moving captions) */
 	private enum CaptionType {
 		/** caption in upper half of the screen */
@@ -212,325 +67,40 @@ public class Core  extends Thread {
 		FULL
 	};
 
-	/** Enumeration of supported resolutions */
-	public static enum Resolution {
-		/** NTSC: 720x480 */
-		NTSC,
-		/** PAL: 720x576 */
-		PAL,
-		/** 720p: 1280x720 */
-		HD_720,
-		/** 1440x1080 */
-		HD_1440x1080,
-		/** 1080p: 1920x1080 */
-		HD_1080
-	};
+	private static final int RECENT_FILE_COUNT = 5;
 
-	/** Array containing width and height for each resolution in enumeration {@link Resolution} */
-	private final static int[][] resolutions = {
-		{720, 480},
-		{720, 576},
-		{1280, 720},
-		{1440, 1080},
-		{1920, 1080}
-	};
-
-	/** String names of resolutions - order must be as in enumeration {@link Resolution} */
-	private final static String resolutionNames[] = {
-		"NTSC (720x480)",
-		"PAL (720x576)",
-		"720p (1280x720)",
-		"1080p- (1440x1080)",
-		"1080p (1920x1080)"
-	};
-
-	/** string names of resolutions for Xml - order must be as in enumeration {@link Resolution} */
-	private final static String resolutionNamesXml[] = {
-		"480i",
-		"576i",
-		"720p",
-		"1440x1080",
-		"1080p"
-	};
-
-	/** Frames per seconds for 24p (23.976) */
-	public final static double FPS_24P  = 24000.0/1001;
-	/** Frames per seconds for wrong 24P (23.975) */
-	public final static double FPS_23_975 = 23.975;
-	/** Frames per seconds for 24Hz (24.0) */
-	public final static double FPS_24HZ = 24.0;
-	/** Frames per seconds for PAL progressive (25.0) */
-	public final static double FPS_PAL  = 25.0;
-	/** Frames per seconds for NTSC progressive (29.97) */
-	public final static double FPS_NTSC = 30000.0/1001;
-	/** Frames per seconds for PAL interlaced (50.0) */
-	public final static double FPS_PAL_I  = 50.0;
-	/** Frames per seconds for NTSC interlaced (59.94) */
-	public final static double FPS_NTSC_I = 60000.0/1001;
-
-	/** Minimum image dimension (a bitmap won't be scaled to a smaller width/height than this value) */
-	private final static int minDim = 8;
-	/** Minimum value for free scaling factor */
-	public final static double minScale = 0.5;
-	/** Maximum value for free scaling factor */
-	public final static double maxScale = 2.0;
-	
-	/** Number of recently loaded files */
-	private final static int numRecent = 5;
-
-	/** Two dimensional array of languages. 1st entry is full name, 2nd entry is two char abbreviation,
-	 *  3rd entry is a three character abbreviation */
-	private static String[][] languages = {
-		{"German",       "de", "deu"},
-		{"English",      "en", "eng"},
-		{"French",       "fr", "fra"},
-		{"Italian",      "it", "ita"},
-		{"Spanish",      "es", "spa"},
-		{"Abkhazian",    "ab", "abk"},
-		{"Afar",         "aa", "aar"},
-		{"Afrikaans",    "af", "afr"},
-		{"Albanian",     "sq", "sqi"},
-		{"Amharic",      "am", "amh"},
-		{"Arabic",       "ar", "ara"},
-		{"Aragonese",    "an", "arg"},
-		{"Armenian",     "hy", "hye"},
-		{"Assamese",     "as", "asm"},
-		{"Avaric",       "av", "ava"},
-		{"Avestan",      "ae", "ave"},
-		{"Aymara",       "ay", "aym"},
-		{"Azerbaijani",  "az", "aze"},
-		{"Bambara",      "bm", "bam"},
-		{"Bashkir",      "ba", "bak"},
-		{"Basque",       "eu", "eus"},
-		{"Belarusian",   "be", "bel"},
-		{"Bengali",      "bn", "ben"},
-		{"Bihari",       "bh", "bih"},
-		{"Bislama",      "bi", "bis"},
-		{"Bosnian",      "bs", "bos"},
-		{"Breton",       "br", "bre"},
-		{"Bulgarian",    "bg", "bul"},
-		{"Burmese",      "my", "mya"},
-		{"Cambodian",    "km", "khm"},
-		{"Catalan",      "ca", "cat"},
-		{"Chamorro",     "ch", "cha"},
-		{"Chechen",      "ce", "che"},
-		{"Chichewa",     "ny", "nya"},
-		{"Chinese",      "zh", "zho"},
-		{"Chuvash",      "cv", "chv"},
-		{"Cornish",      "kw", "cor"},
-		{"Corsican",     "co", "cos"},
-		{"Cree",         "cr", "cre"},
-		{"Croatian",     "hr", "hrv"},
-		{"Czech",        "cs", "ces"},
-		{"Danish",       "da", "dan"},
-		{"Divehi",       "dv", "div"},
-		{"Dzongkha",     "dz", "dzo"},
-		{"Dutch",        "nl", "nld"},
-		{"Esperanto",    "eo", "epo"},
-		{"Estonian",     "et" ,"est"},
-		{"Ewe",          "ee", "ewe"},
-		{"Faroese",      "fo", "fao"},
-		{"Fiji",         "fj", "fij"},
-		{"Finnish",      "fi", "fin"},
-		{"Frisian",      "fy", "fry"},
-		{"Fulah",        "ff", "ful"},
-		{"Gaelic",       "gd", "gla"},
-		{"Galician",     "gl", "glg"},
-		{"Ganda",        "lg", "lug"},
-		{"Georgian",     "ka", "kat"},
-		{"Greek",        "el", "ell"},
-		{"Greenlandic",  "kl", "kal"},
-		{"Guarani",      "gn", "grn"},
-		{"Gujarati",     "gu", "guj"},
-		{"Haitian",      "ht", "hat"},
-		{"Hausa",        "ha", "hau"},
-		{"Hebrew",       "he", "heb"},
-		{"Herero",       "hz", "her"},
-		{"Hindi",        "hi", "hin"},
-		{"Hiri Motu",    "ho", "hmo"},
-		{"Hungarian",    "hu", "hun"},
-		{"Icelandic",    "is", "isl"},
-		{"Ido",          "io", "ido"},
-		{"Igbo",         "ig", "ibo"},
-		{"Indonesian",   "id", "ind"},
-		{"Interlingua",  "ia", "ina"},
-		{"Interlingue",  "ie", "ile"},
-		{"Inupiaq",      "ik", "ipk"},
-		{"Inuktitut",    "iu", "iku"},
-		{"Irish",        "ga", "gle"},
-		{"Japanese",     "ja", "jpn"},
-		{"Javanese",     "jv", "jav"},
-		{"Kannada",      "kn", "kan"},
-		{"Kanuri",       "kr", "kau"},
-		{"Kashmiri",     "ks", "kas"},
-		{"Kazakh",       "kk", "kaz"},
-		{"Kikuyu",       "ki", "kik"},
-		{"Kinyarwanda",  "rw", "kin"},
-		{"Kirghiz",      "ky", "kir"},
-		{"Komi",         "kv", "kom"},
-		{"Kongo",        "kg", "kon"},
-		{"Korean",       "ko", "kor"},
-		{"Kuanyama",     "kj", "kua"},
-		{"Kurdish",      "ku", "kur"},
-		{"Lao",          "lo", "lao"},
-		{"Latin",        "la", "lat"},
-		{"Latvian",      "lv", "lav"},
-		{"Limburgan",    "li", "lim"},
-		{"Lingala",      "ln", "lin"},
-		{"Lithuanian",   "lt", "lit"},
-		{"Luba",         "lu", "lub"},
-		{"Luxembourgish","lb","ltz"},
-		{"Macedonian",   "mk", "mkd"},
-		{"Malagasy",     "mg", "mlg"},
-		{"Malay",        "ms", "msa"},
-		{"Malayalam",    "ml", "mal"},
-		{"Maltese",      "mt", "mlt"},
-		{"Marshallese",  "mh", "mah"},
-		{"Manx",         "gv", "glv"},
-		{"Maori",        "mi", "mri"},
-		{"Marathi",      "mr", "mar"},
-		{"Mongolian",    "mn", "mon"},
-		{"Nauru",        "na", "nau"},
-		{"Navajo",       "nv", "nav"},
-		{"Ndebele",      "nd", "nde"},
-		{"Ndonga",       "ng", "ndo"},
-		{"Nepali",       "ne", "nep"},
-		{"Norwegian",    "no", "nor"},
-		{"Occitan",      "oc", "oci"},
-		{"Ojibwa",       "oj", "oji"},
-		{"Oriya",        "or", "ori"},
-		{"Oromo",        "om", "orm"},
-		{"Ossetian",     "os", "oss"},
-		{"Pali",         "pi", "pli"},
-		{"Panjabi",      "pa", "pan"},
-		{"Pashto",       "ps", "pus"},
-		{"Persian",      "fa", "fas"},
-		{"Polish",       "pl", "pol"},
-		{"Portuguese",   "pt", "por"},
-		{"Quechua",      "qu", "que"},
-		{"Romansh",      "rm", "roh"},
-		{"Romanian",     "ro", "ron"},
-		{"Rundi",        "rn", "run"},
-		{"Russian",      "ru", "rus"},
-		{"Sami",         "se", "sme"},
-		{"Samoan",       "sm", "smo"},
-		{"Sango",        "sg", "sag"},
-		{"Sanskrit",     "sa", "san"},
-		{"Sardinian",    "sc", "srd"},
-		{"Serbian",      "sr", "srp"},
-		{"Shona",        "sn", "sna"},
-		{"Sichuan Yi",   "ii", "iii"},
-		{"Sindhi",       "sd", "snd"},
-		{"Sinhalese",    "si", "sin"},
-		{"Slavonic",     "cu", "chu"},
-		{"Slovak",       "sk", "slk"},
-		{"Slovenian",    "sl", "slv"},
-		{"Somali",       "so", "som"},
-		{"Sotho",        "st", "sot"},
-		{"Sundanese",    "su", "sun"},
-		{"Swahili",      "sw", "swa"},
-		{"Swati",        "ss", "ssw"},
-		{"Swedish",      "sv", "swe"},
-		{"Tagalog",      "tl", "tgl"},
-		{"Tahitian",     "ty", "tah"},
-		{"Tajik",        "tg", "tgk"},
-		{"Tamil",        "ta", "tam"},
-		{"Tatar",        "tt", "tar"},
-		{"Telugu",       "te", "tel"},
-		{"Thai",         "th", "tha"},
-		{"Tibetan",      "bo", "bod"},
-		{"Tigrinya",     "ti", "tir"},
-		{"Tonga",        "to", "ton"},
-		{"Tsonga",       "ts", "tso"},
-		{"Tswana",       "tn", "tsn"},
-		{"Turkish",      "tr", "tur"},
-		{"Turkmen",      "tk", "tuk"},
-		{"Twi",          "tw", "twi"},
-		{"Uighur",       "ug", "uig"},
-		{"Ukrainian",    "uk", "ukr"},
-		{"Urdu",         "ur", "urd"},
-		{"Uzbek",        "uz", "uzb"},
-		{"Venda",        "ve", "ven"},
-		{"Vietnamese",   "vi", "vie"},
-		{"Volapük",      "vo", "vol"},
-		{"Welsh",        "cy", "cym"},
-		{"Walloon",      "wa", "wln"},
-		{"Wolof",        "wo", "wol"},
-		{"Xhosa",        "xh", "xho"},
-		{"Yiddish",      "yi", "yid"},
-		{"Yoruba",       "yo", "yor"},
-		{"Zhuang",       "za", "zha"},
-		{"Zulu",         "zu", "zul"},
-	};
-
-	/** RED components of default DVD palette */
-	private final static byte defaultPalR[] = {
-		(byte)0x00, (byte)0xf0, (byte)0xcc, (byte)0x99,
-		(byte)0x33, (byte)0x11, (byte)0xfa, (byte)0xbb,
-		(byte)0x33, (byte)0x11, (byte)0xfa, (byte)0xbb,
-		(byte)0xfa, (byte)0xbb, (byte)0x33, (byte)0x11
-	};
-
-	/** GREEN components of default DVD palette */
-	private final static byte defaultPalG[] = {
-		(byte)0x00, (byte)0xf0, (byte)0xcc, (byte)0x99,
-		(byte)0x33, (byte)0x11, (byte)0x33, (byte)0x11,
-		(byte)0xfa, (byte)0xbb, (byte)0xfa, (byte)0xbb,
-		(byte)0x33, (byte)0x11, (byte)0xfa, (byte)0xbb
-	};
-
-	/** BLUE components of default DVD palette */
-	private final static byte defaultPalB[] = {
-		(byte)0x00, (byte)0xf0, (byte)0xcc, (byte)0x99,
-		(byte)0xfa, (byte)0xbb, (byte)0x33, (byte)0x11,
-		(byte)0x33, (byte)0x11, (byte)0x33, (byte)0x11,
-		(byte)0xfa, (byte)0xbb, (byte)0xfa, (byte)0xbb,
-	};
-
-	/** ALPHA components of default DVD palette */
-	private final static byte defaultAlpha[] = {
-		(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00,
-		(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00,
-		(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00,
-		(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00,
-	};
-
-	/** Default DVD palette (for create mode) */
-	private final static Palette defaultDVDPalette = new Palette(
-			defaultPalR, defaultPalG, defaultPalB, defaultAlpha, true
-	);
 	/** Current DVD palette (for create mode) - initialized as default */
 	private static Palette currentDVDPalette = new Palette(
-			defaultPalR, defaultPalG, defaultPalB, defaultAlpha, true
+			DEFAULT_PALETTE_RED, DEFAULT_PALETTE_GREEN, DEFAULT_PALETTE_BLUE, DEFAULT_PALETTE_ALPHA, true
 	);
 
-	private final static boolean convertResolutionDefault = false;
-	private final static Resolution resolutionTrgDefault = Resolution.PAL;
-	private final static boolean convertFPSdefault = false;
-	private final static double  fpsSrcDefault = FPS_24P;
-	private final static double  fpsTrgDefault = FPS_PAL;
-	private final static int     delayPTSdefault = 0;
-	private final static boolean fixShortFramesDefault = false;
-	private final static int     minTimePTSdefault = 90*500;
-	private final static boolean applyFreeScaleDefault = false;
-	private final static double  freeScaleXdefault = 1.0;
-	private final static double  freeScaleYdefault = 1.0;
-
-	private static boolean convertResolutionSet = false;
-	private static boolean resolutionTrgSet = false;
-	private static boolean convertFpsSet = false;
-	private static boolean fpsTrgSet = false;
-	private static boolean delayPtsSet = false;
-	private static boolean fixShortFramesSet = false;
-	private static boolean minTimePtsSet = false;
-	private static boolean applyFreeScaleSet = false;
+	private static final boolean CONVERT_RESOLUTION_BY_DEFAULT = false;
+	private static final Resolution DEFAULT_TARGET_RESOLUTION = Resolution.PAL;
+	private static final boolean CONVERTS_FRAMERATE_BY_DEFAULT = false;
+	private static final double  DEFAULT_SOURCE_FRAMERATE = Framerate.FPS_23_976.getValue();
+	private static final double  DEFAULT_TARGET_FRAMERATE = Framerate.PAL.getValue();
+	private static final int     DEFAULT_PTS_DELAY = 0;
+	private static final boolean FIX_SHORT_FRAMES_BY_DEFAULT = false;
+	private static final int     DEAFULT_MIN_DISPLAY_TIME_PTS = 90*500;
+	private static final boolean APPLY_FREE_SCALE_BY_DEFAULT = false;
+	private static final int MIN_IMAGE_DIMENSION = 8;
+	private static final double  DEAFULT_FREE_SCALE_X = 1.0;
+	private static final double  DEFAULT_FREE_SCALE_Y = 1.0;	public static final double MIN_FREE_SCALE_FACTOR = 0.5;	public static final double MAX_FREE_SCALE_FACTOR = 2.0;	
+	private static boolean convertResolutionSet;
+	private static boolean resolutionTrgSet;
+	private static boolean convertFpsSet;
+	private static boolean fpsTrgSet;
+	private static boolean delayPtsSet;
+	private static boolean fixShortFramesSet;
+	private static boolean minTimePtsSet;
+	private static boolean applyFreeScaleSet;
 
 	/** Palette imported from SUB/IDX or SUP/IFO */
-	private static Palette defaultSourceDVDPalette = null;
+	private static Palette defaultSourceDVDPalette;
 	/** Current palette based on the one imported from SUB/IDX or SUP/IFO */
-	private static Palette currentSourceDVDPalette = null;
+	private static Palette currentSourceDVDPalette;
 	/** Default alpha map */
-	private final static int alphaDefault[] = { 0, 0xf, 0xf, 0xf};
+	private static final int DEFAULT_ALPHA[] = { 0, 0xf, 0xf, 0xf};
 
 	/** Class used to load/store properties persistently */
 	public static Props  props;
@@ -546,20 +116,20 @@ public class Core  extends Thread {
 	/** Palette of target caption */
 	private static Palette trgPal;
 	/** Used for creating VobSub streams */
-	private static SubPictureDVD subVobTrg = null;
+	private static SubPictureDVD subVobTrg;
 
 	/** Used for handling BD SUPs */
-	private static SupBD supBD = null;
+	private static SupBD supBD;
 	/** Used for handling HD-DVD SUPs */
-	private static SupHD supHD = null;
+	private static SupHD supHD;
 	/** Used for handling Xmls */
-	private static SupXml supXml = null;
+	private static SupXml supXml;
 	/** Used for handling VobSub */
-	private static SubDVD subDVD = null;
+	private static SubDVD subDVD;
 	/** Used for handling SUP/IFO */
-	private static SupDVD supDVD = null;
+	private static SupDVD supDVD;
 	/** Used for common handling of either SUPs */
-	private static Substream substream = null;
+	private static Substream substream;
 
 	/** Array of subpictures used for editing and export */
 	private static SubPicture subPictures[];
@@ -570,78 +140,78 @@ public class Core  extends Thread {
 	private static int alphaThr = 80;
 
 	/** Default output mode */
-	private final static OutputMode outModeDefault = OutputMode.VOBSUB;
+	private static final OutputMode DEFAULT_OUTPUT_MODE = OutputMode.VOBSUB;
 	/** Output mode used for next export */
-	private static boolean outModeSet = false;
+	private static boolean outModeSet;
 	/** Output mode used for next export */
-	private static OutputMode outMode = outModeDefault;
+	private static OutputMode outMode = DEFAULT_OUTPUT_MODE;
 	/** Input mode used for last import */
 	private static InputMode inMode = InputMode.VOBSUB;
 	/** Resolution used for export */
-	private static Resolution resolutionTrg = resolutionTrgDefault;
+	private static Resolution resolutionTrg = DEFAULT_TARGET_RESOLUTION;
 
 	/** Flag that defines whether to convert frame rates or nowt*/
-	private static boolean convertFPS = convertFPSdefault;
+	private static boolean convertFPS = CONVERTS_FRAMERATE_BY_DEFAULT;
 	/** Flag that defines whether to convert resolution or not */
-	private static boolean convertResolution = convertResolutionDefault;
+	private static boolean convertResolution = CONVERT_RESOLUTION_BY_DEFAULT;
 	/** Flag that defines whether to export only subpictures marked as "forced" */
-	private static boolean exportForced = false;
+	private static boolean exportForced;
 	/** State that defined whether to set/clear the forced flag for all captions */
-	private static SetState forceAll = SetState.KEEP;
+	private static ForcedFlagState forceAll = ForcedFlagState.KEEP;
 	/** Flag that defines whether to swap Cr/Cb components when loading a SUP */
-	private static boolean swapCrCb = false;
+	private static boolean swapCrCb;
 	/** Flag that defines whether to fix subpictures with a display time shorter than minTimePTS */
-	private static boolean fixShortFrames = fixShortFramesDefault;
+	private static boolean fixShortFrames = FIX_SHORT_FRAMES_BY_DEFAULT;
 	/** Source frame rate is certain */
-	private static boolean fpsSrcCertain = false;
+	private static boolean fpsSrcCertain;
 	/** Source frame rate */
-	private static double fpsSrc = fpsSrcDefault;
+	private static double fpsSrc = DEFAULT_SOURCE_FRAMERATE;
 	/** Source frame rate set via command line */
-	private static boolean fpsSrcSet = false;
+	private static boolean fpsSrcSet;
 	/** Target frame rate */
-	private static double fpsTrg = fpsTrgDefault;
+	private static double fpsTrg = DEFAULT_TARGET_FRAMERATE;
 	/** Delay to apply to target in 90kHz resolution */
-	private static int delayPTS = delayPTSdefault;
+	private static int delayPTS = DEFAULT_PTS_DELAY;
 	/** Minimum display time for subpictures in 90kHz resolution */
-	private static int minTimePTS = minTimePTSdefault;
+	private static int minTimePTS = DEAFULT_MIN_DISPLAY_TIME_PTS;
 	/** Y coordinate crop offset - when exporting, the Y position will be decreased by this value */
 	private static int cropOfsY = 0;
 	/** Use BT.601 color model instead of BT.709 */
 	private static boolean useBT601;
 	/** paletteMode was set from command line */
-	private static boolean paletteModeSet = false;
+	private static boolean paletteModeSet;
 	/** Default palette creation mode */
-	private static final PaletteMode paletteModeDefault = PaletteMode.CREATE_NEW;
+	private static final PaletteMode DEFAULT_PALETTE_MODE = PaletteMode.CREATE_NEW;
 	/** Palette creation mode */
-	private static PaletteMode paletteMode = paletteModeDefault;
+	private static PaletteMode paletteMode = DEFAULT_PALETTE_MODE;
 	/** Verbatim mode was set from command line */
-	private static boolean verbatimSet = false;
+	private static boolean verbatimSet;
 	/** Verbatim output ? */
-	private static boolean verbatim = false;
+	private static boolean verbatim;
 	/** Use src fps for trg if possible */
-	private static boolean keepFps = false;
+	private static boolean keepFps;
 	/** Default Scaling Filter to use */
-	private final static ScalingFilters scalingFilterDefault = ScalingFilters.BILINEAR;
+	private static final ScalingFilter DEFAULT_SCALING_FILTER = ScalingFilter.BILINEAR;
 	/** Scaling Filter to use */
-	private static ScalingFilters scalingFilter = scalingFilterDefault;
+	private static ScalingFilter scalingFilter = DEFAULT_SCALING_FILTER;
 	/** Scaling filter was set from command line */
-	private static boolean scalingFilterSet = false;
+	private static boolean scalingFilterSet;
 	/** Two equal captions are merged of they are closer than 200ms (0.2*90000 = 18000) */
 	private static int mergePTSdiff = 18000;
 	/** mergePTSdiff was set from command line */
-	private static boolean mergePTSdiffSet = false;
+	private static boolean mergePTSdiffSet;
 	/** Alpha threshold for cropping */
 	private static int alphaCrop = 14;
 	/** alphaCrop was set from command line */
-	private static boolean alphaCropSet = false;
+	private static boolean alphaCropSet;
 	/** Fix completely invisibly subtitles due to alpha=0 (SUB/IDX and SUP/IFO import only) */
-	private static boolean fixZeroAlpha = false;
+	private static boolean fixZeroAlpha;
 	/** fixZeroAlpha was set from command line */
-	private static boolean fixZeroAlphaSet = false;
+	private static boolean fixZeroAlphaSet;
 	/** WritePGCEditPal was set from command line */
-	private static boolean writePGCEditPalSet = false;
+	private static boolean writePGCEditPalSet;
 	/** Write PGCEdit palette file on export */
-	private static boolean writePGCEditPal = false;
+	private static boolean writePGCEditPal;
 
 	/** Factor to calculate height of one cinemascope bar from screen height */
 	private static double cineBarFactor = 5.0/42;
@@ -650,17 +220,17 @@ public class Core  extends Thread {
 	/** Additional x offset to consider when moving */
 	private static int moveOffsetX = 10;
 	/** Move move in Y direction */
-	private static MoveModeY moveModeY = MoveModeY.KEEP;
+	private static CaptionMoveModeY moveModeY = CaptionMoveModeY.KEEP_POSITION;
 	/** Move move in X direction */
-	private static MoveModeX moveModeX = MoveModeX.KEEP;
+	private static CaptionMoveModeX moveModeX = CaptionMoveModeX.KEEP_POSITION;
 	/** Flag: move subtitle */
-	private static boolean moveCaptions = false;
+	private static boolean moveCaptions;
 	/** flag: apply free scaling */
-	private static boolean applyFreeScale = applyFreeScaleDefault;
+	private static boolean applyFreeScale = APPLY_FREE_SCALE_BY_DEFAULT;
 	/** Free X scaling factor */
-	private static double freeScaleX = freeScaleXdefault;
+	private static double freeScaleX = DEAFULT_FREE_SCALE_X;
 	/** Free Y scaling factor */
-	private static double freeScaleY = freeScaleYdefault;
+	private static double freeScaleY = DEFAULT_FREE_SCALE_Y;
 
 	/** Current input stream ID */
 	private static StreamID currentStreamID = StreamID.UNKNOWN;
@@ -668,9 +238,9 @@ public class Core  extends Thread {
 	private static String fileName;
 
 	/** Reference to main GUI class */
-	private static MainFrame mainFrame = null;
+	private static MainFrame mainFrame;
 	/** Progress dialog for loading/exporting */
-	private static Progress progress = null;
+	private static Progress progress;
 	/** Maximum absolute value for progress bar */
 	private static int progressMax;
 	/** Last relative value for progress bar */
@@ -686,13 +256,13 @@ public class Core  extends Thread {
 	/** Functionality executed in the started thread */
 	private static RunType runType;
 	/** Thread state */
-	private static State state = State.INACTIVE;
+	private static CoreThreadState state = CoreThreadState.INACTIVE;
 	/** Used to store exception thrown in the thread */
 	private static Exception threadException;
 	/** Semaphore to disable actions while changing component properties */
-	private static volatile boolean ready = false;
+	private static volatile boolean ready;
 	/** Semaphore for synchronization */
-	private final static Object semaphore = new Object();
+	private static final Object semaphore = new Object();
 	
 	/** Strings storing recently loaded files */
 	private static ArrayList<String> recentFiles = new ArrayList<String>();
@@ -700,7 +270,7 @@ public class Core  extends Thread {
 	/** Thread used for threaded import/export. */
 	@Override
 	public void run() {
-		state = State.ACTIVE;
+		state = CoreThreadState.ACTIVE;
 		threadException = null;
 		try {
 			switch (runType) {
@@ -726,7 +296,7 @@ public class Core  extends Thread {
 		} catch (Exception ex) {
 			threadException = ex;
 		} finally {
-			state = State.INACTIVE;
+			state = CoreThreadState.INACTIVE;
 		}
 	}
 
@@ -734,7 +304,7 @@ public class Core  extends Thread {
 	 * Initialize the Core - call this before calling readSub or other Core functionality.
 	 * @param c Main object - needed to determine name of jar and path of ini file
 	 */
-	public static void init(final Object c) {
+	public static void init(Object c) {
 		// extract path of JAR from the class name
 		// needed to store ini file in the same folder as the JAR
 		// note: during development, the path is the path of the main class
@@ -746,103 +316,98 @@ public class Core  extends Thread {
 			int pos;
 			try {
 				fnameProps = URLDecoder.decode(url.getPath(),"UTF-8");
-			} catch (UnsupportedEncodingException ex) {};
-			if (( (pos=fnameProps.toLowerCase().indexOf("file:")) != -1))
-				fnameProps = fnameProps.substring(pos+5);
-			if ( (pos=fnameProps.toLowerCase().indexOf(s.toLowerCase())) != -1)
-				fnameProps = fnameProps.substring(0,pos);
+			} catch (UnsupportedEncodingException ex) {			}
+			if (((pos=fnameProps.toLowerCase().indexOf("file:")) != -1)) {
+				fnameProps = fnameProps.substring(pos+5);			}
+			if ((pos=fnameProps.toLowerCase().indexOf(s.toLowerCase())) != -1) {
+				fnameProps = fnameProps.substring(0,pos);			}
 			// special handling for JAR
 			s = ToolBox.exchangeSeparators(fnameProps.toLowerCase());
 			pos = s.lastIndexOf(".jar");
 			if (pos != -1) {
 				pos = s.substring(0,pos).lastIndexOf('/');
-				if (pos != -1)
-					fnameProps = fnameProps.substring(0,pos+1);
+				if (pos != -1) {
+					fnameProps = fnameProps.substring(0,pos+1);				}
 			}
-			fnameProps += Core.iniName;
+			fnameProps += Core.INI_FILE;
 
 			// read properties from ini file
 			props = new Props();
-			props.setHeader(Core.progNameVer+" settings - don't modify manually");
+			props.setHeader(APP_NAME_AND_VERSION+" settings - don't modify manually");
 			props.load(fnameProps);
 
-			if (!verbatimSet)
-				verbatim = Core.props.get("verbatim", "false").equals("true");
-			else
-				props.set("verbatim", verbatim?"true":"false");
+			if (!verbatimSet) {
+				verbatim = Core.props.get("verbatim", "false").equals("true");			} else {
+				props.set("verbatim", verbatim?"true":"false");			}
 
-			if (!writePGCEditPalSet)
-				writePGCEditPal = Core.props.get("writePGCEditPal", "false").equals("true");
-			else
-				props.set("writePGCEditPal", writePGCEditPal?"true":"false");
+			if (!writePGCEditPalSet) {
+				writePGCEditPal = Core.props.get("writePGCEditPal", "false").equals("true");			} else {
+				props.set("writePGCEditPal", writePGCEditPal?"true":"false");			}
 
-			if (!mergePTSdiffSet)
-				mergePTSdiff = Core.props.get("mergePTSdiff", 18000);
-			else
-				props.set("mergePTSdiff", mergePTSdiff);
+			if (!mergePTSdiffSet) {
+				mergePTSdiff = Core.props.get("mergePTSdiff", 18000);			} else {
+				props.set("mergePTSdiff", mergePTSdiff);			}
 
-			if (!alphaCropSet)
-				alphaCrop = Core.props.get("alphaCrop", 14);
-			else
-				props.set("alphaCrop", alphaCrop);
+			if (!alphaCropSet) {
+				alphaCrop = Core.props.get("alphaCrop", 14);			} else {
+				props.set("alphaCrop", alphaCrop);			}
 
-			if (!fixZeroAlphaSet)
-				fixZeroAlpha = Core.props.get("fixZeroAlpha", "false").equals("true");
-			else
-				props.set("fixZeroAlpha", fixZeroAlpha?"true":"false");
+			if (!fixZeroAlphaSet) {
+				fixZeroAlpha = Core.props.get("fixZeroAlpha", "false").equals("true");			} else {
+				props.set("fixZeroAlpha", fixZeroAlpha?"true":"false");			}
 
 			if (!scalingFilterSet) {
-				String filter = props.get("filter", getScalingFilterName(scalingFilterDefault));
-				for (ScalingFilters sf : ScalingFilters.values())
-					if (getScalingFilterName(sf).equalsIgnoreCase(filter)) {
+				String filter = props.get("filter", DEFAULT_SCALING_FILTER.toString());
+				for (ScalingFilter sf : ScalingFilter.values()) {
+					if (sf.toString().equalsIgnoreCase(filter)) {
 						scalingFilter = sf;
 						break;
-					}
-			} else props.set("filter", getScalingFilterName(scalingFilter));
+					}				}
+			} else {				props.set("filter", scalingFilter.toString());			}
 
 			if (!paletteModeSet) {
-				String pMode = props.get("paletteMode", getPaletteModeName(paletteModeDefault)); 
-				for (PaletteMode pm : PaletteMode.values())
-					if (getPaletteModeName(pm).equalsIgnoreCase(pMode)) {
+				String pMode = props.get("paletteMode", DEFAULT_PALETTE_MODE.toString()); 
+				for (PaletteMode pm : PaletteMode.values()) {
+					if (pm.toString().equalsIgnoreCase(pMode)) {
 						paletteMode = pm;
 						break;
-					}
-			} else props.set("paletteMode", getPaletteModeName(paletteMode));
+					}				}
+			} else {				props.set("paletteMode", paletteMode.toString());			}
 			
 			if (!outModeSet) {
-				String oMode = props.get("outputMode", getOutputFormatName(outModeDefault));
-				for (OutputMode om : OutputMode.values())
-					if (getOutputFormatName(om).equalsIgnoreCase(oMode)) {
+				String oMode = props.get("outputMode", DEFAULT_OUTPUT_MODE.toString());
+				for (OutputMode om : OutputMode.values()) {
+					if (om.toString().equalsIgnoreCase(oMode)) {
 						outMode = om;
 						break;
-					}
-			} else props.set("outputMode", getOutputFormatName(outMode));
+					}				}
+			} else {				props.set("outputMode", outMode.toString());			}
 
 			// load recent list
 			int i = 0;
-			while (i<numRecent &&(s = props.get("recent_"+i, "")).length()>0) {
+			while (i < RECENT_FILE_COUNT && (s = props.get("recent_"+i, "")).length() > 0) {
 				recentFiles.add(s);
 				i++;
 			}
 
-			if (!convertResolutionSet)
-				convertResolution = restoreConvertResolution();
-			if (convertResolution && !resolutionTrgSet)
-					resolutionTrg = restoreResolution();
-			if (!convertFpsSet)
-				convertFPS = restoreConvertFPS();
+			if (!convertResolutionSet) {
+				convertResolution = restoreConvertResolution();			}
+			if (convertResolution && !resolutionTrgSet) {
+					resolutionTrg = restoreResolution();			}
+			if (!convertFpsSet) {
+				convertFPS = restoreConvertFPS();			}
 			if (convertFPS) {
-				if (!fpsSrcCertain && !fpsSrcSet)
-					fpsSrc = restoreFpsSrc();
-				if (!fpsTrgSet)
-					fpsTrg = restoreFpsTrg();
+				if (!fpsSrcCertain && !fpsSrcSet) {
+					fpsSrc = restoreFpsSrc();				}
+				if (!fpsTrgSet) {
+					fpsTrg = restoreFpsTrg();				}
 			}
-			if (!delayPtsSet)
-				delayPTS = Core.restoreDelayPTS();
-			if (!fixShortFramesSet)
-				fixShortFrames = Core.restoreFixShortFrames();
-			if (!minTimePtsSet)
-				minTimePTS = Core.restoreMinTimePTS();
+			if (!delayPtsSet) {
+				delayPTS = Core.restoreDelayPTS();			}
+			if (!fixShortFramesSet) {
+				fixShortFrames = Core.restoreFixShortFrames();			}
+			if (!minTimePtsSet) {
+				minTimePTS = Core.restoreMinTimePTS();			}
 			if (!applyFreeScaleSet) {
 				applyFreeScale = Core.restoreApplyFreeScale();
 				if (applyFreeScale) {
@@ -865,16 +430,16 @@ public class Core  extends Thread {
 	 */
 	public static void close() {
 		ready = false;
-		if (supBD != null)
-			supBD.close();
-		if (supHD != null)
-			supHD.close();
-		if (supXml != null)
-			supXml.close();
-		if (subDVD != null)
-			subDVD.close();
-		if (supDVD != null)
-			supDVD.close();
+		if (supBD != null) {
+			supBD.close();		}
+		if (supHD != null) {
+			supHD.close();		}
+		if (supXml != null) {
+			supXml.close();		}
+		if (subDVD != null) {
+			subDVD.close();		}
+		if (supDVD != null) {
+			supDVD.close();		}
 	}
 
 	/**
@@ -882,24 +447,24 @@ public class Core  extends Thread {
 	 */
 	public static void exit() {
 		storeProps();
-		if (supBD != null)
-			supBD.close();
-		if (supHD != null)
-			supHD.close();
-		if (supXml != null)
-			supXml.close();
-		if (subDVD != null)
-			subDVD.close();
-		if (supDVD != null)
-			supDVD.close();
+		if (supBD != null) {
+			supBD.close();		}
+		if (supHD != null) {
+			supHD.close();		}
+		if (supXml != null) {
+			supXml.close();		}
+		if (subDVD != null) {
+			subDVD.close();		}
+		if (supDVD != null) {
+			supDVD.close();		}
 	}
 
 	/**
 	 * Write properties
 	 */
 	public static void storeProps() {
-		if (props != null)
-			props.save(fnameProps);
+		if (props != null) {
+			props.save(fnameProps);		}
 	}
 	
 	/**
@@ -919,10 +484,10 @@ public class Core  extends Thread {
 		if (!found) {
 			recentFiles.add(0,s);
 			// trim list
-			while ( (size=recentFiles.size()) > numRecent) 
-				recentFiles.remove(size-1);
+			while ( (size=recentFiles.size()) > RECENT_FILE_COUNT)  {
+				recentFiles.remove(size-1);			}
 			// store list
-			for (int i=0; i<size;i++) {
+			for (int i=0; i<size; i++) {
 				props.set("recent_"+i, recentFiles.get(i));
 			}
 		}
@@ -941,22 +506,16 @@ public class Core  extends Thread {
 	 * @param id Byte array holding four bytes at minimum
 	 * @return StreamID
 	 */
-	public static StreamID getStreamID(final byte id[]) {
+	public static StreamID getStreamID(byte id[]) {
 		StreamID sid;
 
-		if (id[0]==0x50 && id[1]==0x47)
-			sid = StreamID.BDSUP;
-		else if (id[0]==0x53 && id[1]==0x50)
-			sid = StreamID.SUP;
-		else if (id[0]==0x00 && id[1]==0x00 && id[2]==0x01 && id[3]==(byte)0xba)
-			sid = StreamID.DVDSUB;
-		else if (id[0]==0x23 && id[1]==0x20 && id[2]==0x56 && id[3]==0x6f)
-			sid = StreamID.IDX;
-		else if (id[0]==0x3c && id[1]==0x3f && id[2]==0x78 && id[3]==0x6d)
-			sid = StreamID.XML;
-		else if (id[0]==0x44 && id[1]==0x56 && id[2]==0x44 && id[3]==0x56)
-			sid = StreamID.IFO;
-		else sid = StreamID.UNKNOWN;
+		if (id[0]==0x50 && id[1]==0x47) {
+			sid = StreamID.BDSUP;		} else if (id[0]==0x53 && id[1]==0x50) {
+			sid = StreamID.SUP;		} else if (id[0]==0x00 && id[1]==0x00 && id[2]==0x01 && id[3]==(byte)0xba) {
+			sid = StreamID.DVDSUB;		} else if (id[0]==0x23 && id[1]==0x20 && id[2]==0x56 && id[3]==0x6f) {
+			sid = StreamID.IDX;		} else if (id[0]==0x3c && id[1]==0x3f && id[2]==0x78 && id[3]==0x6d) {
+			sid = StreamID.XML;		} else if (id[0]==0x44 && id[1]==0x56 && id[2]==0x44 && id[3]==0x56) {
+			sid = StreamID.IFO;		} else {			sid = StreamID.UNKNOWN;		}
 
 		return sid;
 	}
@@ -967,17 +526,17 @@ public class Core  extends Thread {
 	 * @param fps	Frame rate
 	 * @return		Synchronized time stamp in 90kHz resolution
 	 */
-	public static long syncTimePTS(final long t, final double fps) {
+	public static long syncTimePTS(long t, double fps) {
 		long retval;
 		// correct time stamps to fit to frames
-		if (fps == Core.FPS_NTSC || fps == Core.FPS_PAL || fps == Core.FPS_24HZ) {
+		if (fps == Framerate.NTSC.getValue() || fps == Framerate.PAL.getValue() || fps == Framerate.FPS_24.getValue()) {
 			// NTSC: 90000/(30000/1001) = 3003
 			// PAL:  90000/25 = 3600
 			// 24Hz: 90000/24 = 3750
 			int tpfi = (int)((90000+(fps/2))/fps); // target time per frame in 90kHz
 			int tpfh = tpfi/2;
 			retval = ((t + tpfh)/tpfi)*tpfi;
-		} else if (fpsTrg == Core.FPS_24P) {
+		} else if (fpsTrg == Framerate.FPS_23_976.getValue()) {
 			// 90000/(24000/1001) = 3753.75 = 15015/4
 			retval = ((((t + 1877)*4)/15015)*15015)/4;
 		} else {
@@ -994,7 +553,7 @@ public class Core  extends Thread {
 	 * @param sid       stream identifier
 	 * @throws Exception
 	 */
-	public static void readStreamThreaded(final String fname, final JFrame parent, final StreamID sid) throws Exception {
+	public static void readStreamThreaded(String fname, JFrame parent, StreamID sid) throws Exception {
 		boolean xml = ToolBox.getExtension(fname).equalsIgnoreCase("xml");
 		boolean idx = ToolBox.getExtension(fname).equalsIgnoreCase("idx");
 		boolean ifo = ToolBox.getExtension(fname).equalsIgnoreCase("ifo");
@@ -1006,14 +565,11 @@ public class Core  extends Thread {
 		progress.setMinMax(0, 100);
 		progress.setTitle("Loading");
 		progress.setText("Loading subtitle stream");
-		if (xml || sid == Core.StreamID.XML)
-			runType = RunType.READXML;
-		else if (idx || sid == Core.StreamID.DVDSUB || sid == Core.StreamID.IDX)
-			runType = RunType.READVOBSUB;
-		else if (ifo || sid == Core.StreamID.IFO)
-			runType = RunType.READSUPIFO;
-		else
-			runType = RunType.READSUP;
+		if (xml || sid == StreamID.XML) {
+			runType = RunType.READXML;		} else if (idx || sid == StreamID.DVDSUB || sid == StreamID.IDX) {
+			runType = RunType.READVOBSUB;		} else if (ifo || sid == StreamID.IFO) {
+			runType = RunType.READSUPIFO;		} else {
+			runType = RunType.READSUP;		}
 
 		currentStreamID = sid;
 
@@ -1024,12 +580,12 @@ public class Core  extends Thread {
 		while (t.isAlive()) {
 			try  {
 				Thread.sleep(500);
-			} catch (InterruptedException ex) {}
+			} catch (InterruptedException ex) {			}
 		}
-		state = State.INACTIVE;
+		state = CoreThreadState.INACTIVE;
 		Exception ex = threadException;
-		if (ex != null)
-			throw ex;
+		if (ex != null) {
+			throw ex;		}
 	}
 
 	/**
@@ -1038,21 +594,18 @@ public class Core  extends Thread {
 	 * @param parent	Parent frame (needed for progress dialog)
 	 * @throws Exception
 	 */
-	public static void createSubThreaded(final String fname, final JFrame parent) throws Exception {
+	public static void createSubThreaded(String fname, JFrame parent) throws Exception {
 		fileName = fname;
 		progressMax = substream.getNumFrames();
 		progressLast = 0;
 		progress = new Progress(parent, true);
 		progress.setMinMax(0, 100);
 		progress.setTitle("Exporting");
-		if (Core.outMode == Core.OutputMode.VOBSUB)
-			progress.setText("Exporting SUB/IDX");
-		else if (Core.outMode == Core.OutputMode.BDSUP)
-			progress.setText("Exporting SUP(BD)");
-		else if (Core.outMode == Core.OutputMode.XML)
-			progress.setText("Exporting XML/PNG");
-		else
-			progress.setText("Exporting SUP/IFO");
+		if (Core.outMode == OutputMode.VOBSUB) {
+			progress.setText("Exporting SUB/IDX");		} else if (Core.outMode == OutputMode.BDSUP) {
+			progress.setText("Exporting SUP(BD)");		} else if (Core.outMode == OutputMode.XML) {
+			progress.setText("Exporting XML/PNG");		} else {
+			progress.setText("Exporting SUP/IFO");		}
 		runType = RunType.CREATESUB;
 		// start thread
 		Thread t = new Thread(new Core());
@@ -1061,19 +614,19 @@ public class Core  extends Thread {
 		while (t.isAlive()) {
 			try  {
 				Thread.sleep(500);
-			} catch (InterruptedException ex) {}
+			} catch (InterruptedException ex) {			}
 		}
-		state = State.INACTIVE;
+		state = CoreThreadState.INACTIVE;
 		Exception ex = threadException;
-		if (ex != null)
-			throw ex;
+		if (ex != null) {
+			throw ex;		}
 	}
 
 	/**
 	 * Create the frame individual 4-color palette for VobSub mode.
 	 * @index Index of caption
 	 */
-	private static void determineFramePal(final int index) {
+	private static void determineFramePal(int index) {
 		if ((inMode != InputMode.VOBSUB && inMode != InputMode.SUPIFO) || paletteMode != PaletteMode.KEEP_EXISTING) {
 			// get the primary color from the source palette
 			int rgbSrc[] = substream.getPalette().getRGB(substream.getPrimaryColorIndex());
@@ -1095,25 +648,24 @@ public class Core  extends Thread {
 				if ( distance < minDistance) {
 					colIdx = idx;
 					minDistance = distance;
-					if (minDistance == 0)
-						break;
+					if (minDistance == 0) {
+						break;					}
 				}
 				// special treatment for index 1 (white)
-				if (idx==1)
-					idx--; // -> continue with index = 2
+				if (idx == 1) {
+					idx--; // -> continue with index = 2				}
 			}
 
 			// set new frame palette
 			int palFrame[] = new int[4];
 			palFrame[0] = 0;        // black - transparent color
 			palFrame[1] = colIdx;   // primary color
-			if (colIdx == 1)
-				palFrame[2] = colIdx+2; // special handling: white + dark grey
-			else
-				palFrame[2] = colIdx+1; // darker version of primary color
+			if (colIdx == 1) {
+				palFrame[2] = colIdx+2; // special handling: white + dark grey			} else {
+				palFrame[2] = colIdx+1; // darker version of primary color			}
 			palFrame[3] = 0;        // black - opaque
 
-			subVobTrg.alpha = alphaDefault;
+			subVobTrg.alpha = DEFAULT_ALPHA;
 			subVobTrg.pal = palFrame;
 
 			trgPal = SubDVD.decodePalette(subVobTrg, trgPallete);
@@ -1124,21 +676,20 @@ public class Core  extends Thread {
 			int palFrame[];
 			SubstreamDVD substreamDVD;
 
-			if (inMode == InputMode.VOBSUB)
-				substreamDVD = subDVD;
-			else
-				substreamDVD = supDVD;
+			if (inMode == InputMode.VOBSUB) {
+				substreamDVD = subDVD;			} else {
+				substreamDVD = supDVD;			}
 
 			alpha = substreamDVD.getFrameAlpha(index);
 			palFrame = substreamDVD.getFramePal(index);
 
-			for (int i=0; i<4; i++) {
+			for (int i=0; i < 4; i++) {
 				int a = (alpha[i]*0xff)/0xf;
 				if (a >= alphaCrop) {
 					miniPal.setARGB(i, currentSourceDVDPalette.getARGB(palFrame[i]));
 					miniPal.setAlpha(i, a);
-				} else
-					miniPal.setARGB(i, 0);
+				} else {
+					miniPal.setARGB(i, 0);				}
 			}
 			subVobTrg.alpha = alpha;
 			subVobTrg.pal = palFrame;
@@ -1151,24 +702,24 @@ public class Core  extends Thread {
 	 * @param fname File name
 	 * @throws CoreException
 	 */
-	public static void readSup(final String fname) throws CoreException {
+	public static void readSup(String fname) throws CoreException {
 		printX("Loading "+fname+"\n");
 		resetErrors();
 		resetWarnings();
 
 		// try to find matching language idx if filename contains language string
 		String fnl = ToolBox.getFileName(fname.toLowerCase());
-		for (int i=0; i<languages.length; i++) {
-			if (fnl.indexOf(languages[i][0].toLowerCase()) >= 0) {
+		for (int i=0; i < LANGUAGES.length; i++) {
+			if (fnl.indexOf(LANGUAGES[i][0].toLowerCase()) >= 0) {
 				languageIdx = i;
-				printX("Selected language '"+languages[i][0]+" ("+languages[i][1]+")' by filename\n");
+				printX("Selected language '"+LANGUAGES[i][0]+" ("+LANGUAGES[i][1]+")' by filename\n");
 				break;
 			}
 		}
 
 		// close existing substream
-		if (substream != null)
-			substream.close();
+		if (substream != null) {
+			substream.close();		}
 
 		// check first two byte to determine whether this is a BD-SUP or HD-DVD-SUP
 		byte id[] = ToolBox.getFileID(fname, 2);
@@ -1204,13 +755,13 @@ public class Core  extends Thread {
 			if (substream == supBD) {
 				fpsSrc = supBD.getFps(0);
 				fpsSrcCertain = true;
-				if (Core.keepFps)
-					setFPSTrg(fpsSrc);
+				if (Core.keepFps) {
+					setFPSTrg(fpsSrc);				}
 			} else {
 				// for HD-DVD we need to guess
 				useBT601 = false;
 				fpsSrcCertain = false;
-				fpsSrc = FPS_24P;
+				fpsSrc = Framerate.FPS_23_976.getValue();
 			}
 		}
 	}
@@ -1220,14 +771,14 @@ public class Core  extends Thread {
 	 * @param fname File name
 	 * @throws CoreException
 	 */
-	public static void readXml(final String fname) throws CoreException {
+	public static void readXml(String fname) throws CoreException {
 		printX("Loading "+fname+"\n");
 		resetErrors();
 		resetWarnings();
 
 		// close existing substream
-		if (substream != null)
-			substream.close();
+		if (substream != null) {
+			substream.close();		}
 
 
 		supXml = new SupXml(fname);
@@ -1251,8 +802,8 @@ public class Core  extends Thread {
 		}
 
 		// find language idx
-		for (int i=0; i<languages.length; i++) {
-			if (languages[i][2].equalsIgnoreCase(supXml.getLanguage())) {
+		for (int i=0; i < LANGUAGES.length; i++) {
+			if (LANGUAGES[i][2].equalsIgnoreCase(supXml.getLanguage())) {
 				languageIdx = i;
 				break;
 			}
@@ -1262,8 +813,8 @@ public class Core  extends Thread {
 		if (!fpsSrcSet) {      // CLI override
 			fpsSrc = supXml.getFps();
 			fpsSrcCertain = true;
-			if (Core.keepFps)
-				setFPSTrg(fpsSrc);
+			if (Core.keepFps) {
+				setFPSTrg(fpsSrc);			}
 		}
 	}
 
@@ -1272,7 +823,7 @@ public class Core  extends Thread {
 	 * @param fname File name
 	 * @throws CoreException
 	 */
-	public static void readVobSub(final String fname) throws CoreException {
+	public static void readVobSub(String fname) throws CoreException {
 		readDVDSubstream(fname, true);
 	}
 
@@ -1281,7 +832,7 @@ public class Core  extends Thread {
 	 * @param fname File name
 	 * @throws CoreException
 	 */
-	public static void readSupIfo(final String fname) throws CoreException {
+	public static void readSupIfo(String fname) throws CoreException {
 		readDVDSubstream(fname, false);
 	}
 
@@ -1291,14 +842,14 @@ public class Core  extends Thread {
 	 * @param isVobSub True if SUB/IDX, false if SUP/IFO
 	 * @throws CoreException
 	 */
-	public static void readDVDSubstream(final String fname, final boolean isVobSub) throws CoreException {
-		printX("Loading "+fname+"\n");
+	public static void readDVDSubstream(String fname, boolean isVobSub) throws CoreException {
+		printX("Loading " + fname + "\n");
 		resetErrors();
 		resetWarnings();
 
 		// close existing substream
-		if (substream != null)
-			substream.close();
+		if (substream != null) {
+			substream.close();		}
 
 		SubstreamDVD substreamDVD;
 		String fnI;
@@ -1340,11 +891,11 @@ public class Core  extends Thread {
 		if (yMax > 10) {
 			// find darkest opaque color
 			int yMin = yMax;
-			for (int i=0; i<4; i++) {
+			for (int i=0; i < 4; i++) {
 				int y = substream.getPalette().getY()[i] & 0xff;
 				int a = substream.getPalette().getAlpha(i);
-				if (y < yMin && a > alphaThr)
-					yMin = y;
+				if (y < yMin && a > alphaThr) {
+					yMin = y;				}
 			}
 			lumThr[0] = yMin + (yMax-yMin)*9/10;
 			lumThr[1] = yMin + (yMax-yMin)*3/10;
@@ -1360,18 +911,18 @@ public class Core  extends Thread {
 			int h = substream.getSubPicture(0).height; //substream.getBitmap().getHeight();
 			switch (h) {
 				case 480:
-					fpsSrc = FPS_NTSC;
+					fpsSrc = Framerate.NTSC.getValue();
 					useBT601 = true;
 					fpsSrcCertain = true;
 					break;
 				case 576:
-					fpsSrc = FPS_PAL;
+					fpsSrc = Framerate.PAL.getValue();
 					useBT601 = true;
 					fpsSrcCertain = true;
 					break;
 				default:
 					useBT601 = false;
-					fpsSrc = FPS_24P;
+					fpsSrc = Framerate.FPS_23_976.getValue();
 					fpsSrcCertain = false;
 			}
 		}
@@ -1385,20 +936,19 @@ public class Core  extends Thread {
 	 * @param subPicNext	Next subpicture
 	 * @param subPicPrev	Previous subpicture
 	 */
-	private static void validateTimes(int idx, final SubPicture subPic, final SubPicture subPicNext, final SubPicture subPicPrev) {
+	private static void validateTimes(int idx, SubPicture subPic, SubPicture subPicNext, SubPicture subPicPrev) {
 		//long tpf = (long)(90000/fpsTrg); // time per frame
 		long ts =  subPic.startTime;     // start time
 		long te =  subPic.endTime;       // end time
 		long delay = 5000*90;            // default delay for missing end time (5 seconds)
 
-		idx+=1; // only used for display
+		idx += 1; // only used for display
 
 		// get end time of last frame
 		long te_last;
-		if (subPicPrev != null)
-			te_last = subPicPrev.endTime;
-		else
-			te_last = -1;
+		if (subPicPrev != null) {
+			te_last = subPicPrev.endTime;		} else {
+			te_last = -1;		}
 
 		if (ts < te_last) {
 			printWarn("start time of frame "+idx+" < end of last frame -> fixed\n");
@@ -1407,29 +957,26 @@ public class Core  extends Thread {
 
 		// get start time of next frame
 		long ts_next;
-		if (subPicNext != null)
-			ts_next = subPicNext.startTime;
-		else
-			ts_next = 0;
+		if (subPicNext != null) {
+			ts_next = subPicNext.startTime;		} else {
+			ts_next = 0;		}
 
 		if (ts_next == 0) {
-			if ( te > ts)
-				ts_next = te;
-			else {
-				// completely fucked:
+			if ( te > ts) {
+				ts_next = te;			} else {
+				// completely messed up:
 				// end time and next start time are invalid
 				ts_next = ts+delay;
 			}
 		}
 
 		if (te <= ts) {
-			if (te == 0)
-				printWarn("missing end time of frame "+idx+" -> fixed\n");
-			else
-				printWarn("end time of frame "+idx+" <= start time -> fixed\n");
+			if (te == 0) {
+				printWarn("missing end time of frame "+idx+" -> fixed\n");			} else {
+				printWarn("end time of frame "+idx+" <= start time -> fixed\n");			}
 			te = ts+delay;
-			if (te > ts_next)
-				te = ts_next;
+			if (te > ts_next) {
+				te = ts_next;			}
 		} else if (te > ts_next) {
 			printWarn("end time of frame "+idx+" > start time of next frame -> fixed\n");
 			te = ts_next;
@@ -1438,18 +985,18 @@ public class Core  extends Thread {
 		if (te - ts < minTimePTS) {
 			if (fixShortFrames) {
 				te = ts + minTimePTS;
-				if (te > ts_next)
-					te = ts_next;
+				if (te > ts_next) {
+					te = ts_next;				}
 				printWarn("duration of frame "+idx+" was shorter than "+(ToolBox.formatDouble(minTimePTS/90.0))+"ms -> fixed\n");
-			} else
-				printWarn("duration of frame "+idx+" is shorter than "+(ToolBox.formatDouble(minTimePTS/90.0))+"ms\n");
+			} else {
+				printWarn("duration of frame "+idx+" is shorter than "+(ToolBox.formatDouble(minTimePTS/90.0))+"ms\n");			}
 		}
 
-		if (subPic.startTime != ts)
-			subPic.startTime = syncTimePTS(ts, fpsTrg);
-		if (subPic.endTime != te)
+		if (subPic.startTime != ts) {
+			subPic.startTime = syncTimePTS(ts, fpsTrg);		}
+		if (subPic.endTime != te) {
 			subPic.endTime = syncTimePTS(te, fpsTrg);
-
+		}
 	}
 
 	/**
@@ -1458,7 +1005,7 @@ public class Core  extends Thread {
 	 * @param index Index of caption
 	 * @return true: image size has changed, false: image size didn't change.
 	 */
-	public static boolean updateTrgPic(final int index) {
+	public static boolean updateTrgPic(int index) {
 		SubPicture picSrc = substream.getSubPicture(index);
 		SubPicture picTrg = subPictures[index];
 		double scaleX = (double)picTrg.width/picSrc.width;
@@ -1476,15 +1023,13 @@ public class Core  extends Thread {
 		int wOld = picTrg.getImageWidth();
 		int hOld = picTrg.getImageHeight();
 		int wNew = (int)(picSrc.getImageWidth()  * scaleX * fx + 0.5);
-		if (wNew < minDim)
-			wNew = picSrc.getImageWidth();
-		else if (wNew > picTrg.width)
-			wNew = picTrg.width;
+		if (wNew < MIN_IMAGE_DIMENSION) {
+			wNew = picSrc.getImageWidth();		} else if (wNew > picTrg.width) {
+			wNew = picTrg.width;		}
 		int hNew = (int)(picSrc.getImageHeight() * scaleY * fy + 0.5);
-		if (hNew < minDim)
-			hNew = picSrc.getImageHeight();
-		else if (hNew > picTrg.height)
-			hNew = picTrg.height;
+		if (hNew < MIN_IMAGE_DIMENSION) {
+			hNew = picSrc.getImageHeight();		} else if (hNew > picTrg.height) {
+			hNew = picTrg.height;		}
 		picTrg.setImageWidth(wNew);
 		picTrg.setImageHeight(hNew);
 		if (wNew != wOld) {
@@ -1492,10 +1037,9 @@ public class Core  extends Thread {
 			int spaceSrc = (int)((picSrc.width-picSrc.getImageWidth())*scaleX + 0.5);
 			int spaceTrg = picTrg.width - wNew;
 			xOfs += (spaceTrg - spaceSrc) / 2;
-			if (xOfs < 0)
-				xOfs = 0;
-			else if (xOfs+wNew > picTrg.width)
-				xOfs = picTrg.width - wNew;
+			if (xOfs < 0) {
+				xOfs = 0;			} else if (xOfs+wNew > picTrg.width) {
+				xOfs = picTrg.width - wNew;			}
 			picTrg.setOfsX(xOfs);
 		}
 		if (hNew != hOld) {
@@ -1503,8 +1047,8 @@ public class Core  extends Thread {
 			int spaceSrc = (int)((picSrc.height-picSrc.getImageHeight())*scaleY + 0.5);
 			int spaceTrg = picTrg.height - hNew;
 			yOfs += (spaceTrg - spaceSrc) / 2;
-			if (yOfs+hNew > picTrg.height)
-				yOfs = picTrg.height - hNew;
+			if (yOfs+hNew > picTrg.height) {
+				yOfs = picTrg.height - hNew;			}
 			picTrg.setOfsY(yOfs);
 		}
 		// was image cropped?
@@ -1545,8 +1089,8 @@ public class Core  extends Thread {
 			factTS = 1.0;
 
 		// change target resolution to source resolution if no conversion is needed
-		if (!convertResolution && getNumFrames()>0)
-			resolutionTrg = getResolution(getSubPictureSrc(0).width, getSubPictureSrc(0).height);
+		if (!convertResolution && getNumFrames() > 0) {
+			resolutionTrg = getResolution(getSubPictureSrc(0).width, getSubPictureSrc(0).height);		}
 
 		double fx;
 		double fy;
@@ -1603,16 +1147,14 @@ public class Core  extends Thread {
 				scaleY = 1.0;
 			}
 			int w = (int)(picSrc.getImageWidth()  * scaleX * fx + 0.5);
-			if (w < minDim)
-				w = picSrc.getImageWidth();
-			else if (w > picTrg.width)
-				w = picTrg.width;
+			if (w < MIN_IMAGE_DIMENSION) {
+				w = picSrc.getImageWidth();			} else if (w > picTrg.width) {
+				w = picTrg.width;			}
 
 			int h = (int)(picSrc.getImageHeight() * scaleY * fy + 0.5);
-			if (h < minDim)
-				h = picSrc.getImageHeight();
-			else if (h > picTrg.height)
-				h = picTrg.height;
+			if (h < MIN_IMAGE_DIMENSION) {
+				h = picSrc.getImageHeight();			} else if (h > picTrg.height) {
+				h = picTrg.height;			}
 			picTrg.setImageWidth(w);
 			picTrg.setImageHeight(h);
 
@@ -1620,30 +1162,27 @@ public class Core  extends Thread {
 			int spaceSrc = (int)((picSrc.width-picSrc.getImageWidth())*scaleX + 0.5);
 			int spaceTrg = picTrg.width - w;
 			xOfs += (spaceTrg - spaceSrc) / 2;
-			if (xOfs < 0)
-				xOfs = 0;
-			else if (xOfs+w > picTrg.width)
-				xOfs = picTrg.width - w;
+			if (xOfs < 0) {
+				xOfs = 0;			} else if (xOfs+w > picTrg.width) {
+				xOfs = picTrg.width - w;			}
 			picTrg.setOfsX(xOfs);
 
 			int yOfs = (int)(picSrc.getOfsY() * scaleY + 0.5);
 			spaceSrc = (int)((picSrc.height-picSrc.getImageHeight())*scaleY + 0.5);
 			spaceTrg = picTrg.height - h;
 			yOfs += (spaceTrg - spaceSrc) / 2;
-			if (yOfs+h > picTrg.height)
-				yOfs = picTrg.height - h;
+			if (yOfs+h > picTrg.height) {
+				yOfs = picTrg.height - h;			}
 			picTrg.setOfsY(yOfs);
-
 		}
 
 		// 2nd run: validate times
 		SubPicture picPrev = null;
 		SubPicture picNext;
 		for (int i=0; i<subPictures.length; i++) {
-			if (i < subPictures.length-1)
-				picNext = subPictures[i+1];
-			else
-				picNext = null;
+			if (i < subPictures.length-1) {
+				picNext = subPictures[i+1];			} else {
+				picNext = null;			}
 			picSrc = subPictures[i];
 			validateTimes(i, subPictures[i], picNext, picPrev);
 			picPrev = picSrc;
@@ -1660,14 +1199,14 @@ public class Core  extends Thread {
 	 * @param fsXOld        Old free scaling factor in X direction
 	 * @param fsYOld        Old free scaling factor in Y direction
 	 */
-	public static void reScanSubtitles(final Resolution resOld, final double fpsTrgOld, final int delayOld, final boolean convertFpsOld, final double fsXOld, final double fsYOld) {
+	public static void reScanSubtitles(Resolution resOld, double fpsTrgOld, int delayOld, boolean convertFpsOld, double fsXOld, double fsYOld) {
 		//SubPicture subPicturesOld[] = subPictures;
 		//subPictures = new SubPicture[sup.getNumFrames()];
 		SubPicture picOld;
 		SubPicture picSrc;
 		double factTS = 1.0;
-		final double factX;
-		final double factY;
+		double factX;
+		double factY;
 		double fsXNew;
 		double fsYNew;
 
@@ -1685,12 +1224,12 @@ public class Core  extends Thread {
 			factTS = fpsTrgOld / fpsSrc;
 		} else if (convertFPS && convertFpsOld && (fpsTrg != fpsTrgOld)) {
 			factTS = fpsTrgOld / fpsTrg;
-		} else
-			factTS = 1.0;
+		} else {
+			factTS = 1.0;		}
 
 		// change target resolution to source resolution if no conversion is needed
-		if (!convertResolution && getNumFrames()>0)
-			resolutionTrg = getResolution(getSubPictureSrc(0).width, getSubPictureSrc(0).height);
+		if (!convertResolution && getNumFrames() > 0) {
+			resolutionTrg = getResolution(getSubPictureSrc(0).width, getSubPictureSrc(0).height);		}
 
 		if (resOld != resolutionTrg) {
 			int rOld[] = getResolution(resOld);
@@ -1703,7 +1242,7 @@ public class Core  extends Thread {
 		}
 
 		// first run: clone source subpics, apply speedup/down,
-		for (int i=0; i<subPictures.length; i++) {
+		for (int i=0; i < subPictures.length; i++) {
 			picOld = subPictures[i];
 			picSrc = substream.getSubPicture(i);
 			subPictures[i] = picOld.copy();
@@ -1748,16 +1287,14 @@ public class Core  extends Thread {
 			}
 
 			int w = (int)(picSrc.getImageWidth()  * scaleX * fsXNew + 0.5);
-			if (w < minDim)
-				w = picSrc.getImageWidth();
-			else if (w > subPictures[i].width) {
+			if (w < MIN_IMAGE_DIMENSION) {
+				w = picSrc.getImageWidth();			} else if (w > subPictures[i].width) {
 				w = subPictures[i].width;
 				fsXNew = (double)w / (double)picSrc.getImageWidth() / scaleX;
 			}
 			int h = (int)(picSrc.getImageHeight() * scaleY * fsYNew + 0.5);
-			if (h < minDim)
-				h = picSrc.getImageHeight();
-			else if (h > subPictures[i].height) {
+			if (h < MIN_IMAGE_DIMENSION) {
+				h = picSrc.getImageHeight();			} else if (h > subPictures[i].height) {
 				h = subPictures[i].height;
 				fsYNew = (double)h / (double)picSrc.getImageHeight() / scaleY;
 			}
@@ -1772,10 +1309,9 @@ public class Core  extends Thread {
 				int spaceTrg    = subPictures[i].width - w;
 				xOfs += (spaceTrg - spaceTrgOld) / 2;
 			}
-			if (xOfs < 0)
-				xOfs = 0;
-			else if (xOfs+w > subPictures[i].width)
-				xOfs = subPictures[i].width - w;
+			if (xOfs < 0) {
+				xOfs = 0;			} else if (xOfs+w > subPictures[i].width) {
+				xOfs = subPictures[i].width - w;			}
 			subPictures[i].setOfsX(xOfs);
 
 			int yOfs = (int)(picOld.getOfsY()*factY + 0.5);
@@ -1784,15 +1320,15 @@ public class Core  extends Thread {
 				int spaceTrg = subPictures[i].height - h;
 				yOfs += (spaceTrg - spaceTrgOld) / 2;
 			}
-			if (yOfs < 0)
-				yOfs = 0;
-			if (yOfs+h > subPictures[i].height)
-				yOfs = subPictures[i].height - h;
+			if (yOfs < 0) {
+				yOfs = 0;			}
+			if (yOfs+h > subPictures[i].height) {
+				yOfs = subPictures[i].height - h;			}
 			subPictures[i].setOfsY(yOfs);
 
 			// fix erase patches
-			final double fx = factX * fsXNew / fsXOld;
-			final double fy = factY * fsYNew / fsYOld;
+			double fx = factX * fsXNew / fsXOld;
+			double fy = factY * fsYNew / fsYOld;
 			ArrayList<ErasePatch> erasePatches = subPictures[i].erasePatch;			if (erasePatches != null) {				for (int j = 0; j < erasePatches.size(); j++) {					ErasePatch ep = erasePatches.get(j);					int x = (int)(ep.x * fx + 0.5);					int y = (int)(ep.y * fy + 0.5);					int width = (int)(ep.width * fx + 0.5);					int height = (int)(ep.height * fy + 0.5);					erasePatches.set(j, new ErasePatch(x, y, width, height));				}			}
 		}
 
@@ -1801,10 +1337,9 @@ public class Core  extends Thread {
 		SubPicture subPicNext;
 
 		for (int i=0; i<subPictures.length; i++) {
-			if (i < subPictures.length-1)
-				subPicNext = subPictures[i+1];
-			else
-				subPicNext = null;
+			if (i < subPictures.length-1) {
+				subPicNext = subPictures[i+1];			} else {
+				subPicNext = null;			}
 
 			picOld = subPictures[i];
 			validateTimes(i, subPictures[i], subPicNext, subPicPrev);
@@ -1819,7 +1354,7 @@ public class Core  extends Thread {
 	 * @param displayMax	Maximum subtitle number to display (needed for forced subs)
 	 * @throws CoreException
 	 */
-	public static void convertSup(final int index, final int displayNum, final int displayMax) throws CoreException{
+	public static void convertSup(int index, int displayNum, int displayMax) throws CoreException{
 		convertSup(index, displayNum, displayMax, false);
 	}
 	
@@ -1831,10 +1366,10 @@ public class Core  extends Thread {
 	 * @param skipScaling   true: skip bitmap scaling and palette transformation (used for moving captions)
 	 * @throws CoreException
 	 */
-	public static void convertSup(final int index, final int displayNum, final int displayMax, boolean skipScaling) throws CoreException{
-		final int w,h;
-		final int startOfs = (int)substream.getStartOffset(index);
-		final SubPicture subPic = substream.getSubPicture(index);
+	public static void convertSup(int index, int displayNum, int displayMax, boolean skipScaling) throws CoreException{
+		int w,h;
+		int startOfs = (int)substream.getStartOffset(index);
+		SubPicture subPic = substream.getSubPicture(index);
 
 		printX("Decoding frame "+displayNum+"/"+displayMax+((substream == supXml)?"\n":(" at offset "+ToolBox.hex(startOfs,8)+"\n")));
 
@@ -1842,8 +1377,8 @@ public class Core  extends Thread {
 			substream.decode(index);			
 			w = subPic.getImageWidth();
 			h = subPic.getImageHeight();
-			if (outMode == OutputMode.VOBSUB || outMode == OutputMode.SUPIFO)
-				determineFramePal(index);
+			if (outMode == OutputMode.VOBSUB || outMode == OutputMode.SUPIFO) {
+				determineFramePal(index);			}
 			updateTrgPic(index);
 		}
 		SubPicture picTrg = subPictures[index];
@@ -1851,7 +1386,7 @@ public class Core  extends Thread {
 
 		int trgWidth = picTrg.getImageWidth();
 		int trgHeight = picTrg.getImageHeight();
-		if (trgWidth < minDim || trgHeight < minDim || w < minDim || h < minDim) {
+		if (trgWidth < MIN_IMAGE_DIMENSION || trgHeight < MIN_IMAGE_DIMENSION || w < MIN_IMAGE_DIMENSION || h < MIN_IMAGE_DIMENSION) {
 			// don't scale to avoid division by zero in scaling routines
 			trgWidth = w;
 			trgHeight = h;
@@ -1861,25 +1396,25 @@ public class Core  extends Thread {
 			Filter f;
 			switch (scalingFilter) {
 				case BELL:
-					f = Filters.getBellFilter();
+					f = new BellFilter();
 					break;
 				case BICUBIC:
-					f = Filters.getBiCubicFilter();
+					f = new BiCubicFilter();
 					break;
-				case BSPLINE:
-					f = Filters.getBSplineFilter();
+				case BICUBIC_SPLINE:
+					f = new BSplineFilter();
 					break;
 				case HERMITE:
-					f = Filters.getHermiteFilter();
+					f = new HermiteFilter();
 					break;
 				case LANCZOS3:
-					f = Filters.getLanczos3Filter();
+					f = new Lanczos3Filter();
 					break;
 				case TRIANGLE:
-					f = Filters.getTriangleFilter();
+					f = new TriangleFilter();
 					break;
 				case MITCHELL:
-					f = Filters.getMitchellFilter();
+					f = new MitchellFilter();
 					break;
 				default:
 					f = null;
@@ -1892,24 +1427,21 @@ public class Core  extends Thread {
 				// export 4 color palette
 				if (w==trgWidth && h==trgHeight) {
 					// don't scale at all
-					if ( (inMode == InputMode.VOBSUB || inMode == InputMode.SUPIFO) && paletteMode == PaletteMode.KEEP_EXISTING)
-						tBm = substream.getBitmap(); // no conversion
-					else
-						tBm = substream.getBitmap().getBitmapWithNormalizedPalette(substream.getPalette().getAlpha(), alphaThr, substream.getPalette().getY(), lumThr); // reduce palette
+					if ( (inMode == InputMode.VOBSUB || inMode == InputMode.SUPIFO) && paletteMode == PaletteMode.KEEP_EXISTING) {
+						tBm = substream.getBitmap(); // no conversion					} else {
+						tBm = substream.getBitmap().getBitmapWithNormalizedPalette(substream.getPalette().getAlpha(), alphaThr, substream.getPalette().getY(), lumThr); // reduce palette					}
 				} else {
 					// scale up/down
 					if ((inMode == InputMode.VOBSUB || inMode == InputMode.SUPIFO) && paletteMode == PaletteMode.KEEP_EXISTING) {
 						// keep palette
-						if (f!=null)
-							tBm = substream.getBitmap().scaleFilter(trgWidth, trgHeight, substream.getPalette(), f);
-						else
-							tBm = substream.getBitmap().scaleBilinear(trgWidth, trgHeight, substream.getPalette());
+						if (f != null) {
+							tBm = substream.getBitmap().scaleFilter(trgWidth, trgHeight, substream.getPalette(), f);						} else {
+							tBm = substream.getBitmap().scaleBilinear(trgWidth, trgHeight, substream.getPalette());						}
 					} else {
 						// reduce palette
-						if (f!=null)
-							tBm = substream.getBitmap().scaleFilterLm(trgWidth, trgHeight, substream.getPalette(), alphaThr, lumThr, f);
-						else
-							tBm = substream.getBitmap().scaleBilinearLm(trgWidth, trgHeight, substream.getPalette(), alphaThr, lumThr);
+						if (f != null) {
+							tBm = substream.getBitmap().scaleFilterLm(trgWidth, trgHeight, substream.getPalette(), alphaThr, lumThr, f);						} else {
+							tBm = substream.getBitmap().scaleBilinearLm(trgWidth, trgHeight, substream.getPalette(), alphaThr, lumThr);						}
 					}
 				}
 			} else {
@@ -1921,18 +1453,16 @@ public class Core  extends Thread {
 					// scale up/down
 					if (paletteMode == PaletteMode.KEEP_EXISTING) {
 						// keep palette
-						if (f!=null)
-							tBm = substream.getBitmap().scaleFilter(trgWidth, trgHeight, substream.getPalette(), f);
-						else
-							tBm = substream.getBitmap().scaleBilinear(trgWidth, trgHeight, substream.getPalette());
+						if (f != null) {
+							tBm = substream.getBitmap().scaleFilter(trgWidth, trgHeight, substream.getPalette(), f);						} else {
+							tBm = substream.getBitmap().scaleBilinear(trgWidth, trgHeight, substream.getPalette());						}
 					} else {
 						// create new palette
 						boolean dither = paletteMode == PaletteMode.CREATE_DITHERED;
 						BitmapWithPalette pb;
-						if (f != null)
-							pb = substream.getBitmap().scaleFilter(trgWidth, trgHeight, substream.getPalette(), f, dither);
-						else
-							pb = substream.getBitmap().scaleBilinear(trgWidth, trgHeight, substream.getPalette(), dither);
+						if (f != null) {
+							pb = substream.getBitmap().scaleFilter(trgWidth, trgHeight, substream.getPalette(), f, dither);						} else {
+							pb = substream.getBitmap().scaleBilinear(trgWidth, trgHeight, substream.getPalette(), dither);						}
 						tBm = pb.bitmap;
 						tPal = pb.palette;
 					}
@@ -1941,17 +1471,17 @@ public class Core  extends Thread {
 			if (picTrg.erasePatch != null) {
 				trgBitmapUnpatched = new Bitmap(tBm);
 				int col = tPal.getIndexOfMostTransparentPaletteEntry();
-				for (ErasePatch ep : picTrg.erasePatch)
-					tBm.fillRectangularWithColorIndex(ep.x, ep.y, ep.width, ep.height, (byte)col);
-			} else
-				trgBitmapUnpatched = tBm;
+				for (ErasePatch ep : picTrg.erasePatch) {
+					tBm.fillRectangularWithColorIndex(ep.x, ep.y, ep.width, ep.height, (byte)col);				}
+			} else {
+				trgBitmapUnpatched = tBm;			}
 			trgBitmap = tBm;
 			trgPal = tPal;
 
 		}
 		
-		if (cliMode)
-			moveToBounds(picTrg, displayNum, cineBarFactor, moveOffsetX, moveOffsetY, moveModeX, moveModeY, cropOfsY);
+		if (cliMode) {
+			moveToBounds(picTrg, displayNum, cineBarFactor, moveOffsetX, moveOffsetY, moveModeX, moveModeY, cropOfsY);		}
 	}
 
 	/**
@@ -1968,10 +1498,9 @@ public class Core  extends Thread {
 		String fn = "";
 
 		// handling of forced subtitles
-		if (exportForced)
-			maxNum = countForcedIncluded();
-		else
-			maxNum = countIncluded();
+		if (exportForced) {
+			maxNum = countForcedIncluded();		} else {
+			maxNum = countIncluded();		}
 
 		try {
 			// handle file name extensions depending on mode
@@ -1996,7 +1525,7 @@ public class Core  extends Thread {
 
 			// main loop
 			int offset = 0;
-			for (int i=0; i<substream.getNumFrames(); i++) {
+			for (int i=0; i < substream.getNumFrames(); i++) {
 				// for threaded version
 				if (isCancelled()) {
 					throw new CoreException("Cancelled by user!");
@@ -2030,7 +1559,7 @@ public class Core  extends Thread {
 						//File file = new File(fnp);
 						//ImageIO.write(trgBitmap.getImage(trgPal), "png", file);
 						out = new BufferedOutputStream(new FileOutputStream(fnp));
-						PngEncoderB pngEncoder= new PngEncoderB(trgBitmap.getImage(trgPal.getColorModel()));
+						EnhancedPngEncoder pngEncoder= new EnhancedPngEncoder(trgBitmap.getImage(trgPal.getColorModel()));
 						byte buf[] = pngEncoder.pngEncode(true);
 						out.write(buf);
 						out.close();
@@ -2044,33 +1573,31 @@ public class Core  extends Thread {
 		}
 		finally {
 			try {
-				if (out != null)
-					out.close();
-			} catch (IOException ex) {};
+				if (out != null) {
+					out.close();				}
+			} catch (IOException ex) {			};
 		}
 
 		boolean importedDVDPalette;
-		if (inMode == InputMode.VOBSUB || inMode == InputMode.SUPIFO)
-			importedDVDPalette = true;
-		else
-			importedDVDPalette = false;
+		if (inMode == InputMode.VOBSUB || inMode == InputMode.SUPIFO) {
+			importedDVDPalette = true;		} else {
+			importedDVDPalette = false;		}
 
 		Palette trgPallete = null;
 		if (outMode == OutputMode.VOBSUB) {
 			// VobSub - write IDX
 			/* return offets as array of ints */
 			int ofs[] = new int[offsets.size()];
-			for (int i=0; i<ofs.length; i++)
-				ofs[i] = offsets.get(i);
+			for (int i=0; i<ofs.length; i++) {
+				ofs[i] = offsets.get(i);			}
 			int ts[] = new int[timestamps.size()];
-			for (int i=0; i<ts.length; i++)
-				ts[i] = timestamps.get(i);
+			for (int i=0; i<ts.length; i++) {
+				ts[i] = timestamps.get(i);			}
 			fname = ToolBox.stripExtension(fname)+".idx";
 			printX("\nWriting "+fname+"\n");
-			if (!importedDVDPalette || paletteMode != PaletteMode.KEEP_EXISTING)
-				trgPallete = currentDVDPalette;
-			else
-				trgPallete = currentSourceDVDPalette;
+			if (!importedDVDPalette || paletteMode != PaletteMode.KEEP_EXISTING) {
+				trgPallete = currentDVDPalette;			} else {
+				trgPallete = currentSourceDVDPalette;			}
 			SubDVD.writeIdx(fname, subPictures[0], ofs, ts, trgPallete);
 		} else if (outMode == OutputMode.XML) {
 			// XML - write ML
@@ -2078,10 +1605,9 @@ public class Core  extends Thread {
 			SupXml.writeXml(fname, subPictures);
 		} else if (outMode == OutputMode.SUPIFO) {
 			// SUP/IFO - write IFO
-			if (!importedDVDPalette || paletteMode != PaletteMode.KEEP_EXISTING)
-				trgPallete = currentDVDPalette;
-			else
-				trgPallete = currentSourceDVDPalette;
+			if (!importedDVDPalette || paletteMode != PaletteMode.KEEP_EXISTING) {
+				trgPallete = currentDVDPalette;			} else {
+				trgPallete = currentSourceDVDPalette;			}
 			fname = ToolBox.stripExtension(fname)+".ifo";
 			printX("\nWriting "+fname+"\n");
 			SupDVD.writeIFO(fname, subPictures[0], trgPallete);
@@ -2094,7 +1620,7 @@ public class Core  extends Thread {
 			writePGCEditPal(fnp, trgPallete);
 		}
 
-		state = State.FINISHED;
+		state = CoreThreadState.FINISHED;
 	}
 
 	/**
@@ -2102,17 +1628,17 @@ public class Core  extends Thread {
 	 * @param r Output resolution
 	 * @return Default frame rate for resolution r
 	 */
-	public static double getDefaultFPS(final Resolution r) {
+	public static double getDefaultFPS(Resolution r) {
 		double fps;
 		switch (getResolution(r)[1]) {
 			case 480:
-				fps = FPS_NTSC;
+				fps = Framerate.NTSC.getValue();
 				break;
 			case 576:
-				fps = FPS_PAL;
+				fps = Framerate.PAL.getValue();
 				break;
 			default:
-				fps = FPS_24P;
+				fps = Framerate.FPS_23_976.getValue();
 		}
 		return fps;
 	}
@@ -2124,21 +1650,21 @@ public class Core  extends Thread {
 	 */
 	public static double getFPS(String s) {
 		// first check the string
-		s = ToolBox.trim(s.toLowerCase());
-		if (s.equals("pal")  || s.equals("25p") || s.equals("25"))
-			return FPS_PAL;
-		if (s.equals("ntsc") || s.equals("30p") || s.equals("29.97") || s.equals("29.970"))
-			return FPS_NTSC;
-		if (s.equals("24p")  || s.equals("23.976"))
-			return FPS_24P;
-		if (s.equals("23.975"))
-			return FPS_23_975;
-		if (s.equals("24"))
-			return FPS_24HZ;
-		if (s.equals("50i")  || s.equals("50"))
-			return FPS_PAL_I;
-		if (s.equals("60i")  || s.equals("59.94"))
-			return FPS_NTSC_I;
+		s = s.toLowerCase().trim();
+		if (s.equals("pal")  || s.equals("25p") || s.equals("25")) {
+			return Framerate.PAL.getValue();		}
+		if (s.equals("ntsc") || s.equals("30p") || s.equals("29.97") || s.equals("29.970")) {
+			return Framerate.NTSC.getValue();		}
+		if (s.equals("24p")  || s.equals("23.976")) {
+			return Framerate.FPS_23_976.getValue();		}
+		if (s.equals("23.975")) {
+			return Framerate.FPS_23_975.getValue();		}
+		if (s.equals("24")) {
+			return Framerate.FPS_24.getValue();		}
+		if (s.equals("50i")  || s.equals("50")) {
+			return Framerate.PAL_I.getValue();		}
+		if (s.equals("60i")  || s.equals("59.94")) {
+			return Framerate.NTSC_I.getValue();		}
 
 		// now check the number
 		double d;
@@ -2147,20 +1673,20 @@ public class Core  extends Thread {
 		} catch (NumberFormatException ex) {
 			return -1.0;
 		}
-		if (Math.abs(d-Core.FPS_23_975) < 0.001)
-			return Core.FPS_23_975;
-		if (Math.abs(d-Core.FPS_24P) < 0.001)
-			return Core.FPS_24P;
-		if (Math.abs(d-Core.FPS_24HZ) < 0.001)
-			return Core.FPS_24P;
-		if (Math.abs(d-Core.FPS_PAL) < 0.001)
-			return Core.FPS_PAL;
-		if (Math.abs(d-Core.FPS_NTSC) < 0.001)
-			return Core.FPS_NTSC;
-		if (Math.abs(d-Core.FPS_NTSC_I) < 0.001)
-			return Core.FPS_NTSC_I;
-		if (Math.abs(d-Core.FPS_PAL_I) < 0.001)
-			return Core.FPS_PAL_I;
+		if (Math.abs(d - Framerate.FPS_23_975.getValue()) < 0.001) {
+			return Framerate.FPS_23_975.getValue();		}
+		if (Math.abs(d - Framerate.FPS_23_976.getValue()) < 0.001) {
+			return Framerate.FPS_23_976.getValue();		}
+		if (Math.abs(d - Framerate.FPS_24.getValue()) < 0.001) {
+			return Framerate.FPS_24.getValue();		}
+		if (Math.abs(d - Framerate.PAL.getValue()) < 0.001) {
+			return Framerate.PAL.getValue();		}
+		if (Math.abs(d - Framerate.NTSC.getValue()) < 0.001) {
+			return Framerate.NTSC.getValue();		}
+		if (Math.abs(d - Framerate.NTSC_I.getValue()) < 0.001) {
+			return Framerate.NTSC_I.getValue();		}
+		if (Math.abs(d - Framerate.PAL_I.getValue()) < 0.001) {
+			return Framerate.PAL_I.getValue();		}
 		return d;
 	}
 	
@@ -2169,7 +1695,7 @@ public class Core  extends Thread {
 	 * @param parent	Parent frame (needed for progress dialog)
 	 * @throws Exception
 	 */
-	public static void moveAllThreaded(final JFrame parent) throws Exception {
+	public static void moveAllThreaded(JFrame parent) throws Exception {
 		progressMax = substream.getNumFrames();
 		progressLast = 0;
 		progress = new Progress(parent, true);
@@ -2184,12 +1710,12 @@ public class Core  extends Thread {
 		while (t.isAlive()) {
 			try  {
 				Thread.sleep(500);
-			} catch (InterruptedException ex) {}
+			} catch (InterruptedException ex) {			}
 		}
-		state = State.INACTIVE;
+		state = CoreThreadState.INACTIVE;
 		Exception ex = threadException;
-		if (ex != null)
-			throw ex;
+		if (ex != null) {
+			throw ex;		}
 	}
 
 	/**
@@ -2199,10 +1725,10 @@ public class Core  extends Thread {
 	public static void moveAllToBounds() throws CoreException {
 		String sy = null;
 		switch (moveModeY) {
-			case INSIDE:
+			case MOVE_INSIDE_BOUNDS:
 				sy = "inside";
 				break;
-			case OUTSIDE:
+			case MOVE_OUTSIDE_BOUNDS:
 				sy = "outside";
 				break;
 		}
@@ -2220,18 +1746,18 @@ public class Core  extends Thread {
 		String s = "Moving captions ";
 		if (sy!= null) {
 			s += sy + " cinemascope bars";
-			if (sx != null)
-				 s += " and to the " + sx;
+			if (sx != null) {
+				 s += " and to the " + sx;			}
 			print(s+".\n");
-		} else if (sx != null) 
-			print(s+"to the "+sx+".\n");				
+		} else if (sx != null) {
+			print(s+"to the "+sx+".\n");		}
 
 		if (!cliMode) {
 			// in CLI mode, moving is done during export
 			for (int idx=0; idx<subPictures.length; idx++) {
 				setProgress(idx);
-				if (!subPictures[idx].wasDecoded)
-					convertSup(idx, idx+1, subPictures.length, true);				
+				if (!subPictures[idx].wasDecoded) {
+					convertSup(idx, idx+1, subPictures.length, true);				}
 				moveToBounds(subPictures[idx], idx+1, cineBarFactor, moveOffsetX, moveOffsetY, moveModeX, moveModeY, cropOfsY);
 			}
 		}
@@ -2248,8 +1774,8 @@ public class Core  extends Thread {
 	 * @param mmy         Move mode in Y direction
 	 * @param cropOffsetY Number of lines to crop from bottom and top
 	 */
-	public static void moveToBounds(final SubPicture pic, final int idx, final double barFactor, final int offsetX, final int offsetY,
-			final MoveModeX mmx, final MoveModeY mmy, final int cropOffsetY) {
+	public static void moveToBounds(SubPicture pic, int idx, double barFactor, int offsetX, int offsetY,
+			CaptionMoveModeX mmx, CaptionMoveModeY mmy, int cropOffsetY) {
 
 		int barHeight = (int)(pic.height * barFactor + 0.5);
 		int y1 = pic.getOfsY();
@@ -2260,55 +1786,49 @@ public class Core  extends Thread {
 		int y2 = y1 + hi;
 		CaptionType c;
 
-		if (mmy != MoveModeY.KEEP) {
+		if (mmy != CaptionMoveModeY.KEEP_POSITION) {
 			// move vertically
-			if (y1 < h/2 && y2 < h/2)
-				c = CaptionType.UP;
-			else if (y1 > h/2 && y2 > h/2)
-				c = CaptionType.DOWN;
-			else
-				c = CaptionType.FULL;
+			if (y1 < h/2 && y2 < h/2) {
+				c = CaptionType.UP;			} else if (y1 > h/2 && y2 > h/2) {
+				c = CaptionType.DOWN;			} else {
+				c = CaptionType.FULL;			}			
 			switch (c) {
 				case FULL:
 					// maybe add scaling later, but for now: do nothing
 					printWarn("Caption "+idx+" not moved (too large)\n");
 					break;
 				case UP:
-					if (mmy == MoveModeY.INSIDE)
+					if (mmy == CaptionMoveModeY.MOVE_INSIDE_BOUNDS)
 						pic.setOfsY(barHeight+offsetY);
 					else
 						pic.setOfsY(offsetY);
 					print("Caption "+idx+" moved to y position "+pic.getOfsY()+"\n");
 					break;
 				case DOWN:
-					if (mmy == MoveModeY.INSIDE)
-						pic.setOfsY(h-barHeight-offsetY-hi);
-					else
-						pic.setOfsY(h-offsetY-hi);
+					if (mmy == CaptionMoveModeY.MOVE_INSIDE_BOUNDS) {
+						pic.setOfsY(h-barHeight-offsetY-hi);					} else {
+						pic.setOfsY(h-offsetY-hi);					}
 					print("Caption "+idx+" moved to y position "+pic.getOfsY()+"\n");
 					break;
 			}
-			if (pic.getOfsY() < cropOffsetY)
-				pic.getOfsY();
-			else {
+			if (pic.getOfsY() < cropOffsetY) {
+				pic.getOfsY();			} else {
 				int yMax = pic.height - pic.getImageHeight() - cropOffsetY;
-				if (pic.getOfsY() > yMax)
-					pic.setOfsY(yMax);
+				if (pic.getOfsY() > yMax) {
+					pic.setOfsY(yMax);				}
 			}
 		}
 		// move horizontally
 		switch (mmx) {
 			case LEFT:
-				if (w-wi >= offsetX)
-					pic.setOfsX(offsetX);
-				else
-					pic.setOfsX((w-wi)/2);
+				if (w-wi >= offsetX) {
+					pic.setOfsX(offsetX);				} else {
+					pic.setOfsX((w-wi)/2);				}
 				break;
 			case RIGHT:
-				if (w-wi >= offsetX)
-					pic.setOfsX(w-wi-offsetX);
-				else
-					pic.setOfsX((w-wi)/2);
+				if (w-wi >= offsetX) {
+					pic.setOfsX(w-wi-offsetX);				} else {
+					pic.setOfsX((w-wi)/2);				}
 				break;
 			case CENTER:
 				pic.setOfsX((w-wi)/2);
@@ -2320,12 +1840,11 @@ public class Core  extends Thread {
 	 * Print string to console or console window (only printed in verbatim mode).
 	 * @param s String containing message to print
 	 */
-	public static void print(final String s) {
+	public static void print(String s) {
 		if (Core.verbatim) {
-			if (mainFrame != null)
-				mainFrame.printOut(s);
-			else
-				System.out.print(s);
+			if (mainFrame != null) {
+				mainFrame.printOut(s);			} else {
+				System.out.print(s);			}
 		}
 	}
 
@@ -2333,11 +1852,10 @@ public class Core  extends Thread {
 	 * Print string to console or console window (always printed).
 	 * @param s String containing message to print
 	 */
-	public static void printX(final String s) {
-		if (mainFrame != null)
-			mainFrame.printOut(s);
-		else
-			System.out.print(s);
+	public static void printX(String s) {
+		if (mainFrame != null) {
+			mainFrame.printOut(s);		} else {
+			System.out.print(s);		}
 	}
 
 	/**
@@ -2346,11 +1864,10 @@ public class Core  extends Thread {
 	 */
 	public static void printErr(String s) {
 		errors++;
-		s = "ERROR: "+s;
-		if (mainFrame != null)
-			mainFrame.printErr(s);
-		else
-			System.out.print(s);
+		s = "ERROR: " + s;
+		if (mainFrame != null) {
+			mainFrame.printErr(s);		} else {
+			System.out.print(s);		}
 	}
 
 	/**
@@ -2360,10 +1877,9 @@ public class Core  extends Thread {
 	public static void printWarn(String s) {
 		warnings++;
 		s = "WARNING: "+s;
-		if (mainFrame != null)
-			mainFrame.printWarn(s);
-		else
-			System.out.print(s);
+		if (mainFrame != null) {
+			mainFrame.printWarn(s);		} else {
+			System.out.print(s);		}
 	}
 
 	/**
@@ -2372,13 +1888,13 @@ public class Core  extends Thread {
 	 * @param p     Palette
 	 * @throws CoreException
 	 */
-	public static void writePGCEditPal(final String fname, final Palette p) throws CoreException {
+	public static void writePGCEditPal(String fname, Palette p) throws CoreException {
 		BufferedWriter out = null;
 		try {
 			out = new BufferedWriter(new FileWriter(fname));
 			out.write("# Palette file for PGCEdit - colors given as R,G,B components (0..255)");
 			out.newLine();
-			for (int i=0; i<p.getSize(); i++) {
+			for (int i=0; i < p.getSize(); i++) {
 				int rgb[] = p.getRGB(i);
 				out.write("Color "+i+"="+rgb[0]+", "+rgb[1]+", "+rgb[2]);
 				out.newLine();
@@ -2388,9 +1904,9 @@ public class Core  extends Thread {
 		}
 		finally {
 			try {
-				if (out != null)
-					out.close();
-			} catch (IOException ex) {};
+				if (out != null) {
+					out.close();				}
+			} catch (IOException ex) {			};
 		}
 	}
 
@@ -2400,9 +1916,9 @@ public class Core  extends Thread {
 	 */
 	private static int countForcedIncluded() {
 		int n = 0;
-		for (SubPicture pic : subPictures)
-			if (pic.isforced && !pic.exclude)
-				n++;
+		for (SubPicture pic : subPictures) {
+			if (pic.isforced && !pic.exclude) {
+				n++;			}		}
 		return n;
 	}
 
@@ -2412,9 +1928,9 @@ public class Core  extends Thread {
 	 */
 	private static int countIncluded() {
 		int n = 0;
-		for (SubPicture pic : subPictures)
-			if (!pic.exclude)
-				n++;
+		for (SubPicture pic : subPictures) {
+			if (!pic.exclude) {
+				n++;			}		}
 		return n;
 	}
 
@@ -2433,7 +1949,7 @@ public class Core  extends Thread {
 	 * Set luminance thresholds.
 	 * @param lt Array of luminance thresholds ( 0: med/high, 1: low/med )
 	 */
-	public static void setLumThr(final int[] lt) {
+	public static void setLumThr(int[] lt) {
 		lumThr = lt;
 	}
 
@@ -2449,7 +1965,7 @@ public class Core  extends Thread {
 	 * Set alpha threshold.
 	 * @param at Alpha threshold
 	 */
-	public static void setAlphaThr(final int at) {
+	public static void setAlphaThr(int at) {
 		alphaThr = at;
 	}
 
@@ -2465,7 +1981,7 @@ public class Core  extends Thread {
 	 * Set Core ready state.
 	 * @param r true if the Core is ready
 	 */
-	public static void setReady(final boolean r) {
+	public static void setReady(boolean r) {
 		ready = r;
 	}
 
@@ -2481,17 +1997,17 @@ public class Core  extends Thread {
 	 * Set output resolution.
 	 * @param r output resolution
 	 */
-	public static void setOutputResolution(final Resolution r) {
+	public static void setOutputResolution(Resolution r) {
 		resolutionTrg = r;
-		if (props==null)
-			resolutionTrgSet = true;
+		if (props == null) {
+			resolutionTrgSet = true;		}
 	}
 
 	/**
 	 * Store output resolution.
 	 * @param r output resolution
 	 */
-	public static void storeOutputResolution(final Resolution r) {
+	public static void storeOutputResolution(Resolution r) {
 		props.set("resolutionTrg", getResolutionName(r));
 	}
 
@@ -2500,7 +2016,7 @@ public class Core  extends Thread {
 	 * @return default value for frame rate conversion
 	 */
 	public static boolean getConvertFPSdefault() {
-		return convertFPSdefault;
+		return CONVERTS_FRAMERATE_BY_DEFAULT;
 	}
 
 	/**
@@ -2508,7 +2024,7 @@ public class Core  extends Thread {
 	 * @return default value for resolution conversion
 	 */
 	public static boolean getConvertResolutionDefault() {
-		return convertResolutionDefault;
+		return CONVERT_RESOLUTION_BY_DEFAULT;
 	}
 
 	/**
@@ -2516,7 +2032,7 @@ public class Core  extends Thread {
 	 * @return default target resolution
 	 */
 	public static Resolution getResolutionDefault() {
-		return resolutionTrgDefault;
+		return DEFAULT_TARGET_RESOLUTION;
 	}
 
 	/**
@@ -2524,7 +2040,7 @@ public class Core  extends Thread {
 	 * @return default value for source frame rate
 	 */
 	public static double getFpsSrcDefault() {
-		return fpsSrcDefault;
+		return DEFAULT_SOURCE_FRAMERATE;
 	}
 
 	/**
@@ -2532,7 +2048,7 @@ public class Core  extends Thread {
 	 * @return default value for target frame rate
 	 */
 	public static double getFpsTrgDefault() {
-		return fpsTrgDefault;
+		return DEFAULT_TARGET_FRAMERATE;
 	}
 
 	/**
@@ -2540,7 +2056,7 @@ public class Core  extends Thread {
 	 * @return default value delay
 	 */
 	public static int getDelayPTSdefault() {
-		return delayPTSdefault;
+		return DEFAULT_PTS_DELAY;
 	}
 
 	/**
@@ -2548,7 +2064,7 @@ public class Core  extends Thread {
 	 * @return default value for fixing short frame
 	 */
 	public static boolean getFixShortFramesDefault() {
-		return fixShortFramesDefault;
+		return FIX_SHORT_FRAMES_BY_DEFAULT;
 	}
 
 	/**
@@ -2556,7 +2072,7 @@ public class Core  extends Thread {
 	 * @return default value for minimum display time
 	 */
 	public static int getMinTimePTSdefault() {
-		return minTimePTSdefault;
+		return DEAFULT_MIN_DISPLAY_TIME_PTS;
 	}
 
 	/**
@@ -2564,7 +2080,7 @@ public class Core  extends Thread {
 	 * @return default value for applying of free scaling
 	 */
 	public static boolean getApplyFreeScaleDefault() {
-		return applyFreeScaleDefault;
+		return APPLY_FREE_SCALE_BY_DEFAULT;
 	}
 
 	/**
@@ -2572,7 +2088,7 @@ public class Core  extends Thread {
 	 * @return default value for free x scaling factor
 	 */
 	public static double getFreeScaleXdefault() {
-		return freeScaleXdefault;
+		return DEAFULT_FREE_SCALE_X;
 	}
 
 	/**
@@ -2580,7 +2096,7 @@ public class Core  extends Thread {
 	 * @return default value for free y scaling factor
 	 */
 	public static double getFreeScaleYdefault() {
-		return freeScaleYdefault;
+		return DEFAULT_FREE_SCALE_Y;
 	}
 
 	/**
@@ -2596,7 +2112,7 @@ public class Core  extends Thread {
 	 * @return restored value for resolution conversion
 	 */
 	public static boolean restoreConvertResolution() {
-		return props.get("convertResolution",convertResolution);
+		return props.get("convertResolution", convertResolution);
 	}
 
 	/**
@@ -2604,11 +2120,10 @@ public class Core  extends Thread {
 	 * @return restored target resolution
 	 */
 	public static Resolution restoreResolution() {
-		String s = props.get("resolutionTrg",getResolutionName(resolutionTrg));
-		for (Core.Resolution r : Core.Resolution.values())
-			if (Core.getResolutionName(r).equalsIgnoreCase(s))
-					return r;
-
+		String s = props.get("resolutionTrg", getResolutionName(resolutionTrg));
+		for (Resolution r : Resolution.values()) {
+			if (Core.getResolutionName(r).equalsIgnoreCase(s)) {
+					return r;			}		}
 		return resolutionTrg;
 	}
 
@@ -2618,7 +2133,7 @@ public class Core  extends Thread {
 	 * @return restored value for source frame rate
 	 */
 	public static double restoreFpsSrc() {
-		return getFPS(props.get("fpsSrc",String.valueOf(fpsSrc)));
+		return getFPS(props.get("fpsSrc", String.valueOf(fpsSrc)));
 	}
 
 	/**
@@ -2626,7 +2141,7 @@ public class Core  extends Thread {
 	 * @return restored value for target frame rate
 	 */
 	public static double restoreFpsTrg() {
-		return getFPS(props.get("fpsTrg",String.valueOf(fpsTrg)));
+		return getFPS(props.get("fpsTrg", String.valueOf(fpsTrg)));
 	}
 
 	/**
@@ -2634,7 +2149,7 @@ public class Core  extends Thread {
 	 * @return restored value delay
 	 */
 	public static int restoreDelayPTS() {
-		return props.get("delayPTS",delayPTS);
+		return props.get("delayPTS", delayPTS);
 	}
 
 	/**
@@ -2642,7 +2157,7 @@ public class Core  extends Thread {
 	 * @return restored value for fixing short frame
 	 */
 	public static boolean restoreFixShortFrames() {
-		return props.get("fixShortFrames",fixShortFrames);
+		return props.get("fixShortFrames", fixShortFrames);
 	}
 
 	/**
@@ -2650,7 +2165,7 @@ public class Core  extends Thread {
 	 * @return restored value for minimum display time
 	 */
 	public static int restoreMinTimePTS() {
-		return props.get("minTimePTS",minTimePTS);
+		return props.get("minTimePTS", minTimePTS);
 	}
 
 	/**
@@ -2658,7 +2173,7 @@ public class Core  extends Thread {
 	 * @return restored value for applying of free scaling
 	 */
 	public static boolean restoreApplyFreeScale() {
-		return props.get("applyFreeScale",applyFreeScale);
+		return props.get("applyFreeScale", applyFreeScale);
 	}
 
 	/**
@@ -2666,7 +2181,7 @@ public class Core  extends Thread {
 	 * @return restored value for free x scaling factor
 	 */
 	public static double restoreFreeScaleX() {
-		return props.get("freeScaleX",freeScaleX);
+		return props.get("freeScaleX", freeScaleX);
 	}
 
 	/**
@@ -2674,34 +2189,28 @@ public class Core  extends Thread {
 	 * @return restored value for free y scaling factor
 	 */
 	public static double restoreFreeScaleY() {
-		return props.get("freeScaleY",freeScaleY);
+		return props.get("freeScaleY", freeScaleY);
 	}
 
 	/**
 	 * Find the most fitting resolution for the given width and height
-	 * @param w screen width
-	 * @param h screen height
+	 * @param width screen width
+	 * @param height screen height
 	 * @return most fitting resolution
 	 */
-	public static Resolution getResolution(int w, int h) {
-		if (w <= resolutions[0][0] && h <= resolutions[0][1])
-			return Resolution.NTSC;
-		if (w <= resolutions[1][0] && h <= resolutions[1][1])
-			return Resolution.PAL;
-		if (w <= resolutions[2][0] && h <= resolutions[2][1])
-			return Resolution.HD_720;
-		if (w <= resolutions[3][0] && h <= resolutions[3][1])
-			return Resolution.HD_1440x1080;
-		if (w <= resolutions[3][0] && h <= resolutions[3][1])
-			return Resolution.HD_1440x1080;
-		return Resolution.HD_1080;
+	public static Resolution getResolution(int width, int height) {
+		if (width <= Resolution.NTSC.getDimensions()[0] && height <= Resolution.NTSC.getDimensions()[1]) {
+			return Resolution.NTSC;		} else if (width <= Resolution.PAL.getDimensions()[0] && height <= Resolution.PAL.getDimensions()[1]) {			return Resolution.PAL;		} else if (width <= Resolution.HD_720.getDimensions()[0] && height <= Resolution.HD_720.getDimensions()[1]) {
+			return Resolution.HD_720;		} else if (width <= Resolution.HD_1440x1080.getDimensions()[0] && height <= Resolution.HD_1440x1080.getDimensions()[1]) {
+			return Resolution.HD_1440x1080;		} else {
+			return Resolution.HD_1080;		}
 	}
 
 	/**
 	 *  Force Core to cancel current operation.
 	 */
 	public static void cancel() {
-		state = State.CANCELED;
+		state = CoreThreadState.CANCELED;
 	}
 
 	/**
@@ -2709,14 +2218,14 @@ public class Core  extends Thread {
 	 * @return True if the current operation was canceled
 	 */
 	public static boolean isCancelled() {
-		return state == State.CANCELED;
+		return state == CoreThreadState.CANCELED;
 	}
 
 	/**
 	 * Get Core state.
 	 * @return Current Core state
 	 */
-	public static State getStatus() {
+	public static CoreThreadState getStatus() {
 		return state;
 	}
 
@@ -2732,17 +2241,17 @@ public class Core  extends Thread {
 	 * Set flag that tells whether or not to convert the frame rate.
 	 * @param b True: convert frame rate
 	 */
-	public static void setConvertFPS(final boolean b) {
+	public static void setConvertFPS(boolean b) {
 		convertFPS = b;
-		if (props==null)
-			convertFpsSet = true;
+		if (props == null) {
+			convertFpsSet = true;		}
 	}
 
 	/**
 	 * Store flag that tells whether or not to convert the frame rate.
 	 * @param b True: convert frame rate
 	 */
-	public static void storeConvertFPS(final boolean b) {
+	public static void storeConvertFPS(boolean b) {
 		props.set("convertFPS", b);
 	}
 
@@ -2758,17 +2267,17 @@ public class Core  extends Thread {
 	 * Set flag that tells whether or not to convert the resolution.
 	 * @param b True: convert resolution
 	 */
-	public static void setConvertResolution(final boolean b) {
+	public static void setConvertResolution(boolean b) {
 		convertResolution = b;
-		if (props==null)
-			convertResolutionSet = true;
+		if (props == null) {
+			convertResolutionSet = true;		}
 	}
 
 	/**
 	 * Store flag that tells whether or not to convert the resolution.
 	 * @param b True: convert resolution
 	 */
-	public static void storeConvertResolution(final boolean b) {
+	public static void storeConvertResolution(boolean b) {
 		props.set("convertResolution", b);
 	}
 
@@ -2784,7 +2293,7 @@ public class Core  extends Thread {
 	 * Set flag that tells whether or not to export only forced subtitles.
 	 * @param b True: export only forced subtitles
 	 */
-	public static void setExportForced(final boolean b) {
+	public static void setExportForced(boolean b) {
 		exportForced = b;
 	}
 
@@ -2792,7 +2301,7 @@ public class Core  extends Thread {
 	 * Request setting of forced flag for all captions
 	 * @return current state
 	 */
-	public static SetState getForceAll() {
+	public static ForcedFlagState getForceAll() {
 		return forceAll;
 	}
 
@@ -2800,7 +2309,7 @@ public class Core  extends Thread {
 	 * Request setting of forced flag for all captions
 	 * @param f state to set
 	 */
-	public static void setForceAll(SetState f) {
+	public static void setForceAll(ForcedFlagState f) {
 		forceAll = f;
 	}
 
@@ -2816,7 +2325,7 @@ public class Core  extends Thread {
 	 * Set source frame rate.
 	 * @param src Source frame rate
 	 */
-	public static void setFPSSrc(final double src) {
+	public static void setFPSSrc(double src) {
 		fpsSrc = src;
 		if (props == null) {
 			// avoid overwriting of command line value
@@ -2829,7 +2338,7 @@ public class Core  extends Thread {
 	 * Store source frame rate.
 	 * @param src Source frame rate
 	 */
-	public static void storeFPSSrc(final double src) {
+	public static void storeFPSSrc(double src) {
 		props.set("fpsSrc", src);
 	}
 
@@ -2845,19 +2354,19 @@ public class Core  extends Thread {
 	 * Set target frame rate.
 	 * @param trg Target frame rate
 	 */
-	public static void setFPSTrg(final double trg) {
+	public static void setFPSTrg(double trg) {
 		fpsTrg = trg;
 		delayPTS = (int)syncTimePTS(delayPTS, trg);
 		minTimePTS = (int)syncTimePTS(minTimePTS, trg);
-		if (props == null)
-			fpsTrgSet = true;
+		if (props == null) {
+			fpsTrgSet = true;		}
 	}
 
 	/**
 	 * Store target frame rate.
 	 * @param trg Target frame rate
 	 */
-	public static void storeFPSTrg(final double trg) {
+	public static void storeFPSTrg(double trg) {
 		props.set("fpsTrg", trg);
 	}
 
@@ -2873,17 +2382,17 @@ public class Core  extends Thread {
 	 * Set delay to add to time stamps.
 	 * @param delay Delay in 90kHz resolution
 	 */
-	public static void setDelayPTS(final int delay) {
+	public static void setDelayPTS(int delay) {
 		delayPTS = delay;
-		if (props==null)
-			delayPtsSet = true;
+		if (props == null) {
+			delayPtsSet = true;		}
 	}
 
 	/**
 	 * Store delay to add to time stamps.
 	 * @param delay Delay in 90kHz resolution
 	 */
-	public static void storeDelayPTS(final int delay) {
+	public static void storeDelayPTS(int delay) {
 		props.set("delayPTS", delay);
 	}
 
@@ -2937,7 +2446,7 @@ public class Core  extends Thread {
 	 * Set progress in progress bar.
 	 * @param p Subtitle index processed
 	 */
-	public static void setProgress(final int p) {
+	public static void setProgress(int p) {
 		if (progress != null) {
 			int val = (int)(((long)p*100)/progressMax);
 			if (val > progressLast) {
@@ -2945,15 +2454,6 @@ public class Core  extends Thread {
 				progress.setProgress(val);
 			}
 		}
-	}
-
-	/**
-	 * Get string representation of output mode.
-	 * @param m Output mode
-	 * @return String representation of output mode
-	 */
-	public static String getOutputFormatName(final Core.OutputMode m) {
-		return modes[m.ordinal()];
 	}
 
 	/**
@@ -2968,11 +2468,10 @@ public class Core  extends Thread {
 	 * Set output mode.
 	 * @param m Output mode
 	 */
-	public static void setOutputMode(final OutputMode m) {
-		if (props != null)
-			props.set("outputMode", getOutputFormatName(m));
-		else
-			outModeSet = true;		
+	public static void setOutputMode(OutputMode m) {
+		if (props != null) {
+			props.set("outputMode", m.toString());		} else {
+			outModeSet = true;		}
 		outMode = m;
 	}
 
@@ -3000,7 +2499,7 @@ public class Core  extends Thread {
 	 * @return		Source image as BufferedImage
 	 * @throws CoreException
 	 */
-	public static BufferedImage getSrcImage(final int idx) throws CoreException {
+	public static BufferedImage getSrcImage(int idx) throws CoreException {
 		synchronized (semaphore) {
 			substream.decode(idx);
 			return substream.getImage();
@@ -3022,15 +2521,15 @@ public class Core  extends Thread {
 	 * @param pic SubPicture to use for applying erase patches
 	 * @return Target image as BufferedImage
 	 */
-	public static BufferedImage getTrgImagePatched(final SubPicture pic) {
+	public static BufferedImage getTrgImagePatched(SubPicture pic) {
 		synchronized (semaphore) {
 			if (pic.erasePatch != null) {
 				Bitmap trgBitmapPatched = new Bitmap(trgBitmapUnpatched);
 				int col = trgPal.getIndexOfMostTransparentPaletteEntry();
-				for (ErasePatch ep : pic.erasePatch)
-					trgBitmapPatched.fillRectangularWithColorIndex(ep.x, ep.y, ep.width, ep.height, (byte)col);
+				for (ErasePatch ep : pic.erasePatch) {
+					trgBitmapPatched.fillRectangularWithColorIndex(ep.x, ep.y, ep.width, ep.height, (byte)col);				}
 				return trgBitmapPatched.getImage(trgPal.getColorModel());
-			} else return trgBitmapUnpatched.getImage(trgPal.getColorModel());
+			} else {				return trgBitmapUnpatched.getImage(trgPal.getColorModel());			}
 		}
 	}
 
@@ -3039,7 +2538,7 @@ public class Core  extends Thread {
 	 * @param index Subtitle index
 	 * @return Screen width of target
 	 */
-	public static int getTrgWidth(final int index) {
+	public static int getTrgWidth(int index) {
 		synchronized (semaphore) {
 			return subPictures[index].width;
 		}
@@ -3050,7 +2549,7 @@ public class Core  extends Thread {
 	 * @param index Subtitle index
 	 * @return Screen height of target
 	 */
-	public static int getTrgHeight(final int index) {
+	public static int getTrgHeight(int index) {
 		synchronized (semaphore) {
 			return subPictures[index].height;
 		}
@@ -3061,7 +2560,7 @@ public class Core  extends Thread {
 	 * @param index Subtitle index
 	 * @return Subtitle width of target
 	 */
-	public static int getTrgImgWidth(final int index) {
+	public static int getTrgImgWidth(int index) {
 		synchronized (semaphore) {
 			return subPictures[index].getImageWidth();
 		}
@@ -3072,7 +2571,7 @@ public class Core  extends Thread {
 	 * @param index Subtitle index
 	 * @return Subtitle height of target
 	 */
-	public static int getTrgImgHeight(final int index) {
+	public static int getTrgImgHeight(int index) {
 		synchronized (semaphore) {
 			return subPictures[index].getImageHeight();
 		}
@@ -3083,7 +2582,7 @@ public class Core  extends Thread {
 	 * @param index Subtitle index
 	 * @return Screen width of target
 	 */
-	public static boolean getTrgExcluded(final int index) {
+	public static boolean getTrgExcluded(int index) {
 		synchronized (semaphore) {
 			return subPictures[index].exclude;
 		}
@@ -3094,7 +2593,7 @@ public class Core  extends Thread {
 	 * @param index Subtitle index
 	 * @return Subtitle x offset of target
 	 */
-	public static int getTrgOfsX(final int index) {
+	public static int getTrgOfsX(int index) {
 		synchronized (semaphore) {
 			return subPictures[index].getOfsX();
 		}
@@ -3105,7 +2604,7 @@ public class Core  extends Thread {
 	 * @param index Subtitle index
 	 * @return Subtitle y offset of target
 	 */
-	public static int getTrgOfsY(final int index) {
+	public static int getTrgOfsY(int index) {
 		synchronized (semaphore) {
 			return subPictures[index].getOfsY();
 		}
@@ -3116,10 +2615,7 @@ public class Core  extends Thread {
 	 * @return Number of subtitles
 	 */
 	public static int getNumFrames() {
-		if (substream==null)
-			return 0;
-		else
-			return substream.getNumFrames();
+		return substream == null ? 0 : substream.getNumFrames();
 	}
 
 	/**
@@ -3127,10 +2623,7 @@ public class Core  extends Thread {
 	 * @return Number of forced subtitles
 	 */
 	public static int getNumForcedFrames() {
-		if (substream==null)
-			return 0;
-		else
-			return substream.getNumForcedFrames();
+		return substream == null ? 0 : substream.getNumForcedFrames();
 	}
 
 	/**
@@ -3138,7 +2631,7 @@ public class Core  extends Thread {
 	 * @param index Index of subtitle
 	 * @return Info string for target subtitle
 	 */
-	public static String getTrgInfoStr(final int index) {
+	public static String getTrgInfoStr(int index) {
 		SubPicture pic = subPictures[index];
 		String text = "screen size: "+getTrgWidth(index)+"x"+getTrgHeight(index)+"    ";
 		text +=	"image size: "+getTrgImgWidth(index)+"x"+getTrgImgHeight(index)+"    ";
@@ -3154,7 +2647,7 @@ public class Core  extends Thread {
 	 * @param index Index of subtitle
 	 * @return Info string for source subtitle
 	 */
-	public static String getSrcInfoStr(final int index) {
+	public static String getSrcInfoStr(int index) {
 		String text;
 
 		SubPicture pic = substream.getSubPicture(index);
@@ -3172,8 +2665,8 @@ public class Core  extends Thread {
 	 * @param r Resolution
 	 * @return Integer array containing width [0] and height [1]
 	 */
-	public static int[] getResolution(final Resolution r) {
-		return resolutions[r.ordinal()];
+	public static int[] getResolution(Resolution r) {
+		return r.getDimensions();
 	}
 
 	/**
@@ -3181,8 +2674,8 @@ public class Core  extends Thread {
 	 * @param r Resolution
 	 * @return String representation of resolution
 	 */
-	public static String getResolutionName(final Resolution r) {
-		return resolutionNames[r.ordinal()];
+	public static String getResolutionName(Resolution r) {
+		return r.toString();
 	}
 
 	/**
@@ -3190,8 +2683,8 @@ public class Core  extends Thread {
 	 * @param r Resolution
 	 * @return String representation of resolution
 	 */
-	public static String getResolutionNameXml(final Resolution r) {
-		return resolutionNamesXml[r.ordinal()];
+	public static String getResolutionNameXml(Resolution r) {
+		return r.getResolutionNameForXml();
 	}
 
 
@@ -3207,16 +2700,8 @@ public class Core  extends Thread {
 	 * Set current DVD palette.
 	 * @param pal DVD palette
 	 */
-	public static void setCurrentDVDPalette(final Palette pal) {
+	public static void setCurrentDVDPalette(Palette pal) {
 		currentDVDPalette = pal;
-	}
-
-	/**
-	 * Get default DVD palette.
-	 * @return Default DVD palette
-	 */
-	public static Palette getDefaultDVDPalette() {
-		return defaultDVDPalette;
 	}
 
 	/**
@@ -3231,7 +2716,7 @@ public class Core  extends Thread {
 	 * Set language index for VobSub (and XML) export.
 	 * @param idx Language index for VobSub (and XML) export
 	 */
-	public static void setLanguageIdx(final int idx) {
+	public static void setLanguageIdx(int idx) {
 		languageIdx = idx;
 	}
 
@@ -3247,17 +2732,17 @@ public class Core  extends Thread {
 	 * Set flag that tells whether to fix frames shorter than minTimePTS.
 	 * @param b True: fix short frames
 	 */
-	public static void setFixShortFrames(final boolean b) {
+	public static void setFixShortFrames(boolean b) {
 		fixShortFrames = b;
-		if (props==null)
-			fixShortFramesSet = true;
+		if (props == null) {
+			fixShortFramesSet = true;		}
 	}
 
 	/**
 	 * Store flag that tells whether to fix frames shorter than minTimePTS.
 	 * @param b True: fix short frames
 	 */
-	public static void storeFixShortFrames(final boolean b) {
+	public static void storeFixShortFrames(boolean b) {
 		props.set("fixShortFrames",  b);
 	}
 
@@ -3273,17 +2758,17 @@ public class Core  extends Thread {
 	 * Set minimum frame duration in 90kHz resolution.
 	 * @param t Minimum frame duration in 90kHz resolution
 	 */
-	public static void setMinTimePTS(final int t) {
+	public static void setMinTimePTS(int t) {
 		minTimePTS = t;
-		if (props==null)
-			minTimePtsSet = true;
+		if (props == null) {
+			minTimePtsSet = true;		}
 	}
 
 	/**
 	 * Store minimum frame duration in 90kHz resolution.
 	 * @param t Minimum frame duration in 90kHz resolution
 	 */
-	public static void storeMinTimePTS(final int t) {
+	public static void storeMinTimePTS(int t) {
 		props.set("minTimePTS", t);
 	}
 
@@ -3292,7 +2777,7 @@ public class Core  extends Thread {
 	 * @param index Index of subpicture
 	 * @return Target SubPicture
 	 */
-	public static SubPicture getSubPictureTrg(final int index) {
+	public static SubPicture getSubPictureTrg(int index) {
 		synchronized (semaphore) {
 			return subPictures[index];
 		}
@@ -3303,7 +2788,7 @@ public class Core  extends Thread {
 	 * @param index Index of subpicture
 	 * @return Source SubPicture
 	 */
-	public static SubPicture getSubPictureSrc(final int index) {
+	public static SubPicture getSubPictureSrc(int index) {
 		synchronized (semaphore) {
 			return substream.getSubPicture(index);
 		}
@@ -3321,47 +2806,15 @@ public class Core  extends Thread {
 	 * Set flag that defines whether to swap Cr/Cb components when loading a SUP.
 	 * @param b True: swap cr/cb
 	 */
-	public static void setSwapCrCb(final boolean b) {
+	public static void setSwapCrCb(boolean b) {
 		swapCrCb = b;
-	}
-
-	/**
-	 * Get program name (excluding version).
-	 * @return Program name (excluding version)
-	 */
-	public static String getProgName() {
-		return progName;
-	}
-
-	/**
-	 * Get program name (including version).
-	 * @return Program name (including version)
-	 */
-	public static String getProgVerName() {
-		return progNameVer;
-	}
-
-	/**
-	 * Get author and date info.
-	 * @return Author and date info
-	 */
-	public static String getAuthorDate() {
-		return authorDate;
-	}
-
-	/**
-	 * Get two dimensional array with languages where [i][0] is full name, [i][1] is two character short name.
-	 * @return Two dimensional array with languages where [i][0] is full name, [i][1] is two character short name
-	 */
-	public static String[][] getLanguages() {
-		return languages;
 	}
 
 	/**
 	 * Set Y coordinate cropping offset.
 	 * @param ofs Cropping Offset (number of lines to crop symmetrically from bottom and top)
 	 */
-	public static void setCropOfsY(final int ofs) {
+	public static void setCropOfsY(int ofs) {
 		cropOfsY = ofs;
 	}
 
@@ -3393,21 +2846,11 @@ public class Core  extends Thread {
 	 * Set palette creation mode.
 	 * @param m Palette creation mode
 	 */
-	public static void setPaletteMode(final PaletteMode m) {
-		if (props != null)
-			props.set("paletteMode", getPaletteModeName(m));
-		else
-			paletteModeSet = true;
+	public static void setPaletteMode(PaletteMode m) {
+		if (props != null) {
+			props.set("paletteMode", m.toString());		} else {
+			paletteModeSet = true;		}
 		paletteMode = m;
-	}
-
-	/**
-	 * Return name string for given palette creation mode.
-	 * @param m Palette creation mode
-	 * @return String for given palette creation mode
-	 */
-	public static String getPaletteModeName(final PaletteMode m) {
-		return paletteModeNames[m.ordinal()];
 	}
 
 	/**
@@ -3422,19 +2865,18 @@ public class Core  extends Thread {
 	 * Set verbatim console output mode.
 	 * @param e True: verbatim console output mode
 	 */
-	public static void setVerbatim(final boolean e) {
+	public static void setVerbatim(boolean e) {
 		verbatim = e;
-		if (props != null)
-			props.set("verbatim", e?"true":"false");
-		else
-			verbatimSet = true;
+		if (props != null) {
+			props.set("verbatim", e ? "true" : "false");		} else {
+			verbatimSet = true;		}
 	}
 
 	/**
 	 * Set internal maximum for progress bar.
 	 * @param max Internal maximum for progress bar (e.g. number of subtitles)
 	 */
-	public static void setProgressMax(final int max) {
+	public static void setProgressMax(int max) {
 		progressMax = max;
 	}
 
@@ -3450,7 +2892,7 @@ public class Core  extends Thread {
 	 * Set: use source fps for target fps if possible.
 	 * @param e True if source fps should be used for target
 	 */
-	public static void setKeepFps(final boolean e) {
+	public static void setKeepFps(boolean e) {
 		keepFps = e;
 	}
 
@@ -3474,7 +2916,7 @@ public class Core  extends Thread {
 	 * Get current scaling filter.
 	 * @return Current scaling filter
 	 */
-	public static ScalingFilters getScalingFilter() {
+	public static ScalingFilter getScalingFilter() {
 		return scalingFilter;
 	}
 
@@ -3482,21 +2924,11 @@ public class Core  extends Thread {
 	 * Set filter to be used for scaling.
 	 * @param f Scaling Filter
 	 */
-	public static void setScalingFilter(final ScalingFilters f) {
-		if (props != null)
-			props.set("filter", getScalingFilterName(f));
-		else
-			scalingFilterSet = true;
+	public static void setScalingFilter(ScalingFilter f) {
+		if (props != null) {
+			props.set("filter", f.toString());		} else {
+			scalingFilterSet = true;		}
 		scalingFilter = f;
-	}
-
-	/**
-	 * Get name for scaling filter.
-	 * @param f Scaling filter
-	 * @return String containing name for scaling filter
-	 */
-	public static String getScalingFilterName(final ScalingFilters f) {
-		return scalingFilters[f.ordinal()];
 	}
 
 	/**
@@ -3511,12 +2943,11 @@ public class Core  extends Thread {
 	 * Set maximum time difference for merging captions.
 	 * @param d Maximum time difference for merging captions
 	 */
-	public static void setMergePTSdiff(final int d) {
+	public static void setMergePTSdiff(int d) {
 		mergePTSdiff = d;
-		if (props != null)
-			props.set("mergePTSdiff", d);
-		else
-			mergePTSdiffSet = true;
+		if (props != null) {
+			props.set("mergePTSdiff", d);		} else {
+			mergePTSdiffSet = true;		}
 	}
 
 	/**
@@ -3531,12 +2962,11 @@ public class Core  extends Thread {
 	 * Set alpha threshold for cropping.
 	 * @param a Alpha threshold for cropping
 	 */
-	public static void setAlphaCrop(final int a) {
+	public static void setAlphaCrop(int a) {
 		alphaCrop = a;
-		if (props != null)
-			props.set("alphaCrop", a);
-		else
-			alphaCropSet = true;
+		if (props != null) {
+			props.set("alphaCrop", a);		} else {
+			alphaCropSet = true;		}
 	}
 
 	/**
@@ -3553,8 +2983,8 @@ public class Core  extends Thread {
 	 */
 	public static void setApplyFreeScale(boolean f) {
 		applyFreeScale = f;
-		if (props==null)
-			applyFreeScaleSet = true;
+		if (props == null) {
+			applyFreeScaleSet = true;		}
 	}
 
 	/**
@@ -3587,15 +3017,13 @@ public class Core  extends Thread {
 	 * @param y Free Y scaling factor (limited to 0.5 .. 2.0)
 	 */
 	public static void setFreeScale(double x, double y) {
-		if (x < minScale)
-			x = minScale;
-		else if (x > maxScale)
-			x = maxScale;
+		if (x < MIN_FREE_SCALE_FACTOR) {
+			x = MIN_FREE_SCALE_FACTOR;		} else if (x > MAX_FREE_SCALE_FACTOR) {
+			x = MAX_FREE_SCALE_FACTOR;		}
 		freeScaleX = x;
-		if (y < minScale)
-			y = minScale;
-		else if (y > maxScale)
-			y = maxScale;
+		if (y < MIN_FREE_SCALE_FACTOR) {
+			y = MIN_FREE_SCALE_FACTOR;		} else if (y > MAX_FREE_SCALE_FACTOR) {
+			y = MAX_FREE_SCALE_FACTOR;		}
 		freeScaleY = y;
 	}
 
@@ -3605,15 +3033,13 @@ public class Core  extends Thread {
 	 * @param y Free Y scaling factor (limited to 0.5 .. 2.0)
 	 */
 	public static void storeFreeScale(double x, double y) {
-		if (x < minScale)
-			x = minScale;
-		else if (x > maxScale)
-			x = maxScale;
+		if (x < MIN_FREE_SCALE_FACTOR) {
+			x = MIN_FREE_SCALE_FACTOR;		} else if (x > MAX_FREE_SCALE_FACTOR) {
+			x = MAX_FREE_SCALE_FACTOR;		}
 		props.set("freeScaleX", x);
-		if (y < minScale)
-			y = minScale;
-		else if (y > maxScale)
-			y = maxScale;
+		if (y < MIN_FREE_SCALE_FACTOR) {
+			y = MIN_FREE_SCALE_FACTOR;		} else if (y > MAX_FREE_SCALE_FACTOR) {
+			y = MAX_FREE_SCALE_FACTOR;		}
 		props.set("freeScaleY", y);
 	}
 
@@ -3621,16 +3047,16 @@ public class Core  extends Thread {
 	 * Set: move mode in Y direction
 	 * @param m Move mode
 	 */
-	public static void setMoveModeY(final MoveModeY m) {
+	public static void setMoveModeY(CaptionMoveModeY m) {
 		moveModeY = m;
-		moveCaptions = (moveModeY != MoveModeY.KEEP) || (moveModeX != MoveModeX.KEEP);
+		moveCaptions = (moveModeY != CaptionMoveModeY.KEEP_POSITION) || (moveModeX != CaptionMoveModeX.KEEP_POSITION);
 	}
 
 	/**
 	 * Get: move mode in Y direction
 	 * @return Move mode
 	 */
-	public static MoveModeY getMoveModeY() {
+	public static CaptionMoveModeY getMoveModeY() {
 		return moveModeY;
 	}
 
@@ -3638,16 +3064,16 @@ public class Core  extends Thread {
 	 * Set: move mode in X direction
 	 * @param m Move mode
 	 */
-	public static void setMoveModeX(final MoveModeX m) {
+	public static void setMoveModeX(CaptionMoveModeX m) {
 		moveModeX = m;
-		moveCaptions = (moveModeY != MoveModeY.KEEP) || (moveModeX != MoveModeX.KEEP);
+		moveCaptions = (moveModeY != CaptionMoveModeY.KEEP_POSITION) || (moveModeX != CaptionMoveModeX.KEEP_POSITION);
 	}
 
 	/**
 	 * Get: move mode in X direction
 	 * @return Move mode
 	 */
-	public static MoveModeX getMoveModeX() {
+	public static CaptionMoveModeX getMoveModeX() {
 		return moveModeX;
 	}
 
@@ -3655,7 +3081,7 @@ public class Core  extends Thread {
 	 * Set: factor of cinemascope bars (needed for moving after cropping).
 	 * @param f Factor of cinemascope bars
 	 */
-	public static void setCineBarFactor(final double f) {
+	public static void setCineBarFactor(double f) {
 		cineBarFactor = f;
 	}
 
@@ -3663,7 +3089,7 @@ public class Core  extends Thread {
 	 * Set: Additional y offset to consider when moving
 	 * @param ofs Y offset
 	 */
-	public static void setMoveOffsetY(final int ofs) {
+	public static void setMoveOffsetY(int ofs) {
 		moveOffsetY = ofs;
 	}
 
@@ -3679,7 +3105,7 @@ public class Core  extends Thread {
 	 * Set: Additional x offset to consider when moving
 	 * @param ofs Y offset
 	 */
-	public static void setMoveOffsetX(final int ofs) {
+	public static void setMoveOffsetX(int ofs) {
 		moveOffsetX = ofs;
 	}
 
@@ -3719,7 +3145,7 @@ public class Core  extends Thread {
 	 * Set current input stream ID.
 	 * @param sid Stream ID
 	 */
-	public static void setCurrentStreamID(final StreamID sid) {
+	public static void setCurrentStreamID(StreamID sid) {
 		currentStreamID = sid;
 	}
 
@@ -3735,12 +3161,11 @@ public class Core  extends Thread {
 	 * Set: write PGCEdit palette file on export.
 	 * @param e True: write
 	 */
-	public static void setWritePGCEditPal(final boolean e) {
+	public static void setWritePGCEditPal(boolean e) {
 		writePGCEditPal = e;
-		if (props != null)
-			props.set("writePGCEditPal", e?"true":"false");
-		else
-			writePGCEditPalSet = true;
+		if (props != null) {
+			props.set("writePGCEditPal", e ? "true" : "false");		} else {
+			writePGCEditPalSet = true;		}
 	}
 
 	/**
@@ -3755,12 +3180,11 @@ public class Core  extends Thread {
 	 * Set: fix completely invisibly subtitles due to alpha=0 (SUB/IDX and SUP/IFO import only).
 	 * @param e True: verbatim text mode
 	 */
-	public static void setFixZeroAlpha(final boolean e) {
+	public static void setFixZeroAlpha(boolean e) {
 		fixZeroAlpha = e;
-		if (props != null)
-			props.set("fixZeroAlpha", e?"true":"false");
-		else
-			fixZeroAlphaSet = true;
+		if (props != null) {
+			props.set("fixZeroAlpha", e ? "true" : "false");		} else {
+			fixZeroAlphaSet = true;		}
 	}
 
 	/**
@@ -3783,14 +3207,13 @@ public class Core  extends Thread {
 	 * Set modified imported palette.
 	 * @param pal Modified imported palette
 	 */
-	public static void setCurSrcDVDPalette(final Palette pal) {
+	public static void setCurSrcDVDPalette(Palette pal) {
 		currentSourceDVDPalette = pal;
 
 		SubstreamDVD substreamDVD = null;
-		if (inMode == InputMode.VOBSUB)
-			substreamDVD = subDVD;
-		else if (inMode == InputMode.SUPIFO)
-			substreamDVD = supDVD;
+		if (inMode == InputMode.VOBSUB) {
+			substreamDVD = subDVD;		} else if (inMode == InputMode.SUPIFO) {
+			substreamDVD = supDVD;		}
 
 		substreamDVD.setSrcPalette(currentSourceDVDPalette);
 	}
@@ -3800,18 +3223,16 @@ public class Core  extends Thread {
 	 * @param index Index of subtitle
 	 * @return Frame palette of given subtitle as array of int (4 entries)
 	 */
-	public static int[] getFramePal(final int index) {
+	public static int[] getFramePal(int index) {
 		SubstreamDVD substreamDVD = null;
 
-		if (inMode == InputMode.VOBSUB)
-			substreamDVD = subDVD;
-		else if (inMode == InputMode.SUPIFO)
-			substreamDVD = supDVD;
+		if (inMode == InputMode.VOBSUB) {
+			substreamDVD = subDVD;		} else if (inMode == InputMode.SUPIFO) {
+			substreamDVD = supDVD;		}
 
-		if (substreamDVD != null)
-			return substreamDVD.getFramePal(index);
-		else
-			return null;
+		if (substreamDVD != null) {
+			return substreamDVD.getFramePal(index);		} else {
+			return null;		}
 	}
 
 	/**
@@ -3819,18 +3240,16 @@ public class Core  extends Thread {
 	 * @param index Index of subtitle
 	 * @return Frame alpha values of given subtitle as array of int (4 entries)
 	 */
-	public static int[] getFrameAlpha(final int index) {
+	public static int[] getFrameAlpha(int index) {
 		SubstreamDVD substreamDVD = null;
 
-		if (inMode == InputMode.VOBSUB)
-			substreamDVD = subDVD;
-		else if (inMode == InputMode.SUPIFO)
-			substreamDVD = supDVD;
+		if (inMode == InputMode.VOBSUB) {
+			substreamDVD = subDVD;		} else if (inMode == InputMode.SUPIFO) {
+			substreamDVD = supDVD;		}
 
-		if (substreamDVD != null)
-			return substreamDVD.getFrameAlpha(index);
-		else
-			return null;
+		if (substreamDVD != null) {
+			return substreamDVD.getFrameAlpha(index);		} else {
+			return null;		}
 	}
 
 	/**
@@ -3838,18 +3257,16 @@ public class Core  extends Thread {
 	 * @param index Index of subtitle
 	 * @return Frame palette of given subtitle as array of int (4 entries)
 	 */
-	public static int[] getOriginalFramePal(final int index) {
+	public static int[] getOriginalFramePal(int index) {
 		SubstreamDVD substreamDVD = null;
 
-		if (inMode == InputMode.VOBSUB)
-			substreamDVD = subDVD;
-		else if (inMode == InputMode.SUPIFO)
-			substreamDVD = supDVD;
+		if (inMode == InputMode.VOBSUB) {
+			substreamDVD = subDVD;		} else if (inMode == InputMode.SUPIFO) {
+			substreamDVD = supDVD;		}
 
-		if (substreamDVD != null)
-			return substreamDVD.getOriginalFramePal(index);
-		else
-			return null;
+		if (substreamDVD != null) {
+			return substreamDVD.getOriginalFramePal(index);		} else {
+			return null;		}
 	}
 
 	/**
@@ -3857,18 +3274,16 @@ public class Core  extends Thread {
 	 * @param index Index of subtitle
 	 * @return Frame alpha values of given subtitle as array of int (4 entries)
 	 */
-	public static int[] getOriginalFrameAlpha(final int index) {
+	public static int[] getOriginalFrameAlpha(int index) {
 		SubstreamDVD substreamDVD = null;
 
-		if (inMode == InputMode.VOBSUB)
-			substreamDVD = subDVD;
-		else if (inMode == InputMode.SUPIFO)
-			substreamDVD = supDVD;
+		if (inMode == InputMode.VOBSUB) {
+			substreamDVD = subDVD;		} else if (inMode == InputMode.SUPIFO) {
+			substreamDVD = supDVD;		}
 
-		if (substreamDVD != null)
-			return substreamDVD.getOriginalFrameAlpha(index);
-		else
-			return null;
+		if (substreamDVD != null) {
+			return substreamDVD.getOriginalFrameAlpha(index);		} else {
+			return null;		}
 	}
 
 }

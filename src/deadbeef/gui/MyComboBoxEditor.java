@@ -31,18 +31,14 @@ import javax.swing.plaf.basic.BasicComboBoxEditor;
  */
 class MyComboBoxEditor extends BasicComboBoxEditor {
 
-	/**
-	 * Constructor
-	 */
 	public MyComboBoxEditor() {
-		super();
 	}
 
 	/**
 	 * Constructor with JTextField
 	 * @param editor JTextField to use as editor
 	 */
-	public MyComboBoxEditor(final JTextField editor) {
+	public MyComboBoxEditor(JTextField editor) {
 		super();
 		this.editor = editor;
 		editor.setBorder(new EmptyBorder(new Insets(1,2,1,2)));
@@ -68,8 +64,7 @@ class MyComboBoxEditor extends BasicComboBoxEditor {
 	 * Set JTextField used as editor
 	 * @param editor JTextField used as editor
 	 */
-	public void setEditorComponent(final JTextField editor) {
+	public void setEditorComponent(JTextField editor) {
 		this.editor = editor;
 	}
-
 }

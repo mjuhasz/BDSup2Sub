@@ -9,6 +9,12 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Point;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -24,6 +30,8 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
 import deadbeef.core.Core;
+import deadbeef.core.ForcedFlagState;
+import deadbeef.core.Resolution;
 import deadbeef.tools.ToolBox;
 
 /*
@@ -51,79 +59,79 @@ public class ConversionDialog extends JDialog {
 
 	private static final long serialVersionUID = 1L;
 
-	private JPanel jContentPane = null;
+	private JPanel jContentPane;
 
-	private JPanel jPanelResolution = null;
+	private JPanel jPanelResolution;
 
-	private JComboBox jComboBoxResolution = null;
+	private JComboBox jComboBoxResolution;
 
-	private JCheckBox jCheckBoxFrameRate = null;
+	private JCheckBox jCheckBoxFrameRate;
 
-	private JCheckBox jCheckBoxResolution = null;	
+	private JCheckBox jCheckBoxResolution;	
 
-	private JPanel jPanelFPS = null;
+	private JPanel jPanelFPS;
 
-	private JComboBox jComboBoxFPSSrc = null;
+	private JComboBox jComboBoxFPSSrc;
 
-	private JComboBox jComboBoxFPSTrg = null;
+	private JComboBox jComboBoxFPSTrg;
 	
 	
-	private JPanel jPanelMove = null;
+	private JPanel jPanelMove;
 	
-	private JCheckBox jCheckBoxMove = null;
+	private JCheckBox jCheckBoxMove;
 
 
-	private JPanel jPanelTimes = null;
+	private JPanel jPanelTimes;
 
-	private JTextField jTextFieldDelay = null;
+	private JTextField jTextFieldDelay;
 
-	private JCheckBox jCheckBoxFixMinTime = null;
+	private JCheckBox jCheckBoxFixMinTime;
 
-	private JTextField jTextFieldMinTime = null;
+	private JTextField jTextFieldMinTime;
 
-	private JTextField fpsTrgEditor = null;
+	private JTextField fpsTrgEditor;
 
-	private JTextField fpsSrcEditor = null;
-
-
-	private JPanel jPanelDefaults = null;
-
-	private JButton jButtonStore = null;
-
-	private JButton jButtonRestore = null;
-
-	private JButton jButtonReset = null;
+	private JTextField fpsSrcEditor;
 
 
-	private JPanel jPanelButtons = null;
+	private JPanel jPanelDefaults;
 
-	private JButton jButtonOk = null;
+	private JButton jButtonStore;
 
-	private JButton jButtonCancel = null;
+	private JButton jButtonRestore;
+
+	private JButton jButtonReset;
 
 
-	private JPanel jPanelScale = null;
+	private JPanel jPanelButtons;
 
-	private JCheckBox jCheckBoxScale = null;
+	private JButton jButtonOk;
 
-	private JTextField jTextFieldScaleX = null;
+	private JButton jButtonCancel;
 
-	private JTextField jTextFieldScaleY = null;
 
-	private JPanel jPanelForced = null;
+	private JPanel jPanelScale;
 
-	private JComboBox jComboBoxForced = null;
+	private JCheckBox jCheckBoxScale;
+
+	private JTextField jTextFieldScaleX;
+
+	private JTextField jTextFieldScaleY;
+
+	private JPanel jPanelForced;
+
+	private JComboBox jComboBoxForced;
 
 
 	/** background color for errors */
-	private final Color errBgnd = new Color(0xffe1acac);
+	private Color errBgnd = new Color(0xffe1acac);
 	/** background color for warnings */
-	private final Color warnBgnd = new Color(0xffffffc0);
+	private Color warnBgnd = new Color(0xffffffc0);
 	/** background color for ok */
-	private final Color okBgnd = UIManager.getColor("TextField.background");
+	private Color okBgnd = UIManager.getColor("TextField.background");
 
 	/** selected output resolution */
-	private Core.Resolution resolution;
+	private Resolution resolution;
 	/** selected delay in 90kHz resolution */
 	private int     delayPTS;
 	/** selected minimum frame time in 90kHz resolution */
@@ -141,7 +149,7 @@ public class ConversionDialog extends JDialog {
 	/** cancel state */
 	private boolean cancel;
 	/** semaphore to disable actions while changing component properties */
-	private volatile boolean isReady = false;
+	private volatile boolean isReady;
 	/** flag that tells whether to use free scaling or not */
 	private boolean changeScale;
 	/** X scaling factor */
@@ -151,7 +159,7 @@ public class ConversionDialog extends JDialog {
 	/** source fps is certain */
 	private boolean fpsSrcCertain;
 	/** clear/set all forced flags */
-	private Core.SetState forcedState;
+	private ForcedFlagState forcedState;
 	/** apply move settings */
 	private boolean moveCaptions;
 
@@ -169,7 +177,6 @@ public class ConversionDialog extends JDialog {
 		fpsTrgEditor = new JTextField();
 		fpsSrcEditor = new JTextField();
 
-		// TODO Auto-generated constructor stub
 		initialize();
 
 		// center to parent frame
@@ -181,10 +188,11 @@ public class ConversionDialog extends JDialog {
 		changeResolution = Core.getConvertResolution();
 		// fix output resolution in case that it should not be changed
 		// change target resolution to source resolution if no conversion is needed
-		if (!changeResolution && Core.getNumFrames()>0)
+		if (!changeResolution && Core.getNumFrames() > 0) {
 			resolution = Core.getResolution(Core.getSubPictureSrc(0).width, Core.getSubPictureSrc(0).height);
-		else
+		} else {
 			resolution = Core.getOutputResolution();
+		}
 		
 		moveCaptions = Core.getMoveCaptions();
 		jCheckBoxMove.setEnabled(false);
@@ -203,7 +211,7 @@ public class ConversionDialog extends JDialog {
 		cancel = false;
 
 		// fill comboboxes and text fields
-		for (Core.Resolution r : Core.Resolution.values()) {
+		for (Resolution r : Resolution.values()) {
 			jComboBoxResolution.addItem(Core.getResolutionName(r));
 		}
 
@@ -278,9 +286,9 @@ public class ConversionDialog extends JDialog {
 		this.setTitle("Conversion Options");
 		this.setPreferredSize(new Dimension(500, 350));
 		this.setContentPane(getJContentPane());
-		this.addWindowListener(new java.awt.event.WindowAdapter() {
+		this.addWindowListener(new WindowAdapter() {
 			@Override
-			public void windowClosing(java.awt.event.WindowEvent e) {
+			public void windowClosing(WindowEvent e) {
 				cancel = true;
 				dispose();
 			}
@@ -745,15 +753,16 @@ public class ConversionDialog extends JDialog {
 			jComboBoxResolution.setMinimumSize(new Dimension(150, 20));
 			jComboBoxResolution.setEditable(false);
 			jComboBoxResolution.setToolTipText("Select the target resolution");
-			jComboBoxResolution.addItemListener(new java.awt.event.ItemListener() {
-				public void itemStateChanged(java.awt.event.ItemEvent e) {
+			jComboBoxResolution.addItemListener(new ItemListener() {
+				public void itemStateChanged(ItemEvent e) {
 					if (isReady) {
 						int idx = jComboBoxResolution.getSelectedIndex();
-						for (Core.Resolution r : Core.Resolution.values()) {
+						for (Resolution r : Resolution.values()) {
 							if (idx == r.ordinal()) {
 								resolution = r;
-								if (!Core.getKeepFps())
+								if (!Core.getKeepFps()) {
 									fpsTrg = Core.getDefaultFPS(r);
+								}
 								jComboBoxFPSTrg.setSelectedItem(ToolBox.formatDouble(fpsTrg));
 								break;
 							}
@@ -777,8 +786,8 @@ public class ConversionDialog extends JDialog {
 			jCheckBoxFrameRate.setMnemonic('f');
 			jCheckBoxFrameRate.setFocusable(false);
 			jCheckBoxFrameRate.setIconTextGap(10);
-			jCheckBoxFrameRate.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jCheckBoxFrameRate.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					if (isReady) {
 						changeFPS = jCheckBoxFrameRate.isSelected();
 						jComboBoxFPSSrc.setEnabled(changeFPS);
@@ -802,8 +811,8 @@ public class ConversionDialog extends JDialog {
 			jCheckBoxResolution.setDisplayedMnemonicIndex(8);
 			jCheckBoxResolution.setFocusable(false);
 			jCheckBoxResolution.setIconTextGap(10);
-			jCheckBoxResolution.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jCheckBoxResolution.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					if (isReady) {
 						changeResolution = jCheckBoxResolution.isSelected();
 						jComboBoxResolution.setEnabled(changeResolution);
@@ -827,10 +836,11 @@ public class ConversionDialog extends JDialog {
 			jCheckBoxMove.setDisplayedMnemonicIndex(8);
 			jCheckBoxMove.setFocusable(false);
 			jCheckBoxMove.setIconTextGap(10);
-			jCheckBoxMove.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
-					if (isReady) 
-						moveCaptions = jCheckBoxMove.isSelected();					
+			jCheckBoxMove.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					if (isReady) {
+						moveCaptions = jCheckBoxMove.isSelected();
+					}
 				}
 			});
 		}
@@ -849,13 +859,14 @@ public class ConversionDialog extends JDialog {
 			jComboBoxFPSSrc.setEditable(true);
 			jComboBoxFPSSrc.setEnabled(false);
 			jComboBoxFPSSrc.setToolTipText("Set the source frame rate (only needed for frame rate conversion)");
-			jComboBoxFPSSrc.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jComboBoxFPSSrc.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					if (isReady) {
 						String s = (String)jComboBoxFPSSrc.getSelectedItem();
 						double d = Core.getFPS(s);
-						if (d > 0)
+						if (d > 0) {
 							fpsSrc = d;
+						}
 						jComboBoxFPSSrc.setSelectedItem(ToolBox.formatDouble(fpsSrc));
 						jComboBoxFPSSrc.getEditor().getEditorComponent().setBackground(okBgnd);
 						fpsSrcCertain = false;
@@ -871,8 +882,9 @@ public class ConversionDialog extends JDialog {
 						if (d>0) {
 							c = okBgnd;
 							fpsSrc = d;
-						} else
+						} else {
 							c = errBgnd;
+						}
 						fpsSrcEditor.setBackground(c);
 						fpsSrcCertain = false;
 					}
@@ -908,13 +920,14 @@ public class ConversionDialog extends JDialog {
 			jComboBoxFPSTrg.setEditable(true);
 			jComboBoxFPSTrg.setEnabled(false);
 			jComboBoxFPSTrg.setToolTipText("Set the target frame rate");
-			jComboBoxFPSTrg.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jComboBoxFPSTrg.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					if (isReady) {
 						String s = (String)jComboBoxFPSTrg.getSelectedItem();
 						double d = Core.getFPS(s);
-						if (d > 0)
+						if (d > 0) {
 							fpsTrg = d;
+						}
 						jComboBoxFPSTrg.setSelectedItem(ToolBox.formatDouble(fpsTrg));
 						jComboBoxFPSTrg.getEditor().getEditorComponent().setBackground(okBgnd);
 						//
@@ -934,13 +947,15 @@ public class ConversionDialog extends JDialog {
 						double d = Core.getFPS(s);
 						Color c;
 						if (d>0) {
-							if ((int)Core.syncTimePTS(delayPTS,fpsTrg) != delayPTS || minTimePTS != (int)Core.syncTimePTS(minTimePTS,fpsTrg))
+							if ((int)Core.syncTimePTS(delayPTS,fpsTrg) != delayPTS || minTimePTS != (int)Core.syncTimePTS(minTimePTS,fpsTrg)) {
 								c = warnBgnd;
-							else
+							} else {
 								c = okBgnd;
+							}
 							fpsTrg = d;
-						} else
+						} else {
 							c = errBgnd;
+						}
 						fpsTrgEditor.setBackground(c);
 					}
 				}
@@ -972,14 +987,15 @@ public class ConversionDialog extends JDialog {
 			jTextFieldDelay = new JTextField();
 			jTextFieldDelay.setPreferredSize(new Dimension(200, 20));
 			jTextFieldDelay.setToolTipText("Set global delay (in milliseconds) added to all timestamps");
-			jTextFieldDelay.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jTextFieldDelay.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					if (isReady) {
 						String s = jTextFieldDelay.getText();
 						try {
 							// don't use getDouble as the value can be negative
 							delayPTS = (int)Core.syncTimePTS((long)(Double.parseDouble(s)*90),fpsTrg);
-						} catch (NumberFormatException ex) {}
+						} catch (NumberFormatException ex) {
+						}
 						jTextFieldDelay.setBackground(okBgnd);
 						jTextFieldDelay.setText(ToolBox.formatDouble(delayPTS/90.0));
 					}
@@ -992,10 +1008,11 @@ public class ConversionDialog extends JDialog {
 						try {
 							// don't use getDouble as the value can be negative
 							delayPTS = (int)Core.syncTimePTS((long)(Double.parseDouble(s)*90),fpsTrg);
-							if (!s.equalsIgnoreCase(ToolBox.formatDouble(delayPTS/90.0)))
+							if (!s.equalsIgnoreCase(ToolBox.formatDouble(delayPTS/90.0))) {
 								jTextFieldDelay.setBackground(warnBgnd);
-							else
+							} else {
 								jTextFieldDelay.setBackground(okBgnd);
+							}
 						} catch (NumberFormatException ex) {
 							jTextFieldDelay.setBackground(errBgnd);
 						}
@@ -1032,8 +1049,8 @@ public class ConversionDialog extends JDialog {
 			jButtonCancel.setText("Cancel");
 			jButtonCancel.setToolTipText("Lose all changes and use the default values");
 			jButtonCancel.setMnemonic('c');
-			jButtonCancel.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jButtonCancel.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					cancel = true;
 					dispose();
 				}
@@ -1052,8 +1069,8 @@ public class ConversionDialog extends JDialog {
 			jButtonStore.setText("Store");
 			jButtonStore.setToolTipText("Store current settings as default");
 			jButtonStore.setMnemonic('o');
-			jButtonStore.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jButtonStore.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					if (isReady) {
 						// read values of editable boxes
 						String s;
@@ -1080,44 +1097,49 @@ public class ConversionDialog extends JDialog {
 						try {
 							delayPTS = (int)Core.syncTimePTS((long)(Double.parseDouble(s)*90),fpsTrg);
 							Core.storeDelayPTS(delayPTS);
-						} catch (NumberFormatException ex) {}
+						} catch (NumberFormatException ex) {
+						}
 						// min time
 						Core.storeFixShortFrames(fixShortFrames);
 						s = jTextFieldMinTime.getText();
 						try {
 							minTimePTS = (int)Core.syncTimePTS((long)(Double.parseDouble(s)*90),fpsTrg);
 							Core.storeMinTimePTS(minTimePTS);
-						} catch (NumberFormatException ex) {}
+						} catch (NumberFormatException ex) {
+						}
 						// exit
 						Core.storeConvertResolution(changeResolution);
-						if (changeResolution)
+						if (changeResolution) {
 							Core.storeOutputResolution(resolution);
+						}
 						// scaleX
 						s = jTextFieldScaleX.getText();
 						d = ToolBox.getDouble(s);
 						if (d >0) {
-							if (d > Core.maxScale)
-								d = Core.maxScale;
-							else if (d < Core.minScale)
-								d = Core.minScale;
+							if (d > Core.MAX_FREE_SCALE_FACTOR) {
+								d = Core.MAX_FREE_SCALE_FACTOR;
+							} else if (d < Core.MIN_FREE_SCALE_FACTOR) {
+								d = Core.MIN_FREE_SCALE_FACTOR;
+							}
 							scaleX = d;
 						};
 						// scaleY
 						s = jTextFieldScaleY.getText();
 						d = ToolBox.getDouble(s);
 						if (d >0) {
-							if (d > Core.maxScale)
-								d = Core.maxScale;
-							else if (d < Core.minScale)
-								d = Core.minScale;
+							if (d > Core.MAX_FREE_SCALE_FACTOR) {
+								d = Core.MAX_FREE_SCALE_FACTOR;
+							} else if (d < Core.MIN_FREE_SCALE_FACTOR) {
+								d = Core.MIN_FREE_SCALE_FACTOR;
+							}
 							scaleY = d;
 						};
 						// set scale X/Y
 						Core.storeApplyFreeScale(changeScale);
-						if (changeScale)
+						if (changeScale) {
 							Core.storeFreeScale(scaleX, scaleY);
+						}
 						// forceAll is not stored
-						//
 						Core.storeProps();
 					}
 				}
@@ -1136,14 +1158,16 @@ public class ConversionDialog extends JDialog {
 			jButtonRestore.setText("Restore");
 			jButtonRestore.setToolTipText("Restore last default settings");
 			jButtonRestore.setMnemonic('e');
-			jButtonRestore.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jButtonRestore.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					changeResolution = Core.restoreConvertResolution();
-					if (changeResolution)
+					if (changeResolution) {
 						resolution = Core.restoreResolution();
+					}
 					changeFPS = Core.restoreConvertFPS();
-					if (changeFPS && !fpsSrcCertain)
+					if (changeFPS && !fpsSrcCertain) {
 						fpsSrc = Core.restoreFpsSrc();
+					}
 					fpsTrg = Core.restoreFpsTrg();
 					delayPTS = Core.restoreDelayPTS();
 					fixShortFrames = Core.restoreFixShortFrames();
@@ -1172,18 +1196,21 @@ public class ConversionDialog extends JDialog {
 			jButtonReset.setText("Reset");
 			jButtonReset.setToolTipText("Reset defaults");
 			jButtonReset.setMnemonic('t');
-			jButtonReset.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jButtonReset.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					changeResolution = Core.getConvertResolutionDefault();
-					if (changeResolution)
+					if (changeResolution) {
 						resolution = Core.getResolutionDefault();
+					}
 					changeFPS = Core.getConvertFPSdefault();
 					if (changeFPS) {
-						if (!fpsSrcCertain)
+						if (!fpsSrcCertain) {
 							fpsSrc = Core.getFpsSrcDefault();
+						}
 						fpsTrg = Core.getFpsTrgDefault();
-					} else
+					} else {
 						fpsTrg = fpsSrc;
+					}
 					delayPTS = Core.getDelayPTSdefault();
 					fixShortFrames = Core.getFixShortFramesDefault();
 					minTimePTS = Core.getMinTimePTSdefault();
@@ -1192,7 +1219,7 @@ public class ConversionDialog extends JDialog {
 						scaleX = Core.getFreeScaleXdefault();
 						scaleY = Core.getFreeScaleYdefault();
 					}
-					forcedState = Core.SetState.KEEP;
+					forcedState = ForcedFlagState.KEEP;
 					fillDialog();
 				}
 			});
@@ -1221,8 +1248,8 @@ public class ConversionDialog extends JDialog {
 			jCheckBoxScale.setMnemonic('a');
 			jCheckBoxScale.setFocusable(false);
 			jCheckBoxScale.setIconTextGap(10);
-			jCheckBoxScale.addItemListener(new java.awt.event.ItemListener() {
-				public void itemStateChanged(java.awt.event.ItemEvent e) {
+			jCheckBoxScale.addItemListener(new ItemListener() {
+				public void itemStateChanged(ItemEvent e) {
 					if (isReady) {
 						changeScale = jCheckBoxScale.isSelected();
 						jTextFieldScaleX.setEnabled(changeScale);
@@ -1247,8 +1274,8 @@ public class ConversionDialog extends JDialog {
 			jCheckBoxFixMinTime.setMnemonic('s');
 			jCheckBoxFixMinTime.setFocusable(false);
 			jCheckBoxFixMinTime.setIconTextGap(10);
-			jCheckBoxFixMinTime.addItemListener(new java.awt.event.ItemListener() {
-				public void itemStateChanged(java.awt.event.ItemEvent e) {
+			jCheckBoxFixMinTime.addItemListener(new ItemListener() {
+				public void itemStateChanged(ItemEvent e) {
 					if (isReady) {
 						fixShortFrames = jCheckBoxFixMinTime.isSelected();
 						jTextFieldMinTime.setEnabled(fixShortFrames);
@@ -1270,13 +1297,14 @@ public class ConversionDialog extends JDialog {
 			jTextFieldMinTime.setPreferredSize(new Dimension(200, 20));
 			jTextFieldMinTime.setEnabled(false);
 			jTextFieldMinTime.setToolTipText("Set minimum display time for a subtitle");
-			jTextFieldMinTime.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jTextFieldMinTime.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					if (isReady) {
 						String s = jTextFieldMinTime.getText();
 						try {
 							minTimePTS = (int)Core.syncTimePTS((long)(Double.parseDouble(s)*90),fpsTrg);
-						} catch (NumberFormatException ex) {}
+						} catch (NumberFormatException ex) {
+						}
 						jTextFieldMinTime.setBackground(okBgnd);
 						jTextFieldMinTime.setText(ToolBox.formatDouble(minTimePTS/90.0));
 					}
@@ -1288,10 +1316,11 @@ public class ConversionDialog extends JDialog {
 						String s = jTextFieldMinTime.getText();
 						try {
 							minTimePTS = (int)Core.syncTimePTS((long)(Double.parseDouble(s)*90),fpsTrg);
-							if (!s.equalsIgnoreCase(ToolBox.formatDouble(minTimePTS/90.0)))
+							if (!s.equalsIgnoreCase(ToolBox.formatDouble(minTimePTS/90.0))) {
 								jTextFieldMinTime.setBackground(warnBgnd);
-							else
+							} else {
 								jTextFieldMinTime.setBackground(okBgnd);
+							}
 						} catch (NumberFormatException ex) {
 							jTextFieldMinTime.setBackground(errBgnd);
 						}
@@ -1326,8 +1355,8 @@ public class ConversionDialog extends JDialog {
 			jButtonOk.setText("  Ok  ");
 			jButtonOk.setMnemonic('o');
 			jButtonOk.setToolTipText("Use current values and continue");
-			jButtonOk.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jButtonOk.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					if (isReady) {
 						// read values of editable boxes
 						String s;
@@ -1354,42 +1383,48 @@ public class ConversionDialog extends JDialog {
 						try {
 							delayPTS = (int)Core.syncTimePTS((long)(Double.parseDouble(s)*90),fpsTrg);
 							Core.setDelayPTS(delayPTS);
-						} catch (NumberFormatException ex) {}
+						} catch (NumberFormatException ex) {
+						}
 						// min time
 						Core.setFixShortFrames(fixShortFrames);
 						s = jTextFieldMinTime.getText();
 						try {
 							minTimePTS = (int)Core.syncTimePTS((long)(Double.parseDouble(s)*90),fpsTrg);
 							Core.setMinTimePTS(minTimePTS);
-						} catch (NumberFormatException ex) {}
+						} catch (NumberFormatException ex) {
+						}
 						// exit
 						Core.setConvertResolution(changeResolution);
-						if (changeResolution)
+						if (changeResolution) {
 							Core.setOutputResolution(resolution);
+						}
 						// scaleX
 						s = jTextFieldScaleX.getText();
 						d = ToolBox.getDouble(s);
 						if (d >0) {
-							if (d > Core.maxScale)
-								d = Core.maxScale;
-							else if (d < Core.minScale)
-								d = Core.minScale;
+							if (d > Core.MAX_FREE_SCALE_FACTOR) {
+								d = Core.MAX_FREE_SCALE_FACTOR;
+							} else if (d < Core.MIN_FREE_SCALE_FACTOR) {
+								d = Core.MIN_FREE_SCALE_FACTOR;
+							}
 							scaleX = d;
 						};
 						// scaleY
 						s = jTextFieldScaleY.getText();
 						d = ToolBox.getDouble(s);
 						if (d >0) {
-							if (d > Core.maxScale)
-								d = Core.maxScale;
-							else if (d < Core.minScale)
-								d = Core.minScale;
+							if (d > Core.MAX_FREE_SCALE_FACTOR) {
+								d = Core.MAX_FREE_SCALE_FACTOR;
+							} else if (d < Core.MIN_FREE_SCALE_FACTOR) {
+								d = Core.MIN_FREE_SCALE_FACTOR;
+							}
 							scaleY = d;
 						};
 						// set scale X/Y
 						Core.setApplyFreeScale(changeScale);
-						if (changeScale)
+						if (changeScale) {
 							Core.setFreeScale(scaleX, scaleY);
+						}
 						cancel = false;
 						// forced state
 						Core.setForceAll(forcedState);
@@ -1416,16 +1451,17 @@ public class ConversionDialog extends JDialog {
 			jTextFieldScaleX = new JTextField();
 			jTextFieldScaleX.setPreferredSize(new Dimension(200, 20));
 			jTextFieldScaleX.setToolTipText("Set free scaling factor in X direction");
-			jTextFieldScaleX.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jTextFieldScaleX.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					if (isReady) {
 						String s = jTextFieldScaleX.getText();
 						double d = ToolBox.getDouble(s);
 						if (d >0) {
-							if (d > Core.maxScale)
-								d = Core.maxScale;
-							else if (d < Core.minScale)
-								d = Core.minScale;
+							if (d > Core.MAX_FREE_SCALE_FACTOR) {
+								d = Core.MAX_FREE_SCALE_FACTOR;
+							} else if (d < Core.MIN_FREE_SCALE_FACTOR) {
+								d = Core.MIN_FREE_SCALE_FACTOR;
+							}
 							scaleX = d;
 						};
 						jTextFieldScaleX.setText(ToolBox.formatDouble(scaleX));
@@ -1438,11 +1474,12 @@ public class ConversionDialog extends JDialog {
 					if (isReady) {
 						String s = jTextFieldScaleX.getText();
 						double d = ToolBox.getDouble(s);
-						if (d >= Core.minScale && d <= Core.maxScale) {
+						if (d >= Core.MIN_FREE_SCALE_FACTOR && d <= Core.MAX_FREE_SCALE_FACTOR) {
 							scaleX = d;
 							jTextFieldScaleX.setBackground(okBgnd);
-						} else
+						} else {
 							jTextFieldScaleX.setBackground(errBgnd);
+						}
 					}
 				}
 
@@ -1474,16 +1511,17 @@ public class ConversionDialog extends JDialog {
 			jTextFieldScaleY = new JTextField();
 			jTextFieldScaleY.setPreferredSize(new Dimension(200, 20));
 			jTextFieldScaleY.setToolTipText("Set free scaling factor in Y direction");
-			jTextFieldScaleY.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jTextFieldScaleY.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					if (isReady) {
 						String s = jTextFieldScaleY.getText();
 						double d = ToolBox.getDouble(s);
 						if (d >0) {
-							if (d > Core.maxScale)
-								d = Core.maxScale;
-							else if (d < Core.minScale)
-								d = Core.minScale;
+							if (d > Core.MAX_FREE_SCALE_FACTOR) {
+								d = Core.MAX_FREE_SCALE_FACTOR;
+							} else if (d < Core.MIN_FREE_SCALE_FACTOR) {
+								d = Core.MIN_FREE_SCALE_FACTOR;
+							}
 							scaleY = d;
 						};
 						jTextFieldScaleY.setText(ToolBox.formatDouble(scaleY));
@@ -1495,11 +1533,12 @@ public class ConversionDialog extends JDialog {
 					if (isReady) {
 						String s = jTextFieldScaleY.getText();
 						double d = ToolBox.getDouble(s);
-						if (d >= Core.minScale && d <= Core.maxScale) {
+						if (d >= Core.MIN_FREE_SCALE_FACTOR && d <= Core.MAX_FREE_SCALE_FACTOR) {
 							scaleY = d;
 							jTextFieldScaleY.setBackground(okBgnd);
-						} else
+						} else {
 							jTextFieldScaleY.setBackground(errBgnd);
+						}
 					}
 				}
 
@@ -1532,11 +1571,11 @@ public class ConversionDialog extends JDialog {
 			jComboBoxForced.setMinimumSize(new Dimension(150, 20));
 			jComboBoxForced.setEditable(false);
 			jComboBoxForced.setToolTipText("Select the target resolution");
-			jComboBoxForced.addItemListener(new java.awt.event.ItemListener() {
-				public void itemStateChanged(java.awt.event.ItemEvent e) {
+			jComboBoxForced.addItemListener(new ItemListener() {
+				public void itemStateChanged(ItemEvent e) {
 					if (isReady) {
 						int idx = jComboBoxForced.getSelectedIndex();
-						for (Core.SetState s : Core.SetState.values()) {
+						for (ForcedFlagState s : ForcedFlagState.values()) {
 							if (idx == s.ordinal()) {
 								forcedState = s;
 								break;
@@ -1556,5 +1595,4 @@ public class ConversionDialog extends JDialog {
 	public void enableOptionMove(boolean e) {
 		jCheckBoxMove.setEnabled(e);
 	}
-
 }

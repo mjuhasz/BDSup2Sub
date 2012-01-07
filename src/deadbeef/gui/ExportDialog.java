@@ -1,6 +1,8 @@
 package deadbeef.gui;
 
 
+import static deadbeef.core.Constants.*;
+
 import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.GridBagConstraints;
@@ -8,6 +10,12 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -18,9 +26,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-
 import deadbeef.core.Core;
-import deadbeef.core.Core.OutputMode;
+import deadbeef.core.OutputMode;
 import deadbeef.tools.ToolBox;
 
 /*
@@ -48,25 +55,25 @@ public class ExportDialog extends JDialog {
 
 	private static final long serialVersionUID = 1L;
 
-	private JPanel jContentPane = null;
+	private JPanel jContentPane;
 
-	private JLabel jLabelFilename = null;
+	private JLabel jLabelFilename;
 
-	private JTextField jTextFieldFileName = null;
+	private JTextField jTextFieldFileName;
 
-	private JButton jButtonFileName = null;
+	private JButton jButtonFileName;
 
-	private JLabel jLabelLanguage = null;
+	private JLabel jLabelLanguage;
 
-	private JComboBox jComboBoxLanguage = null;
+	private JComboBox jComboBoxLanguage;
 
-	private JButton jButtonCancel = null;
+	private JButton jButtonCancel;
 
-	private JButton jButtonSave = null;
+	private JButton jButtonSave;
 
-	private JCheckBox jCheckBoxForced = null;
+	private JCheckBox jCheckBoxForced;
 
-	private JCheckBox jCheckBoxWritePGCPal = null;
+	private JCheckBox jCheckBoxWritePGCPal;
 
 
 	/** reference to main window */
@@ -82,7 +89,7 @@ public class ExportDialog extends JDialog {
 	/** cancel state */
 	private boolean cancel;
 	/** semaphore to disable actions while changing component properties */
-	private volatile boolean isReady = false;
+	private volatile boolean isReady;
 	/** file extension */
 	private String extension;
 
@@ -93,7 +100,6 @@ public class ExportDialog extends JDialog {
 	 */
 	public ExportDialog(Frame owner, boolean modal) {
 		super(owner, modal);
-		// TODO Auto-generated constructor stub
 		initialize();
 
 		Point p = owner.getLocation();
@@ -109,38 +115,42 @@ public class ExportDialog extends JDialog {
 		cancel = false;
 
 		// init components
-		for (int i=0; i < Core.getLanguages().length; i++) {
+		for (int i=0; i < LANGUAGES.length; i++) {
 			int n;
-			if (Core.getOutputMode() == OutputMode.XML)
+			if (Core.getOutputMode() == OutputMode.XML) {
 				n = 2;
-			else
+			} else {
 				n = 1;
-			jComboBoxLanguage.addItem(Core.getLanguages()[i][0]+" ("+Core.getLanguages()[i][n]+")");
+			}
+			jComboBoxLanguage.addItem(LANGUAGES[i][0]+" ("+LANGUAGES[i][n]+")");
 		}
 		jComboBoxLanguage.setSelectedIndex(languageIdx);
-		if (Core.getOutputMode() == Core.OutputMode.BDSUP)
+		if (Core.getOutputMode() == OutputMode.BDSUP) {
 			jComboBoxLanguage.setEnabled(false);
+		}
 
 		if (Core.getOutputMode() == OutputMode.VOBSUB || Core.getOutputMode() == OutputMode.SUPIFO) {
 			jCheckBoxWritePGCPal.setEnabled(true);
 			jCheckBoxWritePGCPal.setSelected(writePGCPal);
-		} else
+		} else {
 			jCheckBoxWritePGCPal.setEnabled(false);
+		}
 
-		if (Core.getNumForcedFrames() > 0)
+		if (Core.getNumForcedFrames() > 0) {
 			setForced(true, exportForced);
-		else
+		} else {
 			setForced(false, false);
+		}
 
 		String sTitle;
 		
-		if (Core.getOutputMode() == Core.OutputMode.VOBSUB) {
+		if (Core.getOutputMode() == OutputMode.VOBSUB) {
 			extension = "idx";
 			sTitle = "SUB/IDX (VobSub)";
-		} else if (Core.getOutputMode() == Core.OutputMode.SUPIFO) {
+		} else if (Core.getOutputMode() == OutputMode.SUPIFO) {
 			extension = "ifo";
 			sTitle = "SUP/IFO (SUP DVD)";
-		} else if (Core.getOutputMode() == Core.OutputMode.BDSUP) {
+		} else if (Core.getOutputMode() == OutputMode.BDSUP) {
 			extension = "sup";
 			sTitle = "BD SUP";
 		} else {
@@ -148,7 +158,7 @@ public class ExportDialog extends JDialog {
 			sTitle = "XML (SONY BDN)";
 		}
 		
-		setTitle("Export "+sTitle);
+		setTitle("Export " + sTitle);
 
 		isReady = true;
 	}
@@ -162,9 +172,9 @@ public class ExportDialog extends JDialog {
 		this.setMaximumSize(new Dimension(350, 160));
 		this.setMinimumSize(new Dimension(350, 160));
 		this.setContentPane(getJContentPane());
-		this.addWindowListener(new java.awt.event.WindowAdapter() {
+		this.addWindowListener(new WindowAdapter() {
 			@Override
-			public void windowClosing(java.awt.event.WindowEvent e) {
+			public void windowClosing(WindowEvent e) {
 				cancel = true;
 				dispose();
 			}
@@ -257,12 +267,13 @@ public class ExportDialog extends JDialog {
 			jTextFieldFileName.setPreferredSize(new Dimension(200, 20));
 			jTextFieldFileName.setHorizontalAlignment(JTextField.LEADING);
 			jTextFieldFileName.setToolTipText("Set file name for export");
-			jTextFieldFileName.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jTextFieldFileName.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					if (isReady) {
 						String s = jTextFieldFileName.getText();
-						if (s != null)
+						if (s != null) {
 							fileName = ToolBox.stripExtension(s)+"."+extension;
+						}
 					}
 				}
 			});
@@ -281,8 +292,8 @@ public class ExportDialog extends JDialog {
 			jButtonFileName.setText("Browse");
 			jButtonFileName.setMnemonic('b');
 			jButtonFileName.setToolTipText("Open file dialog to select file name for export");
-			jButtonFileName.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jButtonFileName.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					if (isReady) {
 						String[] ext = new String[1];
 						ext[0] = extension;
@@ -311,10 +322,11 @@ public class ExportDialog extends JDialog {
 			jComboBoxLanguage.setPreferredSize(new Dimension(200, 20));
 			jComboBoxLanguage.setEditable(false);
 			jComboBoxLanguage.setToolTipText("Set language identifier");
-			jComboBoxLanguage.addItemListener(new java.awt.event.ItemListener() {
-				public void itemStateChanged(java.awt.event.ItemEvent e) {
-					if (isReady)
+			jComboBoxLanguage.addItemListener(new ItemListener() {
+				public void itemStateChanged(ItemEvent e) {
+					if (isReady) {
 						languageIdx = jComboBoxLanguage.getSelectedIndex();
+					}
 				}
 			});
 		}
@@ -332,8 +344,8 @@ public class ExportDialog extends JDialog {
 			jButtonCancel.setText("Cancel");
 			jButtonCancel.setToolTipText("Cancel export and return");
 			jButtonCancel.setMnemonic('c');
-			jButtonCancel.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jButtonCancel.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					cancel = true;
 					dispose();
 				}
@@ -353,8 +365,8 @@ public class ExportDialog extends JDialog {
 			jButtonSave.setText("Save");
 			jButtonSave.setToolTipText("Start creation of export stream");
 			jButtonSave.setMnemonic('s');
-			jButtonSave.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jButtonSave.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					if (isReady) {
 						// read values of editable boxes
 						String s;
@@ -365,8 +377,9 @@ public class ExportDialog extends JDialog {
 						// exit
 						Core.setExportForced(exportForced);
 						Core.setLanguageIdx(languageIdx);
-						if (Core.getOutputMode() == OutputMode.VOBSUB || Core.getOutputMode() == OutputMode.SUPIFO)
+						if (Core.getOutputMode() == OutputMode.VOBSUB || Core.getOutputMode() == OutputMode.SUPIFO) {
 							Core.setWritePGCEditPal(writePGCPal);
+						}
 						cancel = false;
 						dispose();
 					}
@@ -381,8 +394,9 @@ public class ExportDialog extends JDialog {
 	 * @return file name used for export
 	 */
 	public String getFileName() {
-		if (fileName.length() == 0)
+		if (fileName.length() == 0) {
 			return null;
+		}
 		return fileName;
 	}
 
@@ -390,7 +404,7 @@ public class ExportDialog extends JDialog {
 	 * set file name used for export
 	 * @param fn file name used for export
 	 */
-	public void setFileName(final String fn) {
+	public void setFileName(String fn) {
 		fileName = fn;
 		jTextFieldFileName.setText(fileName);
 	}
@@ -400,7 +414,7 @@ public class ExportDialog extends JDialog {
 	 * @param en enable checkbox
 	 * @param set checkbox select state
 	 */
-	private void setForced(final boolean en, final boolean set) {
+	private void setForced(boolean en, boolean set) {
 		exportForced = set;
 		jCheckBoxForced.setEnabled(en);
 		jCheckBoxForced.setSelected(set);
@@ -425,8 +439,8 @@ public class ExportDialog extends JDialog {
 			jCheckBoxForced.setToolTipText("Export only subpictures marked as 'forced'");
 			jCheckBoxForced.setText("                 Export only forced");
 			jCheckBoxForced.setMnemonic('f');
-			jCheckBoxForced.addItemListener(new java.awt.event.ItemListener() {
-				public void itemStateChanged(java.awt.event.ItemEvent e) {
+			jCheckBoxForced.addItemListener(new ItemListener() {
+				public void itemStateChanged(ItemEvent e) {
 					if (isReady) {
 						exportForced = jCheckBoxForced.isSelected();
 					}
@@ -448,8 +462,8 @@ public class ExportDialog extends JDialog {
 			jCheckBoxWritePGCPal.setText("                 Export palette in PGCEdit text format");
 			jCheckBoxWritePGCPal.setMnemonic('p');
 			jCheckBoxWritePGCPal.setDisplayedMnemonicIndex(24);
-			jCheckBoxWritePGCPal.addItemListener(new java.awt.event.ItemListener() {
-				public void itemStateChanged(java.awt.event.ItemEvent e) {
+			jCheckBoxWritePGCPal.addItemListener(new ItemListener() {
+				public void itemStateChanged(ItemEvent e) {
 					if (isReady) {
 						writePGCPal = jCheckBoxWritePGCPal.isSelected();
 					}
@@ -458,4 +472,4 @@ public class ExportDialog extends JDialog {
 		}
 		return jCheckBoxWritePGCPal;
 	}
-}  //  @jve:decl-index=0:visual-constraint="10,10"
+}

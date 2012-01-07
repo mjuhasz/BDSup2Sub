@@ -57,15 +57,15 @@ public class EditPane extends JPanel implements MouseListener, MouseMotionListen
 	/** subtitle height in original screen */
 	private int imgHeight;
 	/** aspect ratio of the inner frame (e.g. 21/9=2.333 for cinemascope */
-	private static double screenRatioIn = 21.0/9;
+	private static double aspectRatioIn = 21.0/9;
 	/** factor to calculate height of one cinemascope bar from screen height */
 	private static double cineBarFactor = 5.0/42;
 	/** aspect ratio of the screen */
-	private final static double screenRatio = 16.0/9;
+	private static final double ASPECT_RATIO = 16.0/9;
 	/** Y coordinate crop offset */
 	private int cropOfsY = 0;
 	/** minimum distance to left and right in pixels */
-	final static int inset = 2;
+	static final int INSET = 2;
 	/** is this EditPane a LayoutPane ? */
 	private boolean layoutPane;
 	/** upper left x coordinate of selection rectangle */
@@ -159,10 +159,10 @@ public class EditPane extends JPanel implements MouseListener, MouseMotionListen
 			g2.setColor(UIManager.getColor("Panel.background"));
 			g2.fillRect(0, 0, w, h);
 			// paint outer frame (16:9)
-			wl = w-2*inset;
+			wl = w-2*INSET;
 			hl = (wl*9+8)/16;
 			if (hl > h) {
-				hl = h-inset;
+				hl = h-INSET;
 				wl = (hl*32+8)/18;
 			}
 			yl = (h-hl+1)/2;
@@ -174,9 +174,9 @@ public class EditPane extends JPanel implements MouseListener, MouseMotionListen
 			yl = 0;
 		}
 
-		int cineH = (int)(hl*cineBarFactor+0.5); // height of one cinemascope bar in pixels
+		int cineH = (int)(hl * cineBarFactor + 0.5); // height of one cinemascope bar in pixels
 		// paint color gradient
-		g2.setPaint(new GradientPaint(xl,yl,color1,wl,hl, color2));
+		g2.setPaint(new GradientPaint(xl, yl, color1, wl, hl, color2));
 		g2.fillRect(xl, yl+cineH, wl, hl-cineH);
 		// paint cinemascope bars
 		g2.setPaint(Color.BLACK);
@@ -184,12 +184,13 @@ public class EditPane extends JPanel implements MouseListener, MouseMotionListen
 		g2.fillRect(xl,yl+hl-cineH, wl, cineH);
 
 		yCrop = ofsY;
-		if (yCrop < cropOfsY)
+		if (yCrop < cropOfsY) {
 			yCrop = cropOfsY;
-		else {
+		} else {
 			int yMax = height - imgHeight - cropOfsY;
-			if (yCrop > yMax)
+			if (yCrop > yMax) {
 				yCrop = yMax;
+			}
 		}
 
 		double sx;
@@ -197,8 +198,8 @@ public class EditPane extends JPanel implements MouseListener, MouseMotionListen
 
 
 		// draw scaled down subtitle image
-		sx = (double)wl/width;
-		sy = (double)hl/height;
+		sx = (double)wl / width;
+		sy = (double)hl / height;
 		xScaleCaption = sx;
 		yScaleCaption = sy;
 		if (imgWidth > 0 && image != null) {
@@ -214,20 +215,23 @@ public class EditPane extends JPanel implements MouseListener, MouseMotionListen
 			g2.drawImage(image, xi, yi, wi, hi ,this);
 
 			if (validSelection && !leftButtonPressed) {
-				if (selectStartX >= imgWidth+ofsX || selectEndX <= ofsX || selectStartY >= imgHeight+yCrop || selectEndY < yCrop)
+				if (selectStartX >= imgWidth+ofsX || selectEndX <= ofsX || selectStartY >= imgHeight+yCrop || selectEndY < yCrop) {
 					validSelection = false;
-				else {
-					if (selectStartX < ofsX)
+				} else {
+					if (selectStartX < ofsX) {
 						selectStartX = ofsX;
-					if (selectEndX >= imgWidth+ofsX)
+					}
+					if (selectEndX >= imgWidth+ofsX) {
 						selectEndX = imgWidth+ofsX-1;
-					if (selectStartY < yCrop)
+					}
+					if (selectStartY < yCrop) {
 						selectStartY = yCrop;
-					if (selectEndY >= imgHeight+yCrop)
+					}
+					if (selectEndY >= imgHeight+yCrop) {
 						selectEndY = imgHeight+yCrop-1;
+					}
 				}
 			}
-
 		}
 
 		// draw lines representing crop offset
@@ -283,19 +287,20 @@ public class EditPane extends JPanel implements MouseListener, MouseMotionListen
 	 */
 	public void setOffsets(int x, int y) {
 		ofsX = x;
-		if (y < cropOfsY)
+		if (y < cropOfsY) {
 			ofsY = cropOfsY;
-		else
+		} else {
 			ofsY = y;
+		}
 	}
 
 	/**
-	 * set screen ration of inner frame (display area)
+	 * set aspect ratio of inner frame (display area)
 	 * @param sr screen ration (e.g. 21.0/9)
 	 */
-	public void setScreenRatio(double sr) {
-		screenRatioIn = sr;
-		cineBarFactor = (1.0 - screenRatio/screenRatioIn)/2.0;
+	public void setAspectRatio(double sr) {
+		aspectRatioIn = sr;
+		cineBarFactor = (1.0 - ASPECT_RATIO/aspectRatioIn)/2.0;
 	}
 
 	/**
@@ -316,20 +321,15 @@ public class EditPane extends JPanel implements MouseListener, MouseMotionListen
 
 	@Override
 	public void mouseClicked(MouseEvent e) {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override
 	public void mouseEntered(MouseEvent e) {
-		// TODO Auto-generated method stub
 
 	}
 
 	@Override
 	public void mouseExited(MouseEvent e) {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override
@@ -348,8 +348,9 @@ public class EditPane extends JPanel implements MouseListener, MouseMotionListen
 			selectEndX = (int)(e.getX()/xScaleCaption+0.5);
 			selectEndY = (int)(e.getY()/yScaleCaption+0.5);
 			leftButtonPressed = false;
-			if (selectStartX >= 0 && selectEndX>selectStartX && selectEndY>selectStartY)
+			if (selectStartX >= 0 && selectEndX>selectStartX && selectEndY>selectStartY) {
 				validSelection = true;
+			}
 			repaint();
 			selectListener.selectionPerformed(validSelection);
 		}
@@ -360,16 +361,15 @@ public class EditPane extends JPanel implements MouseListener, MouseMotionListen
 		if (leftButtonPressed) {
 			selectEndX = (int)(e.getX()/xScaleCaption+0.5);
 			selectEndY = (int)(e.getY()/yScaleCaption+0.5);
-			if (selectStartX >= 0 && selectEndX>selectStartX && selectEndY>selectStartY)
+			if (selectStartX >= 0 && selectEndX>selectStartX && selectEndY>selectStartY) {
 				validSelection = true;
+			}
 			repaint();
 		}
 	}
 
 	@Override
 	public void mouseMoved(MouseEvent e) {
-		// TODO Auto-generated method stub
-
 	}
 
 	/**
@@ -385,8 +385,9 @@ public class EditPane extends JPanel implements MouseListener, MouseMotionListen
 	 * @return null if no valid selection. Else int array [x0,y0,x1,y1]  where x1 > x0 and y1 > y0
 	 */
 	public int[] getSelection() {
-		if (!allowSelection || !validSelection)
+		if (!allowSelection || !validSelection) {
 			return null;
+		}
 		int ret[] = new int[4];
 		ret[0] = selectStartX-ofsX;
 		ret[1] = selectStartY-yCrop;
@@ -411,5 +412,4 @@ public class EditPane extends JPanel implements MouseListener, MouseMotionListen
 	public void addSelectListener(SelectListener s) {
 		selectListener = s;
 	}
-
 }

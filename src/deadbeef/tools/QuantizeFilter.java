@@ -37,12 +37,12 @@ public class QuantizeFilter  {
 	/**
 	 * Floyd-Steinberg dithering matrix.
 	 */
-	protected final static int[] matrix = {
+	private static final int[] FS_MATRIX = {
 		 0, 0, 0,
 		 0, 0, 7,
 		 3, 5, 1,
 	};
-	private final int sum = 3+5+7+1;
+	private static final int SUM = 3 + 5 + 7 + 1;
 
 	private boolean dither;
 	private int numColors = 255;
@@ -52,7 +52,7 @@ public class QuantizeFilter  {
 	 * Set the number of colors to quantize to.
 	 * @param numColors Number of colors. The default is 256.
 	 */
-	public void setNumColors(final int numColors) {
+	public void setNumColors(int numColors) {
 		this.numColors = Math.min(Math.max(numColors, 8), 256);
 	}
 
@@ -62,10 +62,12 @@ public class QuantizeFilter  {
 	 * @return Clamped value
 	 */
 	private static int clamp(final int c) {
-		if (c < 0)
+		if (c < 0) {
 			return 0;
-		if (c > 255)
+		}
+		if (c > 255) {
 			return 255;
+		}
 		return c;
 	}
 
@@ -81,7 +83,7 @@ public class QuantizeFilter  {
 	 * Set whether to use dithering or not. If not, the image is posterized.
 	 * @param dither True to use dithering
 	 */
-	public void setDither(final boolean dither) {
+	public void setDither(boolean dither) {
 		this.dither = dither;
 	}
 
@@ -97,7 +99,7 @@ public class QuantizeFilter  {
 	 * Set whether to use a serpentine pattern for return or not. This can reduce 'avalanche' artifacts in the output.
 	 * @param serpentine True to use serpentine pattern
 	 */
-	public void setSerpentine(final boolean serpentine) {
+	public void setSerpentine(boolean serpentine) {
 		this.serpentine = serpentine;
 	}
 
@@ -120,12 +122,12 @@ public class QuantizeFilter  {
 	 * @param serpentine Use serpentine for dithering?
 	 * @return Integer array containing palette information
 	 */
-	public int[] quantize(final int[] inPixels, final byte[] outPixels, final int width, final int height, final int numColors, final boolean dither, final boolean serpentine) {
-		final int count = width*height;
-		final OctTreeQuantizer quantizer = new OctTreeQuantizer();
+	public int[] quantize(int[] inPixels, byte[] outPixels, int width, int height, int numColors, boolean dither, boolean serpentine) {
+		int count = width * height;
+		OctTreeQuantizer quantizer = new OctTreeQuantizer();
 		quantizer.setup(numColors);
 		quantizer.addPixels(inPixels, 0, count);
-		final int[] table =  quantizer.buildColorTable();
+		int[] table =  quantizer.buildColorTable();
 
 		if (dither) {
 			int index = 0;
@@ -133,10 +135,10 @@ public class QuantizeFilter  {
 				boolean reverse = serpentine && (y & 1) == 1;
 				int direction;
 				if (reverse) {
-					index = y*width+width-1;
+					index = y * width + width - 1;
 					direction = -1;
 				} else {
-					index = y*width;
+					index = y * width;
 					direction = 1;
 				}
 				for (int x = 0; x < width; x++) {
@@ -169,9 +171,9 @@ public class QuantizeFilter  {
 								if (0 <= jx && jx < width) {
 									int w;
 									if (reverse)
-										w = matrix[(i+1)*3-j+1];
+										w = FS_MATRIX[(i+1)*3-j+1];
 									else
-										w = matrix[(i+1)*3+j+1];
+										w = FS_MATRIX[(i+1)*3+j+1];
 									if (w != 0) {
 										int k = reverse ? index - j : index + j;
 										rgb1 = inPixels[k];
@@ -180,10 +182,10 @@ public class QuantizeFilter  {
 										r1 = (rgb1 >> 16) & 0xff;
 										g1 = (rgb1 >> 8) & 0xff;
 										b1 = rgb1 & 0xff;
-										a1 += ea * w/sum;
-										r1 += er * w/sum;
-										g1 += eg * w/sum;
-										b1 += eb * w/sum;
+										a1 += ea * w/SUM;
+										r1 += er * w/SUM;
+										g1 += eg * w/SUM;
+										b1 += eb * w/SUM;
 										inPixels[k] = (clamp(a1) << 24 | clamp(r1) << 16) | (clamp(g1) << 8) | clamp(b1);
 									}
 								}
@@ -196,27 +198,30 @@ public class QuantizeFilter  {
 		}
 
 		// create palette
-		final HashMap<Integer,Integer> p = new HashMap<Integer,Integer>();
+		HashMap<Integer,Integer> p = new HashMap<Integer,Integer>();
 
 		for (int i = 0; i < count; i++) {
 			int color;
-			if (dither)
+			if (dither) {
 				color = table[outPixels[i]&0xff];
-			else
+			} else {
 				color = table[quantizer.getIndexForColor(inPixels[i])];
+			}
 			int idx = p.size();
 			Integer idxEx = p.get(color);
-			if (idxEx == null)
+			if (idxEx == null) {
 				p.put(color, idx);
-			else
+			} else {
 				idx = idxEx;
+			}
 			outPixels[i] = (byte)(idx);
 		}
 
 		Set <Integer>keys = p.keySet();
-		final int pal[] = new int[p.size()];
-		for (int k : keys)
+		int pal[] = new int[p.size()];
+		for (int k : keys) {
 			pal[p.get(k)] = k;
+		}
 
 		return pal;
 	}
@@ -226,12 +231,12 @@ public class QuantizeFilter  {
 /**
  * An image Quantizer based on the Octree algorithm. This is a very basic implementation
  * at present and could be much improved by picking the nodes to reduce more carefully
- * (i.e. not completely at random) when I get the time.
+ * (i.e. not completely at random).
  */
 class OctTreeQuantizer {
 
 	/** The greatest depth the tree is allowed to reach */
-	final static int MAX_LEVEL = 5;
+	private static final int MAX_LEVEL = 5;
 
 	/**
 	 * An Octtree node.
@@ -240,7 +245,7 @@ class OctTreeQuantizer {
 		int children;
 		int level;
 		OctTreeNode parent;
-		final OctTreeNode leaf[] = new OctTreeNode[16];
+		OctTreeNode leaf[] = new OctTreeNode[16];
 		boolean isLeaf;
 		int count;
 		int totalAlpha;
@@ -250,15 +255,14 @@ class OctTreeQuantizer {
 		int index;
 	}
 
-	private int nodes = 0;
-	final private OctTreeNode root;
+	private OctTreeNode root;
 	private int reduceColors;
 	private int maximumColors;
 	private int colors = 0;
-	@SuppressWarnings("unchecked")
-	final private Vector[] colorList;
+	@SuppressWarnings("rawtypes")
+	private Vector[] colorList;
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("rawtypes")
 	public OctTreeQuantizer() {
 		setup(256);
 		colorList = new Vector[MAX_LEVEL+1];
@@ -271,7 +275,7 @@ class OctTreeQuantizer {
 	 * Initialize the quantizer. This should be called before adding any pixels.
 	 * @param numColors Number of colors we're quantizing to.
 	 */
-	public void setup(final int numColors) {
+	public void setup(int numColors) {
 		maximumColors = numColors;
 		reduceColors = Math.max(512, numColors * 2);
 	}
@@ -282,11 +286,12 @@ class OctTreeQuantizer {
 	 * @param offset Offset into the array
 	 * @param count Count of pixels
 	 */
-	public void addPixels(final int[] pixels, final int offset, final int count) {
+	public void addPixels(int[] pixels, int offset, int count) {
 		for (int i = 0; i < count; i++) {
 			insertColor(pixels[i+offset]);
-			if (colors > reduceColors)
+			if (colors > reduceColors) {
 				reduceTree(reduceColors);
+			}
 		}
 	}
 
@@ -295,11 +300,11 @@ class OctTreeQuantizer {
 	 * @param argb Color in ARGB format
 	 * @return Index of color in table
 	 */
-	public int getIndexForColor(final int argb) {
-		final int alpha = (argb >> 24) & 0xff;
-		final int red   = (argb >> 16) & 0xff;
-		final int green = (argb >> 8) & 0xff;
-		final int blue  = argb & 0xff;
+	public int getIndexForColor(int argb) {
+		int alpha = (argb >> 24) & 0xff;
+		int red   = (argb >> 16) & 0xff;
+		int green = (argb >> 8) & 0xff;
+		int blue  = argb & 0xff;
 
 		OctTreeNode node = root;
 
@@ -308,33 +313,38 @@ class OctTreeQuantizer {
 			int bit = 0x80 >> level;
 
 			int index = 0;
-			if ((alpha & bit) != 0)
+			if ((alpha & bit) != 0) {
 				index += 8;
-			if ((red & bit) != 0)
+			}
+			if ((red & bit) != 0) {
 				index += 4;
-			if ((green & bit) != 0)
+			}
+			if ((green & bit) != 0) {
 				index += 2;
-			if ((blue & bit) != 0)
+			}
+			if ((blue & bit) != 0) {
 				index += 1;
+			}
 
 			child = node.leaf[index];
 
-			if (child == null)
+			if (child == null) {
 				return node.index;
-			else if (child.isLeaf)
+			} else if (child.isLeaf) {
 				return child.index;
-			else
+			} else {
 				node = child;
+			}
 		}
 		return 0;
 	}
 
 	@SuppressWarnings("unchecked")
-	private void insertColor(final int rgb) {
-		final int alpha = (rgb >> 24) & 0xff;
-		final int red = (rgb >> 16) & 0xff;
-		final int green = (rgb >> 8) & 0xff;
-		final int blue = rgb & 0xff;
+	private void insertColor(int rgb) {
+		int alpha = (rgb >> 24) & 0xff;
+		int red = (rgb >> 16) & 0xff;
+		int green = (rgb >> 8) & 0xff;
+		int blue = rgb & 0xff;
 
 		OctTreeNode node = root;
 
@@ -344,14 +354,18 @@ class OctTreeQuantizer {
 			int bit = 0x80 >> level;
 
 			int index = 0;
-			if ((alpha & bit) != 0)
+			if ((alpha & bit) != 0) {
 				index += 8;
-			if ((red & bit) != 0)
+			}
+			if ((red & bit) != 0) {
 				index += 4;
-			if ((green & bit) != 0)
+			}
+			if ((green & bit) != 0) {
 				index += 2;
-			if ((blue & bit) != 0)
+			}
+			if ((blue & bit) != 0) {
 				index += 1;
+			}
 
 			child = node.leaf[index];
 
@@ -362,7 +376,6 @@ class OctTreeQuantizer {
 				child.parent = node;
 				node.leaf[index] = child;
 				node.isLeaf = false;
-				nodes++;
 				colorList[level].addElement(child);
 
 				if (level == MAX_LEVEL) {
@@ -388,13 +401,12 @@ class OctTreeQuantizer {
 			} else
 				node = child;
 		}
-		//System.out.println("insertColor failed");
 	}
 
-	@SuppressWarnings("unchecked")
-	private void reduceTree(final int numColors) {
+	@SuppressWarnings("rawtypes")
+	private void reduceTree(int numColors) {
 		for (int level = MAX_LEVEL-1; level >= 0; level--) {
-			final Vector v = colorList[level];
+			Vector v = colorList[level];
 			if (v != null && v.size() > 0) {
 				for (int j = 0; j < v.size(); j++) {
 					OctTreeNode node = (OctTreeNode)v.elementAt(j);
@@ -410,7 +422,6 @@ class OctTreeQuantizer {
 								node.leaf[i] = null;
 								node.children--;
 								colors--;
-								nodes--;
 								colorList[level+1].removeElement(child);
 							}
 						}
@@ -429,7 +440,7 @@ class OctTreeQuantizer {
 	 * @return Color table
 	 */
 	public int[] buildColorTable() {
-		final int[] table = new int[colors];
+		int[] table = new int[colors];
 		buildColorTable(root, table, 0);
 		return table;
 	}
@@ -439,16 +450,18 @@ class OctTreeQuantizer {
 	 * @param inPixels Integer array containing the pixels
 	 * @param table Output color table
 	 */
-	public void buildColorTable(final int[] inPixels, final int[] table) {
-		final int count = inPixels.length;
+	public void buildColorTable(int[] inPixels, int[] table) {
+		int count = inPixels.length;
 		maximumColors = table.length;
 		for (int i = 0; i < count; i++) {
 			insertColor(inPixels[i]);
-			if (colors > reduceColors)
+			if (colors > reduceColors) {
 				reduceTree(reduceColors);
+			}
 		}
-		if (colors > maximumColors)
+		if (colors > maximumColors) {
 			reduceTree(maximumColors);
+		}
 		buildColorTable(root, table, 0);
 	}
 
@@ -459,9 +472,10 @@ class OctTreeQuantizer {
 	 * @param index Index
 	 * @return Index
 	 */
-	private int buildColorTable(final OctTreeNode node, final int[] table, int index) {
-		if (colors > maximumColors)
+	private int buildColorTable(OctTreeNode node, int[] table, int index) {
+		if (colors > maximumColors) {
 			reduceTree(maximumColors);
+		}
 
 		if (node.isLeaf) {
 			int count = node.count;
@@ -481,5 +495,4 @@ class OctTreeQuantizer {
 		}
 		return index;
 	}
-
 }

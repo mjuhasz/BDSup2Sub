@@ -45,11 +45,8 @@ public class GfxPane extends JPanel implements MouseListener {
 	/** color 2 for background gradient */
 	private Color color2 = Color.BLACK;
 	/** reference to this panel */
-	private final GfxPane thisPanel;
+	private GfxPane thisPanel;
 
-	/**
-	 * ctor
-	 */
 	public GfxPane() {
 		super();
 		scale = 1;
@@ -78,9 +75,9 @@ public class GfxPane extends JPanel implements MouseListener {
 		g2.setPaint(new GradientPaint(0,0,color1,this.getWidth(),this.getHeight(), color2));
 		g2.fillRect(0, 0, this.getWidth(), this.getHeight());
 		if (image != null) {
-			if (scale == 1)
+			if (scale == 1) {
 				g.drawImage(image, 0, 0, this);
-			else {
+			} else {
 				g2.drawImage(image, 0, 0, image.getWidth()*scale, image.getHeight()*scale ,this);
 			}
 		}
@@ -107,10 +104,11 @@ public class GfxPane extends JPanel implements MouseListener {
 	public void setImage(final BufferedImage img) {
 		image = img;
 		Dimension dim;
-		if (image != null)
+		if (image != null) {
 			dim = new Dimension(scale*image.getWidth(), scale*image.getHeight());
-		else
+		} else {
 			dim = new Dimension(1,1);
+		}
 		this.setPreferredSize(dim);
 		this.getParent().setSize(dim);
 		((JScrollPane)thisPanel.getParent().getParent()).revalidate();
@@ -120,26 +118,32 @@ public class GfxPane extends JPanel implements MouseListener {
 	public void mouseClicked(MouseEvent e) {
 		int s = scale;
 		if (e.getButton() == MouseEvent.BUTTON1) {
-			if (s < 8)
+			if (s < 8) {
 				s++;
+			}
 		} else {
-			if (s > 1)
+			if (s > 1) {
 				s--;
+			}
 		}
-		if (s != scale)
+		if (s != scale) {
 			setScale(s);
+		}
 	}
 
 	@Override
-	public void mouseEntered(MouseEvent e) {}
+	public void mouseEntered(MouseEvent e) {
+	}
 
 	@Override
-	public void mouseExited(MouseEvent e) {}
+	public void mouseExited(MouseEvent e) {
+	}
 
 	@Override
-	public void mousePressed(MouseEvent e) {}
+	public void mousePressed(MouseEvent e) {
+	}
 
 	@Override
-	public void mouseReleased(MouseEvent e) {}
-
+	public void mouseReleased(MouseEvent e) {
+	}
 }

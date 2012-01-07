@@ -1,6 +1,8 @@
 package deadbeef.supstream;
 
 
+import static deadbeef.core.Constants.*;
+
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -42,7 +44,7 @@ import deadbeef.tools.ToolBox;
  */
 public class SubDVD implements Substream, SubstreamDVD {
 
-	final private static byte packHeader[] = {
+	private static final byte PACK_HEADER[] = {
 		0x00, 0x00, 0x01, (byte)0xba,							// 0:  0x000001ba - packet ID
 		0x44, 0x02, (byte)0xc4, (byte)0x82, 0x04, (byte)0xa9,	// 4:  system clock reference
 		0x01 , (byte)0x89, (byte)0xc3,							// 10: multiplexer rate
@@ -83,17 +85,17 @@ public class SubDVD implements Substream, SubstreamDVD {
 	};
 
 	/** ArrayList of captions contained in the current file */
-	private final ArrayList<SubPictureDVD> subPictures;
+	private final ArrayList<SubPictureDVD> subPictures = new ArrayList<SubPictureDVD>();
 	/** color palette read from idx file  */
-	private Palette srcPalette;
+	private Palette srcPalette = new Palette(DEFAULT_DVD_PALETTE);
 	/** color palette created for last decoded caption  */
 	private Palette palette;
 	/** bitmap of the last decoded caption */
 	private Bitmap bitmap;
 	/** screen width of imported VobSub */
-	private int screenWidth;
+	private int screenWidth = 720;
 	/** screen height of imported VobSub  */
-	private int screenHeight;
+	private int screenHeight = 576;
 	/** global x offset  */
 	private int ofsXglob;
 	/** global y offset */
@@ -111,7 +113,7 @@ public class SubDVD implements Substream, SubstreamDVD {
 	/** number of forced captions in the current file  */
 	private int numForcedFrames;
 	/** store last alpha values for invisible workaround */
-	private static int lastAlpha[] = {0,0xf,0xf,0xf};
+	private static int lastAlpha[] = {0, 0xf, 0xf, 0xf};
 
 
 	/**
@@ -120,17 +122,7 @@ public class SubDVD implements Substream, SubstreamDVD {
 	 * @param fnIdx file name of IDX file
 	 * @throws CoreException
 	 */
-	public SubDVD(final String fnSub, final String fnIdx) throws CoreException {
-		screenWidth = 720;
-		screenHeight = 576;
-		ofsXglob = 0;
-		ofsYglob = 0;
-		delayGlob = 0;
-		languageIdx = 0;
-
-		srcPalette = new Palette (Core.getDefaultDVDPalette());
-		subPictures = new ArrayList<SubPictureDVD>();
-
+	public SubDVD(String fnSub, String fnIdx) throws CoreException {
 		readIdx(fnIdx);
 		Core.setProgressMax(subPictures.size());
 		try {
@@ -138,18 +130,20 @@ public class SubDVD implements Substream, SubstreamDVD {
 		} catch (FileBufferException e) {
 			throw new CoreException(e.getMessage());
 		}
-		for (int i=0; i<subPictures.size(); i++) {
+		for (int i=0; i < subPictures.size(); i++) {
 			Core.setProgress(i);
-			Core.printX("# "+(i+1)+"\n");
-			Core.print("Ofs: "+ToolBox.hex(subPictures.get(i).offset,8)+"\n");
+			Core.printX("# " + (i+1) + "\n");
+			Core.print("Ofs: " + ToolBox.hex(subPictures.get(i).offset,8) + "\n");
 			long nextOfs;
-			if (i < subPictures.size()-1)
+			if (i < subPictures.size() - 1) {
 				nextOfs =  subPictures.get(i+1).offset;
-			else nextOfs = buffer.getSize();
+			} else {
+				nextOfs = buffer.getSize();
+			}
 			readSubFrame(subPictures.get(i), nextOfs, buffer);
 		}
 
-		Core.printX("\nDetected "+numForcedFrames+" forced captions.\n");
+		Core.printX("\nDetected " + numForcedFrames + " forced captions.\n");
 	}
 
 	/**
@@ -162,15 +156,15 @@ public class SubDVD implements Substream, SubstreamDVD {
 	 * @param width image width of encoded caption
 	 * @param maxPixels maximum number of pixels in caption
 	 */
-	static void decodeLine(final byte src[], final int srcOfs, final int srcLen, final byte trg[], int trgOfs, final int width,  final int maxPixels) {
+	static void decodeLine(byte src[], int srcOfs, int srcLen, byte trg[], int trgOfs, int width, int maxPixels) {
 		// to make access to nibbles easier, copy bytes to a nibble array
-		final byte nibbles[] = new byte[srcLen*2];
+		byte nibbles[] = new byte[srcLen * 2];
 		int b;
 
-		for (int i=0; i<srcLen; i++) {
-			b = src[srcOfs+i] & 0xff;
-			nibbles[2*i]   = (byte)(b >> 4);
-			nibbles[2*i+1] = (byte)(b & 0x0f);
+		for (int i=0; i < srcLen; i++) {
+			b = src[srcOfs + i] & 0xff;
+			nibbles[2 * i]   = (byte)(b >> 4);
+			nibbles[2 * i + 1] = (byte)(b & 0x0f);
 		}
 
 		int index = 0;
@@ -180,34 +174,35 @@ public class SubDVD implements Substream, SubstreamDVD {
 		while (index < nibbles.length && sumPixels < maxPixels) {
 			int len;
 			int col;
-			b = nibbles[index++]&0xff;
+			b = nibbles[index++] & 0xff;
 			if (b == 0) {
 				// three or four nibble code
-				b = nibbles[index++]&0xff;
-				if ( (b & 0xc) != 0) {
+				b = nibbles[index++] & 0xff;
+				if ((b & 0xc) != 0) {
 					// three byte code
 					len = b << 2;
-					b = nibbles[index++]&0xff;
-					len  |= (b >> 2);
+					b = nibbles[index++] & 0xff;
+					len |= (b >> 2);
 				} else {
 					// line feed or four nibble code
 					len = b << 6;
-					b = nibbles[index++]&0xff;
+					b = nibbles[index++] & 0xff;
 					len  |= (b << 2);
-					b = nibbles[index++]&0xff;
-					len  |= (b >> 2);
+					b = nibbles[index++] & 0xff;
+					len |= (b >> 2);
 					if (len == 0) {
 						// line feed
 						len = width-x;
 						if (len <= 0 || sumPixels >= maxPixels) {
 							len = 0;
 							// handle line feed
-							trgOfs += 2*width; // lines are interlaced!
-							sumPixels = ((trgOfs/width)/2)*width;
+							trgOfs += 2 * width; // lines are interlaced!
+							sumPixels = ((trgOfs/width) / 2) * width;
 							x = 0;
 						}
-						if ( (index & 1) == 1)
+						if ((index & 1) == 1) {
 							index++;
+						}
 					}
 				}
 			} else {
@@ -216,7 +211,7 @@ public class SubDVD implements Substream, SubstreamDVD {
 				if (len == 0) {
 					// two nibble code
 					len = b << 2;
-					b = nibbles[index++]&0xff;
+					b = nibbles[index++] & 0xff;
 					len  |= (b >> 2);
 				}
 			}
@@ -224,13 +219,14 @@ public class SubDVD implements Substream, SubstreamDVD {
 			col = b & 0x3;
 			sumPixels += len;
 
-			for (int i=0; i<len; i++) {
+			for (int i=0; i < len; i++) {
 				trg[trgOfs+x] = (byte)col;
 				if (++x >= width) {
 					trgOfs += 2*width; // lines are interlaced!
 					x = 0;
-					if ( (index & 1) == 1)
+					if ((index & 1) == 1) {
 						index++;
+					}
 				}
 			}
 		}
@@ -242,25 +238,27 @@ public class SubDVD implements Substream, SubstreamDVD {
 	 * @param even true: encode even lines, false: encode odd lines
 	 * @return RLE buffer
 	 */
-	static byte[] encodeLines(final Bitmap bm, final boolean even) {
+	static byte[] encodeLines(Bitmap bm, boolean even) {
 		int ofs = 0;
 		byte color;
 		int len;
 		int y;
-		final ArrayList<Byte> nibbles = new ArrayList<Byte>();
+		ArrayList<Byte> nibbles = new ArrayList<Byte>();
 
-		if (even)
+		if (even) {
 			y = 0;
-		else
+		} else {
 			y = 1;
+		}
 
 		for (; y < bm.getHeight(); y+=2) {
-			ofs = y*bm.getWidth();
+			ofs = y * bm.getWidth();
 			for (int x=0; x < bm.getWidth(); x+=len, ofs+=len) {
 				color = bm.getInternalBuffer()[ofs];
 				for (len=1; x+len < bm.getWidth(); len++)
-					if (bm.getInternalBuffer()[ofs+len] != color)
+					if (bm.getInternalBuffer()[ofs+len] != color) {
 						break;
+					}
 				if (len < 4) {
 					nibbles.add((byte)((len << 2)|(color&3)));
 				} else if (len < 0x10) {
@@ -276,16 +274,18 @@ public class SubDVD implements Substream, SubstreamDVD {
 					nibbles.add((byte)(0));
 					nibbles.add(color);
 				} else {
-					if (len > 0xff)
+					if (len > 0xff) {
 						len = 0xff;
+					}
 					nibbles.add((byte)(0));
 					nibbles.add((byte)(len >> 6));
 					nibbles.add((byte)(len >> 2));
 					nibbles.add((byte)((len << 2)|(color&3)));
 				}
 			}
-			if ((nibbles.size() & 1) == 1)
+			if ((nibbles.size() & 1) == 1) {
 				nibbles.add((byte)(0));
+			}
 		}
 		// end buffer with line feed
 		nibbles.add((byte)(0));
@@ -293,11 +293,11 @@ public class SubDVD implements Substream, SubstreamDVD {
 		nibbles.add((byte)(0));
 		nibbles.add((byte)(0));
 
-		final int size =  nibbles.size() / 2; // number of bytes
-		final byte[] retval = new byte[size];
-		final Iterator<Byte> it = nibbles.iterator();
+		int size =  nibbles.size() / 2; // number of bytes
+		byte[] retval = new byte[size];
+		Iterator<Byte> it = nibbles.iterator();
 
-		for (int i=0; i<size; i++) {
+		for (int i=0; i < size; i++) {
 			int hi = (it.next()&0xf);
 			int lo = (it.next()&0xf);
 			retval[i] = (byte)((hi<<4) | lo);
@@ -311,10 +311,10 @@ public class SubDVD implements Substream, SubstreamDVD {
 	 * @param bm bitmap
 	 * @return byte buffer containing the binary stream representation of one caption
 	 */
-	public static byte[] createSubFrame(final SubPictureDVD pic, final Bitmap bm) {
+	public static byte[] createSubFrame(SubPictureDVD pic, Bitmap bm) {
 		/* create RLE buffers */
-		final byte even[] = encodeLines(bm, true);
-		final byte odd[]  = encodeLines(bm, false);
+		byte even[] = encodeLines(bm, true);
+		byte odd[]  = encodeLines(bm, false);
 		int tmp;
 
 		int forcedOfs;
@@ -324,7 +324,6 @@ public class SubDVD implements Substream, SubstreamDVD {
 			controlHeader[2] = 0x01; // display
 			controlHeader[3] = 0x00; // forced
 			controlHeaderLen = controlHeader.length;
-
 		} else {
 			forcedOfs = 1;
 			controlHeader[2] = 0x00; // part of offset
@@ -335,7 +334,7 @@ public class SubDVD implements Substream, SubstreamDVD {
 		// fill out all info but the offets (determined later)
 
 		/* header - contains PTM */
-		final int ptm = (int)pic.startTime; // should be end time, but STC writes start time?
+		int ptm = (int)pic.startTime; // should be end time, but STC writes start time?
 		headerFirst[9]  = (byte)(((ptm >> 29) & 0x0E) | 0x21);
 		headerFirst[10] = (byte)(ptm >> 22);
 		headerFirst[11] = (byte)((ptm >> 14) | 1);
@@ -357,16 +356,17 @@ public class SubDVD implements Substream, SubstreamDVD {
 		controlHeader[1+12] = (byte)(tmp&0xff);
 
 		int yOfs = pic.getOfsY() - Core.getCropOfsY();
-		if (yOfs < 0)
+		if (yOfs < 0) {
 			yOfs = 0;
-		else {
+		} else {
 			int yMax = pic.height - pic.getImageHeight() - 2*Core.getCropOfsY();
-			if (yOfs > yMax)
+			if (yOfs > yMax) {
 				yOfs = yMax;
+			}
 		}
 
 		controlHeader[1+13] = (byte)((yOfs >> 4) & 0xff);
-		tmp = yOfs+bm.getHeight()-1;
+		tmp = yOfs + bm.getHeight()-1;
 		controlHeader[1+14] = (byte)(((yOfs & 0xf)<<4) | ((tmp>>8)&0xf) );
 		controlHeader[1+15] = (byte)(tmp&0xff);
 
@@ -401,43 +401,45 @@ public class SubDVD implements Substream, SubstreamDVD {
 		headerFirst[17] = (byte)(tmp >> 8);
 		headerFirst[18] = (byte)tmp;
 
-		// unfortunately, the SUB format is so completely fucked that
-		// only 0x800 bytes can be written per packet. If a packet
+		// in the SUB format only 0x800 bytes can be written per packet. If a packet
 		// is larger, it has to be split into fragments <= 0x800 bytes
 		// which follow one after the other.
 
-		final int sizeRLE = even.length+ odd.length;
-		int bufSize = packHeader.length + headerFirst.length + controlHeaderLen + sizeRLE;
+		int sizeRLE = even.length + odd.length;
+		int bufSize = PACK_HEADER.length + headerFirst.length + controlHeaderLen + sizeRLE;
 		int numAdditionalPackets = 0;
 		if (bufSize > 0x800) {
 			// determine how many additional headers we will need
 			// considering that each additional header also adds to the size
 			// due to its own headers
 			numAdditionalPackets = 1;
-			int remainingRLEsize = sizeRLE  - (0x800-packHeader.length-headerFirst.length); // size - 0x7df
-			while (remainingRLEsize > (0x800-packHeader.length-headerNext.length-controlHeaderLen)) {
-				remainingRLEsize -= (0x800-packHeader.length-headerNext.length);
-				bufSize += packHeader.length+headerNext.length;
+			int remainingRLEsize = sizeRLE  - (0x800 - PACK_HEADER.length - headerFirst.length); // size - 0x7df
+			while (remainingRLEsize > (0x800 - PACK_HEADER.length - headerNext.length - controlHeaderLen)) {
+				remainingRLEsize -= (0x800 - PACK_HEADER.length-headerNext.length);
+				bufSize += PACK_HEADER.length + headerNext.length;
 				numAdditionalPackets++;
 			}
 			// packet length of the 1st packet should be the maximum size
-			tmp = 0x800-packHeader.length-6;
-		} else
-			tmp = (bufSize-packHeader.length-6);
+			tmp = 0x800 - PACK_HEADER.length - 6;
+		} else {
+			tmp = (bufSize - PACK_HEADER.length - 6);
+		}
 
 		// allocate and fill buffer
-		final byte buf[] = new byte[(1+numAdditionalPackets)*0x800];
+		byte buf[] = new byte[(1 + numAdditionalPackets) * 0x800];
 
 		int stuffingBytes;
-		int diff = buf.length-bufSize;
-		if (diff > 0 && diff < 6)
+		int diff = buf.length - bufSize;
+		if (diff > 0 && diff < 6) {
 			stuffingBytes = diff;
-		else
+		} else {
 			stuffingBytes = 0;
+		}
 
 		int ofs = 0;
-		for (int i=0; i<packHeader.length; i++)
-			buf[ofs++] = packHeader[i];
+		for (int i=0; i<PACK_HEADER.length; i++) {
+			buf[ofs++] = PACK_HEADER[i];
+		}
 
 		// set packet length
 		tmp += stuffingBytes;
@@ -448,80 +450,93 @@ public class SubDVD implements Substream, SubstreamDVD {
 		headerFirst[8] = (byte)(5 + stuffingBytes);
 
 		// write header and use pts for stuffing bytes (if needed)
-		for (int i=0; i<14; i++)
+		for (int i=0; i<14; i++) {
 			buf[ofs++] = headerFirst[i];
-		for (int i=0; i<stuffingBytes; i++)
+		}
+		for (int i=0; i<stuffingBytes; i++) {
 			buf[ofs++] = (byte)0xff;
-		for (int i=14; i<headerFirst.length; i++)
+		}
+		for (int i=14; i<headerFirst.length; i++) {
 			buf[ofs++] = headerFirst[i];
+		}
 
 		// write (first part of) RLE buffer
 		tmp = sizeRLE;
 		if (numAdditionalPackets > 0) {
-			tmp = (0x800-packHeader.length-stuffingBytes-headerFirst.length);
-			if (tmp > sizeRLE) // can only happen in 1st buffer
+			tmp = (0x800-PACK_HEADER.length-stuffingBytes-headerFirst.length);
+			if (tmp > sizeRLE) { // can only happen in 1st buffer
 				tmp = sizeRLE;
+			}
 		}
 		for (int i=0; i<tmp; i++) {
-			if (i<even.length)
+			if (i<even.length) {
 				buf[ofs++] = even[i];
-			else
+			} else {
 				buf[ofs++] = odd[i-even.length];
+			}
 		}
 		int ofsRLE=tmp;
 
 		// fill gap in first packet with (parts of) control header
 		// only if the control header is split over two packets
 		int controlHeaderWritten = 0;
-		if (numAdditionalPackets == 1 && ofs<0x800) {
-			for (; ofs<0x800; ofs++)
+		if (numAdditionalPackets == 1 && ofs < 0x800) {
+			for (; ofs<0x800; ofs++) {
 				buf[ofs] = controlHeader[forcedOfs+(controlHeaderWritten++)];
+			}
 		}
 
 		// write additional packets
-		for (int p=0; p<numAdditionalPackets; p++) {
+		for (int p=0; p < numAdditionalPackets; p++) {
 			int rleSizeLeft;
 			if (p==numAdditionalPackets-1) {
 				// last loop
 				rleSizeLeft = sizeRLE-ofsRLE;
 				tmp = headerNext.length + (controlHeaderLen-controlHeaderWritten) + (sizeRLE-ofsRLE) - 6;
 			} else {
-				tmp = 0x800-packHeader.length-6;
-				rleSizeLeft = (0x800-packHeader.length-headerNext.length);
+				tmp = 0x800 - PACK_HEADER.length - 6;
+				rleSizeLeft = (0x800 - PACK_HEADER.length - headerNext.length);
 				// now, again, it could happen that the RLE buffer runs out before the last package
-				if (rleSizeLeft > (sizeRLE-ofsRLE))
+				if (rleSizeLeft > (sizeRLE-ofsRLE)) {
 					rleSizeLeft = sizeRLE-ofsRLE;
+				}
 			}
 			// copy packet headers
-			packHeader[13] = (byte)(0xf8);
-			for (int i=0; i<packHeader.length; i++)
-				buf[ofs++] = packHeader[i];
+			PACK_HEADER[13] = (byte)(0xf8);
+			for (int i=0; i<PACK_HEADER.length; i++) {
+				buf[ofs++] = PACK_HEADER[i];
+			}
 
 			// set packet length
 			headerNext[4] = (byte)(tmp >> 8);
 			headerNext[5] = (byte)tmp;
-			for (int i=0; i<headerNext.length; i++)
+			for (int i=0; i < headerNext.length; i++) {
 				buf[ofs++] = headerNext[i];
+			}
 
 			// copy RLE buffer
 			for (int i=ofsRLE; i<ofsRLE+rleSizeLeft; i++) {
-				if (i<even.length)
+				if (i<even.length) {
 					buf[ofs++] = even[i];
-				else
+				} else {
 					buf[ofs++] = odd[i-even.length];
+				}
 			}
 			ofsRLE += rleSizeLeft;
 			// fill possible gap in all but last package with (parts of) control header
 			// only if the control header is split over two packets
 			// this can only happen in the package before the last one though
-			if (p != numAdditionalPackets-1)
-				for (; ofs<(p+2)*0x800; ofs++)
-					buf[ofs] = controlHeader[forcedOfs+(controlHeaderWritten++)];
+			if (p != numAdditionalPackets-1) {
+				for (; ofs<(p+2)*0x800; ofs++) {
+					buf[ofs] = controlHeader[forcedOfs + (controlHeaderWritten++)];
+				}
+			}
 		}
 
 		// write (rest of) control header
-		for (int i=controlHeaderWritten; i<controlHeaderLen; i++)
-			buf[ofs++] = controlHeader[forcedOfs+i];
+		for (int i=controlHeaderWritten; i < controlHeaderLen; i++) {
+			buf[ofs++] = controlHeader[forcedOfs + i];
+		}
 
 		// fill rest of last packet with padding bytes
 		diff = buf.length - ofs;
@@ -533,8 +548,9 @@ public class SubDVD implements Substream, SubstreamDVD {
 			buf[ofs++] = (byte)0xbe;
 			buf[ofs++] = (byte)(diff >> 8);
 			buf[ofs++] = (byte)diff;
-			for (; ofs<buf.length; ofs++)
+			for (; ofs<buf.length; ofs++) {
 				buf[ofs] = (byte)0xff;
+			}
 		} // else should never happen due to stuffing bytes
 
 		return buf;
@@ -545,7 +561,7 @@ public class SubDVD implements Substream, SubstreamDVD {
 	 * @param fname file name
 	 * @throws CoreException
 	 */
-	void readIdx(final String fname) throws CoreException {
+	void readIdx(String fname) throws CoreException {
 		BufferedReader in = null;
 		try {
 			in = new BufferedReader(new FileReader(fname));
@@ -554,29 +570,33 @@ public class SubDVD implements Substream, SubstreamDVD {
 			int langIdx = 0;
 			boolean ignore = false;
 			while ( (s = in.readLine()) != null ) {
-				s = ToolBox.trim(s);
-				if (s.length() < 1 || s.charAt(0) == '#')
-					continue;
-				int pos = s.indexOf(':');
-				if (pos == -1 || s.length()-pos <= 1) {
-					Core.printErr("Illegal key: "+s+"\n");
+				s = s.trim();
+				if (s.length() < 1 || s.charAt(0) == '#') {
 					continue;
 				}
-				String key = ToolBox.trim(s.substring(0, pos));
-				String val = ToolBox.trim(s.substring(pos+1));
+				int pos = s.indexOf(':');
+				if (pos == -1 || s.length()-pos <= 1) {
+					Core.printErr("Illegal key: " + s + "\n");
+					continue;
+				}
+				String key = s.substring(0, pos).trim();
+				String val = s.substring(pos+1).trim();
 
 				// size (e.g. "size: 720x576")
 				if (key.equalsIgnoreCase("size")) {
 					pos = val.indexOf('x');
-					if (pos == -1 || val.length()-pos <= 1)
-						throw new CoreException("Illegal size: "+val);
+					if (pos == -1 || val.length()-pos <= 1) {
+						throw new CoreException("Illegal size: " + val);
+					}
 					v = ToolBox.getInt(val.substring(0,pos));
-					if (v < 2)
-						throw new CoreException("Illegal screen width: "+v);
+					if (v < 2) {
+						throw new CoreException("Illegal screen width: " + v);
+					}
 					screenWidth = v;
 					v = ToolBox.getInt(val.substring(pos+1));
-					if (v < 2)
-						throw new CoreException("Illegal screen height: "+v);
+					if (v < 2) {
+						throw new CoreException("Illegal screen height: " + v);
+					}
 					screenHeight = v;
 					continue;
 				}
@@ -584,15 +604,18 @@ public class SubDVD implements Substream, SubstreamDVD {
 				// origin (e.g. "org: 0, 0")
 				if (key.equalsIgnoreCase("org")) {
 					pos = val.indexOf(',');
-					if (pos == -1 || val.length()-pos <= 1)
-						throw new CoreException("Illegal origin: "+val);
+					if (pos == -1 || val.length()-pos <= 1) {
+						throw new CoreException("Illegal origin: " + val);
+					}
 					v = ToolBox.getInt(val.substring(0,pos));
-					if (v < 0)
-						throw new CoreException("Illegal x origin: "+v);
+					if (v < 0) {
+						throw new CoreException("Illegal x origin: " + v);
+					}
 					ofsXglob = v;
 					v = ToolBox.getInt(val.substring(pos+1));
-					if (v < 0)
-						throw new CoreException("Illegal y origin: "+v);
+					if (v < 0) {
+						throw new CoreException("Illegal y origin: " + v);
+					}
 					ofsYglob = v;
 					continue;
 				}
@@ -630,11 +653,13 @@ public class SubDVD implements Substream, SubstreamDVD {
 				// time offset (e.g. "time offset: 0")
 				if (key.equalsIgnoreCase("time offset")) {
 					v = ToolBox.getInt(val);
-					if (v < 0)
+					if (v < 0) {
 						v = (int)ToolBox.timeStrToPTS(val);
-					if (v < 0)
-						throw new CoreException("Illegal time offset: "+v);
-					delayGlob = v*90; // ms -> 90kHz
+					}
+					if (v < 0) {
+						throw new CoreException("Illegal time offset: " + v);
+					}
+					delayGlob = v * 90; // ms -> 90kHz
 					continue;
 				}
 
@@ -647,15 +672,18 @@ public class SubDVD implements Substream, SubstreamDVD {
 				// palette
 				if (key.equalsIgnoreCase("palette")) {
 					String vals[] = val.split(",");
-					if (vals == null || vals.length < 1 || vals.length > 16)
-						throw new CoreException("Illegal palette definition: "+val);
+					if (vals == null || vals.length < 1 || vals.length > 16) {
+						throw new CoreException("Illegal palette definition: " + val);
+					}
 					for (int i=0; i<vals.length; i++) {
 						int color = -1;
 						try {
-							color = Integer.parseInt(ToolBox.trim(vals[i]), 16);
-						} catch (NumberFormatException ex) {}
-						if (color == -1)
-							throw new CoreException("Illegal palette entry: "+vals[i]);
+							color = Integer.parseInt(vals[i].trim(), 16);
+						} catch (NumberFormatException ex) {
+						}
+						if (color == -1) {
+							throw new CoreException("Illegal palette entry: " + vals[i]);
+						}
 						srcPalette.setARGB(i, color);
 					}
 					continue;
@@ -670,8 +698,9 @@ public class SubDVD implements Substream, SubstreamDVD {
 				// language index (e.g. "langidx: 0")
 				if (key.equalsIgnoreCase("langidx")) {
 					v = ToolBox.getInt(val);
-					if (v < 0)
-						throw new CoreException("Illegal language idx: "+v);
+					if (v < 0) {
+						throw new CoreException("Illegal language idx: " + v);
+					}
 					langIdx = v; // ms -> 90kHz
 					// ignored for the moment
 					continue;
@@ -681,42 +710,46 @@ public class SubDVD implements Substream, SubstreamDVD {
 				if (key.equalsIgnoreCase("id")) {
 					String id;
 					pos = val.indexOf(',');
-					if (pos > 0 )
-						id = ToolBox.trim(val.substring(0,pos));
-					else
+					if (pos > 0 ) {
+						id = val.substring(0, pos).trim();
+					} else {
 						id = val;
+					}
 					if (id.length() != 2) {
-						Core.printWarn("Illegal language id: "+id+"\n");
+						Core.printWarn("Illegal language id: " + id + "\n");
 						continue;
 					}
 					boolean found = false;
-					for (int i=0; i<Core.getLanguages().length; i++)
-						if (id.equalsIgnoreCase(Core.getLanguages()[i][1])) {
+					for (int i=0; i < LANGUAGES.length; i++) {
+						if (id.equalsIgnoreCase(LANGUAGES[i][1])) {
 							languageIdx = i;
 							found = true;
 							break;
 						}
-					if (!found)
-						Core.printWarn("Illegal language id: "+id+"\n");
+					}
+					if (!found) {
+						Core.printWarn("Illegal language id: " + id + "\n");
+					}
 
 					pos = val.indexOf(':');
-					if (pos == -1 || s.length()-pos <= 1) {
-						Core.printErr("Missing index key: "+val+"\n");
+					if (pos == -1 || s.length() - pos <= 1) {
+						Core.printErr("Missing index key: " + val + "\n");
 						continue;
 					}
-					key = ToolBox.trim(val.substring(0, pos));
-					val = ToolBox.trim(val.substring(pos+1));
+					key = val.substring(0, pos).trim();
+					val = val.substring(pos+1).trim();
 					if (key.equalsIgnoreCase("index"))  {
-						Core.printErr("Missing index key: "+s+"\n");
+						Core.printErr("Missing index key: " + s + "\n");
 						continue;
 					}
 					v = ToolBox.getInt(val);
-					if (v < 0)
-						throw new CoreException("Illegal language index: "+v);
+					if (v < 0) {
+						throw new CoreException("Illegal language index: " + v);
+					}
 
 					if (v != langIdx) {
 						ignore = true;
-						Core.printWarn("Language id "+id+"(index:"+v+") inactive -> ignored\n");
+						Core.printWarn("Language id " + id + "(index:" + v + ") inactive -> ignored\n");
 					} else {
 						streamID = v;
 						ignore = false;
@@ -729,19 +762,23 @@ public class SubDVD implements Substream, SubstreamDVD {
 					if (key.equalsIgnoreCase("timestamp")) {
 						String vs;
 						pos = val.indexOf(',');
-						if (pos == -1 || val.length()-pos <= 1)
-							throw new CoreException("Illegal timestamp entry: "+val);
+						if (pos == -1 || val.length()-pos <= 1) {
+							throw new CoreException("Illegal timestamp entry: " + val);
+						}
 						vs = val.substring(0,pos);
 						long t = ToolBox.timeStrToPTS(vs);
-						if (t < 0)
-							throw new CoreException("Illegal timestamp: "+vs);
+						if (t < 0) {
+							throw new CoreException("Illegal timestamp: " + vs);
+						}
 						vs = val.substring(pos+1).toLowerCase();
 						pos = vs.indexOf("filepos:");
-						if (pos == -1 || vs.length()-pos <= 1)
-							throw new CoreException("Missing filepos: "+val);
-						long l = Long.parseLong(ToolBox.trim(vs.substring(pos+8)), 16);
-						if (l==-1)
-							throw new CoreException("Illegal filepos: "+vs.substring(pos+8));
+						if (pos == -1 || vs.length()-pos <= 1) {
+							throw new CoreException("Missing filepos: " + val);
+						}
+						long l = Long.parseLong(vs.substring(pos+8).trim(), 16);
+						if (l == -1) {
+							throw new CoreException("Illegal filepos: " + vs.substring(pos+8));
+						}
 						SubPictureDVD pic = new SubPictureDVD();
 						pic.offset = l;
 						pic.width = screenWidth;
@@ -754,12 +791,13 @@ public class SubDVD implements Substream, SubstreamDVD {
 
 		} catch (IOException ex) {
 			throw new CoreException(ex.getMessage());
-		}
-		finally {
+		} finally {
 			try {
-				if (in != null)
+				if (in != null) {
 					in.close();
-			} catch (IOException ex) {};
+				}
+			} catch (IOException ex) {
+			}
 		}
 	}
 
@@ -769,15 +807,16 @@ public class SubDVD implements Substream, SubstreamDVD {
 	 * @param pal base palette
 	 * @return decoded palette
 	 */
-	public static Palette decodePalette(final SubPictureDVD pic, final Palette pal) {
-		final Palette miniPal = new Palette(4, true);
-		for (int i=0; i<4; i++) {
-			int a = (pic.alpha[i]*0xff)/0xf;
+	public static Palette decodePalette(SubPictureDVD pic, Palette pal) {
+		Palette miniPal = new Palette(4, true);
+		for (int i=0; i < 4; i++) {
+			int a = (pic.alpha[i] * 0xff) / 0xf;
 			if (a >= Core.getAlphaCrop()) {
 				miniPal.setRGB(i, pal.getR()[pic.pal[i]]&0xff, pal.getG()[pic.pal[i]]&0xff, pal.getB()[pic.pal[i]]&0xff);
 				miniPal.setAlpha(i, a);
-			} else
+			} else {
 				miniPal.setARGB(i, 0);
+			}
 		}
 		return miniPal;
 	}
@@ -790,32 +829,33 @@ public class SubDVD implements Substream, SubstreamDVD {
 	 * @throws CoreException
 	 */
 	static Bitmap decodeImage(final SubPictureDVD pic, final FileBuffer fBuf, final int transIdx) throws CoreException {
-		final int w = pic.originalWidth;
-		final int h = pic.originalHeight;
+		int w = pic.originalWidth;
+		int h = pic.originalHeight;
 		int warnings = 0;
 
 		ImageObjectFragment info = pic.rleFragments.get(0);
-		final long startOfs = info.imageBufferOfs;
+		long startOfs = info.imageBufferOfs;
 
-		if (w > pic.width || h > pic.height)
-			Core.printWarn("Subpicture too large: "+w+"x"+h+
-					" at offset "+ToolBox.hex(startOfs, 8)+"\n");
+		if (w > pic.width || h > pic.height) {
+			Core.printWarn("Subpicture too large: " + w + "x" + h
+					+ " at offset " + ToolBox.hex(startOfs, 8) + "\n");
+		}
 
-		final Bitmap bm = new Bitmap(w, h, (byte)transIdx);
+		Bitmap bm = new Bitmap(w, h, (byte)transIdx);
 
 		// copy buffer(s)
-		final byte buf[] = new byte[pic.rleSize];
+		byte buf[] = new byte[pic.rleSize];
 		int index = 0;
 
-		final int sizeEven;
-		final int sizeOdd;
+		int sizeEven;
+		int sizeOdd;
 
 		if (pic.oddOfs > pic.evenOfs) {
-			sizeEven = pic.oddOfs-pic.evenOfs;
-			sizeOdd = pic.rleSize-pic.oddOfs;
+			sizeEven = pic.oddOfs - pic.evenOfs;
+			sizeOdd = pic.rleSize - pic.oddOfs;
 		} else {
-			sizeOdd = pic.evenOfs-pic.oddOfs;
-			sizeEven = pic.rleSize-pic.evenOfs;
+			sizeOdd = pic.evenOfs - pic.oddOfs;
+			sizeEven = pic.rleSize - pic.evenOfs;
 		}
 
 		if (sizeEven <= 0 || sizeOdd <= 0)
@@ -827,8 +867,9 @@ public class SubDVD implements Substream, SubstreamDVD {
 				for (int p = 0; p < pic.rleFragments.size(); p++) {
 					// copy data of all packet to one common buffer
 					info = pic.rleFragments.get(p);
-					for (int i=0; i < info.imagePacketSize; i++)
-						buf[index+i] = (byte)fBuf.getByte(info.imageBufferOfs+i);
+					for (int i=0; i < info.imagePacketSize; i++) {
+						buf[index+i] = (byte)fBuf.getByte(info.imageBufferOfs + i);
+					}
 					index += info.imagePacketSize;
 				}
 			} catch (ArrayIndexOutOfBoundsException ex) {
@@ -847,14 +888,12 @@ public class SubDVD implements Substream, SubstreamDVD {
 				warnings++;
 			}
 
-			if (warnings > 0)
-				Core.printWarn("problems during RLE decoding of picture at offset "+
-						ToolBox.hex(startOfs,8)+"\n");
-
+			if (warnings > 0) {
+				Core.printWarn("problems during RLE decoding of picture at offset " + ToolBox.hex(startOfs,8) + "\n");
+			}
 			return bm;
-
 		} catch (FileBufferException ex) {
-			throw new CoreException (ex.getMessage());
+			throw new CoreException(ex.getMessage());
 		}
 	}
 
@@ -865,7 +904,7 @@ public class SubDVD implements Substream, SubstreamDVD {
 	 * @param buffer File Buffer to read from
 	 * @throws CoreException
 	 */
-	void readSubFrame(final SubPictureDVD pic, final long endOfs, final FileBuffer buffer) throws CoreException  {
+	void readSubFrame(SubPictureDVD pic, long endOfs, FileBuffer buffer) throws CoreException  {
 		long ofs = pic.offset;
 		long ctrlOfs = -1;
 		long nextOfs;
@@ -883,16 +922,18 @@ public class SubDVD implements Substream, SubstreamDVD {
 		try {
 			do {
 				// 4 bytes:  packet identifier 0x000001ba
-				final long startOfs = ofs;
-				if (buffer.getDWord(ofs) != 0x000001ba)
-					throw new CoreException("Missing packet identifier at ofs "+ToolBox.hex(ofs,8));
+				long startOfs = ofs;
+				if (buffer.getDWord(ofs) != 0x000001ba) {
+					throw new CoreException("Missing packet identifier at ofs " + ToolBox.hex(ofs,8));
+				}
 				// 6 bytes:  system clock reference
 				// 3 bytes:  multiplexer rate
 				// 1 byte:   stuffing info
 				int stuffOfs = buffer.getByte(ofs+=13) & 7;
 				// 4 bytes:  sub packet ID 0x000001bd
-				if (buffer.getDWord(ofs += (1+stuffOfs)) != 0x000001bd)
-					throw new CoreException("Missing packet identifier at ofs "+ToolBox.hex(ofs,8));
+				if (buffer.getDWord(ofs += (1+stuffOfs)) != 0x000001bd) {
+					throw new CoreException("Missing packet identifier at ofs " + ToolBox.hex(ofs,8));
+				}
 				// 2 bytes:  packet length (number of bytes after this entry)
 				length = buffer.getWord(ofs+=4);
 				nextOfs = ofs+2+length;
@@ -909,8 +950,9 @@ public class SubDVD implements Substream, SubstreamDVD {
 					if (nextOfs % 0x800 != 0) {
 						ofs = (nextOfs/0x800 + 1)*0x800;
 						Core.printWarn("Offset to next fragment is invalid. Fixed to:"+ToolBox.hex(ofs, 8)+"\n");
-					} else
+					} else {
 						ofs = nextOfs;
+					}
 					ctrlOfs += 0x800;
 					continue;
 				}
@@ -921,8 +963,9 @@ public class SubDVD implements Substream, SubstreamDVD {
 					ctrlOfsRel = buffer.getWord(ofs);
 					rleSize = ctrlOfsRel-2;             // calculate size of RLE buffer
 					ctrlSize = size-ctrlOfsRel-2;       // calculate size of control header
-					if (ctrlSize < 0)
+					if (ctrlSize < 0) {
 						throw new CoreException("Invalid control buffer size");
+					}
 					ctrlHeader = new byte[ctrlSize];
 					ctrlOfs = ctrlOfsRel + ofs; // might have to be corrected for multiple packets
 					ofs += 2;
@@ -930,24 +973,26 @@ public class SubDVD implements Substream, SubstreamDVD {
 					pic.rleFragments = new ArrayList<ImageObjectFragment>();
 					firstPackFound = true;
 				} else {
-					if (firstPackFound)
+					if (firstPackFound) {
 						ctrlOfs += headerSize; // fix absolute offset by adding header bytes
-					else
-						Core.printWarn("Invalid fragment skipped at ofs "+ToolBox.hex(startOfs, 8)+"\n");
+					} else {
+						Core.printWarn("Invalid fragment skipped at ofs " + ToolBox.hex(startOfs, 8) + "\n");
+					}
 				}
 
 				// check if control header is (partly) in this packet
 				int diff = (int)(nextOfs - ctrlOfs - ctrlHeaderCopied);
-				if (diff<0)
+				if (diff<0) {
 					diff = 0;
+				}
 				int copied = ctrlHeaderCopied;
 				try {
 					for (int i=0; (i < diff) && (ctrlHeaderCopied<ctrlSize); i++) {
-						ctrlHeader[ctrlHeaderCopied] = (byte)buffer.getByte(ctrlOfs+i+copied);
+						ctrlHeader[ctrlHeaderCopied] = (byte)buffer.getByte(ctrlOfs + i + copied);
 						ctrlHeaderCopied++;
 					}
 				} catch (ArrayIndexOutOfBoundsException ex) {
-					throw new CoreException("Inconsistent control buffer access ("+ex.getMessage()+")");
+					throw new CoreException("Inconsistent control buffer access (" + ex.getMessage() + ")");
 				}
 				rleFrag = new ImageObjectFragment();
 				rleFrag.imageBufferOfs = ofs;
@@ -957,25 +1002,27 @@ public class SubDVD implements Substream, SubstreamDVD {
 				rleBufferFound += rleFrag.imagePacketSize;
 
 				if (ctrlHeaderCopied != ctrlSize && (nextOfs % 0x800 != 0)) {
-					ofs = (nextOfs/0x800 + 1)*0x800;
-					Core.printWarn("Offset to next fragment is invalid. Fixed to:"+ToolBox.hex(ofs, 8)+"\n");
+					ofs = (nextOfs/0x800 + 1) * 0x800;
+					Core.printWarn("Offset to next fragment is invalid. Fixed to:" + ToolBox.hex(ofs, 8) + "\n");
 					rleBufferFound += ofs-nextOfs;
-				} else
+				} else {
 					ofs = nextOfs;
-			} while ( ofs < endOfs && ctrlHeaderCopied < ctrlSize);
+				}
+			} while (ofs < endOfs && ctrlHeaderCopied < ctrlSize);
 
 			if (ctrlHeaderCopied != ctrlSize) {
 				Core.printWarn("Control buffer size inconsistent.\n");
 				// fill rest of buffer with break command to avoid wrong detection of forced caption (0x00)
-				for (int i=ctrlHeaderCopied; i<ctrlSize; i++)
+				for (int i=ctrlHeaderCopied; i<ctrlSize; i++) {
 					ctrlHeader[i] = (byte)0xff;
+				}
 			}
 
-			if (rleBufferFound != rleSize)
+			if (rleBufferFound != rleSize) {
 				Core.printWarn("RLE buffer size inconsistent.\n");
+			}
 
 			pic.rleSize = rleBufferFound;
-
 		} catch (FileBufferException ex) {
 			throw new CoreException(ex.getMessage());
 		}
@@ -988,13 +1035,13 @@ public class SubDVD implements Substream, SubstreamDVD {
 		int delay = -1;
 		boolean ColAlphaUpdate = false;
 
-		Core.print("SP_DCSQT at ofs: "+ToolBox.hex(ctrlOfs,8)+"\n");
+		Core.print("SP_DCSQT at ofs: " + ToolBox.hex(ctrlOfs,8) + "\n");
 
 		try {
 			// parse control header
 			int b;
 			int index = 0;
-			int endSeqOfs = ToolBox.getWord(ctrlHeader, index)-ctrlOfsRel-2;
+			int endSeqOfs = ToolBox.getWord(ctrlHeader, index) - ctrlOfsRel - 2;
 			if (endSeqOfs < 0 || endSeqOfs > ctrlSize) {
 				Core.printWarn("Invalid end sequence offset -> no end time\n");
 				endSeqOfs = ctrlSize;
@@ -1026,8 +1073,9 @@ public class SubDVD implements Substream, SubstreamDVD {
 						b = ToolBox.getByte(ctrlHeader, index++);
 						pic.alpha[1] = (b >> 4);
 						pic.alpha[0] = b & 0x0f;
-						for (int i = 0; i<4; i++)
+						for (int i = 0; i<4; i++) {
 							alphaSum += pic.alpha[i] & 0xff;
+						}
 						Core.print("Alpha:     "+pic.alpha[0]+", "+pic.alpha[1]+", "+pic.alpha[2]+", "+pic.alpha[3]+"\n");
 						break;
 					case 5: // coordinates
@@ -1059,13 +1107,15 @@ public class SubDVD implements Substream, SubstreamDVD {
 						b = ToolBox.getByte(ctrlHeader, index+11);
 						alphaUpdate[1] = (b >> 4);
 						alphaUpdate[0] = b & 0x0f;
-						for (int i = 0; i<4; i++)
+						for (int i = 0; i<4; i++) {
 							alphaUpdateSum += alphaUpdate[i] & 0xff;
+						}
 						// only use more opaque colors
 						if (alphaUpdateSum > alphaSum) {
 							alphaSum = alphaUpdateSum;
-							for (int i = 0; i<4; i++)
+							for (int i = 0; i<4; i++) {
 								pic.alpha[i] = alphaUpdate[i];
+							}
 							// take over frame palette
 							b = ToolBox.getByte(ctrlHeader, index+8);
 							pic.pal[3] = (b >> 4);
@@ -1087,7 +1137,7 @@ public class SubDVD implements Substream, SubstreamDVD {
 					case 0xff: // end sequence
 						break parse_ctrl;
 					default:
-						Core.printWarn("Unknown control sequence "+ToolBox.hex(cmd,2)+" skipped\n");
+						Core.printWarn("Unknown control sequence " + ToolBox.hex(cmd,2) + " skipped\n");
 						break;
 				}
 			}
@@ -1110,24 +1160,25 @@ public class SubDVD implements Substream, SubstreamDVD {
 				pic.endTime = pic.startTime;
 			}
 
-			if (ColAlphaUpdate)
+			if (ColAlphaUpdate) {
 				Core.printWarn("Palette update/alpha fading detected - result may be erratic.\n");
+			}
 
 			if (alphaSum == 0) {
 				if (Core.getFixZeroAlpha()) {
-					for (int i=0; i<4; i++)
+					for (int i=0; i<4; i++) {
 						pic.alpha[i] = lastAlpha[i];
+					}
 					Core.printWarn("Invisible caption due to zero alpha - used alpha info of last caption.\n");
-				} else
+				} else {
 					Core.printWarn("Invisible caption due to zero alpha (not fixed due to user setting).\n");
+				}
 			}
 
 			lastAlpha = pic.alpha;
-
 			pic.setOriginal();
-
 		} catch (IndexOutOfBoundsException ex) {
-			throw new CoreException("Index "+ex.getMessage()+" out of bounds in control header.");
+			throw new CoreException("Index "+ex.getMessage() + " out of bounds in control header.");
 		}
 	}
 
@@ -1140,16 +1191,16 @@ public class SubDVD implements Substream, SubstreamDVD {
 	 * @param pal 16 color main Palette
 	 * @throws CoreException
 	 */
-	public static void writeIdx(final String fname, final SubPicture pic, final int offsets[], final int timestamps[], final Palette pal) throws CoreException {
+	public static void writeIdx(String fname, SubPicture pic, int offsets[], int timestamps[], Palette pal) throws CoreException {
 		BufferedWriter out = null;
 		try {
 			out = new BufferedWriter(new FileWriter(fname));
 
 			out.write("# VobSub index file, v7 (do not modify this line!)"); out.newLine();
-			out.write("# Created by "+Core.progNameVer); out.newLine();
+			out.write("# Created by " + APP_NAME_AND_VERSION); out.newLine();
 			out.newLine();
 			out.write("# Frame size"); out.newLine();
-			out.write("size: "+pic.width+"x"+(pic.height-2*Core.getCropOfsY())); out.newLine();
+			out.write("size: " + pic.width + "x" + (pic.height-2 * Core.getCropOfsY())); out.newLine();
 			out.newLine();
 			out.write("# Origin - upper-left corner"); out.newLine();
 			out.write("org: 0, 0"); out.newLine();
@@ -1178,12 +1229,13 @@ public class SubDVD implements Substream, SubstreamDVD {
 			out.write("# The palette of the generated file"); out.newLine();
 			out.write("palette: ");
 			//Palette pal = Core.getCurrentDVDPalette();
-			for (int i=0; i<pal.getSize(); i++) {
+			for (int i=0; i < pal.getSize(); i++) {
 				int rbg[] = pal.getRGB(i);
 				int val = (rbg[0]<<16) | (rbg[1]<<8) | rbg[2];
 				out.write(ToolBox.hex(val, 6).substring(2));
-				if (i != pal.getSize()-1)
+				if (i != pal.getSize()-1) {
 					out.write(", ");
+				}
 			}
 			out.newLine();out.newLine();
 			out.write("# Custom colors (transp idxs and the four colors)"); out.newLine();
@@ -1192,10 +1244,10 @@ public class SubDVD implements Substream, SubstreamDVD {
 			out.write("# Language index in use"); out.newLine();
 			out.write("langidx: 0"); out.newLine();
 			out.newLine();
-			out.write("# "+Core.getLanguages()[Core.getLanguageIdx()][0]); out.newLine();
-			out.write("id: "+Core.getLanguages()[Core.getLanguageIdx()][1]+", index: 0"); out.newLine();
+			out.write("# "+LANGUAGES[Core.getLanguageIdx()][0]); out.newLine();
+			out.write("id: "+LANGUAGES[Core.getLanguageIdx()][1]+", index: 0"); out.newLine();
 			out.write("# Decomment next line to activate alternative name in DirectVobSub / Windows Media Player 6.x"); out.newLine();
-			out.write("# alt: "+Core.getLanguages()[Core.getLanguageIdx()][0]); out.newLine();
+			out.write("# alt: "+LANGUAGES[Core.getLanguageIdx()][0]); out.newLine();
 			out.write("# Vob/Cell ID: 1, 1 (PTS: 0)"); out.newLine();
 			for (int i=0; i<timestamps.length; i++) {
 				out.write("timestamp: "+ToolBox.ptsToTimeStrIdx(timestamps[i]));
@@ -1204,12 +1256,13 @@ public class SubDVD implements Substream, SubstreamDVD {
 			}
 		} catch (IOException ex) {
 			throw new CoreException(ex.getMessage());
-		}
-		finally {
+		} finally {
 			try {
-				if (out != null)
+				if (out != null) {
 					out.close();
-			} catch (IOException ex) {};
+				}
+			} catch (IOException ex) {
+			}
 		}
 	}
 
@@ -1218,7 +1271,7 @@ public class SubDVD implements Substream, SubstreamDVD {
 	 * @param pic SubPicture object containing info about caption
 	 * @throws CoreException
 	 */
-	private void decode(final SubPictureDVD pic)  throws CoreException {
+	private void decode(SubPictureDVD pic)  throws CoreException {
 		palette = decodePalette(pic, srcPalette);
 		bitmap  = decodeImage(pic, buffer, palette.getIndexOfMostTransparentPaletteEntry());
 
@@ -1227,10 +1280,12 @@ public class SubDVD implements Substream, SubstreamDVD {
 		if (bounds.yMin>0 || bounds.xMin > 0 || bounds.xMax<bitmap.getWidth()-1 || bounds.yMax<bitmap.getHeight()-1) {
 			int w = bounds.xMax - bounds.xMin + 1;
 			int h = bounds.yMax - bounds.yMin + 1;
-			if (w<2)
+			if (w<2) {
 				w = 2;
-			if (h<2)
+			}
+			if (h<2) {
 				h = 2;
+			}
 			bitmap = bitmap.crop(bounds.xMin, bounds.yMin, w, h);
 			// update picture
 			pic.setImageWidth(w);
@@ -1245,21 +1300,20 @@ public class SubDVD implements Substream, SubstreamDVD {
 	/* (non-Javadoc)
 	 * @see Substream#decode(int)
 	 */
-	public void decode(final int index) throws CoreException {
-		if (index < subPictures.size())
+	public void decode(int index) throws CoreException {
+		if (index < subPictures.size()) {
 			decode(subPictures.get(index));
-		else
+		} else {
 			throw new CoreException("Index "+index+" out of bounds\n");
+		}
 	}
-
-	/* setters / getters */
 
 	/**
 	 * Return frame palette
 	 * @param index index of caption
 	 * @return int array with 4 entries representing frame palette
 	 */
-	public int[] getFramePal(final int index) {
+	public int[] getFramePal(int index) {
 		return subPictures.get(index).pal;
 	}
 
@@ -1268,7 +1322,7 @@ public class SubDVD implements Substream, SubstreamDVD {
 	 * @param index index of caption
 	 * @return int array with 4 entries representing frame palette
 	 */
-	public int[] getOriginalFramePal(final int index) {
+	public int[] getOriginalFramePal(int index) {
 		return subPictures.get(index).originalPal;
 	}
 
@@ -1277,7 +1331,7 @@ public class SubDVD implements Substream, SubstreamDVD {
 	 * @param index index of caption
 	 * @return int array with 4 entries representing frame alphas
 	 */
-	public int[] getFrameAlpha(final int index) {
+	public int[] getFrameAlpha(int index) {
 		return subPictures.get(index).alpha;
 	}
 
@@ -1286,14 +1340,14 @@ public class SubDVD implements Substream, SubstreamDVD {
 	 * @param index index of caption
 	 * @return int array with 4 entries representing frame alphas
 	 */
-	public int[] getOriginalFrameAlpha(final int index) {
+	public int[] getOriginalFrameAlpha(int index) {
 		return subPictures.get(index).originalAlpha;
 	}
 
 	/* (non-Javadoc)
 	 * @see Substream#getImage(Bitmap)
 	 */
-	public BufferedImage getImage(final Bitmap bm) {
+	public BufferedImage getImage(Bitmap bm) {
 		return bm.getImage(palette.getColorModel());
 	}
 
@@ -1328,7 +1382,7 @@ public class SubDVD implements Substream, SubstreamDVD {
 	/* (non-Javadoc)
 	 * @see Substream#getSubPicture(int)
 	 */
-	public SubPicture getSubPicture(final int index) {
+	public SubPicture getSubPicture(int index) {
 		return subPictures.get(index);
 	}
 
@@ -1349,7 +1403,7 @@ public class SubDVD implements Substream, SubstreamDVD {
 	/* (non-Javadoc)
 	 * @see Substream#isForced(int)
 	 */
-	public boolean isForced(final int index) {
+	public boolean isForced(int index) {
 		return subPictures.get(index).isforced;
 	}
 
@@ -1364,21 +1418,21 @@ public class SubDVD implements Substream, SubstreamDVD {
 	/* (non-Javadoc)
 	 * @see Substream#getEndTime(int)
 	 */
-	public long getEndTime(final int index) {
+	public long getEndTime(int index) {
 		return subPictures.get(index).endTime;
 	}
 
 	/* (non-Javadoc)
 	 * @see Substream#getStartTime(int)
 	 */
-	public long getStartTime(final int index) {
+	public long getStartTime(int index) {
 		return subPictures.get(index).startTime;
 	}
 
 	/* (non-Javadoc)
 	 * @see Substream#getStartOffset(int)
 	 */
-	public long getStartOffset(final int index) {
+	public long getStartOffset(int index) {
 		return subPictures.get(index).offset;
 	}
 
@@ -1405,5 +1459,4 @@ public class SubDVD implements Substream, SubstreamDVD {
 	public void setSrcPalette(Palette pal) {
 		srcPalette = pal;
 	}
-
 }

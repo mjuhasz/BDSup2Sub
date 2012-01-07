@@ -34,45 +34,45 @@ public interface Substream {
 	 * Return the Palette of the current (last decoded) frame.
 	 * @return Palette of the current frame
 	 */
-	abstract Palette getPalette();
+	Palette getPalette();
 
 	/**
 	 * Return the Bitmap of the current (last decoded) frame.
 	 * @return Bitmap of the current frame
 	 */
-	abstract Bitmap getBitmap();
+	Bitmap getBitmap();
 
 	/**
 	 * Return current (last decoded) frame as BufferedImage
 	 * @return Current (last decoded) frame as BufferedImage
 	 */
-	abstract BufferedImage getImage();
+	BufferedImage getImage();
 
 	/**
 	 * Return given Bitmap as BufferedImage (using current Palette).
-	 * @param bm Bitmap to convert.
+	 * @param bitmap Bitmap to convert.
 	 * @return BufferedImage of given bitmap
 	 */
-	abstract BufferedImage getImage(Bitmap bm);
+	BufferedImage getImage(Bitmap bitmap);
 
 	/**
 	 * Get index of most dominant opaque color (for DVD subtitle export).
 	 * @return Index of most dominant opaque color
 	 */
-	abstract int getPrimaryColorIndex();
+	int getPrimaryColorIndex();
 
 	/**
 	 * Decode caption.
 	 * @param index Index of caption
 	 * @throws CoreException
 	 */
-	abstract void decode(int index) throws CoreException;
+	void decode(int index) throws CoreException;
 
 	/**
 	 * Get number of frames in the currently loaded subtitle stream.
 	 * @return Number of frames
 	 */
-	abstract int getNumFrames();
+	int getNumFrames();
 
 	/**
 	 * Get number of forced frames in the currently loaded subtitle stream.
@@ -90,7 +90,7 @@ public interface Substream {
 	/**
 	 * Close input stream.
 	 */
-	abstract void close();
+	void close();
 
 	/**
 	 * Get end time stamp of given frame.
@@ -119,5 +119,4 @@ public interface Substream {
 	 * @return SubPicture of caption
 	 */
 	SubPicture getSubPicture(int index);
-
 }

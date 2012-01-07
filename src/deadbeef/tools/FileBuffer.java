@@ -33,30 +33,29 @@ public class FileBuffer {
 	/** Size of the buffer in memory */
 	private static final int BUFFERSIZE = 1024*1024; /* 1MB */
 	/** Buffer in memory */
-	private final byte buf[];
+	private byte buf[];
 	/** File name of the input file */
-	private final String filename;
+	private String filename;
 	/** File input stream of the input file */
-	private final FileInputStream fi;
+	private FileInputStream fi;
 	/** File channel of the input file */
-	private final FileChannel fc;
+	private FileChannel fc;
 	/** Current offset in file = start of memory buffer */
 	private long offset;
 	/** Last valid offset that is stored in internal buffer */
 	private long offsetEnd;
 	/** Length of file */
-	private final long len;
+	private long length;
 
 	public FileBuffer(final String filename) throws FileBufferException {
+		this.filename = filename;
+		length = new File(filename).length();
+		if (length < BUFFERSIZE) {
+			buf = new byte[(int)length];
+		} else {
+			buf = new byte[BUFFERSIZE];
+		}
 		try {
-			this.filename = filename;
-			len = new File(filename).length();
-			if (len<BUFFERSIZE) {
-				buf = new byte[(int)len];
-			}
-			else {
-				buf = new byte[BUFFERSIZE];
-			}
 			fi = new FileInputStream(filename);
 			fc = fi.getChannel();
 			offset = 0;
@@ -75,7 +74,7 @@ public class FileBuffer {
 		try {
 			this.offset = offset;
 			fc.position(offset);
-			long l = len - offset;
+			long l = length - offset;
 			int numRead;
 			if (l < 0) {
 				throw new FileBufferException("Offset " + offset + " out of bounds for file " + filename);
@@ -112,7 +111,7 @@ public class FileBuffer {
 	 * @return Word read from the buffer
 	 * @throws FileBufferException
 	 */
-	public int getWord(final long offset) throws FileBufferException {
+	public int getWord(long offset) throws FileBufferException {
 		if ((offset < this.offset) || ((offset+1) > offsetEnd)) {
 			readBuffer(offset);
 		}
@@ -185,7 +184,7 @@ public class FileBuffer {
 	 * @return Size of input file in bytes
 	 */
 	public long getSize() {
-		return len;
+		return length;
 	}
 
 	/**

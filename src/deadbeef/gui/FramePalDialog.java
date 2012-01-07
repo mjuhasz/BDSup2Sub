@@ -6,6 +6,8 @@ import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 
 import javax.swing.DefaultListCellRenderer;
@@ -47,61 +49,61 @@ public class FramePalDialog extends JDialog {
 
 	private static final long serialVersionUID = 1L;
 
-	private JPanel jContentPane = null;
+	private JPanel jContentPane;
 
-	private JButton jButtonOk = null;
+	private JButton jButtonOk;
 
-	private JButton jButtonCancel = null;
+	private JButton jButtonCancel;
 
-	private JLabel jLabelColor1 = null;
+	private JLabel jLabelColor1;
 
-	private JLabel jLabelColor2 = null;
+	private JLabel jLabelColor2;
 
-	private JLabel jLabelColor3 = null;
+	private JLabel jLabelColor3;
 
-	private JLabel jLabelColor4 = null;
+	private JLabel jLabelColor4;
 
-	private JLabel jLabelAlpha1 = null;
+	private JLabel jLabelAlpha1;
 
-	private JLabel jLabelAlpha2 = null;
+	private JLabel jLabelAlpha2;
 
-	private JLabel jLabelAlpha3 = null;
+	private JLabel jLabelAlpha3;
 
-	private JLabel jLabelAlpha4 = null;
+	private JLabel jLabelAlpha4;
 
-	private JComboBox jComboBoxColor1 = null;
+	private JComboBox jComboBoxColor1;
 
-	private JComboBox jComboBoxColor2 = null;
+	private JComboBox jComboBoxColor2;
 
-	private JComboBox jComboBoxColor3 = null;
+	private JComboBox jComboBoxColor3;
 
-	private JComboBox jComboBoxColor4 = null;
+	private JComboBox jComboBoxColor4;
 
-	private JComboBox jComboBoxAlpha1 = null;
+	private JComboBox jComboBoxAlpha1;
 
-	private JComboBox jComboBoxAlpha2 = null;
+	private JComboBox jComboBoxAlpha2;
 
-	private JComboBox jComboBoxAlpha3 = null;
+	private JComboBox jComboBoxAlpha3;
 
-	private JComboBox jComboBoxAlpha4 = null;
+	private JComboBox jComboBoxAlpha4;
 
-	private JButton jButtonSetAll = null;
+	private JButton jButtonSetAll;
 
-	private JButton jButtonResetAll = null;
+	private JButton jButtonResetAll;
 
-	private JButton jButtonReset = null;
+	private JButton jButtonReset;
 
 
 	/** array containing the 16 numeric values 00 - 15 as strings */
-	private final static String[] cName = {	"00", "01", "02", "03", "04", "05", "06" ,"07",
+	private static final String[] COLOR_NAME = {	"00", "01", "02", "03", "04", "05", "06" ,"07",
 											"08", "09", "10", "11", "12", "13", "14", "15"};
 
 	/** current subtitle index */
 	private int index;
 	/** image icons to preview color */
-	private final ImageIcon cIcon[];
+	private ImageIcon cIcon[];
 	/** semaphore to disable actions while changing component properties */
-	private volatile boolean isReady = false;
+	private volatile boolean isReady;
 	/* frame alpha */
 	private int alpha[];
 	/* frame palette */
@@ -130,14 +132,14 @@ public class FramePalDialog extends JDialog {
 			cIcon[i] = new ImageIcon(new BufferedImage(12,12,BufferedImage.TYPE_INT_RGB ));
 			Color c = new Color (pal.getARGB(i) | 0xff000000); // make fully opaque
 			paintIcon(cIcon[i],c);
-			jComboBoxColor1.addItem(cName[i]);
-			jComboBoxColor2.addItem(cName[i]);
-			jComboBoxColor3.addItem(cName[i]);
-			jComboBoxColor4.addItem(cName[i]);
-			jComboBoxAlpha1.addItem(cName[i]);
-			jComboBoxAlpha2.addItem(cName[i]);
-			jComboBoxAlpha3.addItem(cName[i]);
-			jComboBoxAlpha4.addItem(cName[i]);
+			jComboBoxColor1.addItem(COLOR_NAME[i]);
+			jComboBoxColor2.addItem(COLOR_NAME[i]);
+			jComboBoxColor3.addItem(COLOR_NAME[i]);
+			jComboBoxColor4.addItem(COLOR_NAME[i]);
+			jComboBoxAlpha1.addItem(COLOR_NAME[i]);
+			jComboBoxAlpha2.addItem(COLOR_NAME[i]);
+			jComboBoxAlpha3.addItem(COLOR_NAME[i]);
+			jComboBoxAlpha4.addItem(COLOR_NAME[i]);
 		}
 		MyListCellRenderer myListCellRenderer = new MyListCellRenderer();
 		jComboBoxColor1.setRenderer(myListCellRenderer);
@@ -155,13 +157,13 @@ public class FramePalDialog extends JDialog {
 	 * @author 0xdeadbeef
 	 */
 	private class MyListCellRenderer extends DefaultListCellRenderer {
-		final static long serialVersionUID = 0x000000001;
+		static final long serialVersionUID = 0x000000001;
 		@Override
-		public Component getListCellRendererComponent( JList list, Object value, int index, boolean isSelected,  boolean cellHasFocus) {
-			Component retValue = super.getListCellRendererComponent( list, value, index, isSelected, cellHasFocus);
+		public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected,  boolean cellHasFocus) {
+			Component retValue = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 			int idx = ToolBox.getInt(value.toString());
 			if (idx >= 0) {
-				setText(cName[idx]);
+				setText(COLOR_NAME[idx]);
 				setIcon(cIcon[idx]);
 			}
 			return retValue;
@@ -173,7 +175,7 @@ public class FramePalDialog extends JDialog {
 	 * @param b JButton to paint
 	 * @param c Color to paint
 	 */
-	private void paintIcon(final ImageIcon i, final Color c) {
+	private void paintIcon(ImageIcon i, Color c) {
 		Graphics g = i.getImage().getGraphics();
 		g.setColor(c);
 		g.setPaintMode();
@@ -203,11 +205,13 @@ public class FramePalDialog extends JDialog {
 		int a[] = Core.getFrameAlpha(index);
 		int p[] = Core.getFramePal(index);
 		for (int i=0; i<4; i++) {
-			if (a != null)
+			if (a != null) {
 				alpha[i] = a[i];
-			if (p != null)
+			}
+			if (p != null) {
 				pal[i]   = p[i];
-		};
+			}
+		}
 
 		jComboBoxAlpha1.setSelectedIndex(alpha[0]);
 		jComboBoxAlpha2.setSelectedIndex(alpha[1]);
@@ -291,12 +295,13 @@ public class FramePalDialog extends JDialog {
 			jComboBoxColor1.setBounds(new Rectangle(70, 10, 61, 16));
 			jComboBoxColor1.setEditable(false);
 			jComboBoxColor1.setToolTipText("Set palette index of frame color 1");
-			jComboBoxColor1.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jComboBoxColor1.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					if (isReady) {
 						int idx = ToolBox.getInt(jComboBoxColor1.getSelectedItem().toString());
-						if (idx >= 0 && idx < 16)
+						if (idx >= 0 && idx < 16) {
 							pal[0] = idx;
+						}
 					}
 				}
 			});
@@ -315,12 +320,13 @@ public class FramePalDialog extends JDialog {
 			jComboBoxColor2.setBounds(new Rectangle(70, 35, 61, 16));
 			jComboBoxColor2.setEditable(false);
 			jComboBoxColor2.setToolTipText("Set palette index of frame color 2");
-			jComboBoxColor2.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jComboBoxColor2.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					if (isReady) {
 						int idx = ToolBox.getInt(jComboBoxColor2.getSelectedItem().toString());
-						if (idx >= 0 && idx < 16)
+						if (idx >= 0 && idx < 16) {
 							pal[1] = idx;
+						}
 					}
 				}
 			});
@@ -339,12 +345,13 @@ public class FramePalDialog extends JDialog {
 			jComboBoxColor3.setBounds(new Rectangle(70, 60, 61, 16));
 			jComboBoxColor3.setEditable(false);
 			jComboBoxColor3.setToolTipText("Set palette index of frame color 3");
-			jComboBoxColor3.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jComboBoxColor3.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					if (isReady) {
 						int idx = ToolBox.getInt(jComboBoxColor3.getSelectedItem().toString());
-						if (idx >= 0 && idx < 16)
+						if (idx >= 0 && idx < 16) {
 							pal[2] = idx;
+						}
 					}
 				}
 			});
@@ -363,12 +370,13 @@ public class FramePalDialog extends JDialog {
 			jComboBoxColor4.setBounds(new Rectangle(70, 85, 61, 16));
 			jComboBoxColor4.setEditable(false);
 			jComboBoxColor4.setToolTipText("Set palette index of frame color 4");
-			jComboBoxColor4.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jComboBoxColor4.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					if (isReady) {
 						int idx = ToolBox.getInt(jComboBoxColor4.getSelectedItem().toString());
-						if (idx >= 0 && idx < 16)
+						if (idx >= 0 && idx < 16) {
 							pal[3] = idx;
+						}
 					}
 				}
 			});
@@ -387,12 +395,13 @@ public class FramePalDialog extends JDialog {
 			jComboBoxAlpha1.setBounds(new Rectangle(215, 10, 56, 16));
 			jComboBoxAlpha1.setEditable(false);
 			jComboBoxAlpha1.setToolTipText("Set alpha value of frame color 1");
-			jComboBoxAlpha1.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jComboBoxAlpha1.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					if (isReady) {
 						int idx = ToolBox.getInt(jComboBoxAlpha1.getSelectedItem().toString());
-						if (idx >= 0 && idx < 16)
+						if (idx >= 0 && idx < 16) {
 							alpha[0] = idx;
+						}
 					}
 				}
 			});
@@ -411,12 +420,13 @@ public class FramePalDialog extends JDialog {
 			jComboBoxAlpha2.setBounds(new Rectangle(215, 35, 56, 16));
 			jComboBoxAlpha2.setEditable(false);
 			jComboBoxAlpha2.setToolTipText("Set alpha value of frame color 2");
-			jComboBoxAlpha2.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jComboBoxAlpha2.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					if (isReady) {
 						int idx = ToolBox.getInt(jComboBoxAlpha2.getSelectedItem().toString());
-						if (idx >= 0 && idx < 16)
+						if (idx >= 0 && idx < 16) {
 							alpha[1] = idx;
+						}
 					}
 				}
 			});
@@ -435,12 +445,13 @@ public class FramePalDialog extends JDialog {
 			jComboBoxAlpha3.setBounds(new Rectangle(215, 60, 56, 16));
 			jComboBoxAlpha3.setEditable(false);
 			jComboBoxAlpha3.setToolTipText("Set alpha value of frame color 3");
-			jComboBoxAlpha3.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jComboBoxAlpha3.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					if (isReady) {
 						int idx = ToolBox.getInt(jComboBoxAlpha3.getSelectedItem().toString());
-						if (idx >= 0 && idx < 16)
+						if (idx >= 0 && idx < 16) {
 							alpha[2] = idx;
+						}
 					}
 				}
 			});
@@ -459,12 +470,13 @@ public class FramePalDialog extends JDialog {
 			jComboBoxAlpha4.setBounds(new Rectangle(215, 85, 56, 16));
 			jComboBoxAlpha4.setEditable(false);
 			jComboBoxAlpha4.setToolTipText("Set alpha value of frame color 4");
-			jComboBoxAlpha4.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jComboBoxAlpha4.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					if (isReady) {
 						int idx = ToolBox.getInt(jComboBoxAlpha4.getSelectedItem().toString());
-						if (idx >= 0 && idx < 16)
+						if (idx >= 0 && idx < 16) {
 							alpha[3] = idx;
+						}
 					}
 				}
 			});
@@ -485,15 +497,17 @@ public class FramePalDialog extends JDialog {
 			jButtonOk.setText("Ok");
 			jButtonOk.setToolTipText("Use current settings and return");
 			jButtonOk.setMnemonic('o');
-			jButtonOk.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jButtonOk.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					int a[] = Core.getFrameAlpha(index);
 					int p[] = Core.getFramePal(index);
 					for (int i= 0; i<4; i++) {
-						if (a != null)
+						if (a != null) {
 							a[i] = alpha[i];
-						if (p != null)
+						}
+						if (p != null) {
 							p[i] = pal[i];
+						}
 					}
 					dispose();
 				}
@@ -515,8 +529,8 @@ public class FramePalDialog extends JDialog {
 			jButtonCancel.setText("Cancel");
 			jButtonCancel.setToolTipText("Lose changes and return");
 			jButtonCancel.setMnemonic('c');
-			jButtonCancel.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jButtonCancel.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					dispose();
 				}
 			});
@@ -536,16 +550,18 @@ public class FramePalDialog extends JDialog {
 			jButtonSetAll.setText("Set All");
 			jButtonSetAll.setToolTipText("Apply these settings for whole stream and return");
 			jButtonSetAll.setMnemonic('s');
-			jButtonSetAll.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jButtonSetAll.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					for (int j=0; j<Core.getNumFrames(); j++) {
 						int a[] = Core.getFrameAlpha(j);
 						int p[] = Core.getFramePal(j);
 						for (int i= 0; i<4; i++) {
-							if (a != null)
+							if (a != null) {
 								a[i] = alpha[i];
-							if (p != null)
+							}
+							if (p != null) {
 								p[i] = pal[i];
+							}
 						}
 					}
 					dispose();
@@ -575,18 +591,20 @@ public class FramePalDialog extends JDialog {
 			jButtonResetAll.setText("Reset All");
 			jButtonResetAll.setToolTipText("Revert to original frame palettes for whole stream and return");
 			jButtonResetAll.setMnemonic('a');
-			jButtonResetAll.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
-					for (int j=0; j<Core.getNumFrames(); j++) {
+			jButtonResetAll.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					for (int j=0; j < Core.getNumFrames(); j++) {
 						int ao[] = Core.getOriginalFrameAlpha(j);
 						int po[] = Core.getOriginalFramePal(j);
 						int a[] = Core.getFrameAlpha(j);
 						int p[] = Core.getFramePal(j);
 						for (int i= 0; i<4; i++) {
-							if (a != null && ao != null)
+							if (a != null && ao != null) {
 								a[i] = ao[i];
-							if (p != null && po != null)
+							}
+							if (p != null && po != null) {
 								p[i] = po[i];
+							}
 						}
 					}
 					dispose();
@@ -608,17 +626,19 @@ public class FramePalDialog extends JDialog {
 			jButtonReset.setText("Reset");
 			jButtonReset.setToolTipText("Revert to original frame palette");
 			jButtonReset.setMnemonic('r');
-			jButtonReset.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jButtonReset.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					int ao[] = Core.getOriginalFrameAlpha(index);
 					int po[] = Core.getOriginalFramePal(index);
 					int a[] = Core.getFrameAlpha(index);
 					int p[] = Core.getFramePal(index);
 					for (int i= 0; i<4; i++) {
-						if (a != null && ao != null)
+						if (a != null && ao != null) {
 							a[i] = ao[i];
-						if (p != null && po != null)
+						}
+						if (p != null && po != null) {
 							p[i] = po[i];
+						}
 					}
 					setIndex(index);
 				}
@@ -626,5 +646,4 @@ public class FramePalDialog extends JDialog {
 		}
 		return jButtonReset;
 	}
-
-}  //  @jve:decl-index=0:visual-constraint="10,10"
+}

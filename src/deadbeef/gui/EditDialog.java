@@ -3,15 +3,21 @@ package deadbeef.gui;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Frame;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Point;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JDialog;
@@ -21,18 +27,18 @@ import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.JTextField;
 import javax.swing.UIManager;
+import javax.swing.border.TitledBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
 import deadbeef.bitmap.ErasePatch;
 import deadbeef.core.Core;
 import deadbeef.core.CoreException;
+import deadbeef.core.Resolution;
 import deadbeef.supstream.SubPicture;
 import deadbeef.tools.ToolBox;
-
-import javax.swing.BorderFactory;
-import javax.swing.border.TitledBorder;
-import java.awt.Font;
 
 /*
  * Copyright 2009 Volker Oth (0xdeadbeef)
@@ -59,83 +65,83 @@ public class EditDialog extends JDialog implements SelectListener {
 
 	private static final long serialVersionUID = 1L;
 
-	private JPanel jContentPane = null;
+	private JPanel jContentPane;
 
-	private JPanel jPanelUp = null;
+	private JPanel jPanelUp;
 
-	private JPanel jPanelLayout = null;
+	private JPanel jPanelLayout;
 
-	private JPanel jPanelOffsets = null;
+	private JPanel jPanelOffsets;
 
-	private JPanel jPanelTimes = null;
+	private JPanel jPanelTimes;
 
-	private JPanel jPanelButtons = null;
+	private JPanel jPanelButtons;
 
-	private JPanel jPanelCheck = null;
+	private JPanel jPanelCheck;
 
-	private JLabel jLabelInfo = null;
+	private JLabel jLabelInfo;
 
-	private JButton jButtonPrev = null;
+	private JButton jButtonPrev;
 
-	private JButton jButtonNext = null;
+	private JButton jButtonNext;
 
-	private JButton jButtonStoreNext = null;
+	private JButton jButtonStoreNext;
 
-	private JButton jButtonStorePrev = null;
+	private JButton jButtonStorePrev;
 
-	private EditPane jPanelPreview = null;
+	private EditPane jPanelPreview;
 
-	private JSlider jSliderVertical = null;
+	private JSlider jSliderVertical;
 
-	private JSlider jSliderHorizontal = null;
+	private JSlider jSliderHorizontal;
 
-	private JLabel jLabelX = null;
+	private JLabel jLabelX;
 
-	private JLabel jLabelY = null;
+	private JLabel jLabelY;
 
-	private JButton jButtonCancel = null;
+	private JButton jButtonCancel;
 
-	private JButton jButtonOk = null;
+	private JButton jButtonOk;
 
-	private JTextField jTextFieldX = null;
+	private JTextField jTextFieldX;
 
-	private JTextField jTextFieldY = null;
+	private JTextField jTextFieldY;
 
-	private JButton jButtonCenter = null;
+	private JButton jButtonCenter;
 
-	private JLabel jLabelStart = null;
+	private JLabel jLabelStart;
 
-	private JLabel jLabelEnd = null;
+	private JLabel jLabelEnd;
 
-	private JLabel jLabelDuration = null;
+	private JLabel jLabelDuration;
 
-	private JTextField jTextFieldStart = null;
+	private JTextField jTextFieldStart;
 
-	private JTextField jTextFieldEnd = null;
+	private JTextField jTextFieldEnd;
 
-	private JTextField jTextFieldDuration = null;
+	private JTextField jTextFieldDuration;
 
-	private JButton jButtonMin = null;
+	private JButton jButtonMin;
 
-	private JButton jButtonMax = null;
+	private JButton jButtonMax;
 
-	private JButton jButtonTop = null;
+	private JButton jButtonTop;
 
-	private JButton jButtonBottom = null;
+	private JButton jButtonBottom;
 
-	private JButton jButtonStore = null;
+	private JButton jButtonStore;
 
-	private JCheckBox jCheckBoxForced = null;
+	private JCheckBox jCheckBoxForced;
 
-	private JCheckBox jCheckBoxExclude = null;
+	private JCheckBox jCheckBoxExclude;
 
-	private JPanel jPanelPatches = null;
+	private JPanel jPanelPatches;
 
-	private JButton jButtonAddPatch = null;
+	private JButton jButtonAddPatch;
 
-	private JButton jButtonUndoPatch = null;
+	private JButton jButtonUndoPatch;
 
-	private JButton jButtonUndoAllPatches = null;
+	private JButton jButtonUndoAllPatches;
 
 
 	/** width of preview pane */
@@ -144,16 +150,16 @@ public class EditDialog extends JDialog implements SelectListener {
 	private static int miniHeight = 432;
 
 	/** background color for errors */
-	private final Color errBgnd = new Color(0xffe1acac);
+	private Color errBgnd = new Color(0xffe1acac);
 	/** background color for warnings */
-	private final Color warnBgnd = new Color(0xffffffc0);
+	private Color warnBgnd = new Color(0xffffffc0);
 	/** background color for ok */
-	private final Color okBgnd = UIManager.getColor("TextField.background");
+	private Color okBgnd = UIManager.getColor("TextField.background");
 
 	/** image of subpicture to display in preview pane */
-	private BufferedImage image = null;
+	private BufferedImage image;
 	/** semaphore to disable slider events when setting the slider values */
-	private boolean enableSliders = false;
+	private boolean enableSliders;
 	/** current subtitle index */
 	private int index;
 	/** current subpicture */
@@ -165,9 +171,9 @@ public class EditDialog extends JDialog implements SelectListener {
 	/** time of one (target) frame in 90kHz resolution */
 	private int frameTime;
 	/** dirty flag that tells if any value might have been changed */
-	private volatile boolean edited = false;
+	private volatile boolean edited;
 	/** semaphore to disable actions while changing component properties */
-	private volatile boolean isReady = false;
+	private volatile boolean isReady;
 
 
 	/**
@@ -178,7 +184,7 @@ public class EditDialog extends JDialog implements SelectListener {
 	public EditDialog(Frame owner, boolean modal) {
 		super(owner, modal);
 
-		Core.Resolution r = Core.getOutputResolution();
+		Resolution r = Core.getOutputResolution();
 		switch (r) {
 			case PAL:
 			case NTSC:
@@ -194,7 +200,6 @@ public class EditDialog extends JDialog implements SelectListener {
 				break;
 		}
 
-		// TODO Auto-generated constructor stub
 		initialize();
 		// center dialog
 		Point p = owner.getLocation();
@@ -213,9 +218,9 @@ public class EditDialog extends JDialog implements SelectListener {
 	private void initialize() {
 		this.setSize(miniWidth+36, miniHeight+280);
 		this.setContentPane(getJContentPane());
-		this.addWindowListener(new java.awt.event.WindowAdapter() {
+		this.addWindowListener(new WindowAdapter() {
 			@Override
-			public void windowClosing(java.awt.event.WindowEvent e) {
+			public void windowClosing(WindowEvent e) {
 				dispose();
 			}
 		});
@@ -225,7 +230,7 @@ public class EditDialog extends JDialog implements SelectListener {
 	 * sets dirty flag and enables/disables the store button accordingly
 	 * @param e true: was edited
 	 */
-	private void setEdited(final boolean e) {
+	private void setEdited(boolean e) {
 		edited = e;
 		jButtonStore.setEnabled(e);
 	}
@@ -628,8 +633,8 @@ public class EditDialog extends JDialog implements SelectListener {
 			jButtonPrev.setText("  <  ");
 			jButtonPrev.setMnemonic(KeyEvent.VK_LEFT);
 			jButtonPrev.setToolTipText("Lose changes and skip to previous frame");
-			jButtonPrev.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jButtonPrev.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					if (index > 0) {
 						setIndex(index-1);
 						setEdited(false);
@@ -651,8 +656,8 @@ public class EditDialog extends JDialog implements SelectListener {
 			jButtonNext.setText("  >  ");
 			jButtonNext.setMnemonic(KeyEvent.VK_RIGHT);
 			jButtonNext.setToolTipText("Lose changes and skip to next frame");
-			jButtonNext.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jButtonNext.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					if (index < Core.getNumFrames()-1) {
 						setIndex(index+1);
 						setEdited(false);
@@ -691,21 +696,22 @@ public class EditDialog extends JDialog implements SelectListener {
 			jSliderVertical = new JSlider();
 			jSliderVertical.setOrientation(JSlider.VERTICAL);
 			jSliderVertical.setToolTipText("Move subtitle vertically");
-			jSliderVertical.addChangeListener(new javax.swing.event.ChangeListener() {
-				public void stateChanged(javax.swing.event.ChangeEvent e) {
+			jSliderVertical.addChangeListener(new ChangeListener() {
+				public void stateChanged(ChangeEvent e) {
 					if (enableSliders) {
 						int y = subPic.height-jSliderVertical.getValue();
 
-						if (y < Core.getCropOfsY())
+						if (y < Core.getCropOfsY()) {
 							y = Core.getCropOfsY();
-						else if (y > subPic.height - subPic.getImageHeight() - Core.getCropOfsY())
+						} else if (y > subPic.height - subPic.getImageHeight() - Core.getCropOfsY()) {
 							y = subPic.height - subPic.getImageHeight() - Core.getCropOfsY();
+						}
 
 						if (y != subPic.getOfsY()) {
 							subPic.setOfsY(y);
 							jTextFieldY.setText(""+subPic.getOfsY());
 							jPanelPreview.setOffsets(subPic.getOfsX(), subPic.getOfsY());
-							jPanelPreview.setScreenRatio(21.0/9);
+							jPanelPreview.setAspectRatio(21.0/9);
 							jPanelPreview.repaint();
 							setEdited(true);
 						}
@@ -725,15 +731,16 @@ public class EditDialog extends JDialog implements SelectListener {
 		if (jSliderHorizontal == null) {
 			jSliderHorizontal = new JSlider();
 			jSliderHorizontal.setToolTipText("Move subtitle horizontally");
-			jSliderHorizontal.addChangeListener(new javax.swing.event.ChangeListener() {
-				public void stateChanged(javax.swing.event.ChangeEvent e) {
+			jSliderHorizontal.addChangeListener(new ChangeListener() {
+				public void stateChanged(ChangeEvent e) {
 					if (enableSliders) {
 						int x = jSliderHorizontal.getValue();
 
-						if (x<0)
+						if (x < 0) {
 							x = 0;
-						else if (x > subPic.width - subPic.getImageWidth())
+						} else if (x > subPic.width - subPic.getImageWidth()) {
 							x = subPic.width - subPic.getImageWidth();
+						}
 
 						if (x != subPic.getOfsX()) {
 							subPic.setOfsX(x);
@@ -760,8 +767,8 @@ public class EditDialog extends JDialog implements SelectListener {
 			jButtonCancel.setText("Cancel");
 			jButtonCancel.setMnemonic('c');
 			jButtonCancel.setToolTipText("Lose changes and return");
-			jButtonCancel.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jButtonCancel.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					dispose();
 				}
 			});
@@ -780,10 +787,11 @@ public class EditDialog extends JDialog implements SelectListener {
 			jButtonOk.setText("  Ok  ");
 			jButtonOk.setMnemonic('o');
 			jButtonOk.setToolTipText("Save changes and return");
-			jButtonOk.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
-					if (edited)
+			jButtonOk.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					if (edited) {
 						store();
+					}
 					dispose();
 				}
 			});
@@ -802,16 +810,17 @@ public class EditDialog extends JDialog implements SelectListener {
 			jTextFieldX.setPreferredSize(new Dimension(80, 20));
 			jTextFieldX.setMinimumSize(new Dimension(80, 20));
 			jTextFieldX.setToolTipText("Set X coordinate of upper left corner of subtitle");
-			jTextFieldX.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jTextFieldX.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					if (isReady) {
 						int x = ToolBox.getInt(jTextFieldX.getText());
-						if (x==-1)
+						if (x == -1) {
 							x = subPic.getOfsX(); // invalid value -> keep old one
-						else if (x<0)
+						} else if (x < 0) {
 							x = 0;
-						else if (x > subPic.width - subPic.getImageWidth())
+						} else if (x > subPic.width - subPic.getImageWidth()) {
 							x = subPic.width - subPic.getImageWidth();
+						}
 
 						if (x != subPic.getOfsX() ) {
 							enableSliders = false;
@@ -831,9 +840,9 @@ public class EditDialog extends JDialog implements SelectListener {
 				private void check(DocumentEvent e) {
 					if (isReady) {
 						int x = ToolBox.getInt(jTextFieldX.getText());
-						if (x < 0 || x > subPic.width - subPic.getImageWidth())
+						if (x < 0 || x > subPic.width - subPic.getImageWidth()) {
 							jTextFieldX.setBackground(errBgnd);
-						else {
+						} else {
 							if (x != subPic.getOfsX() ) {
 								enableSliders = false;
 								subPic.setOfsX(x);
@@ -877,16 +886,17 @@ public class EditDialog extends JDialog implements SelectListener {
 			jTextFieldY.setPreferredSize(new Dimension(80, 20));
 			jTextFieldY.setMinimumSize(new Dimension(80, 20));
 			jTextFieldY.setToolTipText("Set Y coordinate of upper left corner of subtitle");
-			jTextFieldY.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jTextFieldY.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					int y = ToolBox.getInt(jTextFieldY.getText());
-					if (y==-1)
+					if (y == -1) {
 						y = subPic.getOfsY(); // invalid value -> keep old one
-					else if (y < Core.getCropOfsY())
+					} else if (y < Core.getCropOfsY()) {
 						y = Core.getCropOfsY();
-					else if (y > subPic.height - subPic.getImageHeight() - Core.getCropOfsY())
+					} else if (y > subPic.height - subPic.getImageHeight() - Core.getCropOfsY()) {
 						y = subPic.height - subPic.getImageHeight() - Core.getCropOfsY();
-					if ( y != subPic.getOfsY() ) {
+					}
+					if (y != subPic.getOfsY()) {
 						enableSliders = false;
 						subPic.setOfsY(y);
 						jSliderVertical.setValue(subPic.height-subPic.getOfsY());
@@ -903,10 +913,10 @@ public class EditDialog extends JDialog implements SelectListener {
 				private void check(DocumentEvent e) {
 					if (isReady) {
 						int y = ToolBox.getInt(jTextFieldY.getText());
-						if (y < Core.getCropOfsY() || y > subPic.height - subPic.getImageHeight() - Core.getCropOfsY())
+						if (y < Core.getCropOfsY() || y > subPic.height - subPic.getImageHeight() - Core.getCropOfsY()) {
 							jTextFieldY.setBackground(errBgnd);
-						else {
-							if ( y != subPic.getOfsY() ) {
+						} else {
+							if (y != subPic.getOfsY()) {
 								enableSliders = false;
 								subPic.setOfsY(y);
 								jSliderVertical.setValue(subPic.height-subPic.getOfsY());
@@ -949,8 +959,8 @@ public class EditDialog extends JDialog implements SelectListener {
 			jButtonCenter.setText("Center");
 			jButtonCenter.setMnemonic('c');
 			jButtonCenter.setToolTipText("Center subpicture horizontally");
-			jButtonCenter.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jButtonCenter.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					subPic.setOfsX((subPic.width-subPic.getImageWidth())/2);
 					enableSliders = false;
 					jSliderHorizontal.setValue(subPic.getOfsX());
@@ -976,15 +986,17 @@ public class EditDialog extends JDialog implements SelectListener {
 			jTextFieldStart.setPreferredSize(new Dimension(80, 20));
 			jTextFieldStart.setMinimumSize(new Dimension(80, 20));
 			jTextFieldStart.setToolTipText("Set start time of subtitle");
-			jTextFieldStart.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jTextFieldStart.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					if (isReady) {
 						isReady = false;
 						long t = Core.syncTimePTS(ToolBox.timeStrToPTS(jTextFieldStart.getText()), Core.getFPSTrg());
-						if (t >= subPic.endTime)
+						if (t >= subPic.endTime) {
 							t = subPic.endTime-frameTime;
-						if (subPicPrev != null && subPicPrev.endTime > t)
+						}
+						if (subPicPrev != null && subPicPrev.endTime > t) {
 							t = subPicPrev.endTime+frameTime;
+						}
 						if (t >= 0) {
 							subPic.startTime = Core.syncTimePTS(t, Core.getFPSTrg());
 							jTextFieldDuration.setText(ToolBox.formatDouble((subPic.endTime-subPic.startTime)/90.0));
@@ -1001,15 +1013,16 @@ public class EditDialog extends JDialog implements SelectListener {
 					if (isReady) {
 						isReady = false;
 						long t = Core.syncTimePTS(ToolBox.timeStrToPTS(jTextFieldStart.getText()), Core.getFPSTrg());
-						if (t < 0 || t >= subPic.endTime || subPicPrev != null && subPicPrev.endTime > t)
+						if (t < 0 || t >= subPic.endTime || subPicPrev != null && subPicPrev.endTime > t) {
 							jTextFieldStart.setBackground(errBgnd);
-						else {
+						} else {
 							subPic.startTime = t;
 							jTextFieldDuration.setText(ToolBox.formatDouble((subPic.endTime-subPic.startTime)/90.0));
-							if (!jTextFieldStart.getText().equalsIgnoreCase(ToolBox.ptsToTimeStr(subPic.startTime)))
+							if (!jTextFieldStart.getText().equalsIgnoreCase(ToolBox.ptsToTimeStr(subPic.startTime))) {
 								jTextFieldStart.setBackground(warnBgnd);
-							else
+							} else {
 								jTextFieldStart.setBackground(okBgnd);
+							}
 							setEdited(true);
 						}
 						isReady = true;
@@ -1044,16 +1057,18 @@ public class EditDialog extends JDialog implements SelectListener {
 			jTextFieldEnd.setPreferredSize(new Dimension(80, 20));
 			jTextFieldEnd.setMinimumSize(new Dimension(80, 20));
 			jTextFieldEnd.setToolTipText("Set end time of subtitle");
-			jTextFieldEnd.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jTextFieldEnd.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					if (isReady) {
 						isReady = false;
 						long t = Core.syncTimePTS(ToolBox.timeStrToPTS(jTextFieldEnd.getText()), Core.getFPSTrg());
-						if (t <= subPic.startTime)
-							t = subPic.startTime+frameTime;
+						if (t <= subPic.startTime) {
+							t = subPic.startTime + frameTime;
+						}
 
-						if (subPicNext != null && subPicNext.startTime < t)
+						if (subPicNext != null && subPicNext.startTime < t) {
 							t = subPicNext.startTime;
+						}
 						if (t >= 0) {
 							subPic.endTime = Core.syncTimePTS(t, Core.getFPSTrg());
 							jTextFieldDuration.setText(ToolBox.formatDouble((subPic.endTime-subPic.startTime)/90.0));
@@ -1070,15 +1085,16 @@ public class EditDialog extends JDialog implements SelectListener {
 					if (isReady) {
 						isReady = false;
 						long t = Core.syncTimePTS(ToolBox.timeStrToPTS(jTextFieldEnd.getText()), Core.getFPSTrg());
-						if (t < 0 || t <= subPic.startTime || subPicNext != null && subPicNext.startTime < t)
+						if (t < 0 || t <= subPic.startTime || subPicNext != null && subPicNext.startTime < t) {
 							jTextFieldEnd.setBackground(errBgnd);
-						else {
+						} else {
 							subPic.endTime = t;
 							jTextFieldDuration.setText(ToolBox.formatDouble((subPic.endTime-subPic.startTime)/90.0));
-							if (!jTextFieldEnd.getText().equalsIgnoreCase(ToolBox.ptsToTimeStr(subPic.endTime)))
+							if (!jTextFieldEnd.getText().equalsIgnoreCase(ToolBox.ptsToTimeStr(subPic.endTime))) {
 								jTextFieldEnd.setBackground(warnBgnd);
-							else
+							} else {
 								jTextFieldEnd.setBackground(okBgnd);
+							}
 							setEdited(true);
 						}
 						isReady = true;
@@ -1113,17 +1129,19 @@ public class EditDialog extends JDialog implements SelectListener {
 			jTextFieldDuration.setPreferredSize(new Dimension(80, 20));
 			jTextFieldDuration.setMinimumSize(new Dimension(80, 20));
 			jTextFieldDuration.setToolTipText("Set display duration of subtitle in milliseconds");
-			jTextFieldDuration.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jTextFieldDuration.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					if (isReady) {
 						isReady = false;
 						long t = (long)(ToolBox.getDouble(jTextFieldDuration.getText())*90);
-						if (t >= 0 && t < frameTime)
+						if (t >= 0 && t < frameTime) {
 							t = frameTime;
+						}
 						if (t > 0) {
 							t += subPic.startTime;
-							if (subPicNext != null && subPicNext.startTime < t)
+							if (subPicNext != null && subPicNext.startTime < t) {
 								t = subPicNext.startTime;
+							}
 							subPic.endTime = Core.syncTimePTS(t, Core.getFPSTrg());
 							jTextFieldEnd.setText(ToolBox.ptsToTimeStr(subPic.endTime));
 							setEdited(true);
@@ -1139,19 +1157,21 @@ public class EditDialog extends JDialog implements SelectListener {
 					if (isReady) {
 						isReady = false;
 						long t = (long)(ToolBox.getDouble(jTextFieldDuration.getText())*90);
-						if (t < frameTime)
+						if (t < frameTime) {
 							jTextFieldDuration.setBackground(errBgnd);
-						else {
+						} else {
 							t += subPic.startTime;
-							if (subPicNext != null && subPicNext.startTime < t)
+							if (subPicNext != null && subPicNext.startTime < t) {
 								t = subPicNext.startTime;
+							}
 							subPic.endTime = Core.syncTimePTS(t, Core.getFPSTrg());
 							jTextFieldEnd.setText(ToolBox.ptsToTimeStr(subPic.endTime));
 							setEdited(true);
-							if (!jTextFieldDuration.getText().equalsIgnoreCase(ToolBox.formatDouble((subPic.endTime-subPic.startTime)/90.0)))
+							if (!jTextFieldDuration.getText().equalsIgnoreCase(ToolBox.formatDouble((subPic.endTime-subPic.startTime)/90.0))) {
 								jTextFieldDuration.setBackground(warnBgnd);
-							else
+							} else {
 								jTextFieldDuration.setBackground(okBgnd);
+							}
 							setEdited(true);
 						}
 						isReady = true;
@@ -1186,13 +1206,14 @@ public class EditDialog extends JDialog implements SelectListener {
 			jButtonMin.setText("   Min   ");
 			jButtonMin.setMnemonic('n');
 			jButtonMin.setToolTipText("Set minimum duration");
-			jButtonMin.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jButtonMin.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					long t = Core.getMinTimePTS();
 					if (t >= 0) {
 						t += subPic.startTime;
-						if (subPicNext != null && subPicNext.startTime < t)
+						if (subPicNext != null && subPicNext.startTime < t) {
 							t = subPicNext.startTime;
+						}
 						subPic.endTime = Core.syncTimePTS(t, Core.getFPSTrg());
 						jTextFieldEnd.setText(ToolBox.ptsToTimeStr(subPic.endTime));
 						setEdited(true);
@@ -1215,13 +1236,14 @@ public class EditDialog extends JDialog implements SelectListener {
 			jButtonMax.setText("   Max  ");
 			jButtonMax.setMnemonic('m');
 			jButtonMax.setToolTipText("Set maximum duration");
-			jButtonMax.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jButtonMax.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					long t;
-					if (subPicNext != null)
+					if (subPicNext != null) {
 						t = subPicNext.startTime;
-					else
+					} else {
 						t = subPic.endTime + 10000*90; // 10 seconds
+					}
 					subPic.endTime = Core.syncTimePTS(t, Core.getFPSTrg());
 					jTextFieldEnd.setText(ToolBox.ptsToTimeStr(subPic.endTime));
 					jTextFieldDuration.setText(ToolBox.formatDouble((subPic.endTime-subPic.startTime)/90.0));
@@ -1243,14 +1265,16 @@ public class EditDialog extends JDialog implements SelectListener {
 			jButtonTop.setText("   Top  ");
 			jButtonTop.setMnemonic('t');
 			jButtonTop.setToolTipText("Move to upper cinemascope bar");
-			jButtonTop.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jButtonTop.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					int cineH = subPic.height*5/42;
 					int y = cineH-subPic.getImageHeight();
-					if (y < 10)
+					if (y < 10) {
 						y = 10;
-					if ( y < Core.getCropOfsY())
+					}
+					if (y < Core.getCropOfsY()) {
 						y = Core.getCropOfsY();
+					}
 					enableSliders = false;
 					subPic.setOfsY(y);
 					jSliderVertical.setValue(subPic.height-subPic.getOfsY());
@@ -1276,12 +1300,13 @@ public class EditDialog extends JDialog implements SelectListener {
 			jButtonBottom.setText("Bottom");
 			jButtonBottom.setMnemonic('b');
 			jButtonBottom.setToolTipText("Move to lower cinemascope bar");
-			jButtonBottom.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jButtonBottom.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					int cineH = subPic.height*5/42;
 					int y = subPic.height-cineH;
-					if (y+subPic.getImageHeight() > subPic.height - Core.getCropOfsY())
+					if (y+subPic.getImageHeight() > subPic.height - Core.getCropOfsY()) {
 						y = subPic.height - subPic.getImageHeight() - 10;
+					}
 					enableSliders = false;
 					subPic.setOfsY(y);
 					jSliderVertical.setValue(subPic.height-subPic.getOfsY());
@@ -1300,7 +1325,7 @@ public class EditDialog extends JDialog implements SelectListener {
 	 * error handler
 	 * @param s error string to display
 	 */
-	public void error (final String s) {
+	public void error (String s) {
 		Core.printErr(s);
 		JOptionPane.showMessageDialog(this,s,"Error!", JOptionPane.WARNING_MESSAGE);
 	}
@@ -1329,18 +1354,20 @@ public class EditDialog extends JDialog implements SelectListener {
 	 * set current subtitle index, update all components
 	 * @param idx subtitle index
 	 */
-	public void setIndex(final int idx) {
+	public void setIndex(int idx) {
 		isReady = false;
 		index = idx;
 		// get prev and next
-		if (idx > 0)
+		if (idx > 0) {
 			subPicPrev = Core.getSubPictureTrg(idx-1);
-		else
+		} else {
 			subPicPrev = null;
-		if (idx < Core.getNumFrames()-1)
+		}
+		if (idx < Core.getNumFrames()-1) {
 			subPicNext = Core.getSubPictureTrg(idx+1);
-		else
+		} else {
 			subPicNext = null;
+		}
 
 		// update components
 		try {
@@ -1401,8 +1428,8 @@ public class EditDialog extends JDialog implements SelectListener {
 			jButtonStore.setMnemonic('s');
 			jButtonStore.setEnabled(false);
 			jButtonStore.setToolTipText("Save changes and continue editing");
-			jButtonStore.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jButtonStore.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					store();
 					setEdited(false);
 				}
@@ -1422,8 +1449,8 @@ public class EditDialog extends JDialog implements SelectListener {
 			jCheckBoxForced.setText("Forced Caption");
 			jCheckBoxForced.setMnemonic('f');
 			jCheckBoxForced.setToolTipText("Force display of this subtitle");
-			jCheckBoxForced.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jCheckBoxForced.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					subPic.isforced = jCheckBoxForced.isSelected();
 					setEdited(true);
 				}
@@ -1443,8 +1470,8 @@ public class EditDialog extends JDialog implements SelectListener {
 			jCheckBoxExclude.setText("Exclude from export");
 			jCheckBoxExclude.setMnemonic('x');
 			jCheckBoxExclude.setToolTipText("Exclude this subtitle from export");
-			jCheckBoxExclude.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jCheckBoxExclude.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					subPic.exclude = jCheckBoxExclude.isSelected();
 					jPanelPreview.setExcluded(subPic.exclude);
 					jPanelPreview.repaint();
@@ -1501,12 +1528,13 @@ public class EditDialog extends JDialog implements SelectListener {
 			jButtonAddPatch.setMnemonic('e');
 			jButtonAddPatch.setToolTipText("Add erase patch to make the selected area transparent");
 			jButtonAddPatch.setEnabled(false);
-			jButtonAddPatch.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jButtonAddPatch.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					int sel[] = jPanelPreview.getSelection();
 					if (sel != null) {
-						if (subPic.erasePatch == null)
+						if (subPic.erasePatch == null) {
 							subPic.erasePatch = new ArrayList<ErasePatch>();
+						}
 						ErasePatch ep = new ErasePatch(sel[0], sel[1], sel[2]-sel[0]+1, sel[3]-sel[1]+1);
 						subPic.erasePatch.add(ep);
 
@@ -1539,8 +1567,8 @@ public class EditDialog extends JDialog implements SelectListener {
 			jButtonUndoPatch.setMnemonic('u');
 			jButtonUndoPatch.setToolTipText("Remove one erase patch from the stack (undo one delete step)");
 			jButtonUndoPatch.setEnabled(false);
-			jButtonUndoPatch.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jButtonUndoPatch.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					if (subPic.erasePatch != null && subPic.erasePatch.size() > 0) {
 						subPic.erasePatch.remove(subPic.erasePatch.size()-1);
 						if (subPic.erasePatch.size() == 0) {
@@ -1571,8 +1599,8 @@ public class EditDialog extends JDialog implements SelectListener {
 			jButtonUndoAllPatches.setMnemonic('a');
 			jButtonUndoAllPatches.setEnabled(false);
 			jButtonUndoAllPatches.setToolTipText("Remove all erase patches from the stack (undo all delete steps)");
-			jButtonUndoAllPatches.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jButtonUndoAllPatches.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					if (subPic.erasePatch != null) {
 						subPic.erasePatch.clear();
 						subPic.erasePatch = null;
@@ -1599,10 +1627,11 @@ public class EditDialog extends JDialog implements SelectListener {
 			jButtonStoreNext = new JButton();
 			jButtonStoreNext.setText("<html><font color=\"red\"><b>&nbsp;&gt;&nbsp;</b></font></html>");
 			jButtonStoreNext.setToolTipText("Store changes and skip to next frame");
-			jButtonStoreNext.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
-					if (edited)
+			jButtonStoreNext.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					if (edited) {
 						store();
+					}
 					if (index < Core.getNumFrames()-1) {
 						setIndex(index+1);
 						setEdited(false);
@@ -1624,10 +1653,11 @@ public class EditDialog extends JDialog implements SelectListener {
 			jButtonStorePrev = new JButton();
 			jButtonStorePrev.setText("<html><font color=\"red\"><b>&nbsp;&lt;&nbsp;</b></font></html>");
 			jButtonStorePrev.setToolTipText("Store changes and skip to previous frame");
-			jButtonStorePrev.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
-					if (edited)
+			jButtonStorePrev.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					if (edited) {
 						store();
+					}
 					if (index > 0) {
 						setIndex(index-1);
 						setEdited(false);
@@ -1637,5 +1667,4 @@ public class EditDialog extends JDialog implements SelectListener {
 		}
 		return jButtonStorePrev;
 	}
-
 }

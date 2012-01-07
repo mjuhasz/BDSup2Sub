@@ -1,13 +1,19 @@
 package deadbeef.gui;
 
 
+import static deadbeef.core.Constants.*;
+
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 
@@ -20,10 +26,10 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
 
-import deadbeef.core.Core;
 import deadbeef.core.CoreException;
 import deadbeef.tools.Props;
 import deadbeef.tools.ToolBox;
@@ -50,20 +56,18 @@ import deadbeef.tools.ToolBox;
  * @author 0xdeadbeef
  */
 public class ColorDialog extends JDialog {
-	final static long serialVersionUID = 0x000000001;
+	private static final long serialVersionUID = 0x000000001;
 
-	private javax.swing.JPanel jContentPane = null;
-	private JLabel lblColor = null;
-	private JScrollPane jScrollPane = null;
-	private JList jList = null;
-	private JButton btnOk = null;
-	private JButton btnCancel = null;
-	private JButton btnDefault = null;
-	private JButton btnColor = null;
-	private JButton jButtonSave = null;
-	private JButton jButtonLoad = null;
-
-	/* custom created attributes */
+	private javax.swing.JPanel jContentPane;
+	private JLabel lblColor;
+	private JScrollPane jScrollPane;
+	private JList jList;
+	private JButton btnOk;
+	private JButton btnCancel;
+	private JButton btnDefault;
+	private JButton btnColor;
+	private JButton jButtonSave;
+	private JButton jButtonLoad;
 
 	/** image icons to preview color */
 	private ImageIcon cIcon[];
@@ -98,8 +102,9 @@ public class ColorDialog extends JDialog {
 	 */
 	private void changeColor(int idx) {
 		Color c = JColorChooser.showDialog( null, "Chose Input Color "+cName[idx], cColor[idx] );
-		if (c != null)
+		if (c != null) {
 			cColor[idx] = c;
+		}
 		paintIcon(cIcon[idx],  cColor[idx]);
 		jList.repaint();
 	}
@@ -128,8 +133,9 @@ public class ColorDialog extends JDialog {
 		jList.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				if (e.getClickCount() == 2)
+				if (e.getClickCount() == 2) {
 					changeColor(((JList) e.getSource()).locationToIndex(e.getPoint()));
+				}
 			}
 		});
 
@@ -167,9 +173,9 @@ public class ColorDialog extends JDialog {
 		this.setContentPane(getJContentPane());
 		this.setSize(372, 231);
 		this.setTitle("Choose Colors");
-		this.addWindowListener(new java.awt.event.WindowAdapter() {
+		this.addWindowListener(new WindowAdapter() {
 			@Override
-			public void windowClosing(java.awt.event.WindowEvent e) {
+			public void windowClosing(WindowEvent e) {
 				cColor = cColorDefault; // same as cancel
 			}
 		});
@@ -182,7 +188,7 @@ public class ColorDialog extends JDialog {
 	private javax.swing.JPanel getJContentPane() {
 		if(jContentPane == null) {
 			lblColor = new JLabel();
-			jContentPane = new javax.swing.JPanel();
+			jContentPane = new JPanel();
 			jContentPane.setLayout(null);
 			lblColor.setText("Choose Color");
 			lblColor.setBounds(15, 9, 73, 16);
@@ -221,8 +227,8 @@ public class ColorDialog extends JDialog {
 			btnOk.setText("OK");
 			btnOk.setToolTipText("Apply changes and return");
 			btnOk.setMnemonic('o');
-			btnOk.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			btnOk.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					canceled = false;
 					dispose();
 				}
@@ -242,8 +248,8 @@ public class ColorDialog extends JDialog {
 			btnCancel.setText("Cancel");
 			btnCancel.setToolTipText("Lose changes and return");
 			btnCancel.setMnemonic('c');
-			btnCancel.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			btnCancel.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					cColor = cColorDefault;
 					dispose();
 				}
@@ -263,9 +269,9 @@ public class ColorDialog extends JDialog {
 			btnDefault.setText("Restore default Colors");
 			btnDefault.setToolTipText("Revert to default colors");
 			btnDefault.setMnemonic('r');
-			btnDefault.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
-					for (int i=0; i<cName.length; i++) {
+			btnDefault.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					for (int i=0; i < cName.length; i++) {
 						cColor[i] = new Color(cColorDefault[i].getRGB());
 						paintIcon(cIcon[i],  cColor[i]);
 					}
@@ -281,9 +287,9 @@ public class ColorDialog extends JDialog {
 	 * @author 0xdeadbeef
 	 */
 	private class myListCellRenderer extends DefaultListCellRenderer {
-		final static long serialVersionUID = 0x000000001;
+		private static final long serialVersionUID = 0x000000001;
 		@Override
-		public Component getListCellRendererComponent( JList list, Object value, int index, boolean isSelected,  boolean cellHasFocus) {
+		public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected,  boolean cellHasFocus) {
 			Component retValue = super.getListCellRendererComponent( list, value, index, isSelected, cellHasFocus);
 			setText(cName[index]);
 			setIcon(cIcon[index]);
@@ -303,8 +309,8 @@ public class ColorDialog extends JDialog {
 			btnColor.setText("Change Color");
 			btnColor.setToolTipText("Edit the selected color");
 			btnColor.setMnemonic('h');
-			btnColor.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			btnColor.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					int idx = jList.getSelectedIndex();
 					changeColor(idx);
 				}
@@ -348,8 +354,8 @@ public class ColorDialog extends JDialog {
 			jButtonSave.setText("Save Palette");
 			jButtonSave.setToolTipText("Save the current palette settings in an INI file");
 			jButtonSave.setMnemonic('s');
-			jButtonSave.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jButtonSave.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					String[] ext = new String[1];
 					ext[0] = "ini";
 					String p = ToolBox.getPathName(colorPath);
@@ -360,24 +366,27 @@ public class ColorDialog extends JDialog {
 						File f = new File(fname);
 						try {
 							if (f.exists()) {
-								if ((f.exists() && !f.canWrite()) || (f.exists() && !f.canWrite()))
+								if ((f.exists() && !f.canWrite()) || (f.exists() && !f.canWrite())) {
 									throw new CoreException("Target is write protected.");
+								}
 								if (JOptionPane.showConfirmDialog(thisFrame, "Target exists! Overwrite?",
-										"", JOptionPane.YES_NO_OPTION) == 1)
+										"", JOptionPane.YES_NO_OPTION) == 1) {
 									throw new CoreException();
+								}
 							}
 							colorPath = fname;
 							Props colProps = new Props();
-							colProps.setHeader("COL - created by "+Core.getProgVerName());
+							colProps.setHeader("COL - created by " + APP_NAME_AND_VERSION);
 							for (int i=0; i<cColor.length; i++) {
 								String s = ""+cColor[i].getRed()+","+cColor[i].getGreen()+","+cColor[i].getBlue();
 								colProps.set("Color_"+i, s);
 							}
 							colProps.save(colorPath);
 						} catch (CoreException ex) {
-							if (ex.getMessage() != null)
+							if (ex.getMessage() != null) {
 								JOptionPane.showMessageDialog(thisFrame,ex.getMessage(),
 										"Error!", JOptionPane.WARNING_MESSAGE);
+							}
 						}
 					}
 				}
@@ -397,8 +406,8 @@ public class ColorDialog extends JDialog {
 			jButtonLoad.setText("Load Palette");
 			jButtonLoad.setToolTipText("Load palette settings from an INI file");
 			jButtonLoad.setMnemonic('l');
-			jButtonLoad.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jButtonLoad.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					String[] ext = new String[1];
 					ext[0] = "ini";
 					String p = ToolBox.getPathName(colorPath);
@@ -414,27 +423,29 @@ public class ColorDialog extends JDialog {
 											"Wrong format!", JOptionPane.WARNING_MESSAGE);
 									throw new CoreException();
 								}
-							} else
+							} else {
 								throw new CoreException("File not found.");
+							}
 							Props colProps = new Props();
 							colProps.load(fname);
 							colorPath = fname;
-							for (int i=0; i<cColor.length; i++) {
+							for (int i=0; i < cColor.length; i++) {
 								String s = colProps.get("Color_"+i, "0,0,0");
 								String sp[] = s.split(",");
 								if (sp.length >= 3) {
-									int r = Integer.valueOf(ToolBox.trim(sp[0]))&0xff;
-									int g = Integer.valueOf(ToolBox.trim(sp[1]))&0xff;
-									int b = Integer.valueOf(ToolBox.trim(sp[2]))&0xff;
+									int r = Integer.valueOf(sp[0].trim())&0xff;
+									int g = Integer.valueOf(sp[1].trim())&0xff;
+									int b = Integer.valueOf(sp[2].trim())&0xff;
 									cColor[i] = new Color(r,g,b);
 									paintIcon(cIcon[i],  cColor[i]);
 								}
 							}
 							jList.repaint();
 						} catch (CoreException ex) {
-							if (ex.getMessage() != null)
+							if (ex.getMessage() != null) {
 								JOptionPane.showMessageDialog(thisFrame,ex.getMessage(),
 										"Error!", JOptionPane.WARNING_MESSAGE);
+							}
 						}
 					}
 				}
@@ -442,4 +453,4 @@ public class ColorDialog extends JDialog {
 		}
 		return jButtonLoad;
 	}
-}  //  @jve:decl-index=0:visual-constraint="311,10"
+}

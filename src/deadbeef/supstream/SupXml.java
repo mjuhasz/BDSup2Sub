@@ -1,6 +1,8 @@
 package deadbeef.supstream;
 
 
+import static deadbeef.core.Constants.*;
+
 import java.awt.image.BufferedImage;
 import java.awt.image.IndexColorModel;
 import java.awt.image.WritableRaster;
@@ -9,6 +11,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 import javax.swing.JOptionPane;
@@ -20,13 +23,13 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
-
 import deadbeef.bitmap.Bitmap;
 import deadbeef.bitmap.BitmapBounds;
 import deadbeef.bitmap.Palette;
 import deadbeef.core.Core;
 import deadbeef.core.CoreException;
-import deadbeef.core.Core.Resolution;
+import deadbeef.core.Framerate;
+import deadbeef.core.Resolution;
 import deadbeef.tools.QuantizeFilter;
 import deadbeef.tools.ToolBox;
 
@@ -54,7 +57,7 @@ import deadbeef.tools.ToolBox;
 public class SupXml implements Substream {
 
 	/** ArrayList of captions contained in the current file */
-	final private ArrayList<SubPictureXml> subPictures;
+	private List<SubPictureXml> subPictures = new ArrayList<SubPictureXml>();
 	/** color palette of the last decoded caption  */
 	private Palette palette;
 	/** bitmap of the last decoded caption  */
@@ -69,13 +72,13 @@ public class SupXml implements Substream {
 	/** file name of XML file used as title */
 	private String title;
 	/** language id read from the xml */
-	private String language;
+	private String language = "eng";
 	/** resolution read from the xml */
-	private Resolution resolution;
+	private Resolution resolution = Resolution.HD_1080;
 	/** frame rate read from the stream */
-	private double fps;
+	private double fps = Framerate.FPS_23_976.getValue();
 	/** converted xml frame rate read from the stream */
-	private double fpsXml;
+	private double fpsXml = XmlFps(fps);
 	/** number of subtitles read from the xml */
 	private int numToImport;
 
@@ -84,23 +87,16 @@ public class SupXml implements Substream {
 	 * @param fn file name of Xml file to read
 	 * @throws CoreException
 	 */
-	public SupXml(final String fn) throws CoreException {
+	public SupXml(String fn) throws CoreException {
+		this.pathName = ToolBox.addSeparator(ToolBox.getPathName(fn));
+		this.title = ToolBox.stripExtension(ToolBox.getFileName(fn));
+
 		SAXParserFactory factory = SAXParserFactory.newInstance();
 		SAXParser saxParser;
-
-		pathName = ToolBox.addSeparator(ToolBox.getPathName(fn));
-		title = ToolBox.stripExtension(ToolBox.getFileName(fn));
-		language = "deu";
-		resolution = Resolution.HD_1080;
-		fps = Core.FPS_24P;
-		fpsXml = XmlFps(fps);
-
-		subPictures = new ArrayList<SubPictureXml>();
-
 		try {
 			saxParser = factory.newSAXParser();
 			DefaultHandler handler = new XmlHandler();
-			saxParser.parse( new File(fn), handler );
+			saxParser.parse(new File(fn), handler);
 		} catch (ParserConfigurationException e) {
 			throw new CoreException(e.getMessage());
 		} catch (SAXException e) {
@@ -109,7 +105,7 @@ public class SupXml implements Substream {
 			throw new CoreException(e.getMessage());
 		}
 
-		Core.print("\nDetected "+numForcedFrames+" forced captions.\n");
+		Core.print("\nDetected " + numForcedFrames + " forced captions.\n");
 	}
 
 	/**
@@ -117,16 +113,18 @@ public class SupXml implements Substream {
 	 * @param fps source frame rate
 	 * @return next integer frame rate (yet returned as double)
 	 */
-	static double XmlFps(final double fps) {
-		if (fps == Core.FPS_23_975)
-			return Core.FPS_24HZ;
-		if (fps == Core.FPS_24P)
-			return Core.FPS_24HZ;
-		if (fps == Core.FPS_NTSC)
+	static double XmlFps(double fps) {
+		if (fps == Framerate.FPS_23_975.getValue()) {
+			return Framerate.FPS_24.getValue();
+		} else if (fps == Framerate.FPS_23_976.getValue()) {
+			return Framerate.FPS_24.getValue();
+		} else if (fps == Framerate.NTSC.getValue()) {
 			return 30.0;
-		if (fps == Core.FPS_NTSC_I)
+		} else if (fps == Framerate.NTSC_I.getValue()) {
 			return 60.0;
-		else return fps;
+		} else {
+			return fps;
+		}
 	}
 
 	/* (non-Javadoc)
@@ -134,23 +132,23 @@ public class SupXml implements Substream {
 	 */
 	@Override
 	public void close() {
-		// NOP
 	}
 
 	/* (non-Javadoc)
 	 * @see deadbeef.SupTools.Substream#decode(int)
 	 */
 	@Override
-	public void decode(final int index) throws CoreException {
+	public void decode(int index) throws CoreException {
 		try {
 			File f = new File(subPictures.get(index).fileName);
-			if (!f.exists())
-				throw new CoreException("file "+subPictures.get(index).fileName+" not found.");
+			if (!f.exists()) {
+				throw new CoreException("file " + subPictures.get(index).fileName + " not found.");
+			}
 			BufferedImage img = ImageIO.read(f);
 			int w = img.getWidth();
 			int h = img.getHeight();
 
-			palette = null;
+			this.palette = null;
 
 			// first try to read image and palette directly from imported image
 			if (img.getType() == BufferedImage.TYPE_BYTE_INDEXED) {
@@ -158,12 +156,13 @@ public class SupXml implements Substream {
 				if (icm.getMapSize() < 255 || (icm.hasAlpha() && icm.getAlpha(255) == 0)) {
 					// create palette
 					palette = new Palette(256);
-					for (int i=0; i<icm.getMapSize(); i++) {
+					for (int i=0; i < icm.getMapSize(); i++) {
 						int alpha = (icm.getRGB(i) >> 24) & 0xff;
-						if (alpha >= Core.getAlphaCrop())
-							palette.setARGB(i,icm.getRGB(i));
-						else
-							palette.setARGB(i,0);
+						if (alpha >= Core.getAlphaCrop()) {
+							palette.setARGB(i, icm.getRGB(i));
+						} else {
+							palette.setARGB(i, 0);
+						}
 					}
 					// copy pixels
 					WritableRaster raster = img.getRaster();
@@ -187,12 +186,13 @@ public class SupXml implements Substream {
 				}
 				// create palette
 				palette = new Palette(256);
-				for (int i=0; i<size; i++) {
+				for (int i=0; i < size; i++) {
 					int alpha = (ct[i] >> 24) & 0xff;
-					if (alpha >= Core.getAlphaCrop())
-						palette.setARGB(i,ct[i]);
-					else
-						palette.setARGB(i,0);
+					if (alpha >= Core.getAlphaCrop()) {
+						palette.setARGB(i, ct[i]);
+					} else {
+						palette.setARGB(i, 0);
+					}
 				}
 			}
 			primaryColorIndex = bitmap.getPrimaryColorIndex(palette.getAlpha(), Core.getAlphaThr(), palette.getY());
@@ -201,10 +201,12 @@ public class SupXml implements Substream {
 			if (bounds.yMin>0 || bounds.xMin > 0 || bounds.xMax<bitmap.getWidth()-1 || bounds.yMax<bitmap.getHeight()-1) {
 				w = bounds.xMax - bounds.xMin + 1;
 				h = bounds.yMax - bounds.yMin + 1;
-				if (w<2)
+				if (w < 2) {
 					w = 2;
-				if (h<2)
+				}
+				if (h < 2) {
 					h = 2;
+				}
 				bitmap = bitmap.crop(bounds.xMin, bounds.yMin, w, h);
 				// update picture
 				SubPictureXml pic = subPictures.get(index);
@@ -241,44 +243,48 @@ public class SupXml implements Substream {
 			out.newLine();
 			out.write("  <Description>");
 			out.newLine();
-			out.write("    <Name Title=\""+name+"\" Content=\"\"/>");
+			out.write("    <Name Title=\"" + name + "\" Content=\"\"/>");
 			out.newLine();
-			out.write("    <Language Code=\""+Core.getLanguages()[Core.getLanguageIdx()][2]+"\"/>");
+			out.write("    <Language Code=\"" + LANGUAGES[Core.getLanguageIdx()][2] + "\"/>");
 			out.newLine();
 			String res = Core.getResolutionNameXml(Core.getOutputResolution());
-			out.write("    <Format VideoFormat=\""+res+"\" FrameRate=\""+ToolBox.formatDouble(fps)+"\" DropFrame=\"False\"/>");
+			out.write("    <Format VideoFormat=\"" + res + "\" FrameRate=\"" + ToolBox.formatDouble(fps) + "\" DropFrame=\"False\"/>");
 			out.newLine();
 			t = pics[0].startTime;
-			if (fps != fpsXml)
-				t = (t*2000+1001)/2002;
+			if (fps != fpsXml) {
+				t = (t * 2000 + 1001) / 2002;
+			}
 			String ts = ToolBox.ptsToTimeStrXml(t,fpsXml);
 			t = pics[pics.length-1].endTime;
-			if (fps != fpsXml)
-				t = (t*2000+1001)/2002;
+			if (fps != fpsXml) {
+				t = (t * 2000 + 1001) / 2002;
+			}
 			String te = ToolBox.ptsToTimeStrXml(t,fpsXml);
-			out.write("    <Events Type=\"Graphic\" FirstEventInTC=\""+ts+"\" LastEventOutTC=\""+te+"\" NumberofEvents=\""+pics.length+"\"/>");
+			out.write("    <Events Type=\"Graphic\" FirstEventInTC=\"" + ts + "\" LastEventOutTC=\"" + te + "\" NumberofEvents=\"" + pics.length + "\"/>");
 			out.newLine();
 			out.write("  </Description>");
 			out.newLine();
 			out.write("  <Events>");
 			out.newLine();
-			for (int idx=0; idx<pics.length; idx++) {
+			for (int idx=0; idx < pics.length; idx++) {
 				SubPicture p = pics[idx];
 				t = p.startTime;
-				if (fps != fpsXml)
-					t = (t*2000+1001)/2002;
+				if (fps != fpsXml) {
+					t = (t * 2000 + 1001) / 2002;
+				}
 				ts = ToolBox.ptsToTimeStrXml(t,fpsXml);
 				t = p.endTime;
-				if (fps != fpsXml)
-					t = (t*2000+1001)/2002;
-				te = ToolBox.ptsToTimeStrXml(t,fpsXml);
+				if (fps != fpsXml) {
+					t = (t * 2000 + 1001) / 2002;
+				}
+				te = ToolBox.ptsToTimeStrXml(t, fpsXml);
 				String forced = p.isforced? "True": "False";
-				out.write("    <Event InTC=\""+ts+"\" OutTC=\""+te+"\" Forced=\""+forced+"\">");
+				out.write("    <Event InTC=\"" + ts + "\" OutTC=\"" + te + "\" Forced=\"" + forced + "\">");
 				out.newLine();
 
 				String pname = getPNGname(name, idx+1);
-				out.write("      <Graphic Width=\""+p.getImageWidth()+"\" Height=\""+p.getImageHeight()+
-						"\" X=\""+p.getOfsX()+"\" Y=\""+p.getOfsY()+"\">"+pname+"</Graphic>");
+				out.write("      <Graphic Width=\"" + p.getImageWidth() + "\" Height=\"" + p.getImageHeight()
+						+ "\" X=\"" + p.getOfsX() + "\" Y=\"" + p.getOfsY() + "\">" + pname + "</Graphic>");
 				out.newLine();
 				out.write("    </Event>");
 				out.newLine();
@@ -289,16 +295,15 @@ public class SupXml implements Substream {
 			out.newLine();
 		} catch (IOException ex) {
 			throw new CoreException(ex.getMessage());
-		}
-		finally {
+		} finally {
 			try {
-				if (out != null)
+				if (out != null) {
 					out.close();
-			} catch (IOException ex) {};
+				}
+			} catch (IOException ex) {
+			};
 		}
 	}
-
-	/* setters / getters */
 
 	/* (non-Javadoc)
 	 * @see Substream#getBitmap()
@@ -352,7 +357,7 @@ public class SupXml implements Substream {
 	/* (non-Javadoc)
 	 * @see deadbeef.SupTools.Substream#getStartOffset(int)
 	 */
-	public long getStartOffset(final int index) {
+	public long getStartOffset(int index) {
 		// dummy
 		return 0;
 	}
@@ -360,14 +365,14 @@ public class SupXml implements Substream {
 	/* (non-Javadoc)
 	 * @see Substream#getSubPicture(int)
 	 */
-	public SubPicture getSubPicture(final int index) {
+	public SubPicture getSubPicture(int index) {
 		return subPictures.get(index);
 	}
 
 	/* (non-Javadoc)
 	 * @see Substream#getEndTime(int)
 	 */
-	public long getEndTime(final int index) {
+	public long getEndTime(int index) {
 		return subPictures.get(index).endTime;
 	}
 
@@ -381,7 +386,7 @@ public class SupXml implements Substream {
 	/* (non-Javadoc)
 	 * @see Substream#isForced(int)
 	 */
-	public boolean isForced(final int index) {
+	public boolean isForced(int index) {
 		return subPictures.get(index).isforced;
 	}
 
@@ -391,8 +396,8 @@ public class SupXml implements Substream {
 	 * @param idx index
 	 * @return PNG name
 	 */
-	public static String getPNGname(final String fn, final int idx) {
-		return ToolBox.stripExtension(fn)+"_"+ToolBox.zeroTrim(idx, 4)+".png";
+	public static String getPNGname(String fn, int idx) {
+		return ToolBox.stripExtension(fn) + "_" + ToolBox.zeroTrim(idx, 4) + ".png";
 	}
 
 	/**
@@ -412,7 +417,7 @@ public class SupXml implements Substream {
 	}
 
 	enum XmlState { BDN, DESCRIPT, NAME, LANGUAGE, FORMAT, EVENTS, EVENT, GRAPHIC, UNKNOWN};
-	final static String xmlStates[] = { "bdn", "description", "name", "language", "format", "events", "event", "graphic"};
+	static final String xmlStates[] = { "bdn", "description", "name", "language", "format", "events", "event", "graphic"};
 
 	class XmlHandler extends DefaultHandler {
 
@@ -422,20 +427,22 @@ public class SupXml implements Substream {
 		SubPictureXml pic;
 
 		private XmlState findState(final String s) {
-			for ( XmlState x : XmlState.values()) {
-				if (s.toLowerCase().equals(xmlStates[x.ordinal()]))
+			for (XmlState x : XmlState.values()) {
+				if (s.toLowerCase().equals(xmlStates[x.ordinal()])) {
 					return x;
+				}
 			}
 			return XmlState.UNKNOWN;
 		}
 
 		@Override
-		public void startElement(final String namespaceURI, final String localName, final String qName, final Attributes atts ) {
+		public void startElement(String namespaceURI, String localName, String qName, Attributes atts ) {
 			state = findState(qName);
 			String at;
 
-			if (state != XmlState.BDN && !valid)
+			if (state != XmlState.BDN && !valid) {
 				Core.printErr("BDN tag missing");
+			}
 
 			txt = null;
 
@@ -444,10 +451,11 @@ public class SupXml implements Substream {
 					Core.printErr("Unknown tag "+qName+"\n");
 					break;
 				case BDN:
-					if (valid)
+					if (valid) {
 						Core.printErr("BDN must be used only once");
-					else
+					} else {
 						valid = true;
+					}
 					break;
 				case NAME:
 					at = atts.getValue("Title");
@@ -468,17 +476,18 @@ public class SupXml implements Substream {
 					if (at != null) {
 						fps = Core.getFPS(at);
 						fpsXml = XmlFps(fps);
-						Core.print("fps: "+ToolBox.formatDouble(fps)+"\n");
+						Core.print("fps: " + ToolBox.formatDouble(fps) + "\n");
 					}
 					at = atts.getValue("VideoFormat");
 					if (at != null) {
 						String res = at;
-						for (Core.Resolution r : Core.Resolution.values())  {
-							if (res.length() == 4 && res.charAt(0)!='7') // hack to rename 480p/576p to 480i/576i
+						for (Resolution r : Resolution.values())  {
+							if (res.length() == 4 && res.charAt(0) != '7') { // hack to rename 480p/576p to 480i/576i
 								res = res.replace('p', 'i');
+							}
 							if (Core.getResolutionNameXml(r).equalsIgnoreCase(res)) {
 								resolution = r;
-								Core.print("Language: "+Core.getResolutionNameXml(r)+"\n");
+								Core.print("Language: " + Core.getResolutionNameXml(r) + "\n");
 								break;
 							}
 						}
@@ -502,31 +511,33 @@ public class SupXml implements Substream {
 					Core.setProgress(num);
 					at = atts.getValue("InTC");
 					if (at != null) {
-						pic.startTime = ToolBox.timeStrXmlToPTS(at,fpsXml);
+						pic.startTime = ToolBox.timeStrXmlToPTS(at, fpsXml);
 						if (pic.startTime == -1) {
 							pic.startTime = 0;
-							Core.printWarn("Invalid start time "+at+"\n");
+							Core.printWarn("Invalid start time " + at + "\n");
 						}
 					}
 					at = atts.getValue("OutTC");
 					if (at != null) {
-						pic.endTime   = ToolBox.timeStrXmlToPTS(at,fpsXml);
+						pic.endTime = ToolBox.timeStrXmlToPTS(at, fpsXml);
 						if (pic.endTime == -1) {
 							pic.endTime = 0;
-							Core.printWarn("Invalid end time "+at+"\n");
+							Core.printWarn("Invalid end time " + at + "\n");
 						}
 					}
 					if (fps != fpsXml) {
-						pic.startTime = (pic.startTime*1001+500)/1000;
-						pic.endTime   = (pic.endTime*1001+500)/1000;
+						pic.startTime = (pic.startTime * 1001 + 500) / 1000;
+						pic.endTime   = (pic.endTime * 1001 + 500) / 1000;
 					}
 					at = atts.getValue("Forced");
-					if (at != null)
-						pic.isforced  = at.equalsIgnoreCase("true");
-					else
+					if (at != null) {
+						pic.isforced = at.equalsIgnoreCase("true");
+					} else {
 						pic.isforced = false;
-					if (pic.isforced)
+					}
+					if (pic.isforced) {
 						numForcedFrames++;
+					}
 					int dim[] = Core.getResolution(resolution);
 					pic.width  = dim[0];
 					pic.height = dim[1];
@@ -543,16 +554,18 @@ public class SupXml implements Substream {
 		}
 
 		@Override
-		public void endElement(final String namespaceURI, final String localName, final String qName ) {
+		public void endElement(String namespaceURI, String localName, String qName ) {
 			XmlState endState = findState(qName);
-			if (state == XmlState.GRAPHIC && endState == XmlState.GRAPHIC)
-				pic.fileName = pathName+ToolBox.trim(txt.toString());
+			if (state == XmlState.GRAPHIC && endState == XmlState.GRAPHIC) {
+				pic.fileName = pathName + txt.toString().trim();
+			}
 		}
 
 		@Override
-		public void characters(final char[] ch, final int start, final int length ) {
-			if (txt != null)
+		public void characters(char[] ch, int start, int length ) {
+			if (txt != null) {
 				txt.append(ch, start, length);
+			}
 		}
 	}
 }

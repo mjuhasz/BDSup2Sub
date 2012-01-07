@@ -21,7 +21,8 @@ package deadbeef.filters;
  *
  * @author 0xdeadbeef
  */
-final class MitchellFilter implements Filter {
+public class MitchellFilter implements Filter {
+	
 	private static final float B = 1.0f / 3.0f;
 	private static final float C = 1.0f / 3.0f;
 
@@ -29,9 +30,10 @@ final class MitchellFilter implements Filter {
 		return 2.0f;
 	}
 
-	public final float value(float value) {
-		if (value < 0.0f)
+	public float value(float value) {
+		if (value < 0.0f) {
 			value = -value;
+		}
 		float tt = value * value;
 		if (value < 1.0f) {
 			value = (((12.0f - 9.0f * B - 6.0f * C) * (value * tt))
@@ -49,4 +51,3 @@ final class MitchellFilter implements Filter {
 		return 0.0f;
 	}
 }
-

@@ -35,8 +35,6 @@ public class SubPictureDVD extends SubPicture implements Cloneable {
 	/** 4 palette values */
 	public int pal[];
 
-	/* member functions */
-
 	/* (non-Javadoc)
 	 * @see SubPicture#clone()
 	 */
@@ -56,7 +54,7 @@ public class SubPictureDVD extends SubPicture implements Cloneable {
 
 		originalAlpha = new int[4];
 		originalPal = new int[4];
-		for (int i=0; i<4; i++) {
+		for (int i=0; i < 4; i++) {
 			originalAlpha[i] = alpha[i];
 			originalPal[i] = pal[i];
 		}
@@ -79,5 +77,4 @@ public class SubPictureDVD extends SubPicture implements Cloneable {
 		setOfsX(pic.getOfsX());
 		setOfsY(pic.getOfsY());
 	}
-
 }

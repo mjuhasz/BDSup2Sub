@@ -1,6 +1,6 @@
 package deadbeef.bitmap;
 
-public class ColorSpaceUtils {
+public final class ColorSpaceUtils {
 
 	private ColorSpaceUtils() {
 	}
@@ -74,7 +74,7 @@ public class ColorSpaceUtils {
 			if (yCbCr[i] < 16) {
 				yCbCr[i] = 16;
 			} else {
-				if (i==0) {
+				if (i == 0) {
 					if (yCbCr[i] > 235)
 						yCbCr[i] = 235;
 				} else {

@@ -32,11 +32,15 @@ import javax.swing.JOptionPane;
  *
  * @author 0xdeadbeef
  */
-public class ToolBox {
+public final class ToolBox {
 
-	private final static DecimalFormatSymbols dfSym = new DecimalFormatSymbols();
-	private static DecimalFormat dot3 = null;
-	private final static Pattern timePattern = Pattern.compile( "(\\d+):(\\d+):(\\d+)[:\\.](\\d+)" );
+	private static final DecimalFormat DECIMAL_FORMAT;
+	static {
+		DecimalFormatSymbols dfs = new DecimalFormatSymbols();
+		dfs.setDecimalSeparator('.');
+		DECIMAL_FORMAT = new DecimalFormat("##.###", dfs);
+	}
+	private static final Pattern TIME_PATTERN = Pattern.compile( "(\\d+):(\\d+):(\\d+)[:\\.](\\d+)" );
 
 	/**
 	 * Convert an integer to a string with leading zeroes
@@ -44,11 +48,12 @@ public class ToolBox {
 	 * @param digits Number of digits to display (note: a 32bit number can have only 10 digits)
 	 * @return String version of integer with trailing zeroes
 	 */
-	public static String zeroTrim(final int i, final int digits) {
+	public static String zeroTrim(int i, int digits) {
 		String s = String.valueOf(i);
 		int l = s.length();
-		if (l < digits)
+		if (l < digits) {
 			s = "0000000000".substring(0, digits-l)+s;
+		}
 		return s;
 	}
 
@@ -58,12 +63,13 @@ public class ToolBox {
 	 * @param digits Number of digits to display (note: a 32bit hex number can have only 8 digits)
 	 * @return hex String version of integer with trailing zeroes (and starting with "0x")
 	 */
-	public static String hex(final long val, final int digits) {
+	public static String hex(long val, int digits) {
 		String s = Long.toString(val, 16);
 		int l = s.length();
-		if (l < digits)
-			s = "00000000".substring(0, digits-l)+s;
-		return "0x"+s;
+		if (l < digits) {
+			s = "00000000".substring(0, digits-l) + s;
+		}
+		return "0x" + s;
 	}
 
 	/**
@@ -72,12 +78,13 @@ public class ToolBox {
 	 * @param digits Number of digits to display (note: a 32bit hex number can have only 8 digits)
 	 * @return hex String version of integer with trailing zeroes (and starting with "0x")
 	 */
-	public static String hex(final int val, final int digits) {
+	public static String hex(int val, int digits) {
 		String s = Integer.toString(val, 16);
 		int l = s.length();
-		if (l < digits)
-			s = "00000000".substring(0, digits-l)+s;
-		return "0x"+s;
+		if (l < digits) {
+			s = "00000000".substring(0, digits-l) + s;
+		}
+		return "0x" + s;
 	}
 
 	/** Format double as string in the form "xx.yyy"
@@ -85,11 +92,7 @@ public class ToolBox {
 	 * @return Formatted string
 	 */
 	public static String formatDouble(final double d) {
-		if (dot3 == null) {
-			dfSym.setDecimalSeparator('.');
-			dot3 = new DecimalFormat("##.###", dfSym);
-		}
-		return dot3.format(d);
+		return DECIMAL_FORMAT.format(d);
 	}
 
 	/**
@@ -117,10 +120,10 @@ public class ToolBox {
 	 * @param pts Time in 90kHz resolution
 	 * @return String in format hh:mm:ss:ms
 	 */
-	public static String ptsToTimeStr(final long pts) {
-		int time[] = msToTime((pts+45)/90);
-		return zeroTrim(time[0],2)+":"+zeroTrim(time[1],2)+":"+
-		zeroTrim(time[2],2)+"."+zeroTrim(time[3],3);
+	public static String ptsToTimeStr(long pts) {
+		int time[] = msToTime((pts + 45) / 90);
+		return zeroTrim(time[0], 2) + ":" + zeroTrim(time[1], 2) + ":"
+				+ zeroTrim(time[2], 2) + "." + zeroTrim(time[3], 3);
 	}
 
 	/**
@@ -128,10 +131,10 @@ public class ToolBox {
 	 * @param pts Time in 90kHz resolution
 	 * @return String in format hh:mm:ss:ms
 	 */
-	public static String ptsToTimeStrIdx(final long pts) {
-		int time[] = msToTime((pts+45)/90);
-		return zeroTrim(time[0],2)+":"+zeroTrim(time[1],2)+":"+
-		zeroTrim(time[2],2)+":"+zeroTrim(time[3],3);
+	public static String ptsToTimeStrIdx(long pts) {
+		int time[] = msToTime((pts + 45) / 90);
+		return zeroTrim(time[0], 2) + ":" + zeroTrim(time[1], 2) + ":"
+				+ zeroTrim(time[2], 2) + ":" + zeroTrim(time[3], 3);
 	}
 
 	/**
@@ -140,10 +143,10 @@ public class ToolBox {
 	 * @param fps Frames per second
 	 * @return String in format hh:mm:ss:ff
 	 */
-	public static String ptsToTimeStrXml(final long pts, final double fps) {
-		int time[] = msToTime((pts+45)/90);
-		return zeroTrim(time[0],2)+":"+zeroTrim(time[1],2)+":"+
-		zeroTrim(time[2],2)+":"+zeroTrim((int)(fps*time[3]/1000.0+0.5),2);
+	public static String ptsToTimeStrXml(long pts, double fps) {
+		int time[] = msToTime((pts + 45) / 90);
+		return zeroTrim(time[0], 2) + ":" + zeroTrim(time[1], 2) + ":"
+				+ zeroTrim(time[2], 2) + ":" + zeroTrim((int)(fps*time[3] / 1000.0 + 0.5), 2);
 	}
 
 	/**
@@ -151,8 +154,8 @@ public class ToolBox {
 	 * @param s String in hh:mm:ss.ms or hh:mm:ss:ms format
 	 * @return Time in 90kHz resolution
 	 */
-	public static long timeStrToPTS(final String s) {
-		Matcher m = timePattern.matcher(s);
+	public static long timeStrToPTS(String s) {
+		Matcher m = TIME_PATTERN.matcher(s);
 		if (m.matches()) {
 			long hour = Integer.parseInt(m.group(1));
 			long min = Integer.parseInt(m.group(2));
@@ -164,9 +167,10 @@ public class ToolBox {
 			temp *= 60;
 			temp += sec;
 			temp *= 1000;
-			return (temp+ms)*90;
-		} else
+			return (temp+ms) * 90;
+		} else {
 			return -1;
+		}
 	}
 
 	/**
@@ -175,8 +179,8 @@ public class ToolBox {
 	 * @param fps Frames per second
 	 * @return Time in 90kHz resolution
 	 */
-	public static long timeStrXmlToPTS(final String s, final double fps) {
-		Matcher m = timePattern.matcher(s);
+	public static long timeStrXmlToPTS(String s, double fps) {
+		Matcher m = TIME_PATTERN.matcher(s);
 		if (m.matches()) {
 			long hour    = Integer.parseInt(m.group(1));
 			long min     = Integer.parseInt(m.group(2));
@@ -188,9 +192,10 @@ public class ToolBox {
 			temp *= 60;
 			temp += sec;
 			temp *= 1000;
-			return (temp+(int)(frames/fps*1000.0+0.5))*90;
-		} else
+			return (temp + (int)(frames / fps * 1000.0 + 0.5)) * 90;
+		} else {
 			return -1;
+		}
 	}
 
 	/**
@@ -200,7 +205,7 @@ public class ToolBox {
 	 * @return Integer value of byte buffer[index]
 	 * @throws ArrayIndexOutOfBoundsException
 	 */
-	public static int getByte(final byte buffer[], final int index) throws ArrayIndexOutOfBoundsException {
+	public static int getByte(byte buffer[], int index) throws ArrayIndexOutOfBoundsException {
 		return buffer[index] & 0xff;
 	}
 
@@ -211,7 +216,7 @@ public class ToolBox {
 	 * @return Integer value of word starting at buffer[index] (index points at most significant byte)
 	 * @throws ArrayIndexOutOfBoundsException
 	 */
-	public static int getWord(final byte buffer[], final int index) throws ArrayIndexOutOfBoundsException {
+	public static int getWord(byte buffer[], int index) throws ArrayIndexOutOfBoundsException {
 		return (buffer[index+1] & 0xff) | ((buffer[index] & 0xff)<<8);
 	}
 
@@ -222,8 +227,8 @@ public class ToolBox {
 	 * @param val Integer value of byte to write
 	 * @throws ArrayIndexOutOfBoundsException
 	 */
-	public static void setByte(final byte buffer[], final int index, final int val) throws ArrayIndexOutOfBoundsException {
-		buffer[index]   = (byte)(val);
+	public static void setByte(byte buffer[], int index, int val) throws ArrayIndexOutOfBoundsException {
+		buffer[index] = (byte)(val);
 	}
 
 	/**
@@ -233,7 +238,7 @@ public class ToolBox {
 	 * @param val Integer value of word to write
 	 * @throws ArrayIndexOutOfBoundsException
 	 */
-	public static void setWord(final byte buffer[], final int index, final int val) throws ArrayIndexOutOfBoundsException {
+	public static void setWord(byte buffer[], int index, int val) throws ArrayIndexOutOfBoundsException {
 		buffer[index]   = (byte)(val>>8);
 		buffer[index+1] = (byte)(val);
 	}
@@ -245,7 +250,7 @@ public class ToolBox {
 	 * @param val Integer value of double word to write
 	 * @throws ArrayIndexOutOfBoundsException
 	 */
-	public static void setDWord(final byte buffer[], final int index, final int val) throws ArrayIndexOutOfBoundsException {
+	public static void setDWord(byte buffer[], int index, int val) throws ArrayIndexOutOfBoundsException {
 		buffer[index]   = (byte)(val>>24);
 		buffer[index+1] = (byte)(val>>16);
 		buffer[index+2] = (byte)(val>>8);
@@ -259,30 +264,30 @@ public class ToolBox {
 	 * @param s String containing ASCII characters
 	 * @throws ArrayIndexOutOfBoundsException
 	 */
-	public static void setString(final byte buffer[], final int index, final String s) throws ArrayIndexOutOfBoundsException {
-		for (int i =0; i<s.length(); i++)
+	public static void setString(byte buffer[], int index, String s) throws ArrayIndexOutOfBoundsException {
+		for (int i =0; i<s.length(); i++) {
 			buffer[index+i] = (byte)s.charAt(i);
+		}
 	}
 
 	/**
 	 * Show a dialog with details about an exception
 	 * @param ex Throwable/Exception to display
 	 */
-	public static void showException(final Throwable ex) {
+	public static void showException(Throwable ex) {
 		String m;
 		m = "<html>";
-		m += ex.getClass().getName()+"<p>";
-		if (ex.getMessage() != null)
-			m += ex.getMessage() +"<p>";
+		m += ex.getClass().getName() + "<p>";
+		if (ex.getMessage() != null) {
+			m += ex.getMessage() + "<p>";
+		}
 		StackTraceElement ste[] = ex.getStackTrace();
 		for (int i=0; i<ste.length; i++) {
-			m += ste[i].toString()+"<p>";
-			// m += ste[i].getClassName()+"/"+ste[i].getMethodName()+"/"
-			//   + ste[i].getLineNumber()+"<p>";
+			m += ste[i].toString() + "<p>";
 		}
 		m += "</html>";
 		ex.printStackTrace();
-		JOptionPane.showMessageDialog( null, m, "Error", JOptionPane.ERROR_MESSAGE );
+		JOptionPane.showMessageDialog(null, m, "Error", JOptionPane.ERROR_MESSAGE);
 	}
 
 	/**
@@ -294,31 +299,34 @@ public class ToolBox {
 	 * @param parent Parent component (Frame, Window)
 	 * @return       Selected filename or null if canceled
 	 */
-	public static String getFileName(final String path, final String fn, final String ext[], final boolean load, final Component parent) {
+	public static String getFileName(String path, String fn, String ext[], boolean load, Component parent) {
 		String p = path;
 		File f;
-		if (p.length() == 0)
+		if (p.length() == 0) {
 			p = ".";
-		JFileChooser jf = new JFileChooser(p);
+		}
+		JFileChooser fc = new JFileChooser(p);
 		if (ext != null) {
 			JFileFilter filter = new JFileFilter();
-			for (int i=0; i<ext.length; i++)
+			for (int i=0; i < ext.length; i++) {
 				filter.addExtension(ext[i]);
-			//filter.setDescription("Load subtitle stream");
-			jf.setFileFilter(filter);
+			}
+			fc.setFileFilter(filter);
 		}
-		jf.setFileSelectionMode(JFileChooser.FILES_ONLY );
+		fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
 		if (fn != null) {
-			f = new File(addSeparator(path)+fn);
-			jf.setSelectedFile(f);
+			f = new File(addSeparator(path) + fn);
+			fc.setSelectedFile(f);
 		}
-		if (!load)
-			jf.setDialogType(JFileChooser.SAVE_DIALOG);
-		int returnVal = jf.showDialog(parent,null);
+		if (!load) {
+			fc.setDialogType(JFileChooser.SAVE_DIALOG);
+		}
+		int returnVal = fc.showDialog(parent, null);
 		if(returnVal == JFileChooser.APPROVE_OPTION) {
-			f = jf.getSelectedFile();
-			if (f != null)
+			f = fc.getSelectedFile();
+			if (f != null) {
 				return f.getAbsolutePath();
+			}
 		}
 		return null;
 	}
@@ -328,13 +336,16 @@ public class ToolBox {
 	 * @param fName String containing path name
 	 * @return String that ends with the (system default) path separator for sure
 	 */
-	public static String addSeparator(final String fName) {
+	public static String addSeparator(String fName) {
 		int pos = fName.lastIndexOf(File.separator);
-		if (pos != fName.length()-1)
+		if (pos != fName.length()-1) {
 			pos = fName.lastIndexOf("/");
-		if (pos != fName.length()-1)
+		}
+		if (pos != fName.length()-1) {
 			return fName + File.separator;
-		else return fName;
+		} else {
+			return fName;
+		}
 	}
 
 	/**
@@ -342,11 +353,12 @@ public class ToolBox {
 	 * @param fName String containing file/path name
 	 * @return String with only Unix style path separators
 	 */
-	public static String exchangeSeparators(final String fName) {
+	public static String exchangeSeparators(String fName) {
 		int pos;
 		StringBuffer sb = new StringBuffer(fName);
-		while ( (pos = sb.indexOf("\\")) != -1 )
+		while ((pos = sb.indexOf("\\")) != -1) {
 			sb.setCharAt(pos,'/');
+		}
 		return sb.toString();
 	}
 
@@ -355,15 +367,17 @@ public class ToolBox {
 	 * @param path String of a path with a file name
 	 * @return String containing only the file name
 	 */
-	public static String getFileName(final String path) {
+	public static String getFileName(String path) {
 		int p1 = path.lastIndexOf("/");
 		int p2 = path.lastIndexOf("\\");
-		if (p2 > p1)
+		if (p2 > p1) {
 			p1 = p2;
-		if (p1 < 0)
+		}
+		if (p1 < 0) {
 			p1 = 0;
-		else
+		} else {
 			p1++;
+		}
 		return path.substring(p1);
 	}
 
@@ -372,14 +386,16 @@ public class ToolBox {
 	 * @param path String of file name with a path
 	 * @return String containing only the path (excluding path separator)
 	 */
-	public static String getPathName(final String path) {
+	public static String getPathName(String path) {
 		int p1 = path.lastIndexOf("/");
 		int p2 = path.lastIndexOf("\\");
-		if (p2 > p1)
+		if (p2 > p1) {
 			p1 = p2;
-		if (p1 < 0)
+		}
+		if (p1 < 0) {
 			p1 = 0;
-		return path.substring(0,p1);
+		}
+		return path.substring(0, p1);
 	}
 
 
@@ -388,13 +404,14 @@ public class ToolBox {
 	 * @param path String containing file name
 	 * @return String containing only the extension (without the dot) or null (if no extension found)
 	 */
-	public static String getExtension(final String path) {
+	public static String getExtension(String path) {
 		int p1 = path.lastIndexOf("/");
 		int p2 = path.lastIndexOf("\\");
 		int p = path.lastIndexOf(".");
-		if (p==-1 || p<p1 || p<p2)
+		if (p==-1 || p<p1 || p<p2) {
 			return null;
-		return path.substring(p+1);
+		}
+		return path.substring(p + 1);
 	}
 
 	/**
@@ -403,13 +420,14 @@ public class ToolBox {
 	 * @param path String containing a file name
 	 * @return String to a filename without the extension
 	 */
-	public static String stripExtension(final String path) {
+	public static String stripExtension(String path) {
 		int p1 = path.lastIndexOf("/");
 		int p2 = path.lastIndexOf("\\");
 		int p = path.lastIndexOf(".");
-		if (p==-1 || p<p1 || p<p2)
+		if (p == -1 || p < p1 || p < p2) {
 			return path;
-		return path.substring(0,p);
+		}
+		return path.substring(0, p);
 	}
 
 	/**
@@ -418,11 +436,12 @@ public class ToolBox {
 	 * @param num Number of bytes to return
 	 * @return Array of bytes (size num) from the beginning of the file
 	 */
-	public static byte[] getFileID(final String fname, final int num) {
+	public static byte[] getFileID(String fname, int num) {
 		byte buf[] = new byte[num];
 		File f = new File(fname);
-		if (f.length() < num)
+		if (f.length() < num) {
 			return null;
+		}
 		try {
 			FileInputStream fi = new FileInputStream(fname);
 			fi.read(buf);
@@ -434,31 +453,13 @@ public class ToolBox {
 	}
 
 	/**
-	 * Remove trailing and leading spaces from a string
-	 * @param s String to process
-	 * @return String without leading and trailing spaces
-	 */
-	public static String trim(final String s) {
-		// search first character that is not a space
-		int spos;
-		for (spos=0; spos<s.length(); spos++)
-			if (s.charAt(spos) != ' ')
-				break;
-		int epos;
-		for (epos=s.length()-1; epos > spos; epos--)
-			if (s.charAt(epos) != ' ')
-				break;
-		return s.substring(spos, epos+1);
-	}
-
-	/**
 	 * Convert String to integer
 	 * @param s String containing integer (assumed: positive)
 	 * @return Integer value or -1.0 if no valid numerical value
 	 */
-	public static int getInt(final String s) {
+	public static int getInt(String s) {
 		try {
-			return Integer.parseInt(ToolBox.trim(s));
+			return Integer.parseInt(s.trim());
 		} catch (NumberFormatException ex) {
 			return -1;
 		}
@@ -469,12 +470,11 @@ public class ToolBox {
 	 * @param s String containing double
 	 * @return Double value or -1.0 if no valid numerical value
 	 */
-	public static double getDouble(final String s) {
+	public static double getDouble(String s) {
 		try {
-			return Double.parseDouble(ToolBox.trim(s));
+			return Double.parseDouble(s.trim());
 		} catch (NumberFormatException ex) {
 			return -1.0;
 		}
 	}
-
 }

@@ -1,6 +1,8 @@
 package deadbeef.gui;
 
 
+import static deadbeef.core.Constants.*;
+
 import java.awt.Color;
 import java.awt.ComponentOrientation;
 import java.awt.Dimension;
@@ -19,10 +21,13 @@ import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -51,12 +56,15 @@ import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 
-
 import deadbeef.bitmap.Palette;
 import deadbeef.core.Core;
 import deadbeef.core.CoreException;
-import deadbeef.core.Core.PaletteMode;
-import deadbeef.core.Core.StreamID;
+import deadbeef.core.InputMode;
+import deadbeef.core.OutputMode;
+import deadbeef.core.PaletteMode;
+import deadbeef.core.Resolution;
+import deadbeef.core.ScalingFilter;
+import deadbeef.core.StreamID;
 import deadbeef.tools.ToolBox;
 
 /*
@@ -84,124 +92,124 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 
 	private static final long serialVersionUID = 1L;
 
-	private JPanel jContentPane = null;
+	private JPanel jContentPane;
 
-	private JScrollPane jScrollPaneSrc = null;
+	private JScrollPane jScrollPaneSrc;
 
-	private JScrollPane jScrollPaneTrg = null;
+	private JScrollPane jScrollPaneTrg;
 
-	private JPanel jPanelUp = null;
+	private JPanel jPanelUp;
 
-	private JPanel jPanelDown = null;
+	private JPanel jPanelDown;
 
-	private JLabel jLabelAlphaThr = null;
+	private JLabel jLabelAlphaThr;
 
-	private JLabel jLabelHiMedThr = null;
+	private JLabel jLabelHiMedThr;
 
-	private JLabel jLabelMedLowThr = null;
+	private JLabel jLabelMedLowThr;
 
-	private JLabel jLabelOutFormat = null;
+	private JLabel jLabelOutFormat;
 
-	private GfxPane jPanelSrc = null;
+	private GfxPane jPanelSrc;
 
-	private GfxPane jPanelTrg = null;
+	private GfxPane jPanelTrg;
 
-	private JComboBox jComboBoxSubNum = null;
+	private JComboBox jComboBoxSubNum;
 
-	private JLabel jLabelSubNum = null;
+	private JLabel jLabelSubNum;
 
-	private JComboBox jComboBoxAlphaThr = null;
+	private JComboBox jComboBoxAlphaThr;
 
-	private JComboBox jComboBoxHiMedThr = null;
+	private JComboBox jComboBoxHiMedThr;
 
-	private JComboBox jComboBoxMedLowThr = null;
+	private JComboBox jComboBoxMedLowThr;
 
-	private JComboBox jComboBoxOutFormat = null;
+	private JComboBox jComboBoxOutFormat;
 
-	private JLabel jLabelInfoSrc = null;
+	private JLabel jLabelInfoSrc;
 
-	private JLabel jLabelInfoTrg = null;
+	private JLabel jLabelInfoTrg;
 
-	private JPanel jPanelUp2 = null;
+	private JPanel jPanelUp2;
 
-	private JPanel jPanelMid = null;
+	private JPanel jPanelMid;
 
-	private JMenuBar jMenuBar = null;
+	private JMenuBar jMenuBar;
 
-	private JMenu jMenuFile = null;
+	private JMenu jMenuFile;
 
-	private JMenuItem jMenuItemLoad = null;
+	private JMenuItem jMenuItemLoad;
 	
-	private JMenu jMenuRecent = null;
+	private JMenu jMenuRecent;
 
-	private JMenuItem jMenuItemSave = null;
+	private JMenuItem jMenuItemSave;
 
-	private JMenuItem jMenuItemClose = null;
+	private JMenuItem jMenuItemClose;
 
-	private JMenuItem jMenuItemExit = null;
+	private JMenuItem jMenuItemExit;
 
-	private JMenu jMenuHelp = null;
+	private JMenu jMenuHelp;
 
-	private JMenuItem jMenuItemHelp = null;
+	private JMenuItem jMenuItemHelp;
 
-	private JMenu jMenuPrefs = null;
+	private JMenu jMenuPrefs;
 
-	private JMenuItem jMenuItemEditColors = null;
+	private JMenuItem jMenuItemEditColors;
 
-	private JMenuItem jMenuItemEditCurColors = null;
+	private JMenuItem jMenuItemEditCurColors;
 
-	private JMenuItem jMenuItemEditFramePalAlpha = null;
+	private JMenuItem jMenuItemEditFramePalAlpha;
 
-	private JMenuItem jMenuItemConversionSettings = null;
+	private JMenuItem jMenuItemConversionSettings;
 
-	private JCheckBoxMenuItem jMenuItemSwapCrCb = null;
+	private JCheckBoxMenuItem jMenuItemSwapCrCb;
 
-	private JCheckBoxMenuItem jMenuItemVerbatim = null;
+	private JCheckBoxMenuItem jMenuItemVerbatim;
 
-	private JCheckBoxMenuItem jMenuItemFixAlpha = null;
+	private JCheckBoxMenuItem jMenuItemFixAlpha;
 
-	private JMenu jMenuEdit = null;
+	private JMenu jMenuEdit;
 
-	private JMenuItem jMenuItemEditFrame = null;
+	private JMenuItem jMenuItemEditFrame;
 
-	private JMenuItem jMenuItemBatchMove = null;
+	private JMenuItem jMenuItemBatchMove;
 
-	private JMenuItem jMenuItemResetCrop = null;
+	private JMenuItem jMenuItemResetCrop;
 
-	private JPopupMenu jPopupMenu = null;
+	private JPopupMenu jPopupMenu;
 
-	private JMenuItem jPopupMenuItemCopy = null;
+	private JMenuItem jPopupMenuItemCopy;
 
-	private JMenuItem jPopupMenuItemClear = null;
+	private JMenuItem jPopupMenuItemClear;
 
-	private JScrollPane jScrollPaneConsole = null;
+	private JScrollPane jScrollPaneConsole;
 
-	private JTextArea console = null;
+	private JTextArea console;
 
-	private EditPane jLayoutPane = null;
+	private EditPane jLayoutPane;
 
-	private JComboBox jComboBoxPalette = null;
+	private JComboBox jComboBoxPalette;
 
-	private JLabel jLabelPalette = null;
+	private JLabel jLabelPalette;
 
-	private JLabel jLabelFilter = null;
+	private JLabel jLabelFilter;
 
-	private JComboBox jComboBoxFilter = null;
+	private JComboBox jComboBoxFilter;
 
-	private JTextField jTextSubNum = null;
+	private JTextField jTextSubNum;
 
-	private JTextField jTextAlphaThr = null;
+	private JTextField jTextAlphaThr;
 
-	private JTextField jTextHiMedThr = null;
+	private JTextField jTextHiMedThr;
 
-	private JTextField jTextMedLowThr = null;
+	private JTextField jTextMedLowThr;
 
 	// own stuff
 
 	/** semaphore for synchronization of threads */
-	private final Object threadSemaphore = new Object();
+	private Object threadSemaphore = new Object();
 	/** reference to this frame (to allow access to "this" from inner classes */
-	private final JFrame mainFrame;
+	private JFrame mainFrame;
 	/** current caption index */
 	private int subIndex;
 	/** path to load SUP from */
@@ -213,15 +221,15 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 	/** path to load color profiles from */
 	private String colorPath;
 	/** transfer handler for Drag'n'Drop support */
-	private final TransferHandler thandler;
+	private TransferHandler thandler;
 
 	/** font size for output console */
-	private final int fontSize = 12;
-	//private final static int maxDocSize = 1000000; // to work around bad TextPane performance
+	private int fontSize = 12;
+	//private static final int maxDocSize = 1000000; // to work around bad TextPane performance
 	/** background color for errors */
-	private final Color errBgnd = new Color(0xffe1acac);
+	private Color errBgnd = new Color(0xffe1acac);
 	/** background color for ok */
-	private final Color okBgnd = UIManager.getColor("TextField.background");
+	private Color okBgnd = UIManager.getColor("TextField.background");
 
 	/**
 	 * Constructor
@@ -246,17 +254,16 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 		jTextHiMedThr  = new JTextField();
 		jTextMedLowThr = new JTextField();
 
-		// TODO Auto-generated constructor stub
 		initialize();
 
-		this.addWindowListener(new java.awt.event.WindowAdapter() {
+		this.addWindowListener(new WindowAdapter() {
 			@Override
-			public void windowClosing(java.awt.event.WindowEvent e) {
+			public void windowClosing(WindowEvent e) {
 				exit(0);
 			}
 
 			@Override
-			public void windowClosed(java.awt.event.WindowEvent e) {
+			public void windowClosed(WindowEvent e) {
 				exit(0);
 			}
 		});
@@ -305,18 +312,18 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 		jComboBoxHiMedThr.setSelectedIndex(Core.getLumThr()[0]);
 		jComboBoxMedLowThr.setSelectedIndex(Core.getLumThr()[1]);
 
-		for (Core.OutputMode m : Core.OutputMode.values()) {
-			jComboBoxOutFormat.addItem(Core.getOutputFormatName(m));
+		for (OutputMode m : OutputMode.values()) {
+			jComboBoxOutFormat.addItem(m.toString());
 		}
 		jComboBoxOutFormat.setSelectedIndex(Core.getOutputMode().ordinal());
 
-		for (Core.PaletteMode m : Core.PaletteMode.values()) {
-			jComboBoxPalette.addItem(Core.getPaletteModeName(m));
+		for (PaletteMode m : PaletteMode.values()) {
+			jComboBoxPalette.addItem(m.toString());
 		}
 		jComboBoxPalette.setSelectedIndex(Core.getPaletteMode().ordinal());
 
-		for (Core.ScalingFilters s : Core.ScalingFilters.values()) {
-			jComboBoxFilter.addItem(Core.getScalingFilterName(s));
+		for (ScalingFilter s : ScalingFilter.values()) {
+			jComboBoxFilter.addItem(s.toString());
 		}
 		jComboBoxFilter.setSelectedIndex(Core.getScalingFilter().ordinal());
 
@@ -368,8 +375,8 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 		};
 		this.setTransferHandler(thandler);
 
-		print(Core.getProgVerName()+" - a converter from Blu-Ray/HD-DVD SUP to DVD SUB/IDX and more\n");
-		print(Core.getAuthorDate()+"\n");
+		print(APP_NAME_AND_VERSION + " - a converter from Blu-Ray/HD-DVD SUP to DVD SUB/IDX and more\n");
+		print(AUTHOR_AND_DATE + "\n");
 		print("Official thread at Doom9: http://forum.doom9.org/showthread.php?t=145277\n\n");
 		flush();
 	}
@@ -378,7 +385,7 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 	 * Print string to console window
 	 * @param s String to print
 	 */
-	public void print(final String s) {
+	public void print( String s) {
 		Document doc = console.getDocument();
 		int length = doc.getLength();
 		try {
@@ -390,7 +397,11 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 	 * Force console to display last line
 	 */
 	public void flush() {
-		SwingUtilities.invokeLater(new Runnable() { public void run() { console.setCaretPosition(console.getDocument().getLength()); } });
+		SwingUtilities.invokeLater(new Runnable() { 
+			public void run() {
+				console.setCaretPosition(console.getDocument().getLength());
+			}
+		});
 	}
 
 	/**
@@ -399,7 +410,11 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 	 */
 	public void printOut(final String s) {
 		//try {
-			SwingUtilities.invokeLater(new Runnable() { public void run() { print(s); } });
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				print(s);
+			}
+		});
 		//} catch (InterruptedException e) {
 		//} catch (InvocationTargetException e) {
 		//}
@@ -411,7 +426,11 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 	 */
 	public void printErr(final String s) {
 		//try {
-			SwingUtilities.invokeLater(new Runnable() { public void run() { print(s); }});
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				print(s);
+			}
+		});
 		//} catch (InterruptedException e) {
 		//} catch (InvocationTargetException e) {
 		//}
@@ -423,7 +442,11 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 	 */
 	public void printWarn(final String s) {
 		//try {
-			SwingUtilities.invokeLater(new Runnable() { public void run() { print(s); }});
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				print(s);
+			}
+		});
 		//} catch (InterruptedException e) {
 		//} catch (InvocationTargetException e) {
 		//}
@@ -435,7 +458,7 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 	 */
 	public void error (String s) {
 		Core.printErr(s);
-		JOptionPane.showMessageDialog(mainFrame,s,"Error!", JOptionPane.WARNING_MESSAGE);
+		JOptionPane.showMessageDialog(mainFrame, s, "Error!", JOptionPane.WARNING_MESSAGE);
 	}
 
 	/**
@@ -443,16 +466,18 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 	 * @param index caption index
 	 */
 	private void refreshTrgFrame(final int index) {
-		SwingUtilities.invokeLater( new Runnable() { public void run() {
-			jLayoutPane.setDim(Core.getTrgWidth(index), Core.getTrgHeight(index));
-			jLayoutPane.setOffsets(Core.getTrgOfsX(index), Core.getTrgOfsY(index));
-			jLayoutPane.setCropOfsY(Core.getCropOfsY());
-			jLayoutPane.setImage(Core.getTrgImage(),Core.getTrgImgWidth(index), Core.getTrgImgHeight(index));
-			jLayoutPane.setExcluded(Core.getTrgExcluded(index));
-			jPanelTrg.setImage(Core.getTrgImage());
-			printInfoTrg(index);
-			jLayoutPane.repaint();
-		} } );
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				jLayoutPane.setDim(Core.getTrgWidth(index), Core.getTrgHeight(index));
+				jLayoutPane.setOffsets(Core.getTrgOfsX(index), Core.getTrgOfsY(index));
+				jLayoutPane.setCropOfsY(Core.getCropOfsY());
+				jLayoutPane.setImage(Core.getTrgImage(),Core.getTrgImgWidth(index), Core.getTrgImgHeight(index));
+				jLayoutPane.setExcluded(Core.getTrgExcluded(index));
+				jPanelTrg.setImage(Core.getTrgImage());
+				printInfoTrg(index);
+				jLayoutPane.repaint();
+			}
+		});
 	}
 
 	/**
@@ -460,11 +485,13 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 	 * @param index caption index
 	 */
 	private void refreshSrcFrame(final int index) {
-		SwingUtilities.invokeLater( new Runnable() { public void run() {
-			BufferedImage img = Core.getSrcImage();
-			jPanelSrc.setImage(img);
-			printInfoSrc(index);
-		} } );
+		SwingUtilities.invokeLater( new Runnable() {
+			public void run() {
+				BufferedImage img = Core.getSrcImage();
+				jPanelSrc.setImage(img);
+				printInfoSrc(index);
+			}
+		});
 	}
 
 	/**
@@ -511,7 +538,7 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 		this.setMinimumSize(new Dimension(700,300));
 		this.setJMenuBar(getjMenuBar());
 		this.setContentPane(getJContentPane());
-		this.setTitle(Core.getProgVerName());
+		this.setTitle(APP_NAME_AND_VERSION);
 	}
 
 	/**
@@ -827,7 +854,7 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 			jComboBoxSubNum.setToolTipText("Set subtitle number");
 			jComboBoxSubNum.setEditable(true);
 			jComboBoxSubNum.addActionListener(new ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+				public void actionPerformed(ActionEvent e) {
 					if (Core.isReady()) {
 						int num = Core.getNumFrames();
 						int idx;
@@ -837,41 +864,18 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 							idx = subIndex; // invalid number -> keep old value
 						}
 
-						if (idx < 0)
+						if (idx < 0) {
 							idx = 0;
-						if (idx >= num)
+						}
+						if (idx >= num) {
 							idx = num-1;
+						}
 						subIndex = idx;
 						jComboBoxSubNum.setSelectedIndex(subIndex);
 
-						(new Thread() { @Override
-						public void run() {
-							synchronized (threadSemaphore) {
-							try {
-								Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
-								refreshSrcFrame(subIndex);
-								refreshTrgFrame(subIndex);
-							} catch (CoreException ex) {
-								error(ex.getMessage());
-							} catch (Exception ex) {
-								ToolBox.showException(ex);
-								exit(4);
-							}
-
-						} } }).start();
-					}
-				}
-			});
-			jTextSubNum.getDocument().addDocumentListener(new DocumentListener() {
-				private void check(DocumentEvent e) {
-					if (Core.isReady()) {
-						int idx = ToolBox.getInt(jTextSubNum.getText())-1;
-						if (idx < 0 || idx >= Core.getNumFrames())
-							jTextSubNum.setBackground(errBgnd);
-						else {
-							subIndex = idx;
-							(new Thread() { @Override
-								public void run() {
+						(new Thread() {
+							@Override
+							public void run() {
 								synchronized (threadSemaphore) {
 									try {
 										Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
@@ -885,6 +889,33 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 									}
 
 								} } }).start();
+					}
+				}
+			});
+			jTextSubNum.getDocument().addDocumentListener(new DocumentListener() {
+				private void check(DocumentEvent e) {
+					if (Core.isReady()) {
+						int idx = ToolBox.getInt(jTextSubNum.getText())-1;
+						if (idx < 0 || idx >= Core.getNumFrames()) {
+							jTextSubNum.setBackground(errBgnd);
+						} else {
+							subIndex = idx;
+							(new Thread() {
+								@Override
+								public void run() {
+									synchronized (threadSemaphore) {
+										try {
+											Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
+											refreshSrcFrame(subIndex);
+											refreshTrgFrame(subIndex);
+										} catch (CoreException ex) {
+											error(ex.getMessage());
+										} catch (Exception ex) {
+											ToolBox.showException(ex);
+											exit(4);
+										}
+
+									} } }).start();
 							jTextSubNum.setBackground(okBgnd);
 						}
 					}
@@ -922,7 +953,7 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 			jComboBoxAlphaThr.setPreferredSize(new Dimension(100, 20));
 			jComboBoxAlphaThr.setMinimumSize(new Dimension(80, 20));
 			jComboBoxAlphaThr.addActionListener(new ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+				public void actionPerformed(ActionEvent e) {
 					if (Core.isReady()) {
 						int idx;
 						try {
@@ -931,41 +962,20 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 							idx = Core.getAlphaThr(); // invalid number -> keep old value
 						}
 
-						if (idx < 0)
+						if (idx < 0) {
 							idx = 0;
-						if (idx > 255)
+						}
+						if (idx > 255) {
 							idx = 255;
+						}
 
 						Core.setAlphaThr(idx);
 						jComboBoxAlphaThr.setSelectedIndex(Core.getAlphaThr());
 
-						(new Thread() { @Override
-						public void run() {
-							synchronized (threadSemaphore) {
-							try {
-								Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
-								refreshTrgFrame(subIndex);
-							} catch (CoreException ex) {
-								error(ex.getMessage());
-							} catch (Exception ex) {
-								ToolBox.showException(ex);
-								exit(4);
-							}
-						} } }).start();
-					}
-				}
-			});
-			jTextAlphaThr.getDocument().addDocumentListener(new DocumentListener() {
-				private void check(DocumentEvent e) {
-					if (Core.isReady()) {
-						int idx = ToolBox.getInt(jTextAlphaThr.getText());
-						if (idx < 0 || idx > 255)
-							jTextAlphaThr.setBackground(errBgnd);
-						else {
-							Core.setAlphaThr(idx);
-							(new Thread() { @Override
-								public void run() {
-									synchronized (threadSemaphore) {
+						(new Thread() {
+							@Override
+							public void run() {
+								synchronized (threadSemaphore) {
 									try {
 										Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
 										refreshTrgFrame(subIndex);
@@ -976,6 +986,31 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 										exit(4);
 									}
 								} } }).start();
+					}
+				}
+			});
+			jTextAlphaThr.getDocument().addDocumentListener(new DocumentListener() {
+				private void check(DocumentEvent e) {
+					if (Core.isReady()) {
+						int idx = ToolBox.getInt(jTextAlphaThr.getText());
+						if (idx < 0 || idx > 255) {
+							jTextAlphaThr.setBackground(errBgnd);
+						} else {
+							Core.setAlphaThr(idx);
+							(new Thread() {
+								@Override
+								public void run() {
+									synchronized (threadSemaphore) {
+										try {
+											Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
+											refreshTrgFrame(subIndex);
+										} catch (CoreException ex) {
+											error(ex.getMessage());
+										} catch (Exception ex) {
+											ToolBox.showException(ex);
+											exit(4);
+										}
+									} } }).start();
 							jTextAlphaThr.setBackground(okBgnd);
 						}
 					}
@@ -1014,7 +1049,7 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 			jComboBoxHiMedThr.setMinimumSize(new Dimension(80, 20));
 			jComboBoxHiMedThr.setToolTipText("Set medium/high luminance threshold");
 			jComboBoxHiMedThr.addActionListener(new ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+				public void actionPerformed(ActionEvent e) {
 					if (Core.isReady()) {
 						int lumThr[] = Core.getLumThr();
 						int idx;
@@ -1024,32 +1059,36 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 							idx = lumThr[0]; // invalid number -> keep old value
 						}
 
-						if (idx <= lumThr[1]) // must be greater than med/low threshold
+						if (idx <= lumThr[1]) { // must be greater than med/low threshold
 							idx = lumThr[1] + 1;
+						}
 
-						if (idx < 0)
+						if (idx < 0) {
 							idx = 0;
-						if (idx > 255)
+						}
+						if (idx > 255) {
 							idx = 255;
+						}
 
 						lumThr[0] = idx;
 						Core.setLumThr(lumThr);
 						jComboBoxHiMedThr.setSelectedIndex(Core.getLumThr()[0]);
 
-						(new Thread() { @Override
+						(new Thread() {
+							@Override
 							public void run() {
-							synchronized (threadSemaphore) {
-							try {
-								Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
-								refreshTrgFrame(subIndex);
-							} catch (CoreException ex) {
-								error(ex.getMessage());
-							} catch (Exception ex) {
-								ToolBox.showException(ex);
-								exit(4);
-							}
+								synchronized (threadSemaphore) {
+									try {
+										Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
+										refreshTrgFrame(subIndex);
+									} catch (CoreException ex) {
+										error(ex.getMessage());
+									} catch (Exception ex) {
+										ToolBox.showException(ex);
+										exit(4);
+									}
 
-						} } }).start();
+								} } }).start();
 					}
 				}
 			});
@@ -1058,25 +1097,26 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 					if (Core.isReady()) {
 						int lumThr[] = Core.getLumThr();
 						int idx = ToolBox.getInt(jTextHiMedThr.getText());
-						if (idx < 0 || idx > 255 | idx <= lumThr[1])
+						if (idx < 0 || idx > 255 | idx <= lumThr[1]) {
 							jTextHiMedThr.setBackground(errBgnd);
-						else {
+						} else {
 							lumThr[0] = idx;
 							Core.setLumThr(lumThr);
-							(new Thread() { @Override
+							(new Thread() {
+								@Override
 								public void run() {
-								synchronized (threadSemaphore) {
-								try {
-									Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
-									refreshTrgFrame(subIndex);
-								} catch (CoreException ex) {
-									error(ex.getMessage());
-								} catch (Exception ex) {
-									ToolBox.showException(ex);
-									exit(4);
-								}
+									synchronized (threadSemaphore) {
+										try {
+											Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
+											refreshTrgFrame(subIndex);
+										} catch (CoreException ex) {
+											error(ex.getMessage());
+										} catch (Exception ex) {
+											ToolBox.showException(ex);
+											exit(4);
+										}
 
-							} } }).start();
+									} } }).start();
 							jTextHiMedThr.setBackground(okBgnd);
 						}
 					}
@@ -1115,7 +1155,7 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 			jComboBoxMedLowThr.setPreferredSize(new Dimension(100, 20));
 			jComboBoxMedLowThr.setMinimumSize(new Dimension(80, 20));
 			jComboBoxMedLowThr.addActionListener(new ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+				public void actionPerformed(ActionEvent e) {
 					if (Core.isReady()) {
 						int lumThr[] = Core.getLumThr();
 						int idx;
@@ -1125,13 +1165,16 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 							idx = lumThr[1]; // invalid number -> keep old value
 						}
 
-						if (idx >= lumThr[0]) // must be smaller than med/high threshold
+						if (idx >= lumThr[0]) { // must be smaller than med/high threshold
 							idx = lumThr[0] - 1;
+						}
 
-						if (idx < 0)
+						if (idx < 0) {
 							idx = 0;
-						if (idx > 255)
+						}
+						if (idx > 255) {
 							idx = 255;
+						}
 
 						lumThr[1] = idx;
 						Core.setLumThr(lumThr);
@@ -1139,20 +1182,21 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 						final int index = idx;
 						jComboBoxMedLowThr.setSelectedIndex(index);
 
-						(new Thread() { @Override
+						(new Thread() {
+							@Override
 							public void run() {
-							synchronized (threadSemaphore) {
-							try {
-								Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
-								refreshTrgFrame(subIndex);
-							} catch (CoreException ex) {
-								error(ex.getMessage());
-							} catch (Exception ex) {
-								ToolBox.showException(ex);
-								exit(4);
-							}
+								synchronized (threadSemaphore) {
+									try {
+										Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
+										refreshTrgFrame(subIndex);
+									} catch (CoreException ex) {
+										error(ex.getMessage());
+									} catch (Exception ex) {
+										ToolBox.showException(ex);
+										exit(4);
+									}
 
-						} } }).start();
+								} } }).start();
 					}
 				}
 			});
@@ -1166,20 +1210,21 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 						else {
 							lumThr[1] = idx;
 							Core.setLumThr(lumThr);
-							(new Thread() { @Override
+							(new Thread() {
+								@Override
 								public void run() {
-								synchronized (threadSemaphore) {
-								try {
-									Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
-									refreshTrgFrame(subIndex);
-								} catch (CoreException ex) {
-									error(ex.getMessage());
-								} catch (Exception ex) {
-									ToolBox.showException(ex);
-									exit(4);
-								}
+									synchronized (threadSemaphore) {
+										try {
+											Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
+											refreshTrgFrame(subIndex);
+										} catch (CoreException ex) {
+											error(ex.getMessage());
+										} catch (Exception ex) {
+											ToolBox.showException(ex);
+											exit(4);
+										}
 
-							} } }).start();
+									} } }).start();
 							jTextMedLowThr.setBackground(okBgnd);
 						}
 					}
@@ -1216,34 +1261,35 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 			jComboBoxOutFormat.setToolTipText("Select export format");
 			jComboBoxOutFormat.setPreferredSize(new Dimension(120, 20));
 			jComboBoxOutFormat.addActionListener(new ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+				public void actionPerformed(ActionEvent e) {
 					if (Core.isReady()) {
 						int idx = jComboBoxOutFormat.getSelectedIndex();
-						for (Core.OutputMode m : Core.OutputMode.values()) {
+						for (OutputMode m : OutputMode.values()) {
 							if (idx == m.ordinal()) {
 								Core.setOutputMode(m);
 								break;
 							}
 						}
 
-						(new Thread() { @Override
+						(new Thread() {
+							@Override
 							public void run() {
-							synchronized (threadSemaphore) {
-							try {
-								Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
-								refreshTrgFrame(subIndex);
-								if (Core.getOutputMode() == Core.OutputMode.VOBSUB || Core.getOutputMode() == Core.OutputMode.SUPIFO)
-									enableVobsubStuff(true);
-								else
-									enableVobsubStuff(false);
-							} catch (CoreException ex) {
-								error(ex.getMessage());
-							} catch (Exception ex) {
-								ToolBox.showException(ex);
-								exit(4);
-							}
+								synchronized (threadSemaphore) {
+									try {
+										Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
+										refreshTrgFrame(subIndex);
+										if (Core.getOutputMode() == OutputMode.VOBSUB || Core.getOutputMode() == OutputMode.SUPIFO)
+											enableVobsubStuff(true);
+										else
+											enableVobsubStuff(false);
+									} catch (CoreException ex) {
+										error(ex.getMessage());
+									} catch (Exception ex) {
+										ToolBox.showException(ex);
+										exit(4);
+									}
 
-						} } }).start();
+								} } }).start();
 					}
 				}
 			});
@@ -1421,7 +1467,7 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 			jMenuItemHelp.setText("Help");
 			jMenuItemHelp.setMnemonic('h');
 			jMenuItemHelp.addActionListener(new ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+				public void actionPerformed(ActionEvent e) {
 					Help help = new Help();
 					help.setLocation(getX()+30,getY()+30);
 					help.setSize(800,600);
@@ -1444,27 +1490,28 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 			jMenuItemEditFrame.setMnemonic('e');
 			jMenuItemEditFrame.setEnabled(false);
 			jMenuItemEditFrame.addActionListener(new ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+				public void actionPerformed(ActionEvent e) {
 					if (Core.isReady()) {
 						EditDialog ed = new EditDialog(mainFrame, true);
 						ed.setIndex(subIndex);
 						ed.setVisible(true);
 						subIndex = ed.getIndex();
-						(new Thread() { @Override
+						(new Thread() {
+							@Override
 							public void run() {
-							synchronized (threadSemaphore) {
-							try {
-								Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
-								refreshSrcFrame(subIndex);
-								refreshTrgFrame(subIndex);
-								jComboBoxSubNum.setSelectedIndex(subIndex);
-							} catch (CoreException ex) {
-								error(ex.getMessage());
-							} catch (Exception ex) {
-								ToolBox.showException(ex);
-								exit(4);
-							}
-						} } }).start();
+								synchronized (threadSemaphore) {
+									try {
+										Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
+										refreshSrcFrame(subIndex);
+										refreshTrgFrame(subIndex);
+										jComboBoxSubNum.setSelectedIndex(subIndex);
+									} catch (CoreException ex) {
+										error(ex.getMessage());
+									} catch (Exception ex) {
+										ToolBox.showException(ex);
+										exit(4);
+									}
+								} } }).start();
 					}
 				}
 			});
@@ -1484,7 +1531,7 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 			jMenuItemBatchMove.setMnemonic('m');
 			jMenuItemBatchMove.setEnabled(false);
 			jMenuItemBatchMove.addActionListener(new ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+				public void actionPerformed(ActionEvent e) {
 					if (Core.isReady()) {
 						MoveDialog ed = new MoveDialog(mainFrame, true);
 						ed.setIndex(subIndex);
@@ -1500,22 +1547,23 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 							}
 						}
 						subIndex = ed.getIndex();
-						jLayoutPane.setScreenRatio(ed.getTrgRatio());
-						(new Thread() { @Override
+						jLayoutPane.setAspectRatio(ed.getTrgRatio());
+						(new Thread() {
+							@Override
 							public void run() {
-							synchronized (threadSemaphore) {
-							try {
-								Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
-								refreshSrcFrame(subIndex);
-								refreshTrgFrame(subIndex);
-								jComboBoxSubNum.setSelectedIndex(subIndex);
-							} catch (CoreException ex) {
-								error(ex.getMessage());
-							} catch (Exception ex) {
-								ToolBox.showException(ex);
-								exit(4);
-							}
-						} } }).start();
+								synchronized (threadSemaphore) {
+									try {
+										Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
+										refreshSrcFrame(subIndex);
+										refreshTrgFrame(subIndex);
+										jComboBoxSubNum.setSelectedIndex(subIndex);
+									} catch (CoreException ex) {
+										error(ex.getMessage());
+									} catch (Exception ex) {
+										ToolBox.showException(ex);
+										exit(4);
+									}
+								} } }).start();
 					}
 				}
 			});
@@ -1534,7 +1582,7 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 			jMenuItemResetCrop.setMnemonic('r');
 			jMenuItemResetCrop.setText("Reset crop offset");  // Generated
 			jMenuItemResetCrop.addActionListener(new ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+				public void actionPerformed(ActionEvent e) {
 					Core.setCropOfsY(0);
 					jLayoutPane.setCropOfsY(Core.getCropOfsY());
 					jLayoutPane.repaint();
@@ -1556,27 +1604,28 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 			jMenuItemSwapCrCb.setMnemonic('s');
 			jMenuItemSwapCrCb.setSelected(false);
 			jMenuItemSwapCrCb.addActionListener(new ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+				public void actionPerformed(ActionEvent e) {
 					boolean selected = jMenuItemSwapCrCb.isSelected();
 					Core.setSwapCrCb(selected);
 					// create and show image
-					(new Thread() { @Override
+					(new Thread() {
+						@Override
 						public void run() {
-						synchronized (threadSemaphore) {
-						try {
-							if (Core.isReady()) {
-								Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
-								refreshSrcFrame(subIndex);
-								refreshTrgFrame(subIndex);
-							}
-						} catch (CoreException ex) {
-							error(ex.getMessage());
-						} catch (Exception ex) {
-							ToolBox.showException(ex);
-							exit(4);
-						}
+							synchronized (threadSemaphore) {
+								try {
+									if (Core.isReady()) {
+										Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
+										refreshSrcFrame(subIndex);
+										refreshTrgFrame(subIndex);
+									}
+								} catch (CoreException ex) {
+									error(ex.getMessage());
+								} catch (Exception ex) {
+									ToolBox.showException(ex);
+									exit(4);
+								}
 
-					} } }).start();
+							} } }).start();
 				}
 			});
 		}
@@ -1595,7 +1644,7 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 			jMenuItemVerbatim.setMnemonic('v');
 			jMenuItemVerbatim.setSelected(false);
 			jMenuItemVerbatim.addActionListener(new ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+				public void actionPerformed(ActionEvent e) {
 					boolean selected = jMenuItemVerbatim.isSelected();
 					Core.setVerbatim(selected);
 				}
@@ -1616,7 +1665,7 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 			jMenuItemFixAlpha.setMnemonic('f');
 			jMenuItemFixAlpha.setSelected(false);
 			jMenuItemFixAlpha.addActionListener(new ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+				public void actionPerformed(ActionEvent e) {
 					boolean selected = jMenuItemFixAlpha.isSelected();
 					Core.setFixZeroAlpha(selected);
 				}
@@ -1636,8 +1685,8 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 			jMenuItemConversionSettings.setText("Conversion Settings");
 			jMenuItemConversionSettings.setMnemonic('c');
 			jMenuItemConversionSettings.addActionListener(new ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
-					final Core.Resolution rOld = Core.getOutputResolution();
+				public void actionPerformed(ActionEvent e) {
+					final Resolution rOld = Core.getOutputResolution();
 					final double fpsTrgOld = Core.getFPSTrg();
 					final boolean changeFpsOld = Core.getConvertFPS();
 					final int delayOld = Core.getDelayPTS();
@@ -1657,22 +1706,23 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 
 					if (!trans.wasCanceled()) {
 						// create and show image
-						(new Thread() { @Override
+						(new Thread() {
+							@Override
 							public void run() {
-							synchronized (threadSemaphore) {
-								try {
-									if (Core.isReady()) {
-										Core.reScanSubtitles(rOld, fpsTrgOld, delayOld, changeFpsOld,fsXOld,fsYOld);
-										Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
-										refreshTrgFrame(subIndex);
+								synchronized (threadSemaphore) {
+									try {
+										if (Core.isReady()) {
+											Core.reScanSubtitles(rOld, fpsTrgOld, delayOld, changeFpsOld,fsXOld,fsYOld);
+											Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
+											refreshTrgFrame(subIndex);
+										}
+									} catch (CoreException ex) {
+										error(ex.getMessage());
+									} catch (Exception ex) {
+										ToolBox.showException(ex);
+										exit(4);
 									}
-								} catch (CoreException ex) {
-									error(ex.getMessage());
-								} catch (Exception ex) {
-									ToolBox.showException(ex);
-									exit(4);
-								}
-							} } }).start();
+								} } }).start();
 					}
 				}
 			});
@@ -1693,7 +1743,7 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 			jMenuItemEditColors.setMnemonic('d');
 			jMenuItemEditColors.setDisplayedMnemonicIndex(5);
 			jMenuItemEditColors.addActionListener(new ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+				public void actionPerformed(ActionEvent e) {
 					ColorDialog cDiag = new ColorDialog(mainFrame, true);
 					final String cName[] = {
 							"white","light gray","dark gray",
@@ -1706,9 +1756,9 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 					};
 					Color cColor[] = new Color[15];
 					Color cColorDefault[] = new Color[15];
-					for (int i=0; i<cColor.length; i++) {
+					for (int i=0; i < cColor.length; i++) {
 						cColor[i] = Core.getCurrentDVDPalette().getColor(i+1);
-						cColorDefault[i] = Core.getDefaultDVDPalette().getColor(i+1);
+						cColorDefault[i] = DEFAULT_DVD_PALETTE.getColor(i+1);
 					}
 					cDiag.setParameters(cName, cColor, cColorDefault);
 					cDiag.setPath(colorPath);
@@ -1716,24 +1766,25 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 					if (!cDiag.wasCanceled()) {
 						cColor = cDiag.getColors();
 						colorPath = cDiag.getPath();
-						for (int i=0; i<cColor.length; i++)
+						for (int i=0; i<cColor.length; i++) {
 							Core.getCurrentDVDPalette().setColor(i+1, cColor[i]);
+						}
 						(new Thread() { @Override
 							public void run() {
 							synchronized (threadSemaphore) {
-							try {
-								if (Core.isReady()) {
-									Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
-									refreshTrgFrame(subIndex);
+								try {
+									if (Core.isReady()) {
+										Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
+										refreshTrgFrame(subIndex);
+									}
+								} catch (CoreException ex) {
+									error(ex.getMessage());
+								} catch (Exception ex) {
+									ToolBox.showException(ex);
+									exit(4);
 								}
-							} catch (CoreException ex) {
-								error(ex.getMessage());
-							} catch (Exception ex) {
-								ToolBox.showException(ex);
-								exit(4);
-							}
 
-						} } }).start();
+							} } }).start();
 					}
 				}
 			});
@@ -1754,7 +1805,7 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 			jMenuItemEditCurColors.setMnemonic('i');
 			jMenuItemEditCurColors.setDisplayedMnemonicIndex(5);
 			jMenuItemEditCurColors.addActionListener(new ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+				public void actionPerformed(ActionEvent e) {
 					ColorDialog cDiag = new ColorDialog(mainFrame, true);
 					final String cName[] = {
 							"Color 0", "Color 1", "Color 2", "Color 3",
@@ -1764,7 +1815,7 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 					};
 					Color cColor[] = new Color[16];
 					Color cColorDefault[] = new Color[16];
-					for (int i=0; i<cColor.length; i++) {
+					for (int i=0; i < cColor.length; i++) {
 						cColor[i] = Core.getCurSrcDVDPalette().getColor(i);
 						cColorDefault[i] = Core.getDefSrcDVDPalette().getColor(i);
 					}
@@ -1775,26 +1826,28 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 						cColor = cDiag.getColors();
 						colorPath = cDiag.getPath();
 						Palette p = new Palette(cColor.length, true);
-						for (int i=0; i<cColor.length; i++)
+						for (int i=0; i<cColor.length; i++) {
 							p.setColor(i, cColor[i]);
+						}
 						Core.setCurSrcDVDPalette(p);
-						(new Thread() { @Override
+						(new Thread() {
+							@Override
 							public void run() {
-							synchronized (threadSemaphore) {
-							try {
-								if (Core.isReady()) {
-									Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
-									refreshSrcFrame(subIndex);
-									refreshTrgFrame(subIndex);
-								}
-							} catch (CoreException ex) {
-								error(ex.getMessage());
-							} catch (Exception ex) {
-								ToolBox.showException(ex);
-								exit(4);
-							}
+								synchronized (threadSemaphore) {
+									try {
+										if (Core.isReady()) {
+											Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
+											refreshSrcFrame(subIndex);
+											refreshTrgFrame(subIndex);
+										}
+									} catch (CoreException ex) {
+										error(ex.getMessage());
+									} catch (Exception ex) {
+										ToolBox.showException(ex);
+										exit(4);
+									}
 
-						} } }).start();
+								} } }).start();
 					}
 				}
 			});
@@ -1814,27 +1867,28 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 			jMenuItemEditFramePalAlpha.setText("Edit DVD Frame Palette");
 			jMenuItemEditFramePalAlpha.setMnemonic('f');
 			jMenuItemEditFramePalAlpha.addActionListener(new ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+				public void actionPerformed(ActionEvent e) {
 					FramePalDialog cDiag = new FramePalDialog(mainFrame, true);
 					cDiag.setIndex(subIndex);
 					cDiag.setVisible(true);
-					(new Thread() { @Override
+					(new Thread() {
+						@Override
 						public void run() {
-						synchronized (threadSemaphore) {
-							try {
-								if (Core.isReady()) {
-									Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
-									refreshSrcFrame(subIndex);
-									refreshTrgFrame(subIndex);
+							synchronized (threadSemaphore) {
+								try {
+									if (Core.isReady()) {
+										Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
+										refreshSrcFrame(subIndex);
+										refreshTrgFrame(subIndex);
+									}
+								} catch (CoreException ex) {
+									error(ex.getMessage());
+								} catch (Exception ex) {
+									ToolBox.showException(ex);
+									exit(4);
 								}
-							} catch (CoreException ex) {
-								error(ex.getMessage());
-							} catch (Exception ex) {
-								ToolBox.showException(ex);
-								exit(4);
-							}
 
-						} } }).start();
+							} } }).start();
 				}
 			});
 		}
@@ -1862,21 +1916,23 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 	 */
 	private void enableVobSubMenuCombo() {
 		boolean b;
-		if ( (Core.getOutputMode() == Core.OutputMode.VOBSUB   || Core.getOutputMode() == Core.OutputMode.SUPIFO)
-				&& ( (Core.getInputMode()  != Core.InputMode.VOBSUB    && Core.getInputMode() != Core.InputMode.SUPIFO)
-						|| Core.getPaletteMode() != Core.PaletteMode.KEEP_EXISTING) )
+		if ( (Core.getOutputMode() == OutputMode.VOBSUB   || Core.getOutputMode() == OutputMode.SUPIFO)
+				&& ( (Core.getInputMode()  != InputMode.VOBSUB    && Core.getInputMode() != InputMode.SUPIFO)
+						|| Core.getPaletteMode() != PaletteMode.KEEP_EXISTING) ) {
 			b = true;
-		else
+		} else {
 			b = false;
+		}
 
 		jComboBoxAlphaThr.setEnabled(b);
 		jComboBoxHiMedThr.setEnabled(b);
 		jComboBoxMedLowThr.setEnabled(b);
 
-		if ( (Core.getInputMode()  == Core.InputMode.VOBSUB  || Core.getInputMode() == Core.InputMode.SUPIFO) )
+		if ( (Core.getInputMode()  == InputMode.VOBSUB  || Core.getInputMode() == InputMode.SUPIFO) ) {
 			b = true;
-		else
+		} else {
 			b = false;
+		}
 		jMenuItemEditCurColors.setEnabled(b);
 		jMenuItemEditFramePalAlpha.setEnabled(b);
 	}
@@ -1889,22 +1945,24 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 		boolean ready = Core.isReady();
 		Core.setReady(false);
 		jComboBoxPalette.removeAllItems();
-		for (Core.PaletteMode m : Core.PaletteMode.values())
-			if (!b || m != PaletteMode.CREATE_DITHERED)
-				jComboBoxPalette.addItem(Core.getPaletteModeName(m));
-		if (!b || Core.getPaletteMode() != PaletteMode.CREATE_DITHERED)
+		for (PaletteMode m : PaletteMode.values()) {
+			if (!b || m != PaletteMode.CREATE_DITHERED) {
+				jComboBoxPalette.addItem(m.toString());
+			}
+		}
+		if (!b || Core.getPaletteMode() != PaletteMode.CREATE_DITHERED) {
 			jComboBoxPalette.setSelectedIndex(Core.getPaletteMode().ordinal());
-		else
+		} else {
 			jComboBoxPalette.setSelectedIndex(PaletteMode.CREATE_NEW.ordinal());
+		}
 
-		if (!b || Core.getInputMode() == Core.InputMode.VOBSUB || Core.getInputMode() == Core.InputMode.SUPIFO) {
+		if (!b || Core.getInputMode() == InputMode.VOBSUB || Core.getInputMode() == InputMode.SUPIFO) {
 			jComboBoxPalette.setEnabled(true);
 		} else {
 			jComboBoxPalette.setEnabled(false);
 		}
 
 		enableVobSubMenuCombo();
-
 		Core.setReady(ready);
 	}
 
@@ -1919,24 +1977,28 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 		if (w+e > 0) {
 			String s = "";
 			if (w > 0) {
-				if (w==1)
+				if (w==1) {
 					s += w+" warning";
-				else
+				} else {
 					s += w+" warnings";
+				}
 			}
-			if (w>0 && e>0)
+			if (w>0 && e>0) {
 				s += " and ";
+			}
 			if (e > 0) {
-				if (e==1)
+				if (e==1) {
 					s = e+" error";
-				else
+				} else {
 					s = e+" errors";
+				}
 			}
 
-			if (w+e < 3)
+			if (w+e < 3) {
 				s = "There was "+s;
-			else
+			} else {
 				s = "There were "+s;
+			}
 
 			JOptionPane.showMessageDialog(mainFrame,
 					s+"\nCheck the log for details",
@@ -1946,18 +2008,18 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 
 	private void load(String fname) {
 		if (fname != null) {
-			if (!new File(fname).exists())
+			if (!new File(fname).exists()) {
 				JOptionPane.showMessageDialog(mainFrame, "File '"+fname+"' does not exist",
 						"File not found!", JOptionPane.WARNING_MESSAGE);
-			else {
+			} else {
 				synchronized (threadSemaphore) {
 					boolean xml = ToolBox.getExtension(fname).equalsIgnoreCase("xml");
 					boolean idx = ToolBox.getExtension(fname).equalsIgnoreCase("idx");
 					boolean ifo = ToolBox.getExtension(fname).equalsIgnoreCase("ifo");
 					byte id[] = ToolBox.getFileID(fname, 4);
-					StreamID sid = (id == null) ? Core.StreamID.UNKNOWN : Core.getStreamID(id);
-					if (idx || xml || ifo || sid != Core.StreamID.UNKNOWN) {
-						mainFrame.setTitle(Core.getProgVerName()+" - "+fname);
+					StreamID sid = (id == null) ? StreamID.UNKNOWN : Core.getStreamID(id);
+					if (idx || xml || ifo || sid != StreamID.UNKNOWN) {
+						mainFrame.setTitle(APP_NAME_AND_VERSION + " - " + fname);
 						subIndex = 0;
 						loadPath = fname;
 						saveFilename = ToolBox.stripExtension(ToolBox.getFileName(loadPath));
@@ -1970,33 +2032,38 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 							int num = Core.getNumFrames();
 							Core.setReady(false);
 							jComboBoxSubNum.removeAllItems();
-							for (int i=1; i<=num; i++)
+							for (int i=1; i<=num; i++) {
 								jComboBoxSubNum.addItem(Integer.toString(i));
+							}
 							jComboBoxSubNum.setSelectedIndex(subIndex);
 							jComboBoxAlphaThr.setSelectedIndex(Core.getAlphaThr());
 							jComboBoxHiMedThr.setSelectedIndex(Core.getLumThr()[0]);
 							jComboBoxMedLowThr.setSelectedIndex(Core.getLumThr()[1]);
 							//
-							if (Core.getCropOfsY() > 0)
+							if (Core.getCropOfsY() > 0) {
 								if (JOptionPane.showConfirmDialog(mainFrame, "Reset Crop Offset?",
-										"", JOptionPane.YES_NO_OPTION) == 0)
+										"", JOptionPane.YES_NO_OPTION) == 0) {
 									Core.setCropOfsY(0);
+								}
+							}
 
 							ConversionDialog trans = new ConversionDialog(mainFrame, true);
 							trans.enableOptionMove(Core.getMoveCaptions());
 							trans.setVisible(true);
 							if (!trans.wasCanceled()) {
 								Core.scanSubtitles();
-								if (Core.getMoveCaptions())
+								if (Core.getMoveCaptions()) {
 									Core.moveAllThreaded(mainFrame);
+								}
 								Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
 								Core.setReady(true);
 								jMenuItemExit.setEnabled(true);
 								refreshSrcFrame(subIndex);
 								refreshTrgFrame(subIndex);
 								enableCoreComponents(true);
-								if (Core.getOutputMode() == Core.OutputMode.VOBSUB || Core.getInputMode() == Core.InputMode.SUPIFO)
+								if (Core.getOutputMode() == OutputMode.VOBSUB || Core.getInputMode() == InputMode.SUPIFO) {
 									enableVobsubStuff(true);
+								}
 								// tell the core that a stream was loaded via the GUI
 								Core.loadedHook();
 								Core.addRecent(loadPath);
@@ -2037,7 +2104,7 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 			jMenuItemLoad.setText("Load");
 			jMenuItemLoad.setMnemonic('l');
 			jMenuItemLoad.addActionListener(new ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+				public void actionPerformed(ActionEvent e) {
 					String[] ext = new String[5];
 					ext[0] = "idx";
 					ext[1] = "ifo";
@@ -2048,10 +2115,11 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 					String p = ToolBox.getPathName(loadPath);
 					String fn = ToolBox.getFileName(loadPath);
 					final String fname = ToolBox.getFileName(p, fn, ext, true, mainFrame);
-					(new Thread() { @Override
-					public void run() {
-						load(fname);
-					} }).start();
+					(new Thread() {
+						@Override
+						public void run() {
+							load(fname);
+						} }).start();
 				}
 			});
 		}
@@ -2074,13 +2142,14 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 				j.setActionCommand(s);				
 				j.setMnemonic((""+i).charAt(0));
 				j.addActionListener(new ActionListener() {
-					public void actionPerformed(java.awt.event.ActionEvent e) {
+					public void actionPerformed(ActionEvent e) {
 						console.setText("");
 						final String fname = e.getActionCommand();
-						(new Thread() { @Override
-						public void run() {
-							load(fname);
-						} }).start();
+						(new Thread() {
+							@Override
+							public void run() {
+								load(fname);
+							} }).start();
 					}
 				});				
 				jMenuRecent.add(j);
@@ -2115,20 +2184,21 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 			jMenuItemSave.setMnemonic('s');
 			jMenuItemSave.setEnabled(false);
 			jMenuItemSave.addActionListener(new ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+				public void actionPerformed(ActionEvent e) {
 					boolean showException = true;
 					String path;
 					try {
 						ExportDialog exp = new ExportDialog(mainFrame, true);
 						path = savePath + File.separatorChar + saveFilename+"_exp.";
-						if (Core.getOutputMode() == Core.OutputMode.VOBSUB)
+						if (Core.getOutputMode() == OutputMode.VOBSUB) {
 							path += "idx";
-						else if (Core.getOutputMode() == Core.OutputMode.SUPIFO)
+						} else if (Core.getOutputMode() == OutputMode.SUPIFO) {
 							path += "ifo";
-						else if (Core.getOutputMode() == Core.OutputMode.BDSUP)
+						} else if (Core.getOutputMode() == OutputMode.BDSUP) {
 							path += "sup";
-						else
+						} else {
 							path += "xml";
+						}
 
 						exp.setFileName(path);
 						exp.setVisible(true);
@@ -2140,10 +2210,10 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 							saveFilename = saveFilename.replaceAll("_exp$","");
 							//
 							File fi,fs;
-							if (Core.getOutputMode() == Core.OutputMode.VOBSUB) {
+							if (Core.getOutputMode() == OutputMode.VOBSUB) {
 								fi = new File(ToolBox.stripExtension(fn)+".idx");
 								fs = new File(ToolBox.stripExtension(fn)+".sub");
-							} else if (Core.getOutputMode() == Core.OutputMode.SUPIFO) {
+							} else if (Core.getOutputMode() == OutputMode.SUPIFO) {
 								fi = new File(ToolBox.stripExtension(fn)+".ifo");
 								fs = new File(ToolBox.stripExtension(fn)+".sup");
 							} else {
@@ -2152,11 +2222,13 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 							}
 							if (fi.exists() || fs.exists()) {
 								showException = false;
-								if ((fi.exists() && !fi.canWrite()) || (fs.exists() && !fs.canWrite()))
+								if ((fi.exists() && !fi.canWrite()) || (fs.exists() && !fs.canWrite())) {
 									throw new CoreException("Target is write protected.");
+								}
 								if (JOptionPane.showConfirmDialog(mainFrame, "Target exists! Overwrite?",
-										"", JOptionPane.YES_NO_OPTION) == 1)
+										"", JOptionPane.YES_NO_OPTION) == 1) {
 									throw new CoreException("Target exists. Aborted by user.");
+								}
 								showException = true;
 							}
 							// start conversion
@@ -2164,8 +2236,9 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 							warningDialog();
 						}
 					} catch (CoreException ex) {
-						if (showException)
+						if (showException) {
 							error(ex.getMessage());
+						}
 					} catch (Exception ex) {
 						ToolBox.showException(ex);
 						exit(4);
@@ -2212,7 +2285,7 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 			jMenuItemClose.setEnabled(false);
 			jMenuItemClose.setMnemonic('c');
 			jMenuItemClose.addActionListener(new ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+				public void actionPerformed(ActionEvent e) {
 					Core.close();
 					closeSub();
 				}
@@ -2232,7 +2305,7 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 			jMenuItemExit.setText("Exit");
 			jMenuItemExit.setMnemonic('e');
 			jMenuItemExit.addActionListener(new ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+				public void actionPerformed(ActionEvent e) {
 					exit(0);
 				}
 			});
@@ -2278,12 +2351,13 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 			jPopupMenuItemCopy = new JMenuItem();
 			jPopupMenuItemCopy.setText("Copy");
 			jPopupMenuItemCopy.addActionListener(new ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+				public void actionPerformed(ActionEvent e) {
 					String s = console.getSelectedText();
 					try {
-						if (s!=null)
+						if ( s!= null) {
 							setClipboard(s);
-					}catch (OutOfMemoryError ex) {
+						}
+					} catch (OutOfMemoryError ex) {
 						JOptionPane.showMessageDialog(mainFrame,"Out of heap! Use -Xmx256m to increase heap! ","Error!", JOptionPane.WARNING_MESSAGE);
 					}
 				}
@@ -2302,7 +2376,7 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 			jPopupMenuItemClear = new JMenuItem();
 			jPopupMenuItemClear.setText("Clear");  // Generated
 			jPopupMenuItemClear.addActionListener(new ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+				public void actionPerformed(ActionEvent e) {
 					console.setText("");
 				}
 			});
@@ -2363,22 +2437,23 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 							ed.setIndex(subIndex);
 							ed.setVisible(true);
 							subIndex = ed.getIndex();
-							(new Thread() { @Override
+							(new Thread() {
+								@Override
 								public void run() {
-								synchronized (threadSemaphore) {
-								try {
-									Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
-									refreshSrcFrame(subIndex);
-									refreshTrgFrame(subIndex);
-									jComboBoxSubNum.setSelectedIndex(subIndex);
-								} catch (CoreException ex) {
-									error(ex.getMessage());
-								} catch (Exception ex) {
-									ToolBox.showException(ex);
-									exit(4);
-								}
+									synchronized (threadSemaphore) {
+										try {
+											Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
+											refreshSrcFrame(subIndex);
+											refreshTrgFrame(subIndex);
+											jComboBoxSubNum.setSelectedIndex(subIndex);
+										} catch (CoreException ex) {
+											error(ex.getMessage());
+										} catch (Exception ex) {
+											ToolBox.showException(ex);
+											exit(4);
+										}
 
-							} } }).start();
+									} } }).start();
 						}
 					}
 				}
@@ -2405,7 +2480,6 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 	 */
 	@Override
 	public void lostOwnership(Clipboard clipboard, Transferable contents) {
-		// NOP
 	}
 
 	/**
@@ -2420,10 +2494,10 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 			jComboBoxPalette.setToolTipText("Select palette mode");
 			jComboBoxPalette.setPreferredSize(new Dimension(120, 20));
 			jComboBoxPalette.addActionListener(new ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+				public void actionPerformed(ActionEvent e) {
 					if (Core.isReady()) {
 						int idx = jComboBoxPalette.getSelectedIndex();
-						for (Core.PaletteMode m : Core.PaletteMode.values()) {
+						for (PaletteMode m : PaletteMode.values()) {
 							if (idx == m.ordinal()) {
 								Core.setPaletteMode(m);
 								break;
@@ -2432,20 +2506,21 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 
 						enableVobSubMenuCombo();
 
-						(new Thread() { @Override
+						(new Thread() {
+							@Override
 							public void run() {
-							synchronized (threadSemaphore) {
-							try {
-								Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
-								refreshTrgFrame(subIndex);
-							} catch (CoreException ex) {
-								error(ex.getMessage());
-							} catch (Exception ex) {
-								ToolBox.showException(ex);
-								exit(4);
-							}
+								synchronized (threadSemaphore) {
+									try {
+										Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
+										refreshTrgFrame(subIndex);
+									} catch (CoreException ex) {
+										error(ex.getMessage());
+									} catch (Exception ex) {
+										ToolBox.showException(ex);
+										exit(4);
+									}
 
-						} } }).start();
+								} } }).start();
 					}
 				}
 			});
@@ -2465,30 +2540,31 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 			jComboBoxFilter.setToolTipText("Select filter for scaling");
 			jComboBoxFilter.setPreferredSize(new Dimension(120, 20));
 			jComboBoxFilter.addActionListener(new ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+				public void actionPerformed(ActionEvent e) {
 					if (Core.isReady()) {
 						int idx = jComboBoxFilter.getSelectedIndex();
-						for (Core.ScalingFilters s : Core.ScalingFilters.values()) {
+						for (ScalingFilter s : ScalingFilter.values()) {
 							if (idx == s.ordinal()) {
 								Core.setScalingFilter(s);
 								break;
 							}
 						}
 
-						(new Thread() { @Override
+						(new Thread() {
+							@Override
 							public void run() {
-							synchronized (threadSemaphore) {
-							try {
-								Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
-								refreshTrgFrame(subIndex);
-							} catch (CoreException ex) {
-								error(ex.getMessage());
-							} catch (Exception ex) {
-								ToolBox.showException(ex);
-								exit(4);
-							}
+								synchronized (threadSemaphore) {
+									try {
+										Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
+										refreshTrgFrame(subIndex);
+									} catch (CoreException ex) {
+										error(ex.getMessage());
+									} catch (Exception ex) {
+										ToolBox.showException(ex);
+										exit(4);
+									}
 
-						} } }).start();
+								} } }).start();
 					}
 				}
 			});
@@ -2496,5 +2572,4 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 		}
 		return jComboBoxFilter;
 	}
-
 }

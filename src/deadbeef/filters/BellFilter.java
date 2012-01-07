@@ -21,15 +21,15 @@ package deadbeef.filters;
  *
  * @author 0xdeadbeef
  */
-final class BellFilter implements Filter {
+public class BellFilter implements Filter {
 
 	public float getRadius() {
 		return 1.5f;
 	}
 
-	public final float value(float value) {
+	public float value(float value) {
 		if (value < 0.0f)
-			value = - value;
+			value = -value;
 
 		if (value < 0.5f)
 			return 0.75f - (value * value);

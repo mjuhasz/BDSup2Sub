@@ -21,12 +21,14 @@ import javax.swing.BoxLayout;
 import javax.swing.JEditorPane;
 import javax.swing.JFrame;
 import javax.swing.JMenuItem;
+import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
+import javax.swing.WindowConstants;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
 
-import deadbeef.core.Core;
+import deadbeef.core.Constants;
 import deadbeef.tools.Props;
 import deadbeef.tools.ToolBox;
 
@@ -52,14 +54,14 @@ import deadbeef.tools.ToolBox;
  * @author 0xdeadbeef
  */
 public class Help extends JFrame {
-	final static long serialVersionUID = 0x000000001;
+	private static final long serialVersionUID = 0x000000001;
 
-	private javax.swing.JPanel jContentPane = null;
-	private JScrollPane jScrollPane = null;
-	private JPopupMenu jPopupMenu = null;
-	private JMenuItem jPopupMenuItemCopy = null;
-	private JMenuItem jPopupMenuItemOpen = null;
-	private JEditorPane thisEditor = null;
+	private javax.swing.JPanel jContentPane;
+	private JScrollPane jScrollPane;
+	private JPopupMenu jPopupMenu;
+	private JMenuItem jPopupMenuItemCopy;
+	private JMenuItem jPopupMenuItemOpen;
+	private JEditorPane thisEditor;
 	
 	private URL helpURL;
 	private Props chapters;
@@ -82,18 +84,20 @@ public class Help extends JFrame {
 					URL url = e.getURL();
 					if (e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
 						try {							
-							if (url.sameFile(helpURL))
+							if (url.sameFile(helpURL)) {
 								thisEditor.setPage(url);
-							else
+							} else {
 								Desktop.getDesktop().browse(url.toURI());
+							}
 						} catch (IOException ex) {
 						} catch (URISyntaxException ex) {
 						}
 					} else if (e.getEventType() == HyperlinkEvent.EventType.ENTERED) {
-						if (url.sameFile(helpURL))
+						if (url.sameFile(helpURL)) {
 							thisEditor.setToolTipText(url.getRef());
-						else
+						} else {
 							thisEditor.setToolTipText(url.toExternalForm());
+						}
 					} else if (e.getEventType() == HyperlinkEvent.EventType.EXITED) {
 						thisEditor.setToolTipText(null);
 					}
@@ -106,7 +110,7 @@ public class Help extends JFrame {
 			jPopupMenu.addSeparator();			
 			String s;
 			int i = 0;
-			while ((s = chapters.get("chapter_"+i, "")).length()>0) {
+			while ((s = chapters.get("chapter_"+i, "")).length() > 0) {
 				String str[] = s.split(",");
 				if (str.length == 2) {
 					JMenuItem j = new JMenuItem();
@@ -122,16 +126,13 @@ public class Help extends JFrame {
 			
 			MouseListener popupListener = new PopupListener();
 			thisEditor.addMouseListener(popupListener);
-		} catch (IOException ex) {ex.printStackTrace();};
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
 	}
 
-	/**
-	 * ctor
-	 * @throws java.awt.HeadlessException
-	 */
 	public Help() throws HeadlessException {
 		super();
-		// TODO Auto-generated constructor stub
 		initialize();
 		init();
 	}
@@ -140,7 +141,7 @@ public class Help extends JFrame {
 	 * write a string to the system clipboard.
 	 * @param str string to write to the clipboard
 	 */
-	private static void setClipboard(final String str) {
+	private static void setClipboard(String str) {
 		StringSelection ss = new StringSelection(str);
 		Toolkit.getDefaultToolkit().getSystemClipboard().setContents(ss, null);
 	}
@@ -181,8 +182,9 @@ public class Help extends JFrame {
 						ToolBox.showException(ex);
 					} finally {
 						try {
-							if (fw != null)
+							if (fw != null) {
 								fw.close();
+							}
 						} catch (IOException ex) {
 							ToolBox.showException(ex);
 						};
@@ -203,11 +205,12 @@ public class Help extends JFrame {
 		if (jPopupMenuItemCopy == null) {
 			jPopupMenuItemCopy = new JMenuItem();
 			jPopupMenuItemCopy.setText("Copy");  // Generated
-			jPopupMenuItemCopy.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
+			jPopupMenuItemCopy.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
 					String s = thisEditor.getSelectedText();
-					if (s!=null)
+					if (s != null) {
 						setClipboard(s);
+					}
 				}
 			});
 		}
@@ -218,17 +221,17 @@ public class Help extends JFrame {
 	 * This method initializes this frame
 	 */
 	private void initialize() {
-		this.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+		this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		this.setSize(600,600);
 		this.setContentPane(getJContentPane());
-		this.setTitle(Core.getProgVerName()+" Help");
+		this.setTitle(Constants.APP_NAME_AND_VERSION + " Help");
 	}
 
 	/**
 	 * This method initializes jContentPane
 	 * @return javax.swing.JPanel
 	 */
-	private javax.swing.JPanel getJContentPane() {
+	private JPanel getJContentPane() {
 		if(jContentPane == null) {
 			jContentPane = new javax.swing.JPanel();
 			jContentPane.setLayout(new BoxLayout(jContentPane, BoxLayout.X_AXIS));
@@ -305,4 +308,3 @@ class helpAnchorListener implements ActionListener {
 		}
 	}	
 }
-	

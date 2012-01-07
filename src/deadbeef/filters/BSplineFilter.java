@@ -21,16 +21,16 @@ package deadbeef.filters;
  *
  * @author 0xdeadbeef
  */
-final class BSplineFilter implements Filter {
+public class BSplineFilter implements Filter {
 
 	public float getRadius() {
 		return 2.0f;
 	}
 
-	public final float value(float value) {
-		if (value < 0.0f)
+	public float value(float value) {
+		if (value < 0.0f) {
 			value = - value;
-
+		}
 		if (value < 1.0f) {
 			float tt = value * value;
 			return 0.5f * tt * value - tt + (2.0f / 3.0f);

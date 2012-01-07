@@ -68,9 +68,9 @@ import javax.swing.filechooser.FileFilter;
 
 public class JFileFilter extends FileFilter {
 
-	private Hashtable<String,JFileFilter> filters = null;
-	private String description = null;
-	private String fullDescription = null;
+	private Hashtable<String,JFileFilter> filters;
+	private String description;
+	private String fullDescription;
 	private boolean useExtensionsInDescription = true;
 
 	/**
@@ -91,7 +91,7 @@ public class JFileFilter extends FileFilter {
 	 * @see #addExtension(String)
 	 */
 	public JFileFilter(String extension) {
-		this(extension,null);
+		this(extension, null);
 	}
 
 	/**
@@ -108,8 +108,12 @@ public class JFileFilter extends FileFilter {
 	 */
 	public JFileFilter(String extension, String description) {
 		this();
-		if(extension!=null) addExtension(extension);
-		if(description!=null) setDescription(description);
+		if(extension!=null) {
+			addExtension(extension);
+		}
+		if(description!=null) {
+			setDescription(description);
+		}
 	}
 
 	/**
@@ -144,7 +148,9 @@ public class JFileFilter extends FileFilter {
 			// add filters one by one
 			addExtension(filters[i]);
 		}
-		if(description!=null) setDescription(description);
+		if(description!=null) {
+			setDescription(description);
+		}
 	}
 
 	/**
@@ -182,7 +188,7 @@ public class JFileFilter extends FileFilter {
 		if(f != null) {
 			String filename = f.getName();
 			int i = filename.lastIndexOf('.');
-			if(i>0 && i<filename.length()-1) {
+			if(i > 0 && i < filename.length()-1) {
 				return filename.substring(i+1).toLowerCase();
 			};
 		}

@@ -1,4 +1,4 @@
-package deadbeef.SupTools;
+package deadbeef.bitmap;
 
 import static org.junit.Assert.*;
 
@@ -8,7 +8,7 @@ import deadbeef.bitmap.Bitmap;
 import deadbeef.bitmap.BitmapWithPalette;
 import deadbeef.bitmap.Palette;
 
-public class PaletteBitmapTest {
+public class BitmapWithPaletteTest {
 
 	private BitmapWithPalette subject;
 	
