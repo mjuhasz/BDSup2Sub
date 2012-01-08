@@ -30,7 +30,7 @@ import javax.swing.event.HyperlinkListener;
 
 import deadbeef.core.Constants;
 import deadbeef.tools.Props;
-import deadbeef.tools.ToolBox;
+import deadbeef.utils.ToolBox;
 
 /*
  * Copyright 2009 Volker Oth (0xdeadbeef)

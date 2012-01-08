@@ -2,6 +2,8 @@ package deadbeef.supstream;
 
 
 import static deadbeef.core.Constants.*;
+import static deadbeef.utils.ByteUtils.*;
+import static deadbeef.utils.TimeUtils.*;
 
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
@@ -19,7 +21,7 @@ import deadbeef.core.Core;
 import deadbeef.core.CoreException;
 import deadbeef.tools.FileBuffer;
 import deadbeef.tools.FileBufferException;
-import deadbeef.tools.ToolBox;
+import deadbeef.utils.ToolBox;
 
 /*
  * Copyright 2009 Volker Oth (0xdeadbeef)
@@ -133,7 +135,7 @@ public class SubDVD implements Substream, SubstreamDVD {
 		for (int i=0; i < subPictures.size(); i++) {
 			Core.setProgress(i);
 			Core.printX("# " + (i+1) + "\n");
-			Core.print("Ofs: " + ToolBox.hex(subPictures.get(i).offset,8) + "\n");
+			Core.print("Ofs: " + ToolBox.toHexLeftZeroPadded(subPictures.get(i).offset,8) + "\n");
 			long nextOfs;
 			if (i < subPictures.size() - 1) {
 				nextOfs =  subPictures.get(i+1).offset;
@@ -654,7 +656,7 @@ public class SubDVD implements Substream, SubstreamDVD {
 				if (key.equalsIgnoreCase("time offset")) {
 					v = ToolBox.getInt(val);
 					if (v < 0) {
-						v = (int)ToolBox.timeStrToPTS(val);
+						v = (int)timeStrToPTS(val);
 					}
 					if (v < 0) {
 						throw new CoreException("Illegal time offset: " + v);
@@ -766,7 +768,7 @@ public class SubDVD implements Substream, SubstreamDVD {
 							throw new CoreException("Illegal timestamp entry: " + val);
 						}
 						vs = val.substring(0,pos);
-						long t = ToolBox.timeStrToPTS(vs);
+						long t = timeStrToPTS(vs);
 						if (t < 0) {
 							throw new CoreException("Illegal timestamp: " + vs);
 						}
@@ -838,7 +840,7 @@ public class SubDVD implements Substream, SubstreamDVD {
 
 		if (w > pic.width || h > pic.height) {
 			Core.printWarn("Subpicture too large: " + w + "x" + h
-					+ " at offset " + ToolBox.hex(startOfs, 8) + "\n");
+					+ " at offset " + ToolBox.toHexLeftZeroPadded(startOfs, 8) + "\n");
 		}
 
 		Bitmap bm = new Bitmap(w, h, (byte)transIdx);
@@ -889,7 +891,7 @@ public class SubDVD implements Substream, SubstreamDVD {
 			}
 
 			if (warnings > 0) {
-				Core.printWarn("problems during RLE decoding of picture at offset " + ToolBox.hex(startOfs,8) + "\n");
+				Core.printWarn("problems during RLE decoding of picture at offset " + ToolBox.toHexLeftZeroPadded(startOfs,8) + "\n");
 			}
 			return bm;
 		} catch (FileBufferException ex) {
@@ -924,7 +926,7 @@ public class SubDVD implements Substream, SubstreamDVD {
 				// 4 bytes:  packet identifier 0x000001ba
 				long startOfs = ofs;
 				if (buffer.getDWord(ofs) != 0x000001ba) {
-					throw new CoreException("Missing packet identifier at ofs " + ToolBox.hex(ofs,8));
+					throw new CoreException("Missing packet identifier at ofs " + ToolBox.toHexLeftZeroPadded(ofs,8));
 				}
 				// 6 bytes:  system clock reference
 				// 3 bytes:  multiplexer rate
@@ -932,7 +934,7 @@ public class SubDVD implements Substream, SubstreamDVD {
 				int stuffOfs = buffer.getByte(ofs+=13) & 7;
 				// 4 bytes:  sub packet ID 0x000001bd
 				if (buffer.getDWord(ofs += (1+stuffOfs)) != 0x000001bd) {
-					throw new CoreException("Missing packet identifier at ofs " + ToolBox.hex(ofs,8));
+					throw new CoreException("Missing packet identifier at ofs " + ToolBox.toHexLeftZeroPadded(ofs,8));
 				}
 				// 2 bytes:  packet length (number of bytes after this entry)
 				length = buffer.getWord(ofs+=4);
@@ -949,7 +951,7 @@ public class SubDVD implements Substream, SubstreamDVD {
 					// packet doesn't belong to stream -> skip
 					if (nextOfs % 0x800 != 0) {
 						ofs = (nextOfs/0x800 + 1)*0x800;
-						Core.printWarn("Offset to next fragment is invalid. Fixed to:"+ToolBox.hex(ofs, 8)+"\n");
+						Core.printWarn("Offset to next fragment is invalid. Fixed to:"+ToolBox.toHexLeftZeroPadded(ofs, 8)+"\n");
 					} else {
 						ofs = nextOfs;
 					}
@@ -976,7 +978,7 @@ public class SubDVD implements Substream, SubstreamDVD {
 					if (firstPackFound) {
 						ctrlOfs += headerSize; // fix absolute offset by adding header bytes
 					} else {
-						Core.printWarn("Invalid fragment skipped at ofs " + ToolBox.hex(startOfs, 8) + "\n");
+						Core.printWarn("Invalid fragment skipped at ofs " + ToolBox.toHexLeftZeroPadded(startOfs, 8) + "\n");
 					}
 				}
 
@@ -1003,7 +1005,7 @@ public class SubDVD implements Substream, SubstreamDVD {
 
 				if (ctrlHeaderCopied != ctrlSize && (nextOfs % 0x800 != 0)) {
 					ofs = (nextOfs/0x800 + 1) * 0x800;
-					Core.printWarn("Offset to next fragment is invalid. Fixed to:" + ToolBox.hex(ofs, 8) + "\n");
+					Core.printWarn("Offset to next fragment is invalid. Fixed to:" + ToolBox.toHexLeftZeroPadded(ofs, 8) + "\n");
 					rleBufferFound += ofs-nextOfs;
 				} else {
 					ofs = nextOfs;
@@ -1035,13 +1037,13 @@ public class SubDVD implements Substream, SubstreamDVD {
 		int delay = -1;
 		boolean ColAlphaUpdate = false;
 
-		Core.print("SP_DCSQT at ofs: " + ToolBox.hex(ctrlOfs,8) + "\n");
+		Core.print("SP_DCSQT at ofs: " + ToolBox.toHexLeftZeroPadded(ctrlOfs,8) + "\n");
 
 		try {
 			// parse control header
 			int b;
 			int index = 0;
-			int endSeqOfs = ToolBox.getWord(ctrlHeader, index) - ctrlOfsRel - 2;
+			int endSeqOfs = getWord(ctrlHeader, index) - ctrlOfsRel - 2;
 			if (endSeqOfs < 0 || endSeqOfs > ctrlSize) {
 				Core.printWarn("Invalid end sequence offset -> no end time\n");
 				endSeqOfs = ctrlSize;
@@ -1049,7 +1051,7 @@ public class SubDVD implements Substream, SubstreamDVD {
 			index += 2;
 			parse_ctrl:
 			while (index < endSeqOfs) {
-				int cmd = ToolBox.getByte(ctrlHeader, index++);
+				int cmd = getByte(ctrlHeader, index++);
 				switch (cmd) {
 					case 0: // forced (?)
 						pic.isforced = true;
@@ -1058,19 +1060,19 @@ public class SubDVD implements Substream, SubstreamDVD {
 					case 1: // start display
 						break;
 					case 3: // palette info
-						b = ToolBox.getByte(ctrlHeader, index++);
+						b = getByte(ctrlHeader, index++);
 						pic.pal[3] = (b >> 4);
 						pic.pal[2] = b & 0x0f;
-						b = ToolBox.getByte(ctrlHeader, index++);
+						b = getByte(ctrlHeader, index++);
 						pic.pal[1] = (b >> 4);
 						pic.pal[0] = b & 0x0f;
 						Core.print("Palette:   "+pic.pal[0]+", "+pic.pal[1]+", "+pic.pal[2]+", "+pic.pal[3]+"\n");
 						break;
 					case 4: // alpha info
-						b = ToolBox.getByte(ctrlHeader, index++);
+						b = getByte(ctrlHeader, index++);
 						pic.alpha[3] = (b >> 4);
 						pic.alpha[2] = b & 0x0f;
-						b = ToolBox.getByte(ctrlHeader, index++);
+						b = getByte(ctrlHeader, index++);
 						pic.alpha[1] = (b >> 4);
 						pic.alpha[0] = b & 0x0f;
 						for (int i = 0; i<4; i++) {
@@ -1079,32 +1081,32 @@ public class SubDVD implements Substream, SubstreamDVD {
 						Core.print("Alpha:     "+pic.alpha[0]+", "+pic.alpha[1]+", "+pic.alpha[2]+", "+pic.alpha[3]+"\n");
 						break;
 					case 5: // coordinates
-						int xOfs = (ToolBox.getByte(ctrlHeader, index)<<4) | (ToolBox.getByte(ctrlHeader, index+1)>>4);
+						int xOfs = (getByte(ctrlHeader, index)<<4) | (getByte(ctrlHeader, index+1)>>4);
 						pic.setOfsX(ofsXglob+xOfs);
-						pic.setImageWidth((((ToolBox.getByte(ctrlHeader, index+1)&0xf)<<8) | (ToolBox.getByte(ctrlHeader, index+2))) - xOfs + 1);
-						int yOfs = (ToolBox.getByte(ctrlHeader, index+3)<<4) | (ToolBox.getByte(ctrlHeader, index+4)>>4);
+						pic.setImageWidth((((getByte(ctrlHeader, index+1)&0xf)<<8) | (getByte(ctrlHeader, index+2))) - xOfs + 1);
+						int yOfs = (getByte(ctrlHeader, index+3)<<4) | (getByte(ctrlHeader, index+4)>>4);
 						pic.setOfsY(ofsYglob+yOfs);
-						pic.setImageHeight((((ToolBox.getByte(ctrlHeader, index+4)&0xf)<<8) | (ToolBox.getByte(ctrlHeader, index+5))) - yOfs + 1);
+						pic.setImageHeight((((getByte(ctrlHeader, index+4)&0xf)<<8) | (getByte(ctrlHeader, index+5))) - yOfs + 1);
 						Core.print("Area info:"+" ("
 								+pic.getOfsX()+", "+pic.getOfsY()+") - ("+(pic.getOfsX()+pic.getImageWidth()-1)+", "
 								+(pic.getOfsY()+pic.getImageHeight()-1)+")\n");
 						index += 6;
 						break;
 					case 6: // offset to RLE buffer
-						pic.evenOfs = ToolBox.getWord(ctrlHeader, index) - 4;
-						pic.oddOfs  = ToolBox.getWord(ctrlHeader, index+2) - 4;
+						pic.evenOfs = getWord(ctrlHeader, index) - 4;
+						pic.oddOfs  = getWord(ctrlHeader, index+2) - 4;
 						index += 4;
-						Core.print("RLE ofs:   "+ToolBox.hex(pic.evenOfs, 4)+", "+ToolBox.hex(pic.oddOfs, 4)+"\n");
+						Core.print("RLE ofs:   "+ToolBox.toHexLeftZeroPadded(pic.evenOfs, 4)+", "+ToolBox.toHexLeftZeroPadded(pic.oddOfs, 4)+"\n");
 						break;
 					case 7: // color/alpha update
 						ColAlphaUpdate = true;
 						//int len = ToolBox.getWord(ctrlHeader, index);
 						// ignore the details for now, but just get alpha and palette info
 						alphaUpdateSum = 0;
-						b = ToolBox.getByte(ctrlHeader, index+10);
+						b = getByte(ctrlHeader, index+10);
 						alphaUpdate[3] = (b >> 4);
 						alphaUpdate[2] = b & 0x0f;
-						b = ToolBox.getByte(ctrlHeader, index+11);
+						b = getByte(ctrlHeader, index+11);
 						alphaUpdate[1] = (b >> 4);
 						alphaUpdate[0] = b & 0x0f;
 						for (int i = 0; i<4; i++) {
@@ -1117,17 +1119,17 @@ public class SubDVD implements Substream, SubstreamDVD {
 								pic.alpha[i] = alphaUpdate[i];
 							}
 							// take over frame palette
-							b = ToolBox.getByte(ctrlHeader, index+8);
+							b = getByte(ctrlHeader, index+8);
 							pic.pal[3] = (b >> 4);
 							pic.pal[2] = b & 0x0f;
-							b = ToolBox.getByte(ctrlHeader, index+9);
+							b = getByte(ctrlHeader, index+9);
 							pic.pal[1] = (b >> 4);
 							pic.pal[0] = b & 0x0f;
 						}
 						// search end sequence
 						index = endSeqOfs;
-						delay = ToolBox.getWord(ctrlHeader, index)*1024;
-						endSeqOfs = ToolBox.getWord(ctrlHeader, index+2)-ctrlOfsRel-2;
+						delay = getWord(ctrlHeader, index)*1024;
+						endSeqOfs = getWord(ctrlHeader, index+2)-ctrlOfsRel-2;
 						if (endSeqOfs < 0 || endSeqOfs > ctrlSize) {
 							Core.printWarn("Invalid end sequence offset -> no end time\n");
 							endSeqOfs = ctrlSize;
@@ -1137,7 +1139,7 @@ public class SubDVD implements Substream, SubstreamDVD {
 					case 0xff: // end sequence
 						break parse_ctrl;
 					default:
-						Core.printWarn("Unknown control sequence " + ToolBox.hex(cmd,2) + " skipped\n");
+						Core.printWarn("Unknown control sequence " + ToolBox.toHexLeftZeroPadded(cmd,2) + " skipped\n");
 						break;
 				}
 			}
@@ -1148,8 +1150,8 @@ public class SubDVD implements Substream, SubstreamDVD {
 				int nextIndex = endSeqOfs;
 				while (nextIndex != index) {
 					index = nextIndex;
-					delay = ToolBox.getWord(ctrlHeader, index) * 1024;
-					nextIndex = ToolBox.getWord(ctrlHeader, index + 2) - ctrlOfsRel - 2;
+					delay = getWord(ctrlHeader, index) * 1024;
+					nextIndex = getWord(ctrlHeader, index + 2) - ctrlOfsRel - 2;
 					ctrlSeqCount++;
 				}
 				if (ctrlSeqCount > 2) {
@@ -1232,7 +1234,7 @@ public class SubDVD implements Substream, SubstreamDVD {
 			for (int i=0; i < pal.getSize(); i++) {
 				int rbg[] = pal.getRGB(i);
 				int val = (rbg[0]<<16) | (rbg[1]<<8) | rbg[2];
-				out.write(ToolBox.hex(val, 6).substring(2));
+				out.write(ToolBox.toHexLeftZeroPadded(val, 6).substring(2));
 				if (i != pal.getSize()-1) {
 					out.write(", ");
 				}
@@ -1250,8 +1252,8 @@ public class SubDVD implements Substream, SubstreamDVD {
 			out.write("# alt: "+LANGUAGES[Core.getLanguageIdx()][0]); out.newLine();
 			out.write("# Vob/Cell ID: 1, 1 (PTS: 0)"); out.newLine();
 			for (int i=0; i<timestamps.length; i++) {
-				out.write("timestamp: "+ToolBox.ptsToTimeStrIdx(timestamps[i]));
-				out.write(", filepos: "+ToolBox.hex(offsets[i], 9).substring(2));
+				out.write("timestamp: "+ptsToTimeStrIdx(timestamps[i]));
+				out.write(", filepos: "+ToolBox.toHexLeftZeroPadded(offsets[i], 9).substring(2));
 				out.newLine();
 			}
 		} catch (IOException ex) {

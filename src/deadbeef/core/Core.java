@@ -1,34 +1,4 @@
-package deadbeef.core;import static deadbeef.core.Constants.*;import java.awt.image.BufferedImage;
-import java.io.BufferedOutputStream;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URL;
-import java.net.URLDecoder;
-import java.util.ArrayList;
-
-import javax.swing.JFrame;
-
-import deadbeef.bitmap.Bitmap;import deadbeef.bitmap.BitmapWithPalette;import deadbeef.bitmap.ErasePatch;import deadbeef.bitmap.Palette;import deadbeef.filters.BSplineFilter;import deadbeef.filters.BellFilter;import deadbeef.filters.BiCubicFilter;import deadbeef.filters.Filter;import deadbeef.filters.HermiteFilter;import deadbeef.filters.Lanczos3Filter;import deadbeef.filters.MitchellFilter;import deadbeef.filters.TriangleFilter;
-/*
- * Copyright 2009 Volker Oth (0xdeadbeef)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-import deadbeef.gui.MainFrame;import deadbeef.gui.Progress;import deadbeef.supstream.SubDVD;import deadbeef.supstream.SubPicture;import deadbeef.supstream.SubPictureDVD;import deadbeef.supstream.Substream;import deadbeef.supstream.SubstreamDVD;import deadbeef.supstream.SupBD;import deadbeef.supstream.SupDVD;import deadbeef.supstream.SupHD;import deadbeef.supstream.SupXml;import deadbeef.tools.EnhancedPngEncoder;import deadbeef.tools.Props;import deadbeef.tools.ToolBox;
+package deadbeef.core;import static deadbeef.core.Constants.*;import static deadbeef.utils.TimeUtils.*;import java.awt.image.BufferedImage;import java.io.BufferedOutputStream;import java.io.BufferedWriter;import java.io.File;import java.io.FileOutputStream;import java.io.FileWriter;import java.io.IOException;import java.io.UnsupportedEncodingException;import java.net.URL;import java.net.URLDecoder;import java.util.ArrayList;import javax.swing.JFrame;import deadbeef.bitmap.Bitmap;import deadbeef.bitmap.BitmapWithPalette;import deadbeef.bitmap.ErasePatch;import deadbeef.bitmap.Palette;import deadbeef.filters.BSplineFilter;import deadbeef.filters.BellFilter;import deadbeef.filters.BiCubicFilter;import deadbeef.filters.Filter;import deadbeef.filters.HermiteFilter;import deadbeef.filters.Lanczos3Filter;import deadbeef.filters.MitchellFilter;import deadbeef.filters.TriangleFilter;import deadbeef.gui.MainFrame;import deadbeef.gui.Progress;import deadbeef.supstream.SubDVD;import deadbeef.supstream.SubPicture;import deadbeef.supstream.SubPictureDVD;import deadbeef.supstream.Substream;import deadbeef.supstream.SubstreamDVD;import deadbeef.supstream.SupBD;import deadbeef.supstream.SupDVD;import deadbeef.supstream.SupHD;import deadbeef.supstream.SupXml;import deadbeef.tools.EnhancedPngEncoder;import deadbeef.tools.Props;import deadbeef.utils.ToolBox;
 /**
  * This class contains the core functionality of BDSup2Sub.<br>
  * It's meant to be used from the command line as well as from the GUI.
@@ -1371,7 +1341,7 @@ public class Core  extends Thread {
 		int startOfs = (int)substream.getStartOffset(index);
 		SubPicture subPic = substream.getSubPicture(index);
 
-		printX("Decoding frame "+displayNum+"/"+displayMax+((substream == supXml)?"\n":(" at offset "+ToolBox.hex(startOfs,8)+"\n")));
+		printX("Decoding frame "+displayNum+"/"+displayMax+((substream == supXml)?"\n":(" at offset "+ToolBox.toHexLeftZeroPadded(startOfs,8)+"\n")));
 
 		synchronized (semaphore) {
 			substream.decode(index);			
@@ -2636,8 +2606,8 @@ public class Core  extends Thread {
 		String text = "screen size: "+getTrgWidth(index)+"x"+getTrgHeight(index)+"    ";
 		text +=	"image size: "+getTrgImgWidth(index)+"x"+getTrgImgHeight(index)+"    ";
 		text += "pos: ("+pic.getOfsX()+","+pic.getOfsY()+") - ("+(pic.getOfsX()+getTrgImgWidth(index))+","+(pic.getOfsY()+getTrgImgHeight(index))+")    ";
-		text += "start: "+ToolBox.ptsToTimeStr(pic.startTime)+"    ";
-		text += "end: "+ToolBox.ptsToTimeStr(pic.endTime)+"    ";
+		text += "start: "+ptsToTimeStr(pic.startTime)+"    ";
+		text += "end: "+ptsToTimeStr(pic.endTime)+"    ";
 		text += "forced: "+((pic.isforced)?"yes":"no");
 		return text;
 	}
@@ -2654,8 +2624,8 @@ public class Core  extends Thread {
 		text  = "screen size: "+pic.width+"x"+pic.height+"    ";
 		text +=	"image size: "+pic.getImageWidth()+"x"+pic.getImageHeight()+"    ";
 		text += "pos: ("+pic.getOfsX()+","+pic.getOfsY()+") - ("+(pic.getOfsX()+pic.getImageWidth())+","+(pic.getOfsY()+pic.getImageHeight())+")    ";
-		text += "start: "+ToolBox.ptsToTimeStr(pic.startTime)+"    ";
-		text += "end: "+ToolBox.ptsToTimeStr(pic.endTime)+"    ";
+		text += "start: "+ptsToTimeStr(pic.startTime)+"    ";
+		text += "end: "+ptsToTimeStr(pic.endTime)+"    ";
 		text += "forced: "+((pic.isforced)?"yes":"no");
 		return text;
 	}

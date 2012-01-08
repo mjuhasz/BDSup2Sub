@@ -33,7 +33,7 @@ import deadbeef.core.CaptionMoveModeY;
 import deadbeef.core.Core;
 import deadbeef.core.CoreException;
 import deadbeef.supstream.SubPicture;
-import deadbeef.tools.ToolBox;
+import deadbeef.utils.ToolBox;
 
 import javax.swing.BorderFactory;
 import javax.swing.border.TitledBorder;

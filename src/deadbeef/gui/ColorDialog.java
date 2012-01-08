@@ -32,7 +32,7 @@ import javax.swing.ListSelectionModel;
 
 import deadbeef.core.CoreException;
 import deadbeef.tools.Props;
-import deadbeef.tools.ToolBox;
+import deadbeef.utils.ToolBox;
 
 /*
  * Copyright 2009 Volker Oth (0xdeadbeef)

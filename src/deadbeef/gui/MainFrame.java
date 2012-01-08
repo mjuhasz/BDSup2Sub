@@ -65,7 +65,7 @@ import deadbeef.core.PaletteMode;
 import deadbeef.core.Resolution;
 import deadbeef.core.ScalingFilter;
 import deadbeef.core.StreamID;
-import deadbeef.tools.ToolBox;
+import deadbeef.utils.ToolBox;
 
 /*
  * Copyright 2009 Volker Oth (0xdeadbeef)

@@ -22,7 +22,7 @@ import javax.swing.JPanel;
 
 import deadbeef.bitmap.Palette;
 import deadbeef.core.Core;
-import deadbeef.tools.ToolBox;
+import deadbeef.utils.ToolBox;
 
 /*
  * Copyright 2009 Volker Oth (0xdeadbeef)

@@ -1,6 +1,8 @@
 package deadbeef.supstream;
 
 
+import static deadbeef.utils.TimeUtils.*;
+
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
@@ -11,7 +13,7 @@ import deadbeef.core.CoreException;
 import deadbeef.tools.BitStream;
 import deadbeef.tools.FileBuffer;
 import deadbeef.tools.FileBufferException;
-import deadbeef.tools.ToolBox;
+import deadbeef.utils.ToolBox;
 
 /*
  * Copyright 2009 Volker Oth (0xdeadbeef)
@@ -70,7 +72,7 @@ public class SupHD implements Substream {
 				Core.setProgress(index);
 
 				if (buffer.getWord(index) != 0x5350) {
-					throw new CoreException("ID 'SP' missing at index " + ToolBox.hex(index, 8) + "\n");
+					throw new CoreException("ID 'SP' missing at index " + ToolBox.toHexLeftZeroPadded(index, 8) + "\n");
 				}
 				int masterIndex = index + 10; //end of header
 				pic = new SubPictureHD();
@@ -86,7 +88,7 @@ public class SupHD implements Substream {
 				index  = ofsCmd;
 				int dcsq = buffer.getWord(index);
 				pic.startTime += (dcsq * 1024);
-				Core.printX("DCSQ start    ofs: " + ToolBox.hex(index, 8) + "  (" + ToolBox.ptsToTimeStr(pic.startTime) + ")\n");
+				Core.printX("DCSQ start    ofs: " + ToolBox.toHexLeftZeroPadded(index, 8) + "  (" + ptsToTimeStr(pic.startTime) + ")\n");
 				index += 2; // 2 bytes: dcsq
 				int nextIndex = buffer.getDWord(index) + masterIndex; // offset to next dcsq
 				index += 5;  // 4 bytes: offset, 1 byte: start
@@ -99,21 +101,21 @@ public class SupHD implements Substream {
 					cmd = buffer.getByte(index++);
 					switch (cmd) {
 						case 0x01:
-							Core.printX("DCSQ start    ofs: " + ToolBox.hex(index, 8) + "  (" + ToolBox.ptsToTimeStr(pic.startTime+(dcsq*1024)) + ")\n");
+							Core.printX("DCSQ start    ofs: " + ToolBox.toHexLeftZeroPadded(index, 8) + "  (" + ptsToTimeStr(pic.startTime+(dcsq*1024)) + ")\n");
 							Core.printWarn("DCSQ start ignored due to missing DCSQ stop\n");
 							break;
 						case 0x02:
 							stopDisplay = true;
 							pic.endTime = pic.startTime +(dcsq*1024);
-							Core.printX("DCSQ stop     ofs: " + ToolBox.hex(index,8) + "  (" + ToolBox.ptsToTimeStr(pic.endTime) + ")\n");
+							Core.printX("DCSQ stop     ofs: " + ToolBox.toHexLeftZeroPadded(index,8) + "  (" + ptsToTimeStr(pic.endTime) + ")\n");
 							break;
 						case 0x83: // palette
-							Core.print("Palette info  ofs: " + ToolBox.hex(index, 8) + "\n");
+							Core.print("Palette info  ofs: " + ToolBox.toHexLeftZeroPadded(index, 8) + "\n");
 							pic.paletteOfs = index;
 							index += 0x300;
 							break;
 						case 0x84: // alpha
-							Core.print("Alpha info    ofs: " + ToolBox.hex(index, 8) + "\n");
+							Core.print("Alpha info    ofs: " + ToolBox.toHexLeftZeroPadded(index, 8) + "\n");
 							alphaSum = 0;
 							for (int i=index; i < index+0x100; i++) {
 								alphaSum += buffer.getByte(i);
@@ -132,7 +134,7 @@ public class SupHD implements Substream {
 							pic.setImageWidth((((buffer.getByte(index+1)&0xf)<<8) | (buffer.getByte(index+2))) - pic.getOfsX() + 1);
 							pic.setOfsY((buffer.getByte(index+3)<<4) | (buffer.getByte(index+4)>>4));
 							pic.setImageHeight((((buffer.getByte(index+4)&0xf)<<8) | (buffer.getByte(index+5))) - pic.getOfsY() + 1);
-							Core.print("Area info     ofs: " + ToolBox.hex(index,8) + "  ("
+							Core.print("Area info     ofs: " + ToolBox.toHexLeftZeroPadded(index,8) + "  ("
 									+ pic.getOfsX() + ", " + pic.getOfsY() + ") - (" + (pic.getOfsX() + pic.getImageWidth()) + ", "
 									+ (pic.getOfsY() + pic.getImageHeight()) + ")\n");
 							index += 6;
@@ -140,9 +142,9 @@ public class SupHD implements Substream {
 						case 0x86: // even/odd offsets
 							pic.imageBufferOfsEven = buffer.getDWord(index) + masterIndex;
 							pic.imageBufferOfsOdd = buffer.getDWord(index+4) + masterIndex;
-							Core.print("RLE buffers   ofs: " + ToolBox.hex(index, 8)
-									+ "  (even: " + ToolBox.hex(pic.imageBufferOfsEven, 8)
-									+ ", odd: " + ToolBox.hex(pic.imageBufferOfsOdd, 8) + "\n");
+							Core.print("RLE buffers   ofs: " + ToolBox.toHexLeftZeroPadded(index, 8)
+									+ "  (even: " + ToolBox.toHexLeftZeroPadded(pic.imageBufferOfsEven, 8)
+									+ ", odd: " + ToolBox.toHexLeftZeroPadded(pic.imageBufferOfsOdd, 8) + "\n");
 							index += 8;
 							break;
 						case 0xff:
@@ -161,13 +163,13 @@ public class SupHD implements Substream {
 								dcsq = d;
 								nextIndex = buffer.getDWord(index+2) + masterIndex;
 								stopCommand = (index == nextIndex);
-								Core.print("DCSQ          ofs: " + ToolBox.hex(index, 8) + "  (" + (d * 1024 / 90)
-										+ "ms),    next DCSQ at ofs: " + ToolBox.hex(nextIndex, 8) + "\n");
+								Core.print("DCSQ          ofs: " + ToolBox.toHexLeftZeroPadded(index, 8) + "  (" + (d * 1024 / 90)
+										+ "ms),    next DCSQ at ofs: " + ToolBox.toHexLeftZeroPadded(nextIndex, 8) + "\n");
 								index += 6;
 							}
 							break;
 						default:
-							throw new CoreException("Unexpected command " + cmd + " at index " + ToolBox.hex(index, 8));
+							throw new CoreException("Unexpected command " + cmd + " at index " + ToolBox.toHexLeftZeroPadded(index, 8));
 					}
 				}
 				index = masterIndex + packetSize;
@@ -283,7 +285,7 @@ public class SupHD implements Substream {
 		int warnings = 0;
 
 		if (w > pic.width || h > pic.height) {
-			throw new CoreException("Subpicture too large: " + w + "x" + h + " at offset " + ToolBox.hex(pic.imageBufferOfsEven, 8));
+			throw new CoreException("Subpicture too large: " + w + "x" + h + " at offset " + ToolBox.toHexLeftZeroPadded(pic.imageBufferOfsEven, 8));
 		}
 
 		Bitmap bm = new Bitmap(w, h, (byte)transIdx);
@@ -330,7 +332,7 @@ public class SupHD implements Substream {
 			}
 
 			if (warnings > 0) {
-				Core.printWarn("problems during RLE decoding of picture at offset " + ToolBox.hex(pic.imageBufferOfsEven, 8) + "\n");
+				Core.printWarn("problems during RLE decoding of picture at offset " + ToolBox.toHexLeftZeroPadded(pic.imageBufferOfsEven, 8) + "\n");
 			}
 
 			return bm;

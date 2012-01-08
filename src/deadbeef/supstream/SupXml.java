@@ -2,6 +2,7 @@ package deadbeef.supstream;
 
 
 import static deadbeef.core.Constants.*;
+import static deadbeef.utils.TimeUtils.*;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.IndexColorModel;
@@ -31,7 +32,7 @@ import deadbeef.core.CoreException;
 import deadbeef.core.Framerate;
 import deadbeef.core.Resolution;
 import deadbeef.tools.QuantizeFilter;
-import deadbeef.tools.ToolBox;
+import deadbeef.utils.ToolBox;
 
 /*
  * Copyright 2009 Volker Oth (0xdeadbeef)
@@ -254,12 +255,12 @@ public class SupXml implements Substream {
 			if (fps != fpsXml) {
 				t = (t * 2000 + 1001) / 2002;
 			}
-			String ts = ToolBox.ptsToTimeStrXml(t,fpsXml);
+			String ts = ptsToTimeStrXml(t,fpsXml);
 			t = pics[pics.length-1].endTime;
 			if (fps != fpsXml) {
 				t = (t * 2000 + 1001) / 2002;
 			}
-			String te = ToolBox.ptsToTimeStrXml(t,fpsXml);
+			String te = ptsToTimeStrXml(t,fpsXml);
 			out.write("    <Events Type=\"Graphic\" FirstEventInTC=\"" + ts + "\" LastEventOutTC=\"" + te + "\" NumberofEvents=\"" + pics.length + "\"/>");
 			out.newLine();
 			out.write("  </Description>");
@@ -272,12 +273,12 @@ public class SupXml implements Substream {
 				if (fps != fpsXml) {
 					t = (t * 2000 + 1001) / 2002;
 				}
-				ts = ToolBox.ptsToTimeStrXml(t,fpsXml);
+				ts = ptsToTimeStrXml(t,fpsXml);
 				t = p.endTime;
 				if (fps != fpsXml) {
 					t = (t * 2000 + 1001) / 2002;
 				}
-				te = ToolBox.ptsToTimeStrXml(t, fpsXml);
+				te = ptsToTimeStrXml(t, fpsXml);
 				String forced = p.isforced? "True": "False";
 				out.write("    <Event InTC=\"" + ts + "\" OutTC=\"" + te + "\" Forced=\"" + forced + "\">");
 				out.newLine();
@@ -397,7 +398,7 @@ public class SupXml implements Substream {
 	 * @return PNG name
 	 */
 	public static String getPNGname(String fn, int idx) {
-		return ToolBox.stripExtension(fn) + "_" + ToolBox.zeroTrim(idx, 4) + ".png";
+		return ToolBox.stripExtension(fn) + "_" + ToolBox.leftZeroPad(idx, 4) + ".png";
 	}
 
 	/**
@@ -511,7 +512,7 @@ public class SupXml implements Substream {
 					Core.setProgress(num);
 					at = atts.getValue("InTC");
 					if (at != null) {
-						pic.startTime = ToolBox.timeStrXmlToPTS(at, fpsXml);
+						pic.startTime = timeStrXmlToPTS(at, fpsXml);
 						if (pic.startTime == -1) {
 							pic.startTime = 0;
 							Core.printWarn("Invalid start time " + at + "\n");
@@ -519,7 +520,7 @@ public class SupXml implements Substream {
 					}
 					at = atts.getValue("OutTC");
 					if (at != null) {
-						pic.endTime = ToolBox.timeStrXmlToPTS(at, fpsXml);
+						pic.endTime = timeStrXmlToPTS(at, fpsXml);
 						if (pic.endTime == -1) {
 							pic.endTime = 0;
 							Core.printWarn("Invalid end time " + at + "\n");

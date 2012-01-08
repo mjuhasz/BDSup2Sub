@@ -28,7 +28,7 @@ import javax.swing.JTextField;
 
 import deadbeef.core.Core;
 import deadbeef.core.OutputMode;
-import deadbeef.tools.ToolBox;
+import deadbeef.utils.ToolBox;
 
 /*
  * Copyright 2009 Volker Oth (0xdeadbeef)

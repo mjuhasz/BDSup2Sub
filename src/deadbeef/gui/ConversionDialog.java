@@ -32,7 +32,7 @@ import javax.swing.event.DocumentListener;
 import deadbeef.core.Core;
 import deadbeef.core.ForcedFlagState;
 import deadbeef.core.Resolution;
-import deadbeef.tools.ToolBox;
+import deadbeef.utils.ToolBox;
 
 /*
  * Copyright 2009 Volker Oth (0xdeadbeef)

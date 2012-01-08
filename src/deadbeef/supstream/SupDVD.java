@@ -2,6 +2,8 @@ package deadbeef.supstream;
 
 
 import static deadbeef.core.Constants.*;
+import static deadbeef.utils.ByteUtils.*;
+import static deadbeef.utils.ToolBox.*;
 
 import java.awt.image.BufferedImage;
 import java.io.BufferedOutputStream;
@@ -16,7 +18,7 @@ import deadbeef.core.Core;
 import deadbeef.core.CoreException;
 import deadbeef.tools.FileBuffer;
 import deadbeef.tools.FileBufferException;
-import deadbeef.tools.ToolBox;
+import deadbeef.utils.ToolBox;
 
 /*
  * Copyright 2009 Volker Oth (0xdeadbeef)
@@ -105,7 +107,7 @@ public class SupDVD implements Substream, SubstreamDVD {
 			do {
 				Core.printX("# " + (++i) + "\n");
 				Core.setProgress((int)ofs);
-				Core.print("Ofs: " + ToolBox.hex(ofs , 8)+"\n");
+				Core.print("Ofs: " + ToolBox.toHexLeftZeroPadded(ofs , 8)+"\n");
 				ofs = readSupFrame(ofs, buffer);
 			} while (ofs < size);
 		} catch (FileBufferException e) {
@@ -253,7 +255,7 @@ public class SupDVD implements Substream, SubstreamDVD {
 			// 2 bytes:  packet identifier 0x5350
 			long startOfs = ofs;
 			if (buffer.getWord(ofs) != 0x5350) {
-				throw new CoreException("Missing packet identifier at ofs " + ToolBox.hex(ofs, 8));
+				throw new CoreException("Missing packet identifier at ofs " + ToolBox.toHexLeftZeroPadded(ofs, 8));
 			}
 			// 8 bytes PTS:  system clock reference, but use only the first 4
 			SubPictureDVD pic = new SubPictureDVD();
@@ -289,7 +291,7 @@ public class SupDVD implements Substream, SubstreamDVD {
 			int delay = -1;
 			boolean ColAlphaUpdate = false;
 
-			Core.print("SP_DCSQT at ofs: " + ToolBox.hex(ctrlOfs, 8) + "\n");
+			Core.print("SP_DCSQT at ofs: " + ToolBox.toHexLeftZeroPadded(ctrlOfs, 8) + "\n");
 
 			// copy control header in buffer (to be more compatible with VobSub)
 			ctrlHeader = new byte[ctrlSize];
@@ -301,7 +303,7 @@ public class SupDVD implements Substream, SubstreamDVD {
 				// parse control header
 				int b;
 				int index = 0;
-				int endSeqOfs = ToolBox.getWord(ctrlHeader, index)-ctrlOfsRel-2;
+				int endSeqOfs = getWord(ctrlHeader, index)-ctrlOfsRel-2;
 				if (endSeqOfs < 0 || endSeqOfs > ctrlSize) {
 					Core.printWarn("Invalid end sequence offset -> no end time\n");
 					endSeqOfs = ctrlSize;
@@ -309,7 +311,7 @@ public class SupDVD implements Substream, SubstreamDVD {
 				index += 2;
 				parse_ctrl:
 				while (index < endSeqOfs) {
-					int cmd = ToolBox.getByte(ctrlHeader, index++);
+					int cmd = getByte(ctrlHeader, index++);
 					switch (cmd) {
 						case 0: // forced (?)
 							pic.isforced = true;
@@ -318,19 +320,19 @@ public class SupDVD implements Substream, SubstreamDVD {
 						case 1: // start display
 							break;
 						case 3: // palette info
-							b = ToolBox.getByte(ctrlHeader, index++);
+							b = getByte(ctrlHeader, index++);
 							pic.pal[3] = (b >> 4);
 							pic.pal[2] = b & 0x0f;
-							b = ToolBox.getByte(ctrlHeader, index++);
+							b = getByte(ctrlHeader, index++);
 							pic.pal[1] = (b >> 4);
 							pic.pal[0] = b & 0x0f;
 							Core.print("Palette:   "+pic.pal[0]+", "+pic.pal[1]+", "+pic.pal[2]+", "+pic.pal[3]+"\n");
 							break;
 						case 4: // alpha info
-							b = ToolBox.getByte(ctrlHeader, index++);
+							b = getByte(ctrlHeader, index++);
 							pic.alpha[3] = (b >> 4);
 							pic.alpha[2] = b & 0x0f;
-							b = ToolBox.getByte(ctrlHeader, index++);
+							b = getByte(ctrlHeader, index++);
 							pic.alpha[1] = (b >> 4);
 							pic.alpha[0] = b & 0x0f;
 							for (int i = 0; i < 4; i++) {
@@ -339,32 +341,32 @@ public class SupDVD implements Substream, SubstreamDVD {
 							Core.print("Alpha:     " + pic.alpha[0] + ", " + pic.alpha[1] + ", " + pic.alpha[2] + ", " + pic.alpha[3] + "\n");
 							break;
 						case 5: // coordinates
-							int xOfs = (ToolBox.getByte(ctrlHeader, index)<<4) | (ToolBox.getByte(ctrlHeader, index+1)>>4);
+							int xOfs = (getByte(ctrlHeader, index)<<4) | (getByte(ctrlHeader, index+1)>>4);
 							pic.setOfsX(ofsXglob + xOfs);
-							pic.setImageWidth((((ToolBox.getByte(ctrlHeader, index+1)&0xf)<<8) | (ToolBox.getByte(ctrlHeader, index+2))) - xOfs + 1);
-							int yOfs = (ToolBox.getByte(ctrlHeader, index+3)<<4) | (ToolBox.getByte(ctrlHeader, index+4)>>4);
+							pic.setImageWidth((((getByte(ctrlHeader, index+1)&0xf)<<8) | (getByte(ctrlHeader, index+2))) - xOfs + 1);
+							int yOfs = (getByte(ctrlHeader, index+3)<<4) | (getByte(ctrlHeader, index+4)>>4);
 							pic.setOfsY(ofsYglob+yOfs);
-							pic.setImageHeight((((ToolBox.getByte(ctrlHeader, index+4)&0xf)<<8) | (ToolBox.getByte(ctrlHeader, index+5))) - yOfs + 1);
+							pic.setImageHeight((((getByte(ctrlHeader, index+4)&0xf)<<8) | (getByte(ctrlHeader, index+5))) - yOfs + 1);
 							Core.print("Area info:" + " ("
 									+ pic.getOfsX() + ", "+pic.getOfsY() + ") - (" + (pic.getOfsX() + pic.getImageWidth()-1) + ", "
 									+ (pic.getOfsY() + pic.getImageHeight()-1) + ")\n");
 							index += 6;
 							break;
 						case 6: // offset to RLE buffer
-							pic.evenOfs = ToolBox.getWord(ctrlHeader, index) - 4;
-							pic.oddOfs  = ToolBox.getWord(ctrlHeader, index+2) - 4;
+							pic.evenOfs = getWord(ctrlHeader, index) - 4;
+							pic.oddOfs  = getWord(ctrlHeader, index+2) - 4;
 							index += 4;
-							Core.print("RLE ofs:   " + ToolBox.hex(pic.evenOfs, 4) + ", " + ToolBox.hex(pic.oddOfs, 4) + "\n");
+							Core.print("RLE ofs:   " + ToolBox.toHexLeftZeroPadded(pic.evenOfs, 4) + ", " + ToolBox.toHexLeftZeroPadded(pic.oddOfs, 4) + "\n");
 							break;
 						case 7: // color/alpha update
 							ColAlphaUpdate = true;
 							//int len = ToolBox.getWord(ctrlHeader, index);
 							// ignore the details for now, but just get alpha and palette info
 							alphaUpdateSum = 0;
-							b = ToolBox.getByte(ctrlHeader, index+10);
+							b = getByte(ctrlHeader, index+10);
 							alphaUpdate[3] = (b >> 4);
 							alphaUpdate[2] = b & 0x0f;
-							b = ToolBox.getByte(ctrlHeader, index+11);
+							b = getByte(ctrlHeader, index+11);
 							alphaUpdate[1] = (b >> 4);
 							alphaUpdate[0] = b & 0x0f;
 							for (int i = 0; i < 4; i++) {
@@ -377,17 +379,17 @@ public class SupDVD implements Substream, SubstreamDVD {
 									pic.alpha[i] = alphaUpdate[i];
 								}
 								// take over frame palette
-								b = ToolBox.getByte(ctrlHeader, index+8);
+								b = getByte(ctrlHeader, index+8);
 								pic.pal[3] = (b >> 4);
 								pic.pal[2] = b & 0x0f;
-								b = ToolBox.getByte(ctrlHeader, index+9);
+								b = getByte(ctrlHeader, index+9);
 								pic.pal[1] = (b >> 4);
 								pic.pal[0] = b & 0x0f;
 							}
 							// search end sequence
 							index = endSeqOfs;
-							delay = ToolBox.getWord(ctrlHeader, index)*1024;
-							endSeqOfs = ToolBox.getWord(ctrlHeader, index+2)-ctrlOfsRel-2;
+							delay = getWord(ctrlHeader, index)*1024;
+							endSeqOfs = getWord(ctrlHeader, index+2)-ctrlOfsRel-2;
 							if (endSeqOfs < 0 || endSeqOfs > ctrlSize) {
 								Core.printWarn("Invalid end sequence offset -> no end time\n");
 								endSeqOfs = ctrlSize;
@@ -397,7 +399,7 @@ public class SupDVD implements Substream, SubstreamDVD {
 						case 0xff: // end sequence
 							break parse_ctrl;
 						default:
-							Core.printWarn("Unknown control sequence " + ToolBox.hex(cmd, 2) + " skipped\n");
+							Core.printWarn("Unknown control sequence " + toHexLeftZeroPadded(cmd, 2) + " skipped\n");
 							break;
 					}
 				}
@@ -408,8 +410,8 @@ public class SupDVD implements Substream, SubstreamDVD {
 					int nextIndex = endSeqOfs;
 					while (nextIndex != index) {
 						index = nextIndex;
-						delay = ToolBox.getWord(ctrlHeader, index) * 1024;
-						nextIndex = ToolBox.getWord(ctrlHeader, index + 2) - ctrlOfsRel - 2;
+						delay = getWord(ctrlHeader, index) * 1024;
+						nextIndex = getWord(ctrlHeader, index + 2) - ctrlOfsRel - 2;
 						ctrlSeqCount++;
 					}
 					if (ctrlSeqCount > 2) {
@@ -469,45 +471,45 @@ public class SupDVD implements Substream, SubstreamDVD {
 
 		// VTSI_MAT
 		ToolBox.setString(buf, index, "DVDVIDEO-VTS");
-		ToolBox.setDWord(buf, index+0x12, 0x00000004);	// last sector of title set
-		ToolBox.setDWord(buf, index+0x1C, 0x00000004);	// last sector of IFO
-		ToolBox.setDWord(buf, index+0x80, 0x000007ff);	// end byte address of VTS_MAT
-		ToolBox.setDWord(buf, index+0xC8, 0x00000001);	// start sector of Title Vob (*2048 -> 0x0800) -> PTT_SRPTI
-		ToolBox.setDWord(buf, index+0xCC, 0x00000002);	// start sector of Titles&Chapters table (*2048 -> 0x1000) -> VTS_PGCITI
+		setDWord(buf, index+0x12, 0x00000004);	// last sector of title set
+		setDWord(buf, index+0x1C, 0x00000004);	// last sector of IFO
+		setDWord(buf, index+0x80, 0x000007ff);	// end byte address of VTS_MAT
+		setDWord(buf, index+0xC8, 0x00000001);	// start sector of Title Vob (*2048 -> 0x0800) -> PTT_SRPTI
+		setDWord(buf, index+0xCC, 0x00000002);	// start sector of Titles&Chapters table (*2048 -> 0x1000) -> VTS_PGCITI
 
-		ToolBox.setWord(buf,  index+0x100, vidAttr);	// video attributes
-		ToolBox.setWord(buf,  index+0x200, vidAttr);	// video attributes
+		setWord(buf,  index+0x100, vidAttr);	// video attributes
+		setWord(buf,  index+0x200, vidAttr);	// video attributes
 
 		String l = LANGUAGES[Core.getLanguageIdx()][1];
-		ToolBox.setWord(buf,  index+0x254, 1);			// number of subtitle streams
-		ToolBox.setByte(buf,  index+0x256, 1);			// subtitle attributes
-		ToolBox.setByte(buf,  index+0x258, (byte)l.charAt(0));
-		ToolBox.setByte(buf,  index+0x259, (byte)l.charAt(1));
+		setWord(buf,  index+0x254, 1);			// number of subtitle streams
+		setByte(buf,  index+0x256, 1);			// subtitle attributes
+		setByte(buf,  index+0x258, (byte)l.charAt(0));
+		setByte(buf,  index+0x259, (byte)l.charAt(1));
 
 		// PTT_SRPTI
 		index = 0x0800;
-		ToolBox.setWord(buf,  index,      0x0001);		// Number of TTUs
-		ToolBox.setWord(buf,  index+0x04, 0x000f);		// End byte of PTT_SRPT table
-		ToolBox.setDWord(buf, index+0x04, 0x0000000C);	// TTU_1: starting byte
-		ToolBox.setWord(buf,  index+0x0C, 0x0001);		// PTT_1: program chain number PGCN
-		ToolBox.setWord(buf,  index+0x0e, 0x0001);		// PTT_1: program number PG
+		setWord(buf,  index,      0x0001);		// Number of TTUs
+		setWord(buf,  index+0x04, 0x000f);		// End byte of PTT_SRPT table
+		setDWord(buf, index+0x04, 0x0000000C);	// TTU_1: starting byte
+		setWord(buf,  index+0x0C, 0x0001);		// PTT_1: program chain number PGCN
+		setWord(buf,  index+0x0e, 0x0001);		// PTT_1: program number PG
 
 		// VTS_PGCITI/VTS_PTT_SRPT
 		index = 0x1000;
-		ToolBox.setWord(buf,  index,      0x0001);		// Number of VTS_PGCI_SRP (2 bytes, 2 bytes reserved)
-		ToolBox.setDWord(buf, index+0x04, 0x00000119);	// end byte of VTS_PGCI_SRP table (281)
-		ToolBox.setDWord(buf, index+0x08, 0x81000000);	// VTS_PGC_1_ category mask. entry PGC (0x80), title number 1 (0x01), Category 0,...
-		ToolBox.setDWord(buf, index+0x0C, 0x00000010);	// VTS_PGCI start byte (16)
+		setWord(buf,  index,      0x0001);		// Number of VTS_PGCI_SRP (2 bytes, 2 bytes reserved)
+		setDWord(buf, index+0x04, 0x00000119);	// end byte of VTS_PGCI_SRP table (281)
+		setDWord(buf, index+0x08, 0x81000000);	// VTS_PGC_1_ category mask. entry PGC (0x80), title number 1 (0x01), Category 0,...
+		setDWord(buf, index+0x0C, 0x00000010);	// VTS_PGCI start byte (16)
 
 		// VTS_PGC_1
 		index = 0x1010;
-		ToolBox.setByte(buf,  index+0x02,  0x01);		// Number of Programs
-		ToolBox.setByte(buf,  index+0x03,  0x01);		// Number of Cells
+		setByte(buf,  index+0x02,  0x01);		// Number of Programs
+		setByte(buf,  index+0x03,  0x01);		// Number of Cells
 		for (int i=0; i<16; i++) {
 			int ycbcr[] = pal.getYCbCr(i);
-			ToolBox.setByte(buf, index+0xA4+4*i+1,  ycbcr[0]);
-			ToolBox.setByte(buf, index+0xA4+4*i+2,  ycbcr[1]);
-			ToolBox.setByte(buf, index+0xA4+4*i+3,  ycbcr[2]);
+			setByte(buf, index+0xA4+4*i+1,  ycbcr[0]);
+			setByte(buf, index+0xA4+4*i+2,  ycbcr[1]);
+			setByte(buf, index+0xA4+4*i+3,  ycbcr[2]);
 		}
 
 		BufferedOutputStream out = null;
@@ -616,7 +618,7 @@ public class SupDVD implements Substream, SubstreamDVD {
 
 			// PTT_SRPTI
 			VTS_PGCITI_ofs += buf.getDWord(VTS_PGCITI_ofs+0x0C);
-			Core.print("Reading palette from offset: " + ToolBox.hex(VTS_PGCITI_ofs, 8) + "\n");
+			Core.print("Reading palette from offset: " + ToolBox.toHexLeftZeroPadded(VTS_PGCITI_ofs, 8) + "\n");
 
 			// assume palette in VTS_PGC_1
 			long index = VTS_PGCITI_ofs;

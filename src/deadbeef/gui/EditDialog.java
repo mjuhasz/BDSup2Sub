@@ -1,6 +1,8 @@
 package deadbeef.gui;
 
 
+import static deadbeef.utils.TimeUtils.*;
+
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -38,7 +40,7 @@ import deadbeef.core.Core;
 import deadbeef.core.CoreException;
 import deadbeef.core.Resolution;
 import deadbeef.supstream.SubPicture;
-import deadbeef.tools.ToolBox;
+import deadbeef.utils.ToolBox;
 
 /*
  * Copyright 2009 Volker Oth (0xdeadbeef)
@@ -990,7 +992,7 @@ public class EditDialog extends JDialog implements SelectListener {
 				public void actionPerformed(ActionEvent e) {
 					if (isReady) {
 						isReady = false;
-						long t = Core.syncTimePTS(ToolBox.timeStrToPTS(jTextFieldStart.getText()), Core.getFPSTrg());
+						long t = Core.syncTimePTS(timeStrToPTS(jTextFieldStart.getText()), Core.getFPSTrg());
 						if (t >= subPic.endTime) {
 							t = subPic.endTime-frameTime;
 						}
@@ -1002,7 +1004,7 @@ public class EditDialog extends JDialog implements SelectListener {
 							jTextFieldDuration.setText(ToolBox.formatDouble((subPic.endTime-subPic.startTime)/90.0));
 							setEdited(true);
 						}
-						jTextFieldStart.setText(ToolBox.ptsToTimeStr(subPic.startTime));
+						jTextFieldStart.setText(ptsToTimeStr(subPic.startTime));
 						jTextFieldStart.setBackground(okBgnd);
 						isReady = true;
 					}
@@ -1012,13 +1014,13 @@ public class EditDialog extends JDialog implements SelectListener {
 				private void check(DocumentEvent e) {
 					if (isReady) {
 						isReady = false;
-						long t = Core.syncTimePTS(ToolBox.timeStrToPTS(jTextFieldStart.getText()), Core.getFPSTrg());
+						long t = Core.syncTimePTS(timeStrToPTS(jTextFieldStart.getText()), Core.getFPSTrg());
 						if (t < 0 || t >= subPic.endTime || subPicPrev != null && subPicPrev.endTime > t) {
 							jTextFieldStart.setBackground(errBgnd);
 						} else {
 							subPic.startTime = t;
 							jTextFieldDuration.setText(ToolBox.formatDouble((subPic.endTime-subPic.startTime)/90.0));
-							if (!jTextFieldStart.getText().equalsIgnoreCase(ToolBox.ptsToTimeStr(subPic.startTime))) {
+							if (!jTextFieldStart.getText().equalsIgnoreCase(ptsToTimeStr(subPic.startTime))) {
 								jTextFieldStart.setBackground(warnBgnd);
 							} else {
 								jTextFieldStart.setBackground(okBgnd);
@@ -1061,7 +1063,7 @@ public class EditDialog extends JDialog implements SelectListener {
 				public void actionPerformed(ActionEvent e) {
 					if (isReady) {
 						isReady = false;
-						long t = Core.syncTimePTS(ToolBox.timeStrToPTS(jTextFieldEnd.getText()), Core.getFPSTrg());
+						long t = Core.syncTimePTS(timeStrToPTS(jTextFieldEnd.getText()), Core.getFPSTrg());
 						if (t <= subPic.startTime) {
 							t = subPic.startTime + frameTime;
 						}
@@ -1074,7 +1076,7 @@ public class EditDialog extends JDialog implements SelectListener {
 							jTextFieldDuration.setText(ToolBox.formatDouble((subPic.endTime-subPic.startTime)/90.0));
 							setEdited(true);
 						}
-						jTextFieldEnd.setText(ToolBox.ptsToTimeStr(subPic.endTime));
+						jTextFieldEnd.setText(ptsToTimeStr(subPic.endTime));
 						jTextFieldEnd.setBackground(okBgnd);
 						isReady = true;
 					}
@@ -1084,13 +1086,13 @@ public class EditDialog extends JDialog implements SelectListener {
 				private void check(DocumentEvent e) {
 					if (isReady) {
 						isReady = false;
-						long t = Core.syncTimePTS(ToolBox.timeStrToPTS(jTextFieldEnd.getText()), Core.getFPSTrg());
+						long t = Core.syncTimePTS(timeStrToPTS(jTextFieldEnd.getText()), Core.getFPSTrg());
 						if (t < 0 || t <= subPic.startTime || subPicNext != null && subPicNext.startTime < t) {
 							jTextFieldEnd.setBackground(errBgnd);
 						} else {
 							subPic.endTime = t;
 							jTextFieldDuration.setText(ToolBox.formatDouble((subPic.endTime-subPic.startTime)/90.0));
-							if (!jTextFieldEnd.getText().equalsIgnoreCase(ToolBox.ptsToTimeStr(subPic.endTime))) {
+							if (!jTextFieldEnd.getText().equalsIgnoreCase(ptsToTimeStr(subPic.endTime))) {
 								jTextFieldEnd.setBackground(warnBgnd);
 							} else {
 								jTextFieldEnd.setBackground(okBgnd);
@@ -1143,7 +1145,7 @@ public class EditDialog extends JDialog implements SelectListener {
 								t = subPicNext.startTime;
 							}
 							subPic.endTime = Core.syncTimePTS(t, Core.getFPSTrg());
-							jTextFieldEnd.setText(ToolBox.ptsToTimeStr(subPic.endTime));
+							jTextFieldEnd.setText(ptsToTimeStr(subPic.endTime));
 							setEdited(true);
 						}
 						jTextFieldDuration.setText(ToolBox.formatDouble((subPic.endTime-subPic.startTime)/90.0));
@@ -1165,7 +1167,7 @@ public class EditDialog extends JDialog implements SelectListener {
 								t = subPicNext.startTime;
 							}
 							subPic.endTime = Core.syncTimePTS(t, Core.getFPSTrg());
-							jTextFieldEnd.setText(ToolBox.ptsToTimeStr(subPic.endTime));
+							jTextFieldEnd.setText(ptsToTimeStr(subPic.endTime));
 							setEdited(true);
 							if (!jTextFieldDuration.getText().equalsIgnoreCase(ToolBox.formatDouble((subPic.endTime-subPic.startTime)/90.0))) {
 								jTextFieldDuration.setBackground(warnBgnd);
@@ -1215,7 +1217,7 @@ public class EditDialog extends JDialog implements SelectListener {
 							t = subPicNext.startTime;
 						}
 						subPic.endTime = Core.syncTimePTS(t, Core.getFPSTrg());
-						jTextFieldEnd.setText(ToolBox.ptsToTimeStr(subPic.endTime));
+						jTextFieldEnd.setText(ptsToTimeStr(subPic.endTime));
 						setEdited(true);
 					}
 					jTextFieldDuration.setText(ToolBox.formatDouble((subPic.endTime-subPic.startTime)/90.0));
@@ -1245,7 +1247,7 @@ public class EditDialog extends JDialog implements SelectListener {
 						t = subPic.endTime + 10000*90; // 10 seconds
 					}
 					subPic.endTime = Core.syncTimePTS(t, Core.getFPSTrg());
-					jTextFieldEnd.setText(ToolBox.ptsToTimeStr(subPic.endTime));
+					jTextFieldEnd.setText(ptsToTimeStr(subPic.endTime));
 					jTextFieldDuration.setText(ToolBox.formatDouble((subPic.endTime-subPic.startTime)/90.0));
 					setEdited(true);
 				}
@@ -1388,8 +1390,8 @@ public class EditDialog extends JDialog implements SelectListener {
 			enableSliders = true;
 
 			jLabelInfo.setText("Frame "+(idx+1)+" of "+Core.getNumFrames());
-			jTextFieldStart.setText(ToolBox.ptsToTimeStr(subPic.startTime));
-			jTextFieldEnd.setText(ToolBox.ptsToTimeStr(subPic.endTime));
+			jTextFieldStart.setText(ptsToTimeStr(subPic.startTime));
+			jTextFieldEnd.setText(ptsToTimeStr(subPic.endTime));
 			jTextFieldDuration.setText(ToolBox.formatDouble((subPic.endTime-subPic.startTime)/90.0));
 
 			jTextFieldX.setText(""+subPic.getOfsX());
