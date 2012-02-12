@@ -207,7 +207,7 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 	// own stuff
 
 	/** semaphore for synchronization of threads */
-	private Object threadSemaphore = new Object();
+	private final Object threadSemaphore = new Object();
 	/** reference to this frame (to allow access to "this" from inner classes */
 	private JFrame mainFrame;
 	/** current caption index */
@@ -231,21 +231,13 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 	/** background color for ok */
 	private Color okBgnd = UIManager.getColor("TextField.background");
 
-	/**
-	 * Constructor
-	 * @param fname file name
-	 * @throws HeadlessException
-	 */
-	public MainFrame(String fname) throws HeadlessException {
+
+    public MainFrame(String fname) throws HeadlessException {
 		this();
 		loadPath = fname;
 		load(fname);
 	}
 
-	/**
-	 * Constructor
-	 * @throws HeadlessException
-	 */
 	public MainFrame() throws HeadlessException {
 		super();
 
@@ -346,10 +338,7 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 
 			@Override
 			public boolean canImport(TransferHandler.TransferSupport support) {
-				if (!support.isDataFlavorSupported(DataFlavor.javaFileListFlavor)) {
-					return false;
-				}
-				return true;
+				return support.isDataFlavorSupported(DataFlavor.javaFileListFlavor);
 			}
 
 			@SuppressWarnings("unchecked")
@@ -390,7 +379,9 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 		int length = doc.getLength();
 		try {
 			doc.insertString(length, s, null);
-		} catch (BadLocationException ex) {}
+		} catch (BadLocationException ex) {
+            //
+        }
 	}
 
 	/**
@@ -893,7 +884,7 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 				}
 			});
 			jTextSubNum.getDocument().addDocumentListener(new DocumentListener() {
-				private void check(DocumentEvent e) {
+				private void check() {
 					if (Core.isReady()) {
 						int idx = ToolBox.getInt(jTextSubNum.getText())-1;
 						if (idx < 0 || idx >= Core.getNumFrames()) {
@@ -922,17 +913,17 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 				}
 
 				public void insertUpdate(DocumentEvent e) {
-					check(e);
+					check();
 				}
 
 				@Override
 				public void changedUpdate(DocumentEvent e) {
-					check(e);
+					check();
 				}
 
 				@Override
 				public void removeUpdate(DocumentEvent e) {
-					check(e);
+					check();
 				}
 			});
 		}
@@ -990,7 +981,7 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 				}
 			});
 			jTextAlphaThr.getDocument().addDocumentListener(new DocumentListener() {
-				private void check(DocumentEvent e) {
+				private void check() {
 					if (Core.isReady()) {
 						int idx = ToolBox.getInt(jTextAlphaThr.getText());
 						if (idx < 0 || idx > 255) {
@@ -1017,17 +1008,17 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 				}
 
 				public void insertUpdate(DocumentEvent e) {
-					check(e);
+					check();
 				}
 
 				@Override
 				public void changedUpdate(DocumentEvent e) {
-					check(e);
+					check();
 				}
 
 				@Override
 				public void removeUpdate(DocumentEvent e) {
-					check(e);
+					check();
 				}
 			});
 
@@ -1093,7 +1084,7 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 				}
 			});
 			jTextHiMedThr.getDocument().addDocumentListener(new DocumentListener() {
-				private void check(DocumentEvent e) {
+				private void check() {
 					if (Core.isReady()) {
 						int lumThr[] = Core.getLumThr();
 						int idx = ToolBox.getInt(jTextHiMedThr.getText());
@@ -1123,17 +1114,17 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 				}
 
 				public void insertUpdate(DocumentEvent e) {
-					check(e);
+					check();
 				}
 
 				@Override
 				public void changedUpdate(DocumentEvent e) {
-					check(e);
+					check();
 				}
 
 				@Override
 				public void removeUpdate(DocumentEvent e) {
-					check(e);
+					check();
 				}
 			});
 
@@ -1201,7 +1192,7 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 				}
 			});
 			jTextMedLowThr.getDocument().addDocumentListener(new DocumentListener() {
-				private void check(DocumentEvent e) {
+				private void check() {
 					if (Core.isReady()) {
 						int lumThr[] = Core.getLumThr();
 						int idx = ToolBox.getInt(jTextMedLowThr.getText());
@@ -1231,17 +1222,17 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 				}
 
 				public void insertUpdate(DocumentEvent e) {
-					check(e);
+					check();
 				}
 
 				@Override
 				public void changedUpdate(DocumentEvent e) {
-					check(e);
+					check();
 				}
 
 				@Override
 				public void removeUpdate(DocumentEvent e) {
-					check(e);
+					check();
 				}
 			});
 
@@ -1869,7 +1860,7 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 			jMenuItemEditFramePalAlpha.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					FramePalDialog cDiag = new FramePalDialog(mainFrame, true);
-					cDiag.setIndex(subIndex);
+					cDiag.setCurrentSubtitleIndex(subIndex);
 					cDiag.setVisible(true);
 					(new Thread() {
 						@Override
@@ -1915,24 +1906,15 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 	 * Enable/disable components dependent only available for VobSubs
 	 */
 	private void enableVobSubMenuCombo() {
-		boolean b;
-		if ( (Core.getOutputMode() == OutputMode.VOBSUB   || Core.getOutputMode() == OutputMode.SUPIFO)
-				&& ( (Core.getInputMode()  != InputMode.VOBSUB    && Core.getInputMode() != InputMode.SUPIFO)
-						|| Core.getPaletteMode() != PaletteMode.KEEP_EXISTING) ) {
-			b = true;
-		} else {
-			b = false;
-		}
+		boolean b = (Core.getOutputMode() == OutputMode.VOBSUB   || Core.getOutputMode() == OutputMode.SUPIFO)
+				&& ( (Core.getInputMode()  != InputMode.VOBSUB   && Core.getInputMode() != InputMode.SUPIFO)
+						|| Core.getPaletteMode() != PaletteMode.KEEP_EXISTING);
 
 		jComboBoxAlphaThr.setEnabled(b);
 		jComboBoxHiMedThr.setEnabled(b);
 		jComboBoxMedLowThr.setEnabled(b);
 
-		if ( (Core.getInputMode()  == InputMode.VOBSUB  || Core.getInputMode() == InputMode.SUPIFO) ) {
-			b = true;
-		} else {
-			b = false;
-		}
+		b = (Core.getInputMode()  == InputMode.VOBSUB  || Core.getInputMode() == InputMode.SUPIFO);
 		jMenuItemEditCurColors.setEnabled(b);
 		jMenuItemEditFramePalAlpha.setEnabled(b);
 	}
