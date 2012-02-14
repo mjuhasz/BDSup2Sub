@@ -23,13 +23,13 @@ package deadbeef.core;
  * @author 0xdeadbeef
  */
 public class CoreException extends Exception {
-	
-	public static final long serialVersionUID = 0x000000001;
 
-	public CoreException() {
-	}
+    public static final long serialVersionUID = 0x000000001;
 
-	public CoreException(String s) {
-		super(s);
-	}
+    public CoreException() {
+    }
+
+    public CoreException(String s) {
+        super(s);
+    }
 }

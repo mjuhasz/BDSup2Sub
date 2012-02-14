@@ -1,11 +1,9 @@
 package deadbeef.gui;
 
-import java.awt.Component;
-import java.awt.Insets;
-
-import javax.swing.JTextField;
+import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.plaf.basic.BasicComboBoxEditor;
+import java.awt.*;
 
 /*
  * Copyright 2009 Volker Oth (0xdeadbeef)
@@ -31,40 +29,40 @@ import javax.swing.plaf.basic.BasicComboBoxEditor;
  */
 class MyComboBoxEditor extends BasicComboBoxEditor {
 
-	public MyComboBoxEditor() {
-	}
+    public MyComboBoxEditor() {
+    }
 
-	/**
-	 * Constructor with JTextField
-	 * @param editor JTextField to use as editor
-	 */
-	public MyComboBoxEditor(JTextField editor) {
-		super();
-		this.editor = editor;
-		editor.setBorder(new EmptyBorder(new Insets(1,2,1,2)));
-	}
+    /**
+     * Constructor with JTextField
+     * @param editor JTextField to use as editor
+     */
+    public MyComboBoxEditor(JTextField editor) {
+        super();
+        this.editor = editor;
+        editor.setBorder(new EmptyBorder(new Insets(1,2,1,2)));
+    }
 
-	/* (non-Javadoc)
-	 * @see javax.swing.plaf.basic.BasicComboBoxEditor#getEditorComponent()
-	 */
-	@Override
-	public Component getEditorComponent() {
-		return editor;
-	}
+    /* (non-Javadoc)
+     * @see javax.swing.plaf.basic.BasicComboBoxEditor#getEditorComponent()
+     */
+    @Override
+    public Component getEditorComponent() {
+        return editor;
+    }
 
-	/**
-	 * Get JTextField used as editor
-	 * @return JTextField used as editor
-	 */
-	public JTextField getJTextField() {
-		return editor;
-	}
+    /**
+     * Get JTextField used as editor
+     * @return JTextField used as editor
+     */
+    public JTextField getJTextField() {
+        return editor;
+    }
 
-	/**
-	 * Set JTextField used as editor
-	 * @param editor JTextField used as editor
-	 */
-	public void setEditorComponent(JTextField editor) {
-		this.editor = editor;
-	}
+    /**
+     * Set JTextField used as editor
+     * @param editor JTextField used as editor
+     */
+    public void setEditorComponent(JTextField editor) {
+        this.editor = editor;
+    }
 }

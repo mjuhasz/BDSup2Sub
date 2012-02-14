@@ -1,8 +1,8 @@
 package deadbeef.core;
 
 public enum CoreThreadState {
-	INACTIVE,
-	ACTIVE,
-	CANCELED,
-	FINISHED,
+    INACTIVE,
+    ACTIVE,
+    CANCELED,
+    FINISHED,
 }

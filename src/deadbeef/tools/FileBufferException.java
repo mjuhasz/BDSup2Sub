@@ -22,13 +22,13 @@ package deadbeef.tools;
  * @author 0xdeadbeef
  */
 public class FileBufferException extends Exception {
-	
-	public static final long serialVersionUID = 0x000000001;
 
-	public FileBufferException() {
-	}
+    public static final long serialVersionUID = 0x000000001;
 
-	public FileBufferException(String s) {
-		super(s);
-	}
+    public FileBufferException() {
+    }
+
+    public FileBufferException(String s) {
+        super(s);
+    }
 }

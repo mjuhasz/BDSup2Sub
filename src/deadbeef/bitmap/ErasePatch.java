@@ -23,25 +23,25 @@ package deadbeef.bitmap;
  */
 public class ErasePatch {
 
-	/** X coordinate of patch */
-	public final int x;
-	/** Y coordinate of patch */
-	public final int y;
-	/** Width of patch */
-	public final int width;
-	/** Height of patch */
-	public final int height;
+    /** X coordinate of patch */
+    public final int x;
+    /** Y coordinate of patch */
+    public final int y;
+    /** Width of patch */
+    public final int width;
+    /** Height of patch */
+    public final int height;
 
-	/**
-	 * @param x X coordinate of patch
-	 * @param y Y coordinate of patch
-	 * @param width Width of patch
-	 * @param height Height of patch
-	 */
-	public ErasePatch(int x, int y, int width, int height) {
-		this.x = x;
-		this.y = y;
-		this.width = width;
-		this.height = height;
-	}
+    /**
+     * @param x X coordinate of patch
+     * @param y Y coordinate of patch
+     * @param width Width of patch
+     * @param height Height of patch
+     */
+    public ErasePatch(int x, int y, int width, int height) {
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+    }
 }

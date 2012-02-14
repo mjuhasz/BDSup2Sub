@@ -24,25 +24,25 @@ package deadbeef.bitmap;
 
 public class BitmapBounds {
 
-	/** X coordinate of first column that contains visible pixels. */
-	public final int xMin;
-	/** X coordinate of last column that contains visible pixels. */
-	public final int xMax;
-	/** Y coordinate of first line that contains visible pixels. */
-	public final int yMin;
-	/** Y coordinate of last line that contains visible pixels. */
-	public final int yMax;
+    /** X coordinate of first column that contains visible pixels. */
+    public final int xMin;
+    /** X coordinate of last column that contains visible pixels. */
+    public final int xMax;
+    /** Y coordinate of first line that contains visible pixels. */
+    public final int yMin;
+    /** Y coordinate of last line that contains visible pixels. */
+    public final int yMax;
 
-	/**
-	 * @param xMin x coordinate of first column that contains visible pixels
-	 * @param xMax x coordinate of last column that contains visible pixels
-	 * @param yMin y coordinate of first line that contains visible pixels
-	 * @param yMax y coordinate of last line that contains visible pixels
-	 */
-	public BitmapBounds(int xMin, int xMax, int yMin, int yMax) {
-		this.xMin = xMin;
-		this.xMax = xMax;
-		this.yMin = yMin;
-		this.yMax = yMax;
-	}
+    /**
+     * @param xMin x coordinate of first column that contains visible pixels
+     * @param xMax x coordinate of last column that contains visible pixels
+     * @param yMin y coordinate of first line that contains visible pixels
+     * @param yMax y coordinate of last line that contains visible pixels
+     */
+    public BitmapBounds(int xMin, int xMax, int yMin, int yMax) {
+        this.xMin = xMin;
+        this.xMax = xMax;
+        this.yMin = yMin;
+        this.yMax = yMax;
+    }
 }

@@ -1,7 +1,10 @@
+import deadbeef.core.*;
+import deadbeef.gui.MainFrame;
+import deadbeef.tools.Props;
+import deadbeef.utils.ToolBox;
 
-import static deadbeef.core.Constants.*;
-
-import java.awt.Color;
+import javax.swing.*;
+import java.awt.*;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.UnsupportedEncodingException;
@@ -12,22 +15,7 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.swing.UIManager;
-
-import deadbeef.core.CaptionMoveModeX;
-import deadbeef.core.CaptionMoveModeY;
-import deadbeef.core.Core;
-import deadbeef.core.CoreException;
-import deadbeef.core.ForcedFlagState;
-import deadbeef.core.Framerate;
-import deadbeef.core.OutputMode;
-import deadbeef.core.PaletteMode;
-import deadbeef.core.Resolution;
-import deadbeef.core.ScalingFilter;
-import deadbeef.core.StreamID;
-import deadbeef.gui.MainFrame;
-import deadbeef.tools.Props;
-import deadbeef.utils.ToolBox;
+import static deadbeef.core.Constants.*;
 
 /*
  * Copyright 2009 Volker Oth (0xdeadbeef)
@@ -54,308 +42,308 @@ import deadbeef.utils.ToolBox;
 
 class BDSup2Sub {
 
-	/** Contains the parameter strings in lower case - order must be as in the enumeration {@link Parameters}. */
-	private static final String PARAMS[] = {
-		"res", "atr", "ltr1", "ltr2", "lang", "pal", "forced",
-		"fps" , "dly", "tmin", "swap","movin", "movout", "cropy",
-		"palmode", "verbatim", "filter", "tmerge", "scale", "acrop",
-		"exppal", "fixinv", "movex", "forceall"
-	};
+    /** Contains the parameter strings in lower case - order must be as in the enumeration {@link Parameters}. */
+    private static final String PARAMS[] = {
+        "res", "atr", "ltr1", "ltr2", "lang", "pal", "forced",
+        "fps" , "dly", "tmin", "swap","movin", "movout", "cropy",
+        "palmode", "verbatim", "filter", "tmerge", "scale", "acrop",
+        "exppal", "fixinv", "movex", "forceall"
+    };
 
-	/**
-	 * Enumeration of command line parameters.
-	 */
-	private enum Parameters {
-		/** Define target resolution */
-		RESOLUTION,
-		/** Define alpha threshold */
-		ALPHATHR,
-		/** Define low/med luminance threshold */
-		LUMTHR1,
-		/** Define med/high luminance threshold */
-		LUMTHR2,
-		/** Define VobSub language */
-		LANGUAGE,
-		/** Load palette from file */
-		PALETTE,
-		/** Export only forced captions */
-		FORCED,
-		/** Define (source and) target frame rate */
-		FPS,
-		/** Define delay to add to all time stamps */
-		DELAY,
-		/** Define minimum display time for captions */
-		MIN_TIME,
-		/** Swap Cr/Cb components when loading a SUP */
-		SWAP_CR_CB,
-		/** Move captions inside given area */
-		MOVE_INSIDE,
-		/** Move captions outside given area */
-		MOVE_OUTSIDE,
-		/** Crop the upper n lines */
-		CROP_Y,
-		/** Palette creation mode */
-		PALETTE_MODE,
-		/** Verbatim text mode */
-		VERBATIM,
-		/** Scaling filter */
-		FILTER,
-		/** Scaling filter */
-		TMERGE,
-		/** Free scaling */
-		SCALE,
-		/** Alpha cropping threshold */
-		ALPHA_CROP,
-		/** Export target palette in PGCEdit text format */
-		EXPORT_PAL,
-		/** No fixing of zero alpha values (SUB/IDX and SUP/IFO import) */
-		FIX_ZERO_ALPHA,
-		/** move captions horizontally */
-		MOVE_X,
-		/** set/clear forced flag for all captions */
-		FORCE_ALL,
-		/** Unknown parameter */
-		UNKNOWN;
+    /**
+     * Enumeration of command line parameters.
+     */
+    private enum Parameters {
+        /** Define target resolution */
+        RESOLUTION,
+        /** Define alpha threshold */
+        ALPHATHR,
+        /** Define low/med luminance threshold */
+        LUMTHR1,
+        /** Define med/high luminance threshold */
+        LUMTHR2,
+        /** Define VobSub language */
+        LANGUAGE,
+        /** Load palette from file */
+        PALETTE,
+        /** Export only forced captions */
+        FORCED,
+        /** Define (source and) target frame rate */
+        FPS,
+        /** Define delay to add to all time stamps */
+        DELAY,
+        /** Define minimum display time for captions */
+        MIN_TIME,
+        /** Swap Cr/Cb components when loading a SUP */
+        SWAP_CR_CB,
+        /** Move captions inside given area */
+        MOVE_INSIDE,
+        /** Move captions outside given area */
+        MOVE_OUTSIDE,
+        /** Crop the upper n lines */
+        CROP_Y,
+        /** Palette creation mode */
+        PALETTE_MODE,
+        /** Verbatim text mode */
+        VERBATIM,
+        /** Scaling filter */
+        FILTER,
+        /** Scaling filter */
+        TMERGE,
+        /** Free scaling */
+        SCALE,
+        /** Alpha cropping threshold */
+        ALPHA_CROP,
+        /** Export target palette in PGCEdit text format */
+        EXPORT_PAL,
+        /** No fixing of zero alpha values (SUB/IDX and SUP/IFO import) */
+        FIX_ZERO_ALPHA,
+        /** move captions horizontally */
+        MOVE_X,
+        /** set/clear forced flag for all captions */
+        FORCE_ALL,
+        /** Unknown parameter */
+        UNKNOWN;
 
-		private static final Map<Integer,Parameters> LOOKUP = new HashMap<Integer,Parameters>();
+        private static final Map<Integer,Parameters> LOOKUP = new HashMap<Integer,Parameters>();
 
-		static {
-			for(Parameters s : EnumSet.allOf(Parameters.class))
-				LOOKUP.put(s.ordinal(), s);
-		}
+        static {
+            for(Parameters s : EnumSet.allOf(Parameters.class))
+                LOOKUP.put(s.ordinal(), s);
+        }
 
-		/**
-		 * Reverse lookup implemented via hashtable.
-		 * @param val Ordinal value
-		 * @return Parameter with ordinal value val
-		 */
-		public static Parameters get(int val) {
-			return LOOKUP.get(val);
-		}
-	};
+        /**
+         * Reverse lookup implemented via hashtable.
+         * @param val Ordinal value
+         * @return Parameter with ordinal value val
+         */
+        public static Parameters get(int val) {
+            return LOOKUP.get(val);
+        }
+    };
 
-	/**
-	 * Return the fitting member of enumeration {@link Parameters} for a given parameter string.
-	 * @param s String to convert
-	 * @return Member of enumeration {@link Parameters}
-	 */
-	private static Parameters getParam(String s) {
-		for (int i=0; i < PARAMS.length; i++) {
-			if (s.trim().toLowerCase().equals(PARAMS[i]))
-				return Parameters.get(i);
-		}
-		return Parameters.UNKNOWN;
-	}
+    /**
+     * Return the fitting member of enumeration {@link Parameters} for a given parameter string.
+     * @param s String to convert
+     * @return Member of enumeration {@link Parameters}
+     */
+    private static Parameters getParam(String s) {
+        for (int i=0; i < PARAMS.length; i++) {
+            if (s.trim().toLowerCase().equals(PARAMS[i]))
+                return Parameters.get(i);
+        }
+        return Parameters.UNKNOWN;
+    }
 
-	/**
-	 * Leave program, but free (file) resources before.
-	 * @param c Error code
-	 */
-	private static void exit(int c) {
-		Core.exit();
-		System.exit(c);
-	}
+    /**
+     * Leave program, but free (file) resources before.
+     * @param c Error code
+     */
+    private static void exit(int c) {
+        Core.exit();
+        System.exit(c);
+    }
 
-	/**
-	 * Leave program in a defined way after an error.
-	 * @param e Error message to print to the console
-	 */
-	private static void fatalError(String e) {
-		Core.exit();
-		System.out.println("ERROR: "+e);
-		System.exit(1);
-	}
+    /**
+     * Leave program in a defined way after an error.
+     * @param e Error message to print to the console
+     */
+    private static void fatalError(String e) {
+        Core.exit();
+        System.out.println("ERROR: " + e);
+        System.exit(1);
+    }
 
-	/**
-	 * Print number of warnings and errors during conversion.
-	 */
-	private static void printWarnings() {
-		int w = Core.getWarnings();
-		Core.resetWarnings();
-		int e = Core.getErrors();
-		Core.resetErrors();
-		if (w+e > 0) {
-			String s = "";
-			if (w > 0) {
-				if (w==1) {
-					s += w+" warning";
-				} else {
-					s += w+" warnings";
-				}
-			}
-			if (w>0 && e>0) {
-				s += " and ";
-			}
-			if (e > 0) {
-				if (e==1) {
-					s = e+" error";
-				} else {
-					s = e+" errors";
-				}
-			}
-			if (w+e < 3) {
-				s = "There was "+s;
-			} else {
-				s = "There were "+s;
-			}
-			System.out.println(s);
-		}
-	}
+    /**
+     * Print number of warnings and errors during conversion.
+     */
+    private static void printWarnings() {
+        int w = Core.getWarnings();
+        Core.resetWarnings();
+        int e = Core.getErrors();
+        Core.resetErrors();
+        if (w+e > 0) {
+            String s = "";
+            if (w > 0) {
+                if (w==1) {
+                    s += w+" warning";
+                } else {
+                    s += w+" warnings";
+                }
+            }
+            if (w>0 && e>0) {
+                s += " and ";
+            }
+            if (e > 0) {
+                if (e==1) {
+                    s = e+" error";
+                } else {
+                    s = e+" errors";
+                }
+            }
+            if (w+e < 3) {
+                s = "There was "+s;
+            } else {
+                s = "There were "+s;
+            }
+            System.out.println(s);
+        }
+    }
 
-	/**
-	 * Set "Look and Feel" to system default.
-	 */
-	private static void setupGUI() {
-		/* Set "Look and Feel" to system default */
-		try {
-			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-		} catch (Exception e) { /* don't care */}
-		/* Apple menu bar for MacOS */
-		System.setProperty("com.apple.macos.useScreenMenuBar", "true");
-	}
+    /**
+     * Set "Look and Feel" to system default.
+     */
+    private static void setupGUI() {
+        /* Set "Look and Feel" to system default */
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception e) { /* don't care */}
+        /* Apple menu bar for MacOS */
+        System.setProperty("com.apple.macos.useScreenMenuBar", "true");
+    }
 
-	/**
-	 * Main function.
-	 * @param args Parameters passed from the command line
-	 */
-	public static void main(String[] args) {
-		// Step 1
-		// handle multiple parameters given as one within double quotes (for wildcard support)
-		if (args.length == 1) {
-			// try to detect if this is a single file name with spaces or a full command string
-			int extCnt = 0;
-			int pos = 0;
-			String a = args[0].toLowerCase();
-			do {
-				int p = a.indexOf(".sup", pos);
-				if (p == -1) {
-					p = a.indexOf(".sub", pos);
-				}
-				if (p == -1) {
-					p = a.indexOf(".idx", pos);
-				}
-				if (p == -1) {
-					p = a.indexOf(".xml", pos);
-				}
-				if (p != -1) {
-					pos = p+4;
-					extCnt++;
-				} else {
-					pos = -1;
-				}
-			} while (pos != -1 && pos < a.length());
-			if (args[0].indexOf('/') >= 0 || (args[0].indexOf(' ') >= 0 && extCnt > 1) ) {
-				boolean inside = false;
-				String s = args[0].trim();
-				StringBuffer sb = new StringBuffer();
-				ArrayList<String> al = new ArrayList<String>();
-				for (int i=0; i<s.length();i++) {
-					char c = s.charAt(i);
-					switch (c) {
-						case ' ':
-							if (inside) {
-								sb.append(" ");
-							} else {
-								if (sb.length() > 0) {
-									al.add(sb.toString());
-								}
-								sb = new StringBuffer();
-								for (int j=i+1; j<s.length(); j++) {
-									c = s.charAt(j);
-									if (c!=' ') {
-										i = j-1;
-										break;
-									}
-								}
-							}
-							break;
-						case '\'':
-							inside = !inside;
-							break;
-						default:
-							sb.append(c);
-					}
-				}
-				if (inside) {
-					fatalError("Missing closing single quote");
-				}
-				if (sb.length() > 0) {
-					al.add(sb.toString());
-				}
-				args = al.toArray(args);
-			}
-		}
+    /**
+     * Main function.
+     * @param args Parameters passed from the command line
+     */
+    public static void main(String[] args) {
+        // Step 1
+        // handle multiple parameters given as one within double quotes (for wildcard support)
+        if (args.length == 1) {
+            // try to detect if this is a single file name with spaces or a full command string
+            int extCnt = 0;
+            int pos = 0;
+            String a = args[0].toLowerCase();
+            do {
+                int p = a.indexOf(".sup", pos);
+                if (p == -1) {
+                    p = a.indexOf(".sub", pos);
+                }
+                if (p == -1) {
+                    p = a.indexOf(".idx", pos);
+                }
+                if (p == -1) {
+                    p = a.indexOf(".xml", pos);
+                }
+                if (p != -1) {
+                    pos = p+4;
+                    extCnt++;
+                } else {
+                    pos = -1;
+                }
+            } while (pos != -1 && pos < a.length());
+            if (args[0].indexOf('/') >= 0 || (args[0].indexOf(' ') >= 0 && extCnt > 1) ) {
+                boolean inside = false;
+                String s = args[0].trim();
+                StringBuffer sb = new StringBuffer();
+                ArrayList<String> al = new ArrayList<String>();
+                for (int i=0; i<s.length();i++) {
+                    char c = s.charAt(i);
+                    switch (c) {
+                        case ' ':
+                            if (inside) {
+                                sb.append(" ");
+                            } else {
+                                if (sb.length() > 0) {
+                                    al.add(sb.toString());
+                                }
+                                sb = new StringBuffer();
+                                for (int j=i+1; j<s.length(); j++) {
+                                    c = s.charAt(j);
+                                    if (c!=' ') {
+                                        i = j-1;
+                                        break;
+                                    }
+                                }
+                            }
+                            break;
+                        case '\'':
+                            inside = !inside;
+                            break;
+                        default:
+                            sb.append(c);
+                    }
+                }
+                if (inside) {
+                    fatalError("Missing closing single quote");
+                }
+                if (sb.length() > 0) {
+                    al.add(sb.toString());
+                }
+                args = al.toArray(args);
+            }
+        }
 
-		// Step 2
-		// check if help screen was requested
-		if (args.length == 1 && (args[0].equals("/?") || args[0].equalsIgnoreCase("/help")) ) {
-			// output help
-			System.out.println(APP_NAME_AND_VERSION + " - " + AUTHOR_AND_DATE);
-			System.out.println("Syntax:");
-			System.out.println("java -jar BDSup2Sub <in> <out> [options]");
-			System.out.println("Options:");
-			System.out.println("    /res:<n>         : set resolution to 480, 576, 720 or 1080 - default 576");
-			System.out.println("                       Predefined values: keep, ntsc=480, pal=576, 1440x1080");
-			System.out.println("    /fps:<t>         : synchronize target frame rate to <t> - default: auto");
-			System.out.println("                       Predefined values; 24p=23.976, 25p=25, 30p=29.967");
-			System.out.println("                       /fps:keep preserves the source fps (for BD&XML)");
-			System.out.println("    /fps:<s>,<t>     : convert framerate from <s> to <t>");
-			System.out.println("                       Predefined values; 24p=23.976, 25p=25, 30p=29.967");
-			System.out.println("                       /fps:auto,<t> detects source frame rate automatically");
-			System.out.println("    /dly:<t>         : set delay in ms - default: 0.0");
-			System.out.println("    /filter:<f>      : set scaling filter - default: bilinear");
-			System.out.println("                       Supported values: bilinear, triangle, bicubic, bell,");
-			System.out.println("                       b-spline, hermite, lanczos3, mitchell");
-			System.out.println("    /palmode:<s>     : palette mode: keep, create, dither - default: create");
-			System.out.println("    /tmin:<t>        : set minimum display time in ms - default: 500");
-			System.out.println("    /tmerge:<t>      : set max time diff for merging subs in ms - default: 200");
-			System.out.println("    /movin:<r>[,<o>] : move captions inside screen ratio <r>, +/- offset <o>");
-			System.out.println("    /movout:<r>[,<o>]: move captions inside screen ratio <r>, +/- offset <o>");
-			System.out.println("    /movex:<t>[,<o>] : move captions horizontally.<t> may be left,right,center.");
-			System.out.println("                       +/- optional offset <o> (only if moving left or right)");
-			System.out.println("    /cropy:<n>       : crop the upper/lower n lines - default: 0");
-			System.out.println("    /acrop:<n>       : set alpha cropping threshold - default: 10");
-			System.out.println("    /scale:<x>,<y>   : scale captions with free factors - default: 1.0,1.0");
-			System.out.println("    /exppal[+/-]     : export target palette in PGCEdit format - default: off");
-			System.out.println("    /forced[+/-]     : export only forced subtitles - default: off (export all)");
-			System.out.println("    /forceall[+/-]   : set/clear forced flag for all subs - default: off (keep)");
-			System.out.println("    /swap[+/-]       : swap Cr/Cb components - default: off (don't swap)");
-			System.out.println("    /fixinv[+/-]     : fix zero alpha frame palette - default: off (don't fix)");
-			System.out.println("    /verbatim[+/-]   : switch on verbatim console output mode - default: off");
-			System.out.println("Options only for SUB/IDX or SUP/IFO as target:");
-			System.out.println("    /atr:<n>         : set alpha threshold 0..255 - default 80");
-			System.out.println("    /ltr1:<n>        : set lum lo/mid threshold 0..255 - default auto");
-			System.out.println("    /ltr2:<n>        : set lum mid/hi threshold 0..255 - default auto");
-			System.out.println("    /lang:<s>        : set language to string <s> - default: de (only SUB/IDX)");
-			System.out.println("    /pal:<s>         : load palette file <s> - default: use builtin palette");
-			System.out.println("\nNote:\n");
-			System.out.println("Boolean parameters like \"verbatim\" are switched off with a trailing \"-\".");
-			System.out.println("\nWildcard support:");
-			System.out.println("To use wildcards, enclose the whole parameter string in double quotes.");
-			System.out.println("For filenames containing spaces, use single quotes around the file name.");
-			System.out.println("Use \"*\" for any character and \"?\" for one character in the source name");
-			System.out.println("Use exactly one \"*\" in the target file name.");
-			System.out.println("Example:");
-			System.out.println("java -jar BDSup2Sub.jar \"'movie* 1?.sup' dvd_*.sub /res:720 /fps:25p\"");
-		} else {
-			// analyze parameters
-			String cmdLine = "";
+        // Step 2
+        // check if help screen was requested
+        if (args.length == 1 && (args[0].equals("/?") || args[0].equalsIgnoreCase("/help")) ) {
+            // output help
+            System.out.println(APP_NAME_AND_VERSION + " - " + AUTHOR_AND_DATE);
+            System.out.println("Syntax:");
+            System.out.println("java -jar BDSup2Sub <in> <out> [options]");
+            System.out.println("Options:");
+            System.out.println("    /res:<n>         : set resolution to 480, 576, 720 or 1080 - default 576");
+            System.out.println("                       Predefined values: keep, ntsc=480, pal=576, 1440x1080");
+            System.out.println("    /fps:<t>         : synchronize target frame rate to <t> - default: auto");
+            System.out.println("                       Predefined values; 24p=23.976, 25p=25, 30p=29.967");
+            System.out.println("                       /fps:keep preserves the source fps (for BD&XML)");
+            System.out.println("    /fps:<s>,<t>     : convert framerate from <s> to <t>");
+            System.out.println("                       Predefined values; 24p=23.976, 25p=25, 30p=29.967");
+            System.out.println("                       /fps:auto,<t> detects source frame rate automatically");
+            System.out.println("    /dly:<t>         : set delay in ms - default: 0.0");
+            System.out.println("    /filter:<f>      : set scaling filter - default: bilinear");
+            System.out.println("                       Supported values: bilinear, triangle, bicubic, bell,");
+            System.out.println("                       b-spline, hermite, lanczos3, mitchell");
+            System.out.println("    /palmode:<s>     : palette mode: keep, create, dither - default: create");
+            System.out.println("    /tmin:<t>        : set minimum display time in ms - default: 500");
+            System.out.println("    /tmerge:<t>      : set max time diff for merging subs in ms - default: 200");
+            System.out.println("    /movin:<r>[,<o>] : move captions inside screen ratio <r>, +/- offset <o>");
+            System.out.println("    /movout:<r>[,<o>]: move captions inside screen ratio <r>, +/- offset <o>");
+            System.out.println("    /movex:<t>[,<o>] : move captions horizontally.<t> may be left,right,center.");
+            System.out.println("                       +/- optional offset <o> (only if moving left or right)");
+            System.out.println("    /cropy:<n>       : crop the upper/lower n lines - default: 0");
+            System.out.println("    /acrop:<n>       : set alpha cropping threshold - default: 10");
+            System.out.println("    /scale:<x>,<y>   : scale captions with free factors - default: 1.0,1.0");
+            System.out.println("    /exppal[+/-]     : export target palette in PGCEdit format - default: off");
+            System.out.println("    /forced[+/-]     : export only forced subtitles - default: off (export all)");
+            System.out.println("    /forceall[+/-]   : set/clear forced flag for all subs - default: off (keep)");
+            System.out.println("    /swap[+/-]       : swap Cr/Cb components - default: off (don't swap)");
+            System.out.println("    /fixinv[+/-]     : fix zero alpha frame palette - default: off (don't fix)");
+            System.out.println("    /verbatim[+/-]   : switch on verbatim console output mode - default: off");
+            System.out.println("Options only for SUB/IDX or SUP/IFO as target:");
+            System.out.println("    /atr:<n>         : set alpha threshold 0..255 - default 80");
+            System.out.println("    /ltr1:<n>        : set lum lo/mid threshold 0..255 - default auto");
+            System.out.println("    /ltr2:<n>        : set lum mid/hi threshold 0..255 - default auto");
+            System.out.println("    /lang:<s>        : set language to string <s> - default: de (only SUB/IDX)");
+            System.out.println("    /pal:<s>         : load palette file <s> - default: use builtin palette");
+            System.out.println("\nNote:\n");
+            System.out.println("Boolean parameters like \"verbatim\" are switched off with a trailing \"-\".");
+            System.out.println("\nWildcard support:");
+            System.out.println("To use wildcards, enclose the whole parameter string in double quotes.");
+            System.out.println("For filenames containing spaces, use single quotes around the file name.");
+            System.out.println("Use \"*\" for any character and \"?\" for one character in the source name");
+            System.out.println("Use exactly one \"*\" in the target file name.");
+            System.out.println("Example:");
+            System.out.println("java -jar BDSup2Sub.jar \"'movie* 1?.sup' dvd_*.sub /res:720 /fps:25p\"");
+        } else {
+            // analyze parameters
+            String cmdLine = "";
             for (String arg : args) {
                 cmdLine += arg + " ";
             }
-			System.out.println("\nCommand line:\n" + getJarName() + " " + cmdLine + "\n");
+            System.out.println("\nCommand line:\n" + getJarName() + " " + cmdLine + "\n");
 
-			// parse parameters
-			String src = null;
-			String trg = null;
-			int alphaThr = Core.getAlphaThr();
-			int lumThr1 = -1;
-			int lumThr2 = -1;
-			int langIdx = -1;
-			Resolution r = Resolution.PAL;
-			OutputMode mode = null;
-			boolean defineFPStrg = false;
-			double screenRatio = -1;
+            // parse parameters
+            String src = null;
+            String trg = null;
+            int alphaThr = Core.getAlphaThr();
+            int lumThr1 = -1;
+            int lumThr2 = -1;
+            int langIdx = -1;
+            Resolution r = Resolution.PAL;
+            OutputMode mode = null;
+            boolean defineFPStrg = false;
+            double screenRatio = -1;
             for (String arg : args) {
                 String a = arg;
 
@@ -781,184 +769,184 @@ class BDSup2Sub {
                 }
             }
 
-			Core.setOutputResolution(r);
+            Core.setOutputResolution(r);
 
-			if (!Core.getKeepFps() && !defineFPStrg) {
-				Core.setFPSTrg(Core.getDefaultFPS(r));
-				System.out.println("Target frame rate set to "+ToolBox.formatDouble(Core.getFPSTrg())+"fps");
-			}
+            if (!Core.getKeepFps() && !defineFPStrg) {
+                Core.setFPSTrg(Core.getDefaultFPS(r));
+                System.out.println("Target frame rate set to "+ToolBox.formatDouble(Core.getFPSTrg())+"fps");
+            }
 
-			// Step 3
-			// open GUI if trg file name is missing
-			if (trg == null) {
-				setupGUI();
-				if (src != null) {
-					new MainFrame(src);
-				} else {
-					new MainFrame();
-				}
-				return;
-			}
+            // Step 3
+            // open GUI if trg file name is missing
+            if (trg == null) {
+                setupGUI();
+                if (src != null) {
+                    new MainFrame(src);
+                } else {
+                    new MainFrame();
+                }
+                return;
+            }
 
-			// Step 4
-			// handle wildcards
-			String srcFileNames[];
-			String trgFileNames[];
-			String path;
-			// multiple files
-			if (src.indexOf('*') != -1) {
-				path = ToolBox.getPathName(src);
-				if (path == null || path.length() == 0) {
-					path = "." + File.separatorChar;
-				}
-				File[] srcFiles = (new File(path)).listFiles(new FileFilter(ToolBox.getFileName(src)));
-				if (srcFiles.length == 0) {
-					fatalError("No match found for '"+ToolBox.addSeparator(path)+src+"'");
-				}
-				if (trg.indexOf('*') == -1) {
-					fatalError("No wildcards in target string!");
-				}
-				srcFileNames = new String[srcFiles.length];
-				trgFileNames = new String[srcFiles.length];
-				for (int i=0; i<srcFiles.length; i++) {
-					srcFileNames[i] = ToolBox.addSeparator(path)+srcFiles[i].getName();
-					trgFileNames[i] = trg.replace("*", ToolBox.stripExtension(srcFiles[i].getName()));
-					//System.out.println(srcFileNames[i]+" - "+trgFileNames[i]);
-				}
-			} else {
-				srcFileNames = new String[1];
-				trgFileNames = new String[1];
-				srcFileNames[0] = src;
-				int aPos = trg.indexOf('*');
-				if (aPos != -1) {
-					// replace asterisk by path+filename of source without the extension
-					trgFileNames[0] = trg.replace("*", ToolBox.stripExtension(src));
-				} else {
-					trgFileNames[0] = trg;
-				}
-			}
+            // Step 4
+            // handle wildcards
+            String srcFileNames[];
+            String trgFileNames[];
+            String path;
+            // multiple files
+            if (src.indexOf('*') != -1) {
+                path = ToolBox.getPathName(src);
+                if (path == null || path.length() == 0) {
+                    path = "." + File.separatorChar;
+                }
+                File[] srcFiles = (new File(path)).listFiles(new FileFilter(ToolBox.getFileName(src)));
+                if (srcFiles.length == 0) {
+                    fatalError("No match found for '"+ToolBox.addSeparator(path)+src+"'");
+                }
+                if (trg.indexOf('*') == -1) {
+                    fatalError("No wildcards in target string!");
+                }
+                srcFileNames = new String[srcFiles.length];
+                trgFileNames = new String[srcFiles.length];
+                for (int i=0; i<srcFiles.length; i++) {
+                    srcFileNames[i] = ToolBox.addSeparator(path)+srcFiles[i].getName();
+                    trgFileNames[i] = trg.replace("*", ToolBox.stripExtension(srcFiles[i].getName()));
+                    //System.out.println(srcFileNames[i]+" - "+trgFileNames[i]);
+                }
+            } else {
+                srcFileNames = new String[1];
+                trgFileNames = new String[1];
+                srcFileNames[0] = src;
+                int aPos = trg.indexOf('*');
+                if (aPos != -1) {
+                    // replace asterisk by path+filename of source without the extension
+                    trgFileNames[0] = trg.replace("*", ToolBox.stripExtension(src));
+                } else {
+                    trgFileNames[0] = trg;
+                }
+            }
 
-			// Step 5
-			// the main loop
-			for (int fnum=0; fnum < srcFileNames.length; fnum++) {
-				src = srcFileNames[fnum];
-				trg = trgFileNames[fnum];
-				// ok, let's start
-				Core.init(null);
-				try {
-					System.out.println("\nConverting " + mode + "\n");
-					// check input file
-					if (!new File(src).exists()) {
-						throw new CoreException("File '"+src+"' does not exist.");
-					}
-					boolean xml = ToolBox.getExtension(src).equalsIgnoreCase("xml");
-					boolean idx = ToolBox.getExtension(src).equalsIgnoreCase("idx");
-					boolean ifo = ToolBox.getExtension(src).equalsIgnoreCase("ifo");
-					byte id[] = ToolBox.getFileID(src, 4);
-					StreamID sid = (id == null) ? StreamID.UNKNOWN : Core.getStreamID(id);
-					if (!idx && !xml && !ifo && sid == StreamID.UNKNOWN) {
-						throw new CoreException("File '"+src+"' is not a supported subtitle stream.");
-					}
-					Core.setCurrentStreamID(sid);
-					// check output file(s)
-					File fi,fs;
-					if (Core.getOutputMode() == OutputMode.VOBSUB) {
-						fi = new File(ToolBox.stripExtension(trg)+".idx");
-						fs = new File(ToolBox.stripExtension(trg)+".sub");
-					} else {
-						fs = new File(ToolBox.stripExtension(trg)+".sup");
-						fi = fs; // we don't need the idx file
-					}
-					if (fi.exists() || fs.exists()) {
-						if ((fi.exists() && !fi.canWrite()) || (fs.exists() && !fs.canWrite())) {
-							throw new CoreException("Target file '"+trg+"' is write protected.");
-						}
-					}
-					// read input file
-					if (xml || sid == StreamID.XML) {
-						Core.readXml(src);
-					} else if (idx || sid == StreamID.DVDSUB || sid == StreamID.IDX) {
-						Core.readVobSub(src);
-					} else if (ifo || sid == StreamID.IFO) {
-						Core.readSupIfo(src);
-					} else {
-						Core.readSup(src);
-					}
+            // Step 5
+            // the main loop
+            for (int fnum=0; fnum < srcFileNames.length; fnum++) {
+                src = srcFileNames[fnum];
+                trg = trgFileNames[fnum];
+                // ok, let's start
+                Core.init(null);
+                try {
+                    System.out.println("\nConverting " + mode + "\n");
+                    // check input file
+                    if (!new File(src).exists()) {
+                        throw new CoreException("File '"+src+"' does not exist.");
+                    }
+                    boolean xml = ToolBox.getExtension(src).equalsIgnoreCase("xml");
+                    boolean idx = ToolBox.getExtension(src).equalsIgnoreCase("idx");
+                    boolean ifo = ToolBox.getExtension(src).equalsIgnoreCase("ifo");
+                    byte id[] = ToolBox.getFileID(src, 4);
+                    StreamID sid = (id == null) ? StreamID.UNKNOWN : Core.getStreamID(id);
+                    if (!idx && !xml && !ifo && sid == StreamID.UNKNOWN) {
+                        throw new CoreException("File '"+src+"' is not a supported subtitle stream.");
+                    }
+                    Core.setCurrentStreamID(sid);
+                    // check output file(s)
+                    File fi,fs;
+                    if (Core.getOutputMode() == OutputMode.VOBSUB) {
+                        fi = new File(ToolBox.stripExtension(trg)+".idx");
+                        fs = new File(ToolBox.stripExtension(trg)+".sub");
+                    } else {
+                        fs = new File(ToolBox.stripExtension(trg)+".sup");
+                        fi = fs; // we don't need the idx file
+                    }
+                    if (fi.exists() || fs.exists()) {
+                        if ((fi.exists() && !fi.canWrite()) || (fs.exists() && !fs.canWrite())) {
+                            throw new CoreException("Target file '"+trg+"' is write protected.");
+                        }
+                    }
+                    // read input file
+                    if (xml || sid == StreamID.XML) {
+                        Core.readXml(src);
+                    } else if (idx || sid == StreamID.DVDSUB || sid == StreamID.IDX) {
+                        Core.readVobSub(src);
+                    } else if (ifo || sid == StreamID.IFO) {
+                        Core.readSupIfo(src);
+                    } else {
+                        Core.readSup(src);
+                    }
 
-					Core.scanSubtitles();
-					printWarnings();
-					// move captions
-					if (Core.getMoveModeX() != CaptionMoveModeX.KEEP_POSITION || Core.getMoveModeY() != CaptionMoveModeY.KEEP_POSITION) {
-						Core.setCineBarFactor((1.0 - (16.0/9)/screenRatio)/2.0);
-						Core.moveAllToBounds();
-					}
-					// set some values
-					if (Core.getExportForced() && Core.getNumForcedFrames() == 0) {
-						throw new CoreException("No forced subtitles found.");
-					}
-					int lt[] = Core.getLumThr();
-					if (lumThr1 > 0) {
-						lt[1] = lumThr1;
-					}
-					if (lumThr2 > 0) {
-						lt[0] = lumThr2;
-					}
-					Core.setLumThr(lt);
-					Core.setAlphaThr(alphaThr);
-					if (langIdx != -1) {
-						Core.setLanguageIdx(langIdx);
-					}
-					// write output
-					Core.writeSub(trg);
-				} catch (CoreException ex) {
-					Core.printErr(ex.getMessage());
-				} catch (Exception ex) {
-					ToolBox.showException(ex);
-					Core.printErr(ex.getMessage());
-				}
-				// clean up
-				printWarnings();
-				Core.exit();
-			}
-			System.out.println("\nConversion of "+srcFileNames.length+" file(s) finished");
-			System.exit(0);
-		}
-	}
+                    Core.scanSubtitles();
+                    printWarnings();
+                    // move captions
+                    if (Core.getMoveModeX() != CaptionMoveModeX.KEEP_POSITION || Core.getMoveModeY() != CaptionMoveModeY.KEEP_POSITION) {
+                        Core.setCineBarFactor((1.0 - (16.0/9)/screenRatio)/2.0);
+                        Core.moveAllToBounds();
+                    }
+                    // set some values
+                    if (Core.getExportForced() && Core.getNumForcedFrames() == 0) {
+                        throw new CoreException("No forced subtitles found.");
+                    }
+                    int lt[] = Core.getLumThr();
+                    if (lumThr1 > 0) {
+                        lt[1] = lumThr1;
+                    }
+                    if (lumThr2 > 0) {
+                        lt[0] = lumThr2;
+                    }
+                    Core.setLumThr(lt);
+                    Core.setAlphaThr(alphaThr);
+                    if (langIdx != -1) {
+                        Core.setLanguageIdx(langIdx);
+                    }
+                    // write output
+                    Core.writeSub(trg);
+                } catch (CoreException ex) {
+                    Core.printErr(ex.getMessage());
+                } catch (Exception ex) {
+                    ToolBox.showException(ex);
+                    Core.printErr(ex.getMessage());
+                }
+                // clean up
+                printWarnings();
+                Core.exit();
+            }
+            System.out.println("\nConversion of "+srcFileNames.length+" file(s) finished");
+            System.exit(0);
+        }
+    }
 
-	/**
-	 * Used to determine the name and path of the JAR file.
-	 * @return Name and path of the JAR file
-	 */
-	private static String getJarName() {
-		Object c = new BDSup2Sub(); // dummy
-		String s = c.getClass().getName().replace('.','/') + ".class";
-		String r = "";
-		URL url = c.getClass().getClassLoader().getResource(s);
-		int pos;
-		try {
-			r = URLDecoder.decode(url.getPath(),"UTF-8");
-			if (((pos=r.toLowerCase().indexOf("file:")) != -1)) {
-				r = r.substring(pos+5);
-			}
-			if ((pos=r.toLowerCase().indexOf(s.toLowerCase())) != -1) {
-				r = r.substring(0,pos);
-			}
-			// special handling for JAR
-			pos = r.lastIndexOf(".jar");
-			if (pos != -1) {
-				r = r.substring(0, pos+4);
-			} else {
-				r += APP_NAME + ".jar";
-			}
-		} catch (UnsupportedEncodingException ex) {
-		};
+    /**
+     * Used to determine the name and path of the JAR file.
+     * @return Name and path of the JAR file
+     */
+    private static String getJarName() {
+        Object c = new BDSup2Sub(); // dummy
+        String s = c.getClass().getName().replace('.','/') + ".class";
+        String r = "";
+        URL url = c.getClass().getClassLoader().getResource(s);
+        int pos;
+        try {
+            r = URLDecoder.decode(url.getPath(),"UTF-8");
+            if (((pos=r.toLowerCase().indexOf("file:")) != -1)) {
+                r = r.substring(pos+5);
+            }
+            if ((pos=r.toLowerCase().indexOf(s.toLowerCase())) != -1) {
+                r = r.substring(0,pos);
+            }
+            // special handling for JAR
+            pos = r.lastIndexOf(".jar");
+            if (pos != -1) {
+                r = r.substring(0, pos+4);
+            } else {
+                r += APP_NAME + ".jar";
+            }
+        } catch (UnsupportedEncodingException ex) {
+        };
 
-		r = r.replace('/', File.separatorChar);
-		if (r.length() > 3 && r.charAt(2) == ':' && r.charAt(0) == '\\') {
-			r = r.substring(1);
-		}
-		return r;
-	}
+        r = r.replace('/', File.separatorChar);
+        if (r.length() > 3 && r.charAt(2) == ':' && r.charAt(0) == '\\') {
+            r = r.substring(1);
+        }
+        return r;
+    }
 }
 
 /**
@@ -972,29 +960,29 @@ class BDSup2Sub {
 
 class FileFilter implements FilenameFilter {
 
-	/** file name pattern */
-	String fnPattern;
+    /** file name pattern */
+    String fnPattern;
 
-	/**
-	 * Constructor - creates regular expression for given string with simple wildcards
-	 * @param pattern String with simple wildcards ("*" and "&")
-	 */
-	public FileFilter(String pattern) {
-		fnPattern = pattern;
-		// use escape character for special characters
-		fnPattern = fnPattern.replace("\\", "\\\\"); // "\" -> "\\"
-		fnPattern = fnPattern.replace(".", "\\.");   // "*" -> "\."
-		fnPattern = fnPattern.replace("$", "\\$");   // "$" -> "\$"
-		fnPattern = fnPattern.replace("^", "\\^");   // "^" -> "\^"
-		// replace wildcards with regular expressions
-		fnPattern = fnPattern.replace("*", ".*");  // "*" -> ".*"
-		fnPattern = fnPattern.replace("?", ".") ;  // "?" -> "."
-	}
+    /**
+     * Constructor - creates regular expression for given string with simple wildcards
+     * @param pattern String with simple wildcards ("*" and "&")
+     */
+    public FileFilter(String pattern) {
+        fnPattern = pattern;
+        // use escape character for special characters
+        fnPattern = fnPattern.replace("\\", "\\\\"); // "\" -> "\\"
+        fnPattern = fnPattern.replace(".", "\\.");   // "*" -> "\."
+        fnPattern = fnPattern.replace("$", "\\$");   // "$" -> "\$"
+        fnPattern = fnPattern.replace("^", "\\^");   // "^" -> "\^"
+        // replace wildcards with regular expressions
+        fnPattern = fnPattern.replace("*", ".*");  // "*" -> ".*"
+        fnPattern = fnPattern.replace("?", ".") ;  // "?" -> "."
+    }
 
-	/* (non-Javadoc)
-	 * @see java.io.FilenameFilter#accept(java.io.File, java.lang.String)
-	 */
-	public boolean accept(File dir, String name) {
-		return name.matches(fnPattern);
-	}
+    /* (non-Javadoc)
+     * @see java.io.FilenameFilter#accept(java.io.File, java.lang.String)
+     */
+    public boolean accept(File dir, String name) {
+        return name.matches(fnPattern);
+    }
 }

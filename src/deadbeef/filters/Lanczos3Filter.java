@@ -22,28 +22,28 @@ package deadbeef.filters;
  * @author 0xdeadbeef
  */
 public class Lanczos3Filter implements Filter {
-	
-	private static final float PI_FLOAT = (float) Math.PI;
 
-	private float sincModified(float value) {
-		return ((float)Math.sin(value)) / value;
-	}
-	
-	public float getRadius() {
-		return 3.0f;
-	}
+    private static final float PI_FLOAT = (float) Math.PI;
 
-	public float value(float value) {
-		if (value == 0) {
-			return 1.0f;
-		}
-		if (value < 0.0f) {
-			value = -value;
-		}
-		if (value < 3.0f) {
-			value *= PI_FLOAT;
-			return sincModified(value) * sincModified(value / 3.0f);
-		}
-		return 0.0f;
-	}
+    private float sincModified(float value) {
+        return ((float)Math.sin(value)) / value;
+    }
+
+    public float getRadius() {
+        return 3.0f;
+    }
+
+    public float value(float value) {
+        if (value == 0) {
+            return 1.0f;
+        }
+        if (value < 0.0f) {
+            value = -value;
+        }
+        if (value < 3.0f) {
+            value *= PI_FLOAT;
+            return sincModified(value) * sincModified(value / 3.0f);
+        }
+        return 0.0f;
+    }
 }

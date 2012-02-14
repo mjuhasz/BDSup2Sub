@@ -1,7 +1,6 @@
 package deadbeef.supstream;
 
 import deadbeef.bitmap.Palette;
-import deadbeef.core.Core;
 
 /*
  * Copyright 2009 Volker Oth (0xdeadbeef)
@@ -26,50 +25,49 @@ import deadbeef.core.Core;
  */
 public interface SubstreamDVD extends Substream {
 
-	/**
-	 * Get frame alpha values.
-	 * @param index Index of caption
-	 * @return Integer array with 4 entries representing the frame alpha values
-	 */
-	int[] getFrameAlpha(int index);
+    /**
+     * Get frame alpha values.
+     * @param index Index of caption
+     * @return Integer array with 4 entries representing the frame alpha values
+     */
+    int[] getFrameAlpha(int index);
 
-	/**
-	 * Get frame Palette.
-	 * @param index Index of caption
-	 * @return Integer array with 4 entries representing the frame palette
-	 */
-	int[] getFramePal(int index);
+    /**
+     * Get frame Palette.
+     * @param index Index of caption
+     * @return Integer array with 4 entries representing the frame palette
+     */
+    int[] getFramePal(int index);
 
-	/**
-	 * Get original frame alpha values (as they were before editing).
-	 * @param index Index of caption
-	 * @return Integer array with 4 entries representing the original frame alpha values.
-	 */
-	int[] getOriginalFrameAlpha(int index);
+    /**
+     * Get original frame alpha values (as they were before editing).
+     * @param index Index of caption
+     * @return Integer array with 4 entries representing the original frame alpha values.
+     */
+    int[] getOriginalFrameAlpha(int index);
 
-	/**
-	 * Get original frame Palette (as they were before editing).
-	 * @param index index of caption
-	 * @return Integer array with 4 entries representing the original frame palette.
-	 */
-	int[] getOriginalFramePal(int index);
+    /**
+     * Get original frame Palette (as they were before editing).
+     * @param index index of caption
+     * @return Integer array with 4 entries representing the original frame palette.
+     */
+    int[] getOriginalFramePal(int index);
 
-	/**
-	 * Get imported 16 color DVD Palette.
-	 * @return Imported 16 color DVD Palette.
-	 */
-	Palette getSrcPalette();
+    /**
+     * Get imported 16 color DVD Palette.
+     * @return Imported 16 color DVD Palette.
+     */
+    Palette getSrcPalette();
 
-	/**
-	 * Replace imported 16 color DVD Palette with a new Palette.
-	 * @param pal New Palette
-	 */
-	void setSrcPalette(Palette pal);
+    /**
+     * Replace imported 16 color DVD Palette with a new Palette.
+     * @param pal New Palette
+     */
+    void setSrcPalette(Palette pal);
 
-	/**
-	 * Get language index read from Idx.
-	 * @return language index.
-	 * @see Core#getLanguages()
-	 */
-	int getLanguageIdx();
+    /**
+     * Get language index read from Idx.
+     * @return language index.
+     */
+    int getLanguageIdx();
 }

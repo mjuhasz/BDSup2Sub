@@ -23,16 +23,16 @@ package deadbeef.filters;
  */
 public interface Filter {
 
-	/**
-	 * Get filter radius
-	 * @return Filter radius
-	 */
-	public float getRadius();
+    /**
+     * Get filter radius
+     * @return Filter radius
+     */
+    public float getRadius();
 
-	/**
-	 * Return filtered value for input value v
-	 * @param v Input value
-	 * @return Filtered value for input value v
-	 */
-	float value(float v);
+    /**
+     * Return filtered value for input value v
+     * @param v Input value
+     * @return Filtered value for input value v
+     */
+    float value(float v);
 }

@@ -23,22 +23,22 @@ package deadbeef.filters;
  */
 public class BSplineFilter implements Filter {
 
-	public float getRadius() {
-		return 2.0f;
-	}
+    public float getRadius() {
+        return 2.0f;
+    }
 
-	public float value(float value) {
-		if (value < 0.0f) {
-			value = - value;
-		}
-		if (value < 1.0f) {
-			float tt = value * value;
-			return 0.5f * tt * value - tt + (2.0f / 3.0f);
-		}
-		if (value < 2.0f) {
-			value = 2.0f - value;
-			return (1.0f / 6.0f) * value * value * value;
-		}
-		return 0.0f;
-	}
+    public float value(float value) {
+        if (value < 0.0f) {
+            value = - value;
+        }
+        if (value < 1.0f) {
+            float tt = value * value;
+            return 0.5f * tt * value - tt + (2.0f / 3.0f);
+        }
+        if (value < 2.0f) {
+            value = 2.0f - value;
+            return (1.0f / 6.0f) * value * value * value;
+        }
+        return 0.0f;
+    }
 }

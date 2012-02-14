@@ -22,18 +22,18 @@ package deadbeef.filters;
  * @author 0xdeadbeef
  */
 public class TriangleFilter implements Filter {
-	
-	public float getRadius() {
-		return 1.0f;
-	}
 
-	public float value(float value) {
-		if (value < 0.0f) {
-			value = -value;
-		}
-		if (value < 1.0f) {
-			return 1.0f - value;
-		}
-		return 0.0f;
-	}
+    public float getRadius() {
+        return 1.0f;
+    }
+
+    public float value(float value) {
+        if (value < 0.0f) {
+            value = -value;
+        }
+        if (value < 1.0f) {
+            return 1.0f - value;
+        }
+        return 0.0f;
+    }
 }

@@ -23,20 +23,20 @@ package deadbeef.filters;
  */
 public class BellFilter implements Filter {
 
-	public float getRadius() {
-		return 1.5f;
-	}
+    public float getRadius() {
+        return 1.5f;
+    }
 
-	public float value(float value) {
-		if (value < 0.0f)
-			value = -value;
+    public float value(float value) {
+        if (value < 0.0f)
+            value = -value;
 
-		if (value < 0.5f)
-			return 0.75f - (value * value);
-		if (value < 1.5f) {
-			value = value - 1.5f;
-			return 0.5f * (value * value);
-		}
-		return 0.0f;
-	}
+        if (value < 0.5f)
+            return 0.75f - (value * value);
+        if (value < 1.5f) {
+            value = value - 1.5f;
+            return 0.5f * (value * value);
+        }
+        return 0.0f;
+    }
 }

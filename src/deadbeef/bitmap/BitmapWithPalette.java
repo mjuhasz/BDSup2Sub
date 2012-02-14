@@ -23,17 +23,13 @@ package deadbeef.bitmap;
  */
 public class BitmapWithPalette {
 
-	/** Bitmap containing one byte per pixel */
-	public final Bitmap bitmap;
-	/** Color palette */
-	public final Palette palette;
+    /** Bitmap containing one byte per pixel */
+    public final Bitmap bitmap;
+    /** Color palette */
+    public final Palette palette;
 
-	/**
-	 * @param bm Bitmap
-	 * @param pal Palette
-	 */
-	public BitmapWithPalette(Bitmap bitmap, Palette palette) {
-		this.bitmap = bitmap;
-		this.palette = palette;
-	}
+    public BitmapWithPalette(Bitmap bitmap, Palette palette) {
+        this.bitmap = bitmap;
+        this.palette = palette;
+    }
 }

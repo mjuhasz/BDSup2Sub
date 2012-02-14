@@ -22,18 +22,18 @@ package deadbeef.filters;
  * @author 0xdeadbeef
  */
 public class HermiteFilter implements Filter {
-	
-	public float getRadius() {
-		return 1.0f;
-	}
 
-	public float value(float value) {
-		if (value < 0.0f) {
-			value = -value;
-		}
-		if (value < 1.0f) {
-			return (2.0f * value - 3.0f) * value * value + 1.0f;
-		}
-		return 0.0f;
-	}
+    public float getRadius() {
+        return 1.0f;
+    }
+
+    public float value(float value) {
+        if (value < 0.0f) {
+            value = -value;
+        }
+        if (value < 1.0f) {
+            return (2.0f * value - 3.0f) * value * value + 1.0f;
+        }
+        return 0.0f;
+    }
 }
