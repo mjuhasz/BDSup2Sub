@@ -114,9 +114,9 @@ public class Bitmap {
 	private int[] createHistogram(int colorIndexCount) {
 		int histogram[] = new int[colorIndexCount];
 		Arrays.fill(histogram, 0);
-		for (int i=0; i < buffer.length; i++) {
-			histogram[(buffer[i] & 0xff)]++;
-		}
+        for (byte b : buffer) {
+            histogram[(b & 0xff)]++;
+        }
 		return histogram;
 	}
 
@@ -147,17 +147,17 @@ public class Bitmap {
 
 	public int getHighestVisibleColorIndex(byte[] alphaValues) {
 		int maxColorIndex = 0;
-		for (int i = 0; i < buffer.length; i++) {
-			int colorIndex = buffer[i] & 0xff;
-			if ((alphaValues[colorIndex] & 0xff) > 0) {
-				if (colorIndex > maxColorIndex) {
-					maxColorIndex = colorIndex;
-					if (maxColorIndex == 255) {
-						break;
-					}
-				}
-			}
-		}
+        for (byte b : buffer) {
+            int colorIndex = b & 0xff;
+            if ((alphaValues[colorIndex] & 0xff) > 0) {
+                if (colorIndex > maxColorIndex) {
+                    maxColorIndex = colorIndex;
+                    if (maxColorIndex == 255) {
+                        break;
+                    }
+                }
+            }
+        }
 		return maxColorIndex;
 	}
 
@@ -191,12 +191,12 @@ public class Bitmap {
 					newColorIndex = 0; // transparent color
 				} else {
 					newColorIndex = 1; // default: lightest color
-					for (int n = 0; n < lumaThreshold.length; n++) {
-						if (luma > lumaThreshold[n]) {
-							break;
-						}
-						newColorIndex++; // try next darker color
-					}
+                    for (int threshold : lumaThreshold) {
+                        if (luma > threshold) {
+                            break;
+                        }
+                        newColorIndex++; // try next darker color
+                    }
 				}
 				p.put((alpha << 8) | luma, newColorIndex);
 			}
@@ -289,12 +289,12 @@ public class Bitmap {
 						colIdx = 0; // transparent color
 					} else {
 						colIdx = 1; // default: lightest color
-						for (int n = 0; n < lumThr.length; n++) {
-							if (cyti > lumThr[n]) {
-								break;
-							}
-							colIdx++; // try next darker color
-						}
+                        for (int threshold : lumThr) {
+                            if (cyti > threshold) {
+                                break;
+                            }
+                            colIdx++; // try next darker color
+                        }
 					}
 					// remember
 					lastA = ati;
@@ -352,12 +352,12 @@ public class Bitmap {
 					colIdx = 0; // transparent color
 				} else {
 					colIdx = 1; // default: lightest color
-					for (int n = 0; n < lumThr.length; n++) {
-						if (cyp > lumThr[n]) {
-							break;
-						}
-						colIdx++; // try next darker color
-					}
+                    for (int threshold : lumThr) {
+                        if (cyp > threshold) {
+                            break;
+                        }
+                        colIdx++; // try next darker color
+                    }
 				}
 				p.put(color, colIdx);
 			}

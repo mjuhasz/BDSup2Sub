@@ -34,9 +34,9 @@ public class BitmapTest {
 	@Test
 	public void shouldCreateBitmapInitializedWithZeros() {
 		byte[] buffer = subject.getInternalBuffer();
-		for (int i = 0; i < buffer.length; i++) {
-			assertEquals(0, buffer[i]);
-		}
+        for (byte b : buffer) {
+            assertEquals(0, b);
+        }
 	}
 	
 	@Test
@@ -44,9 +44,9 @@ public class BitmapTest {
 		byte fillerColorIndex = 12;
 		Bitmap bitmap = new Bitmap(WIDTH, HEIGHT, fillerColorIndex);
 		byte[] buffer = bitmap.getInternalBuffer();
-		for (int i = 0; i < buffer.length; i++) {
-			assertEquals(fillerColorIndex, buffer[i]);
-		}
+        for (byte b : buffer) {
+            assertEquals(fillerColorIndex, b);
+        }
 	}
 	
 	@Test
@@ -152,9 +152,9 @@ public class BitmapTest {
 		assertEquals(rectWidth, croppedBitmap.getWidth());
 		
 		byte[] buffer = croppedBitmap.getInternalBuffer();
-		for (int i = 0; i < buffer.length; i++) {
-			assertEquals(colorIndex, buffer[i]);
-		}
+        for (byte b : buffer) {
+            assertEquals(colorIndex, b);
+        }
 	}
 	
 	@Test

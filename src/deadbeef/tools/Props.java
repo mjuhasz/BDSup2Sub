@@ -187,7 +187,7 @@ public class Props {
 			return def;
 		}
 		s = removeComment(s);
-		return Boolean.valueOf(s).booleanValue();
+		return Boolean.valueOf(s);
 	}
 
 	/**
@@ -202,7 +202,7 @@ public class Props {
 			return def;
 		}
 		s = removeComment(s);
-		return Double.valueOf(s).doubleValue();
+		return Double.valueOf(s);
 	}
 
 	/**

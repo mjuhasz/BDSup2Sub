@@ -439,9 +439,9 @@ public class SubDVD implements Substream, SubstreamDVD {
 		}
 
 		int ofs = 0;
-		for (int i=0; i<PACK_HEADER.length; i++) {
-			buf[ofs++] = PACK_HEADER[i];
-		}
+        for (byte packHeader : PACK_HEADER) {
+            buf[ofs++] = packHeader;
+        }
 
 		// set packet length
 		tmp += stuffingBytes;
@@ -505,16 +505,16 @@ public class SubDVD implements Substream, SubstreamDVD {
 			}
 			// copy packet headers
 			PACK_HEADER[13] = (byte)(0xf8);
-			for (int i=0; i<PACK_HEADER.length; i++) {
-				buf[ofs++] = PACK_HEADER[i];
-			}
+            for (byte packHeader : PACK_HEADER) {
+                buf[ofs++] = packHeader;
+            }
 
 			// set packet length
 			headerNext[4] = (byte)(tmp >> 8);
 			headerNext[5] = (byte)tmp;
-			for (int i=0; i < headerNext.length; i++) {
-				buf[ofs++] = headerNext[i];
-			}
+            for (byte b : headerNext) {
+                buf[ofs++] = b;
+            }
 
 			// copy RLE buffer
 			for (int i=ofsRLE; i<ofsRLE+rleSizeLeft; i++) {

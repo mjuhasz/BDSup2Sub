@@ -628,9 +628,9 @@ public class SupBD implements Substream {
 		setDWord(packetHeader, 2, (int)pic.startTime);				// PTS
 		setDWord(packetHeader, 6, dts);								// DTS
 		setWord(packetHeader, 11, headerPCSStart.length);			// size
-		for (int i=0; i < packetHeader.length; i++) {
-			buf[index++] = packetHeader[i];
-		}
+        for (byte b : packetHeader) {
+            buf[index++] = b;
+        }
 		setWord(headerPCSStart,0, pic.width);
 		setWord(headerPCSStart,2, h);								// cropped height
 		setByte(headerPCSStart,4, fpsId);
@@ -638,34 +638,34 @@ public class SupBD implements Substream {
 		headerPCSStart[14] = (pic.isforced ? (byte)0x40 : 0);
 		setWord(headerPCSStart,15, pic.getOfsX());
 		setWord(headerPCSStart,17, yOfs);
-		for (int i=0; i<headerPCSStart.length; i++) {
-			buf[index++] = headerPCSStart[i];
-		}
+        for (byte b : headerPCSStart) {
+            buf[index++] = b;
+        }
 
 		// write WDS
 		packetHeader[10] = 0x17;											// ID
 		int timeStamp = (int)pic.startTime - windowInitTime;
 		setDWord(packetHeader, 2, timeStamp);						// PTS (keep DTS)
 		setWord(packetHeader, 11, headerWDS.length);				// size
-		for (int i=0; i<packetHeader.length; i++) {
-			buf[index++] = packetHeader[i];
-		}
+        for (byte b : packetHeader) {
+            buf[index++] = b;
+        }
 		setWord(headerWDS, 2, pic.getOfsX());
 		setWord(headerWDS, 4, yOfs);
 		setWord(headerWDS, 6, bm.getWidth());
 		setWord(headerWDS, 8, bm.getHeight());
-		for (int i=0; i<headerWDS.length; i++) {
-			buf[index++] = headerWDS[i];
-		}
+        for (byte b : headerWDS) {
+            buf[index++] = b;
+        }
 
 		// write PDS
 		packetHeader[10] = 0x14;											// ID
 		setDWord(packetHeader, 2, dts);								// PTS (=DTS of PCS/WDS)
 		setDWord(packetHeader, 6, 0);								// DTS (0)
 		setWord(packetHeader, 11, (2+palSize*5));					// size
-		for (int i=0; i<packetHeader.length; i++) {
-			buf[index++] = packetHeader[i];
-		}
+        for (byte b : packetHeader) {
+            buf[index++] = b;
+        }
 		buf[index++] = 0;
 		buf[index++] = 0;
 		for (int i=0; i < palSize; i++) {
@@ -687,16 +687,16 @@ public class SupBD implements Substream {
 		setDWord(packetHeader, 2, timeStamp);						// PTS
 		setDWord(packetHeader, 6, dts);								// DTS
 		setWord(packetHeader, 11, headerODSFirst.length+bufSize);	// size
-		for (int i=0; i < packetHeader.length; i++) {
-			buf[index++] = packetHeader[i];
-		}
+        for (byte b : packetHeader) {
+            buf[index++] = b;
+        }
 		int marker = ((numAddPackets == 0) ? 0xC0000000 : 0x80000000);
 		setDWord(headerODSFirst, 3, marker | (rleBuf.length+4));
 		setWord(headerODSFirst, 7, bm.getWidth());
 		setWord(headerODSFirst, 9, bm.getHeight());
-		for (int i=0; i < headerODSFirst.length; i++) {
-			buf[index++] = headerODSFirst[i];
-		}
+        for (byte b : headerODSFirst) {
+            buf[index++] = b;
+        }
 		for (int i=0; i < bufSize; i++) {
 			buf[index++] = rleBuf[rleIndex++];
 		}
@@ -710,12 +710,12 @@ public class SupBD implements Substream {
 			}
 			packetHeader[10] = 0x15;										// ID (keep DTS & PTS)
 			setWord(packetHeader, 11, headerODSNext.length + psize);	// size
-			for (int i=0; i < packetHeader.length; i++) {
-				buf[index++] = packetHeader[i];
-			}
-			for (int i=0; i < headerODSNext.length; i++) {
-				buf[index++] = headerODSNext[i];
-			}
+            for (byte b : packetHeader) {
+                buf[index++] = b;
+            }
+            for (byte b : headerODSNext) {
+                buf[index++] = b;
+            }
 			for (int i=0; i < psize; i++) {
 				buf[index++] = rleBuf[rleIndex++];
 			}
@@ -726,9 +726,9 @@ public class SupBD implements Substream {
 		packetHeader[10] = (byte)0x80;										// ID
 		setDWord(packetHeader, 6, 0);								// DTS (0) (keep PTS of ODS)
 		setWord(packetHeader, 11, 0);								// size
-		for (int i=0; i < packetHeader.length; i++) {
-			buf[index++] = packetHeader[i];
-		}
+        for (byte b : packetHeader) {
+            buf[index++] = b;
+        }
 
 		// write PCS end
 		packetHeader[10] = 0x16;											// ID
@@ -736,41 +736,41 @@ public class SupBD implements Substream {
 		dts = (int)pic.startTime - 1;
 		setDWord(packetHeader, 6, dts);								// DTS
 		setWord(packetHeader, 11, headerPCSEnd.length);				// size
-		for (int i=0; i<packetHeader.length; i++) {
-			buf[index++] = packetHeader[i];
-		}
+        for (byte b : packetHeader) {
+            buf[index++] = b;
+        }
 		setWord(headerPCSEnd,0, pic.width);
 		setWord(headerPCSEnd,2, h);									// cropped height
 		setByte(headerPCSEnd,4, fpsId);
 		setWord(headerPCSEnd,5, pic.compNum+1);
-		for (int i=0; i<headerPCSEnd.length; i++) {
-			buf[index++] = headerPCSEnd[i];
-		}
+        for (byte b : headerPCSEnd) {
+            buf[index++] = b;
+        }
 
 		// write WDS
 		packetHeader[10] = 0x17;											// ID
 		timeStamp = (int)pic.endTime - windowInitTime;
 		setDWord(packetHeader, 2, timeStamp);						// PTS (keep DTS of PCS)
 		setWord(packetHeader, 11, headerWDS.length);				// size
-		for (int i=0; i < packetHeader.length; i++) {
-			buf[index++] = packetHeader[i];
-		}
+        for (byte b : packetHeader) {
+            buf[index++] = b;
+        }
 		setWord(headerWDS, 2, pic.getOfsX());
 		setWord(headerWDS, 4, yOfs);
 		setWord(headerWDS, 6, bm.getWidth());
 		setWord(headerWDS, 8, bm.getHeight());
-		for (int i=0; i < headerWDS.length; i++) {
-			buf[index++] = headerWDS[i];
-		}
+        for (byte b : headerWDS) {
+            buf[index++] = b;
+        }
 
 		// write END
 		packetHeader[10] = (byte)0x80;										// ID
 		setDWord(packetHeader, 2, dts);								// PTS (DTS of end PCS)
 		setDWord(packetHeader, 6, 0);								// DTS (0)
 		setWord(packetHeader, 11, 0);								// size
-		for (int i=0; i < packetHeader.length; i++) {
-			buf[index++] = packetHeader[i];
-		}
+        for (byte b : packetHeader) {
+            buf[index++] = b;
+        }
 
 		return buf;
 	}
@@ -1127,40 +1127,39 @@ public class SupBD implements Substream {
 		// also all entries must be fully transparent after initialization
 
 		try {
-			for (int j=0; j<pl.size(); j++) {
-				PaletteInfo p = pl.get(j);
-				int index = p.paletteOfs;
-				for (int i=0; i < p.paletteSize; i++) {
-					// each palette entry consists of 5 bytes
-					palIndex = buffer.getByte(index);
-					int y = buffer.getByte(++index);
-					int cr,cb;
-					if (Core.getSwapCrCb()) {
-						cb = buffer.getByte(++index);
-						cr = buffer.getByte(++index);
-					} else {
-						cr = buffer.getByte(++index);
-						cb = buffer.getByte(++index);
-					}
-					int alpha = buffer.getByte(++index);
+            for (PaletteInfo p : pl) {
+                int index = p.paletteOfs;
+                for (int i = 0; i < p.paletteSize; i++) {
+                    // each palette entry consists of 5 bytes
+                    palIndex = buffer.getByte(index);
+                    int y = buffer.getByte(++index);
+                    int cr, cb;
+                    if (Core.getSwapCrCb()) {
+                        cb = buffer.getByte(++index);
+                        cr = buffer.getByte(++index);
+                    } else {
+                        cr = buffer.getByte(++index);
+                        cb = buffer.getByte(++index);
+                    }
+                    int alpha = buffer.getByte(++index);
 
-					int alphaOld = palette.getAlpha(palIndex);
-					// avoid fading out
-					if (alpha >= alphaOld) {
-						if (alpha < Core.getAlphaCrop()) {// to not mess with scaling algorithms, make transparent color black
-							y = 16;
-							cr = 128;
-							cb = 128;
-						}
-						palette.setAlpha(palIndex, alpha);
-					} else {
-						fadeOut = true;
-					}
+                    int alphaOld = palette.getAlpha(palIndex);
+                    // avoid fading out
+                    if (alpha >= alphaOld) {
+                        if (alpha < Core.getAlphaCrop()) {// to not mess with scaling algorithms, make transparent color black
+                            y = 16;
+                            cr = 128;
+                            cb = 128;
+                        }
+                        palette.setAlpha(palIndex, alpha);
+                    } else {
+                        fadeOut = true;
+                    }
 
-					palette.setYCbCr(palIndex, y, cb, cr);
-					index++;
-				}
-			}
+                    palette.setYCbCr(palIndex, y, cb, cr);
+                    index++;
+                }
+            }
 			if (fadeOut) {
 				Core.printWarn("fade out detected -> patched palette\n");
 			}

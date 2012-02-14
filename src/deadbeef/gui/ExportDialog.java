@@ -115,15 +115,15 @@ public class ExportDialog extends JDialog {
 		cancel = false;
 
 		// init components
-		for (int i=0; i < LANGUAGES.length; i++) {
-			int n;
-			if (Core.getOutputMode() == OutputMode.XML) {
-				n = 2;
-			} else {
-				n = 1;
-			}
-			jComboBoxLanguage.addItem(LANGUAGES[i][0]+" ("+LANGUAGES[i][n]+")");
-		}
+        for (String[] language : LANGUAGES) {
+            int n;
+            if (Core.getOutputMode() == OutputMode.XML) {
+                n = 2;
+            } else {
+                n = 1;
+            }
+            jComboBoxLanguage.addItem(language[0] + " (" + language[n] + ")");
+        }
 		jComboBoxLanguage.setSelectedIndex(languageIdx);
 		if (Core.getOutputMode() == OutputMode.BDSUP) {
 			jComboBoxLanguage.setEnabled(false);

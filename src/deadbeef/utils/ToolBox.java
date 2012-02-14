@@ -74,9 +74,9 @@ public final class ToolBox {
 			m += ex.getMessage() + "<p>";
 		}
 		StackTraceElement ste[] = ex.getStackTrace();
-		for (int i=0; i<ste.length; i++) {
-			m += ste[i].toString() + "<p>";
-		}
+        for (StackTraceElement e : ste) {
+            m += e.toString() + "<p>";
+        }
 		m += "</html>";
 		ex.printStackTrace();
 		JOptionPane.showMessageDialog(null, m, "Error", JOptionPane.ERROR_MESSAGE);
@@ -100,9 +100,9 @@ public final class ToolBox {
 		JFileChooser fc = new JFileChooser(p);
 		if (ext != null) {
 			JFileFilter filter = new JFileFilter();
-			for (int i=0; i < ext.length; i++) {
-				filter.addExtension(ext[i]);
-			}
+            for (String e : ext) {
+                filter.addExtension(e);
+            }
 			fc.setFileFilter(filter);
 		}
 		fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
@@ -147,7 +147,7 @@ public final class ToolBox {
 	 */
 	public static String exchangeSeparators(String fName) {
 		int pos;
-		StringBuffer sb = new StringBuffer(fName);
+		StringBuilder sb = new StringBuilder(fName);
 		while ((pos = sb.indexOf("\\")) != -1) {
 			sb.setCharAt(pos,'/');
 		}

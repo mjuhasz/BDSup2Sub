@@ -1,4 +1,49 @@
-package deadbeef.core;import static deadbeef.core.Constants.*;import static deadbeef.utils.TimeUtils.*;import java.awt.image.BufferedImage;import java.io.BufferedOutputStream;import java.io.BufferedWriter;import java.io.File;import java.io.FileOutputStream;import java.io.FileWriter;import java.io.IOException;import java.io.UnsupportedEncodingException;import java.net.URL;import java.net.URLDecoder;import java.util.ArrayList;import javax.swing.JFrame;import deadbeef.bitmap.Bitmap;import deadbeef.bitmap.BitmapWithPalette;import deadbeef.bitmap.ErasePatch;import deadbeef.bitmap.Palette;import deadbeef.filters.BSplineFilter;import deadbeef.filters.BellFilter;import deadbeef.filters.BiCubicFilter;import deadbeef.filters.Filter;import deadbeef.filters.HermiteFilter;import deadbeef.filters.Lanczos3Filter;import deadbeef.filters.MitchellFilter;import deadbeef.filters.TriangleFilter;import deadbeef.gui.MainFrame;import deadbeef.gui.Progress;import deadbeef.supstream.SubDVD;import deadbeef.supstream.SubPicture;import deadbeef.supstream.SubPictureDVD;import deadbeef.supstream.Substream;import deadbeef.supstream.SubstreamDVD;import deadbeef.supstream.SupBD;import deadbeef.supstream.SupDVD;import deadbeef.supstream.SupHD;import deadbeef.supstream.SupXml;import deadbeef.tools.EnhancedPngEncoder;import deadbeef.tools.Props;import deadbeef.utils.ToolBox;
+package deadbeef.core;
+
+import static deadbeef.core.Constants.*;
+import static deadbeef.utils.TimeUtils.*;
+
+import java.awt.image.BufferedImage;
+import java.io.BufferedOutputStream;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URL;
+import java.net.URLDecoder;
+import java.util.ArrayList;
+
+import javax.swing.JFrame;
+
+import deadbeef.bitmap.Bitmap;
+import deadbeef.bitmap.BitmapWithPalette;
+import deadbeef.bitmap.ErasePatch;
+import deadbeef.bitmap.Palette;
+import deadbeef.filters.BSplineFilter;
+import deadbeef.filters.BellFilter;
+import deadbeef.filters.BiCubicFilter;
+import deadbeef.filters.Filter;
+import deadbeef.filters.HermiteFilter;
+import deadbeef.filters.Lanczos3Filter;
+import deadbeef.filters.MitchellFilter;
+import deadbeef.filters.TriangleFilter;
+import deadbeef.gui.MainFrame;
+import deadbeef.gui.Progress;
+import deadbeef.supstream.SubDVD;
+import deadbeef.supstream.SubPicture;
+import deadbeef.supstream.SubPictureDVD;
+import deadbeef.supstream.Substream;
+import deadbeef.supstream.SubstreamDVD;
+import deadbeef.supstream.SupBD;
+import deadbeef.supstream.SupDVD;
+import deadbeef.supstream.SupHD;
+import deadbeef.supstream.SupXml;
+import deadbeef.tools.EnhancedPngEncoder;
+import deadbeef.tools.Props;
+import deadbeef.utils.ToolBox;
+
 /**
  * This class contains the core functionality of BDSup2Sub.<br>
  * It's meant to be used from the command line as well as from the GUI.
@@ -55,7 +100,10 @@ public class Core  extends Thread {
 	private static final boolean APPLY_FREE_SCALE_BY_DEFAULT = false;
 	private static final int MIN_IMAGE_DIMENSION = 8;
 	private static final double  DEAFULT_FREE_SCALE_X = 1.0;
-	private static final double  DEFAULT_FREE_SCALE_Y = 1.0;	public static final double MIN_FREE_SCALE_FACTOR = 0.5;	public static final double MAX_FREE_SCALE_FACTOR = 2.0;	
+	private static final double  DEFAULT_FREE_SCALE_Y = 1.0;
+	public static final double MIN_FREE_SCALE_FACTOR = 0.5;
+	public static final double MAX_FREE_SCALE_FACTOR = 2.0;
+	
 	private static boolean convertResolutionSet;
 	private static boolean resolutionTrgSet;
 	private static boolean convertFpsSet;
@@ -286,18 +334,22 @@ public class Core  extends Thread {
 			int pos;
 			try {
 				fnameProps = URLDecoder.decode(url.getPath(),"UTF-8");
-			} catch (UnsupportedEncodingException ex) {			}
+			} catch (UnsupportedEncodingException ex) {
+			}
 			if (((pos=fnameProps.toLowerCase().indexOf("file:")) != -1)) {
-				fnameProps = fnameProps.substring(pos+5);			}
+				fnameProps = fnameProps.substring(pos+5);
+			}
 			if ((pos=fnameProps.toLowerCase().indexOf(s.toLowerCase())) != -1) {
-				fnameProps = fnameProps.substring(0,pos);			}
+				fnameProps = fnameProps.substring(0,pos);
+			}
 			// special handling for JAR
 			s = ToolBox.exchangeSeparators(fnameProps.toLowerCase());
 			pos = s.lastIndexOf(".jar");
 			if (pos != -1) {
 				pos = s.substring(0,pos).lastIndexOf('/');
 				if (pos != -1) {
-					fnameProps = fnameProps.substring(0,pos+1);				}
+					fnameProps = fnameProps.substring(0,pos+1);
+				}
 			}
 			fnameProps += Core.INI_FILE;
 
@@ -307,24 +359,34 @@ public class Core  extends Thread {
 			props.load(fnameProps);
 
 			if (!verbatimSet) {
-				verbatim = Core.props.get("verbatim", "false").equals("true");			} else {
-				props.set("verbatim", verbatim?"true":"false");			}
+				verbatim = Core.props.get("verbatim", "false").equals("true");
+			} else {
+				props.set("verbatim", verbatim?"true":"false");
+			}
 
 			if (!writePGCEditPalSet) {
-				writePGCEditPal = Core.props.get("writePGCEditPal", "false").equals("true");			} else {
-				props.set("writePGCEditPal", writePGCEditPal?"true":"false");			}
+				writePGCEditPal = Core.props.get("writePGCEditPal", "false").equals("true");
+			} else {
+				props.set("writePGCEditPal", writePGCEditPal?"true":"false");
+			}
 
 			if (!mergePTSdiffSet) {
-				mergePTSdiff = Core.props.get("mergePTSdiff", 18000);			} else {
-				props.set("mergePTSdiff", mergePTSdiff);			}
+				mergePTSdiff = Core.props.get("mergePTSdiff", 18000);
+			} else {
+				props.set("mergePTSdiff", mergePTSdiff);
+			}
 
 			if (!alphaCropSet) {
-				alphaCrop = Core.props.get("alphaCrop", 14);			} else {
-				props.set("alphaCrop", alphaCrop);			}
+				alphaCrop = Core.props.get("alphaCrop", 14);
+			} else {
+				props.set("alphaCrop", alphaCrop);
+			}
 
 			if (!fixZeroAlphaSet) {
-				fixZeroAlpha = Core.props.get("fixZeroAlpha", "false").equals("true");			} else {
-				props.set("fixZeroAlpha", fixZeroAlpha?"true":"false");			}
+				fixZeroAlpha = Core.props.get("fixZeroAlpha", "false").equals("true");
+			} else {
+				props.set("fixZeroAlpha", fixZeroAlpha?"true":"false");
+			}
 
 			if (!scalingFilterSet) {
 				String filter = props.get("filter", DEFAULT_SCALING_FILTER.toString());
@@ -332,8 +394,11 @@ public class Core  extends Thread {
 					if (sf.toString().equalsIgnoreCase(filter)) {
 						scalingFilter = sf;
 						break;
-					}				}
-			} else {				props.set("filter", scalingFilter.toString());			}
+					}
+				}
+			} else {
+				props.set("filter", scalingFilter.toString());
+			}
 
 			if (!paletteModeSet) {
 				String pMode = props.get("paletteMode", DEFAULT_PALETTE_MODE.toString()); 
@@ -341,8 +406,11 @@ public class Core  extends Thread {
 					if (pm.toString().equalsIgnoreCase(pMode)) {
 						paletteMode = pm;
 						break;
-					}				}
-			} else {				props.set("paletteMode", paletteMode.toString());			}
+					}
+				}
+			} else {
+				props.set("paletteMode", paletteMode.toString());
+			}
 			
 			if (!outModeSet) {
 				String oMode = props.get("outputMode", DEFAULT_OUTPUT_MODE.toString());
@@ -350,8 +418,11 @@ public class Core  extends Thread {
 					if (om.toString().equalsIgnoreCase(oMode)) {
 						outMode = om;
 						break;
-					}				}
-			} else {				props.set("outputMode", outMode.toString());			}
+					}
+				}
+			} else {
+				props.set("outputMode", outMode.toString());
+			}
 
 			// load recent list
 			int i = 0;
@@ -361,23 +432,31 @@ public class Core  extends Thread {
 			}
 
 			if (!convertResolutionSet) {
-				convertResolution = restoreConvertResolution();			}
+				convertResolution = restoreConvertResolution();
+			}
 			if (convertResolution && !resolutionTrgSet) {
-					resolutionTrg = restoreResolution();			}
+					resolutionTrg = restoreResolution();
+			}
 			if (!convertFpsSet) {
-				convertFPS = restoreConvertFPS();			}
+				convertFPS = restoreConvertFPS();
+			}
 			if (convertFPS) {
 				if (!fpsSrcCertain && !fpsSrcSet) {
-					fpsSrc = restoreFpsSrc();				}
+					fpsSrc = restoreFpsSrc();
+				}
 				if (!fpsTrgSet) {
-					fpsTrg = restoreFpsTrg();				}
+					fpsTrg = restoreFpsTrg();
+				}
 			}
 			if (!delayPtsSet) {
-				delayPTS = Core.restoreDelayPTS();			}
+				delayPTS = Core.restoreDelayPTS();
+			}
 			if (!fixShortFramesSet) {
-				fixShortFrames = Core.restoreFixShortFrames();			}
+				fixShortFrames = Core.restoreFixShortFrames();
+			}
 			if (!minTimePtsSet) {
-				minTimePTS = Core.restoreMinTimePTS();			}
+				minTimePTS = Core.restoreMinTimePTS();
+			}
 			if (!applyFreeScaleSet) {
 				applyFreeScale = Core.restoreApplyFreeScale();
 				if (applyFreeScale) {
@@ -401,15 +480,20 @@ public class Core  extends Thread {
 	public static void close() {
 		ready = false;
 		if (supBD != null) {
-			supBD.close();		}
+			supBD.close();
+		}
 		if (supHD != null) {
-			supHD.close();		}
+			supHD.close();
+		}
 		if (supXml != null) {
-			supXml.close();		}
+			supXml.close();
+		}
 		if (subDVD != null) {
-			subDVD.close();		}
+			subDVD.close();
+		}
 		if (supDVD != null) {
-			supDVD.close();		}
+			supDVD.close();
+		}
 	}
 
 	/**
@@ -418,15 +502,20 @@ public class Core  extends Thread {
 	public static void exit() {
 		storeProps();
 		if (supBD != null) {
-			supBD.close();		}
+			supBD.close();
+		}
 		if (supHD != null) {
-			supHD.close();		}
+			supHD.close();
+		}
 		if (supXml != null) {
-			supXml.close();		}
+			supXml.close();
+		}
 		if (subDVD != null) {
-			subDVD.close();		}
+			subDVD.close();
+		}
 		if (supDVD != null) {
-			supDVD.close();		}
+			supDVD.close();
+		}
 	}
 
 	/**
@@ -434,7 +523,8 @@ public class Core  extends Thread {
 	 */
 	public static void storeProps() {
 		if (props != null) {
-			props.save(fnameProps);		}
+			props.save(fnameProps);
+		}
 	}
 	
 	/**
@@ -455,7 +545,8 @@ public class Core  extends Thread {
 			recentFiles.add(0,s);
 			// trim list
 			while ( (size=recentFiles.size()) > RECENT_FILE_COUNT)  {
-				recentFiles.remove(size-1);			}
+				recentFiles.remove(size-1);
+			}
 			// store list
 			for (int i=0; i<size; i++) {
 				props.set("recent_"+i, recentFiles.get(i));
@@ -480,12 +571,20 @@ public class Core  extends Thread {
 		StreamID sid;
 
 		if (id[0]==0x50 && id[1]==0x47) {
-			sid = StreamID.BDSUP;		} else if (id[0]==0x53 && id[1]==0x50) {
-			sid = StreamID.SUP;		} else if (id[0]==0x00 && id[1]==0x00 && id[2]==0x01 && id[3]==(byte)0xba) {
-			sid = StreamID.DVDSUB;		} else if (id[0]==0x23 && id[1]==0x20 && id[2]==0x56 && id[3]==0x6f) {
-			sid = StreamID.IDX;		} else if (id[0]==0x3c && id[1]==0x3f && id[2]==0x78 && id[3]==0x6d) {
-			sid = StreamID.XML;		} else if (id[0]==0x44 && id[1]==0x56 && id[2]==0x44 && id[3]==0x56) {
-			sid = StreamID.IFO;		} else {			sid = StreamID.UNKNOWN;		}
+			sid = StreamID.BDSUP;
+		} else if (id[0]==0x53 && id[1]==0x50) {
+			sid = StreamID.SUP;
+		} else if (id[0]==0x00 && id[1]==0x00 && id[2]==0x01 && id[3]==(byte)0xba) {
+			sid = StreamID.DVDSUB;
+		} else if (id[0]==0x23 && id[1]==0x20 && id[2]==0x56 && id[3]==0x6f) {
+			sid = StreamID.IDX;
+		} else if (id[0]==0x3c && id[1]==0x3f && id[2]==0x78 && id[3]==0x6d) {
+			sid = StreamID.XML;
+		} else if (id[0]==0x44 && id[1]==0x56 && id[2]==0x44 && id[3]==0x56) {
+			sid = StreamID.IFO;
+		} else {
+			sid = StreamID.UNKNOWN;
+		}
 
 		return sid;
 	}
@@ -536,10 +635,14 @@ public class Core  extends Thread {
 		progress.setTitle("Loading");
 		progress.setText("Loading subtitle stream");
 		if (xml || sid == StreamID.XML) {
-			runType = RunType.READXML;		} else if (idx || sid == StreamID.DVDSUB || sid == StreamID.IDX) {
-			runType = RunType.READVOBSUB;		} else if (ifo || sid == StreamID.IFO) {
-			runType = RunType.READSUPIFO;		} else {
-			runType = RunType.READSUP;		}
+			runType = RunType.READXML;
+		} else if (idx || sid == StreamID.DVDSUB || sid == StreamID.IDX) {
+			runType = RunType.READVOBSUB;
+		} else if (ifo || sid == StreamID.IFO) {
+			runType = RunType.READSUPIFO;
+		} else {
+			runType = RunType.READSUP;
+		}
 
 		currentStreamID = sid;
 
@@ -550,12 +653,14 @@ public class Core  extends Thread {
 		while (t.isAlive()) {
 			try  {
 				Thread.sleep(500);
-			} catch (InterruptedException ex) {			}
+			} catch (InterruptedException ex) {
+			}
 		}
 		state = CoreThreadState.INACTIVE;
 		Exception ex = threadException;
 		if (ex != null) {
-			throw ex;		}
+			throw ex;
+		}
 	}
 
 	/**
@@ -572,10 +677,14 @@ public class Core  extends Thread {
 		progress.setMinMax(0, 100);
 		progress.setTitle("Exporting");
 		if (Core.outMode == OutputMode.VOBSUB) {
-			progress.setText("Exporting SUB/IDX");		} else if (Core.outMode == OutputMode.BDSUP) {
-			progress.setText("Exporting SUP(BD)");		} else if (Core.outMode == OutputMode.XML) {
-			progress.setText("Exporting XML/PNG");		} else {
-			progress.setText("Exporting SUP/IFO");		}
+			progress.setText("Exporting SUB/IDX");
+		} else if (Core.outMode == OutputMode.BDSUP) {
+			progress.setText("Exporting SUP(BD)");
+		} else if (Core.outMode == OutputMode.XML) {
+			progress.setText("Exporting XML/PNG");
+		} else {
+			progress.setText("Exporting SUP/IFO");
+		}
 		runType = RunType.CREATESUB;
 		// start thread
 		Thread t = new Thread(new Core());
@@ -584,12 +693,14 @@ public class Core  extends Thread {
 		while (t.isAlive()) {
 			try  {
 				Thread.sleep(500);
-			} catch (InterruptedException ex) {			}
+			} catch (InterruptedException ex) {
+			}
 		}
 		state = CoreThreadState.INACTIVE;
 		Exception ex = threadException;
 		if (ex != null) {
-			throw ex;		}
+			throw ex;
+		}
 	}
 
 	/**
@@ -619,11 +730,13 @@ public class Core  extends Thread {
 					colIdx = idx;
 					minDistance = distance;
 					if (minDistance == 0) {
-						break;					}
+						break;
+					}
 				}
 				// special treatment for index 1 (white)
 				if (idx == 1) {
-					idx--; // -> continue with index = 2				}
+					idx--; // -> continue with index = 2
+				}
 			}
 
 			// set new frame palette
@@ -631,8 +744,10 @@ public class Core  extends Thread {
 			palFrame[0] = 0;        // black - transparent color
 			palFrame[1] = colIdx;   // primary color
 			if (colIdx == 1) {
-				palFrame[2] = colIdx+2; // special handling: white + dark grey			} else {
-				palFrame[2] = colIdx+1; // darker version of primary color			}
+				palFrame[2] = colIdx+2; // special handling: white + dark grey
+			} else {
+				palFrame[2] = colIdx+1; // darker version of primary color
+			}
 			palFrame[3] = 0;        // black - opaque
 
 			subVobTrg.alpha = DEFAULT_ALPHA;
@@ -647,8 +762,10 @@ public class Core  extends Thread {
 			SubstreamDVD substreamDVD;
 
 			if (inMode == InputMode.VOBSUB) {
-				substreamDVD = subDVD;			} else {
-				substreamDVD = supDVD;			}
+				substreamDVD = subDVD;
+			} else {
+				substreamDVD = supDVD;
+			}
 
 			alpha = substreamDVD.getFrameAlpha(index);
 			palFrame = substreamDVD.getFramePal(index);
@@ -659,7 +776,8 @@ public class Core  extends Thread {
 					miniPal.setARGB(i, currentSourceDVDPalette.getARGB(palFrame[i]));
 					miniPal.setAlpha(i, a);
 				} else {
-					miniPal.setARGB(i, 0);				}
+					miniPal.setARGB(i, 0);
+				}
 			}
 			subVobTrg.alpha = alpha;
 			subVobTrg.pal = palFrame;
@@ -680,7 +798,7 @@ public class Core  extends Thread {
 		// try to find matching language idx if filename contains language string
 		String fnl = ToolBox.getFileName(fname.toLowerCase());
 		for (int i=0; i < LANGUAGES.length; i++) {
-			if (fnl.indexOf(LANGUAGES[i][0].toLowerCase()) >= 0) {
+			if (fnl.contains(LANGUAGES[i][0].toLowerCase())) {
 				languageIdx = i;
 				printX("Selected language '"+LANGUAGES[i][0]+" ("+LANGUAGES[i][1]+")' by filename\n");
 				break;
@@ -689,7 +807,8 @@ public class Core  extends Thread {
 
 		// close existing substream
 		if (substream != null) {
-			substream.close();		}
+			substream.close();
+		}
 
 		// check first two byte to determine whether this is a BD-SUP or HD-DVD-SUP
 		byte id[] = ToolBox.getFileID(fname, 2);
@@ -726,7 +845,8 @@ public class Core  extends Thread {
 				fpsSrc = supBD.getFps(0);
 				fpsSrcCertain = true;
 				if (Core.keepFps) {
-					setFPSTrg(fpsSrc);				}
+					setFPSTrg(fpsSrc);
+				}
 			} else {
 				// for HD-DVD we need to guess
 				useBT601 = false;
@@ -748,7 +868,8 @@ public class Core  extends Thread {
 
 		// close existing substream
 		if (substream != null) {
-			substream.close();		}
+			substream.close();
+		}
 
 
 		supXml = new SupXml(fname);
@@ -784,7 +905,8 @@ public class Core  extends Thread {
 			fpsSrc = supXml.getFps();
 			fpsSrcCertain = true;
 			if (Core.keepFps) {
-				setFPSTrg(fpsSrc);			}
+				setFPSTrg(fpsSrc);
+			}
 		}
 	}
 
@@ -819,7 +941,8 @@ public class Core  extends Thread {
 
 		// close existing substream
 		if (substream != null) {
-			substream.close();		}
+			substream.close();
+		}
 
 		SubstreamDVD substreamDVD;
 		String fnI;
@@ -865,7 +988,8 @@ public class Core  extends Thread {
 				int y = substream.getPalette().getY()[i] & 0xff;
 				int a = substream.getPalette().getAlpha(i);
 				if (y < yMin && a > alphaThr) {
-					yMin = y;				}
+					yMin = y;
+				}
 			}
 			lumThr[0] = yMin + (yMax-yMin)*9/10;
 			lumThr[1] = yMin + (yMax-yMin)*3/10;
@@ -917,8 +1041,10 @@ public class Core  extends Thread {
 		// get end time of last frame
 		long te_last;
 		if (subPicPrev != null) {
-			te_last = subPicPrev.endTime;		} else {
-			te_last = -1;		}
+			te_last = subPicPrev.endTime;
+		} else {
+			te_last = -1;
+		}
 
 		if (ts < te_last) {
 			printWarn("start time of frame "+idx+" < end of last frame -> fixed\n");
@@ -928,12 +1054,15 @@ public class Core  extends Thread {
 		// get start time of next frame
 		long ts_next;
 		if (subPicNext != null) {
-			ts_next = subPicNext.startTime;		} else {
-			ts_next = 0;		}
+			ts_next = subPicNext.startTime;
+		} else {
+			ts_next = 0;
+		}
 
 		if (ts_next == 0) {
 			if ( te > ts) {
-				ts_next = te;			} else {
+				ts_next = te;
+			} else {
 				// completely messed up:
 				// end time and next start time are invalid
 				ts_next = ts+delay;
@@ -942,11 +1071,14 @@ public class Core  extends Thread {
 
 		if (te <= ts) {
 			if (te == 0) {
-				printWarn("missing end time of frame "+idx+" -> fixed\n");			} else {
-				printWarn("end time of frame "+idx+" <= start time -> fixed\n");			}
+				printWarn("missing end time of frame "+idx+" -> fixed\n");
+			} else {
+				printWarn("end time of frame "+idx+" <= start time -> fixed\n");
+			}
 			te = ts+delay;
 			if (te > ts_next) {
-				te = ts_next;			}
+				te = ts_next;
+			}
 		} else if (te > ts_next) {
 			printWarn("end time of frame "+idx+" > start time of next frame -> fixed\n");
 			te = ts_next;
@@ -956,14 +1088,17 @@ public class Core  extends Thread {
 			if (fixShortFrames) {
 				te = ts + minTimePTS;
 				if (te > ts_next) {
-					te = ts_next;				}
+					te = ts_next;
+				}
 				printWarn("duration of frame "+idx+" was shorter than "+(ToolBox.formatDouble(minTimePTS/90.0))+"ms -> fixed\n");
 			} else {
-				printWarn("duration of frame "+idx+" is shorter than "+(ToolBox.formatDouble(minTimePTS/90.0))+"ms\n");			}
+				printWarn("duration of frame "+idx+" is shorter than "+(ToolBox.formatDouble(minTimePTS/90.0))+"ms\n");
+			}
 		}
 
 		if (subPic.startTime != ts) {
-			subPic.startTime = syncTimePTS(ts, fpsTrg);		}
+			subPic.startTime = syncTimePTS(ts, fpsTrg);
+		}
 		if (subPic.endTime != te) {
 			subPic.endTime = syncTimePTS(te, fpsTrg);
 		}
@@ -994,12 +1129,16 @@ public class Core  extends Thread {
 		int hOld = picTrg.getImageHeight();
 		int wNew = (int)(picSrc.getImageWidth()  * scaleX * fx + 0.5);
 		if (wNew < MIN_IMAGE_DIMENSION) {
-			wNew = picSrc.getImageWidth();		} else if (wNew > picTrg.width) {
-			wNew = picTrg.width;		}
+			wNew = picSrc.getImageWidth();
+		} else if (wNew > picTrg.width) {
+			wNew = picTrg.width;
+		}
 		int hNew = (int)(picSrc.getImageHeight() * scaleY * fy + 0.5);
 		if (hNew < MIN_IMAGE_DIMENSION) {
-			hNew = picSrc.getImageHeight();		} else if (hNew > picTrg.height) {
-			hNew = picTrg.height;		}
+			hNew = picSrc.getImageHeight();
+		} else if (hNew > picTrg.height) {
+			hNew = picTrg.height;
+		}
 		picTrg.setImageWidth(wNew);
 		picTrg.setImageHeight(hNew);
 		if (wNew != wOld) {
@@ -1008,8 +1147,10 @@ public class Core  extends Thread {
 			int spaceTrg = picTrg.width - wNew;
 			xOfs += (spaceTrg - spaceSrc) / 2;
 			if (xOfs < 0) {
-				xOfs = 0;			} else if (xOfs+wNew > picTrg.width) {
-				xOfs = picTrg.width - wNew;			}
+				xOfs = 0;
+			} else if (xOfs+wNew > picTrg.width) {
+				xOfs = picTrg.width - wNew;
+			}
 			picTrg.setOfsX(xOfs);
 		}
 		if (hNew != hOld) {
@@ -1018,7 +1159,8 @@ public class Core  extends Thread {
 			int spaceTrg = picTrg.height - hNew;
 			yOfs += (spaceTrg - spaceSrc) / 2;
 			if (yOfs+hNew > picTrg.height) {
-				yOfs = picTrg.height - hNew;			}
+				yOfs = picTrg.height - hNew;
+			}
 			picTrg.setOfsY(yOfs);
 		}
 		// was image cropped?
@@ -1030,16 +1172,16 @@ public class Core  extends Thread {
 	 */
 	public static void setForceAll() {
 		if (subPictures != null) {
-			for (int i=0; i<subPictures.length; i++) {
-				switch (forceAll) {
-					case SET:
-						subPictures[i].isforced = true;
-						break;
-					case CLEAR:
-						subPictures[i].isforced = false;
-						break;
-				}
-			}
+            for (SubPicture subPicture : subPictures) {
+                switch (forceAll) {
+                    case SET:
+                        subPicture.isforced = true;
+                        break;
+                    case CLEAR:
+                        subPicture.isforced = false;
+                        break;
+                }
+            }
 		}
 	}
 
@@ -1060,7 +1202,8 @@ public class Core  extends Thread {
 
 		// change target resolution to source resolution if no conversion is needed
 		if (!convertResolution && getNumFrames() > 0) {
-			resolutionTrg = getResolution(getSubPictureSrc(0).width, getSubPictureSrc(0).height);		}
+			resolutionTrg = getResolution(getSubPictureSrc(0).width, getSubPictureSrc(0).height);
+		}
 
 		double fx;
 		double fy;
@@ -1118,13 +1261,17 @@ public class Core  extends Thread {
 			}
 			int w = (int)(picSrc.getImageWidth()  * scaleX * fx + 0.5);
 			if (w < MIN_IMAGE_DIMENSION) {
-				w = picSrc.getImageWidth();			} else if (w > picTrg.width) {
-				w = picTrg.width;			}
+				w = picSrc.getImageWidth();
+			} else if (w > picTrg.width) {
+				w = picTrg.width;
+			}
 
 			int h = (int)(picSrc.getImageHeight() * scaleY * fy + 0.5);
 			if (h < MIN_IMAGE_DIMENSION) {
-				h = picSrc.getImageHeight();			} else if (h > picTrg.height) {
-				h = picTrg.height;			}
+				h = picSrc.getImageHeight();
+			} else if (h > picTrg.height) {
+				h = picTrg.height;
+			}
 			picTrg.setImageWidth(w);
 			picTrg.setImageHeight(h);
 
@@ -1133,8 +1280,10 @@ public class Core  extends Thread {
 			int spaceTrg = picTrg.width - w;
 			xOfs += (spaceTrg - spaceSrc) / 2;
 			if (xOfs < 0) {
-				xOfs = 0;			} else if (xOfs+w > picTrg.width) {
-				xOfs = picTrg.width - w;			}
+				xOfs = 0;
+			} else if (xOfs+w > picTrg.width) {
+				xOfs = picTrg.width - w;
+			}
 			picTrg.setOfsX(xOfs);
 
 			int yOfs = (int)(picSrc.getOfsY() * scaleY + 0.5);
@@ -1142,7 +1291,8 @@ public class Core  extends Thread {
 			spaceTrg = picTrg.height - h;
 			yOfs += (spaceTrg - spaceSrc) / 2;
 			if (yOfs+h > picTrg.height) {
-				yOfs = picTrg.height - h;			}
+				yOfs = picTrg.height - h;
+			}
 			picTrg.setOfsY(yOfs);
 		}
 
@@ -1151,8 +1301,10 @@ public class Core  extends Thread {
 		SubPicture picNext;
 		for (int i=0; i<subPictures.length; i++) {
 			if (i < subPictures.length-1) {
-				picNext = subPictures[i+1];			} else {
-				picNext = null;			}
+				picNext = subPictures[i+1];
+			} else {
+				picNext = null;
+			}
 			picSrc = subPictures[i];
 			validateTimes(i, subPictures[i], picNext, picPrev);
 			picPrev = picSrc;
@@ -1195,11 +1347,13 @@ public class Core  extends Thread {
 		} else if (convertFPS && convertFpsOld && (fpsTrg != fpsTrgOld)) {
 			factTS = fpsTrgOld / fpsTrg;
 		} else {
-			factTS = 1.0;		}
+			factTS = 1.0;
+		}
 
 		// change target resolution to source resolution if no conversion is needed
 		if (!convertResolution && getNumFrames() > 0) {
-			resolutionTrg = getResolution(getSubPictureSrc(0).width, getSubPictureSrc(0).height);		}
+			resolutionTrg = getResolution(getSubPictureSrc(0).width, getSubPictureSrc(0).height);
+		}
 
 		if (resOld != resolutionTrg) {
 			int rOld[] = getResolution(resOld);
@@ -1258,13 +1412,15 @@ public class Core  extends Thread {
 
 			int w = (int)(picSrc.getImageWidth()  * scaleX * fsXNew + 0.5);
 			if (w < MIN_IMAGE_DIMENSION) {
-				w = picSrc.getImageWidth();			} else if (w > subPictures[i].width) {
+				w = picSrc.getImageWidth();
+			} else if (w > subPictures[i].width) {
 				w = subPictures[i].width;
 				fsXNew = (double)w / (double)picSrc.getImageWidth() / scaleX;
 			}
 			int h = (int)(picSrc.getImageHeight() * scaleY * fsYNew + 0.5);
 			if (h < MIN_IMAGE_DIMENSION) {
-				h = picSrc.getImageHeight();			} else if (h > subPictures[i].height) {
+				h = picSrc.getImageHeight();
+			} else if (h > subPictures[i].height) {
 				h = subPictures[i].height;
 				fsYNew = (double)h / (double)picSrc.getImageHeight() / scaleY;
 			}
@@ -1280,8 +1436,10 @@ public class Core  extends Thread {
 				xOfs += (spaceTrg - spaceTrgOld) / 2;
 			}
 			if (xOfs < 0) {
-				xOfs = 0;			} else if (xOfs+w > subPictures[i].width) {
-				xOfs = subPictures[i].width - w;			}
+				xOfs = 0;
+			} else if (xOfs+w > subPictures[i].width) {
+				xOfs = subPictures[i].width - w;
+			}
 			subPictures[i].setOfsX(xOfs);
 
 			int yOfs = (int)(picOld.getOfsY()*factY + 0.5);
@@ -1291,15 +1449,27 @@ public class Core  extends Thread {
 				yOfs += (spaceTrg - spaceTrgOld) / 2;
 			}
 			if (yOfs < 0) {
-				yOfs = 0;			}
+				yOfs = 0;
+			}
 			if (yOfs+h > subPictures[i].height) {
-				yOfs = subPictures[i].height - h;			}
+				yOfs = subPictures[i].height - h;
+			}
 			subPictures[i].setOfsY(yOfs);
 
 			// fix erase patches
 			double fx = factX * fsXNew / fsXOld;
 			double fy = factY * fsYNew / fsYOld;
-			ArrayList<ErasePatch> erasePatches = subPictures[i].erasePatch;			if (erasePatches != null) {				for (int j = 0; j < erasePatches.size(); j++) {					ErasePatch ep = erasePatches.get(j);					int x = (int)(ep.x * fx + 0.5);					int y = (int)(ep.y * fy + 0.5);					int width = (int)(ep.width * fx + 0.5);					int height = (int)(ep.height * fy + 0.5);					erasePatches.set(j, new ErasePatch(x, y, width, height));				}			}
+			ArrayList<ErasePatch> erasePatches = subPictures[i].erasePatch;
+			if (erasePatches != null) {
+				for (int j = 0; j < erasePatches.size(); j++) {
+					ErasePatch ep = erasePatches.get(j);
+					int x = (int)(ep.x * fx + 0.5);
+					int y = (int)(ep.y * fy + 0.5);
+					int width = (int)(ep.width * fx + 0.5);
+					int height = (int)(ep.height * fy + 0.5);
+					erasePatches.set(j, new ErasePatch(x, y, width, height));
+				}
+			}
 		}
 
 		// 2nd run: validate times (not fully necessary, but to avoid overlap due to truncation
@@ -1308,8 +1478,10 @@ public class Core  extends Thread {
 
 		for (int i=0; i<subPictures.length; i++) {
 			if (i < subPictures.length-1) {
-				subPicNext = subPictures[i+1];			} else {
-				subPicNext = null;			}
+				subPicNext = subPictures[i+1];
+			} else {
+				subPicNext = null;
+			}
 
 			picOld = subPictures[i];
 			validateTimes(i, subPictures[i], subPicNext, subPicPrev);
@@ -1348,7 +1520,8 @@ public class Core  extends Thread {
 			w = subPic.getImageWidth();
 			h = subPic.getImageHeight();
 			if (outMode == OutputMode.VOBSUB || outMode == OutputMode.SUPIFO) {
-				determineFramePal(index);			}
+				determineFramePal(index);
+			}
 			updateTrgPic(index);
 		}
 		SubPicture picTrg = subPictures[index];
@@ -1398,20 +1571,26 @@ public class Core  extends Thread {
 				if (w==trgWidth && h==trgHeight) {
 					// don't scale at all
 					if ( (inMode == InputMode.VOBSUB || inMode == InputMode.SUPIFO) && paletteMode == PaletteMode.KEEP_EXISTING) {
-						tBm = substream.getBitmap(); // no conversion					} else {
-						tBm = substream.getBitmap().getBitmapWithNormalizedPalette(substream.getPalette().getAlpha(), alphaThr, substream.getPalette().getY(), lumThr); // reduce palette					}
+						tBm = substream.getBitmap(); // no conversion
+					} else {
+						tBm = substream.getBitmap().getBitmapWithNormalizedPalette(substream.getPalette().getAlpha(), alphaThr, substream.getPalette().getY(), lumThr); // reduce palette
+					}
 				} else {
 					// scale up/down
 					if ((inMode == InputMode.VOBSUB || inMode == InputMode.SUPIFO) && paletteMode == PaletteMode.KEEP_EXISTING) {
 						// keep palette
 						if (f != null) {
-							tBm = substream.getBitmap().scaleFilter(trgWidth, trgHeight, substream.getPalette(), f);						} else {
-							tBm = substream.getBitmap().scaleBilinear(trgWidth, trgHeight, substream.getPalette());						}
+							tBm = substream.getBitmap().scaleFilter(trgWidth, trgHeight, substream.getPalette(), f);
+						} else {
+							tBm = substream.getBitmap().scaleBilinear(trgWidth, trgHeight, substream.getPalette());
+						}
 					} else {
 						// reduce palette
 						if (f != null) {
-							tBm = substream.getBitmap().scaleFilterLm(trgWidth, trgHeight, substream.getPalette(), alphaThr, lumThr, f);						} else {
-							tBm = substream.getBitmap().scaleBilinearLm(trgWidth, trgHeight, substream.getPalette(), alphaThr, lumThr);						}
+							tBm = substream.getBitmap().scaleFilterLm(trgWidth, trgHeight, substream.getPalette(), alphaThr, lumThr, f);
+						} else {
+							tBm = substream.getBitmap().scaleBilinearLm(trgWidth, trgHeight, substream.getPalette(), alphaThr, lumThr);
+						}
 					}
 				}
 			} else {
@@ -1424,15 +1603,19 @@ public class Core  extends Thread {
 					if (paletteMode == PaletteMode.KEEP_EXISTING) {
 						// keep palette
 						if (f != null) {
-							tBm = substream.getBitmap().scaleFilter(trgWidth, trgHeight, substream.getPalette(), f);						} else {
-							tBm = substream.getBitmap().scaleBilinear(trgWidth, trgHeight, substream.getPalette());						}
+							tBm = substream.getBitmap().scaleFilter(trgWidth, trgHeight, substream.getPalette(), f);
+						} else {
+							tBm = substream.getBitmap().scaleBilinear(trgWidth, trgHeight, substream.getPalette());
+						}
 					} else {
 						// create new palette
 						boolean dither = paletteMode == PaletteMode.CREATE_DITHERED;
 						BitmapWithPalette pb;
 						if (f != null) {
-							pb = substream.getBitmap().scaleFilter(trgWidth, trgHeight, substream.getPalette(), f, dither);						} else {
-							pb = substream.getBitmap().scaleBilinear(trgWidth, trgHeight, substream.getPalette(), dither);						}
+							pb = substream.getBitmap().scaleFilter(trgWidth, trgHeight, substream.getPalette(), f, dither);
+						} else {
+							pb = substream.getBitmap().scaleBilinear(trgWidth, trgHeight, substream.getPalette(), dither);
+						}
 						tBm = pb.bitmap;
 						tPal = pb.palette;
 					}
@@ -1442,16 +1625,19 @@ public class Core  extends Thread {
 				trgBitmapUnpatched = new Bitmap(tBm);
 				int col = tPal.getIndexOfMostTransparentPaletteEntry();
 				for (ErasePatch ep : picTrg.erasePatch) {
-					tBm.fillRectangularWithColorIndex(ep.x, ep.y, ep.width, ep.height, (byte)col);				}
+					tBm.fillRectangularWithColorIndex(ep.x, ep.y, ep.width, ep.height, (byte)col);
+				}
 			} else {
-				trgBitmapUnpatched = tBm;			}
+				trgBitmapUnpatched = tBm;
+			}
 			trgBitmap = tBm;
 			trgPal = tPal;
 
 		}
 		
 		if (cliMode) {
-			moveToBounds(picTrg, displayNum, cineBarFactor, moveOffsetX, moveOffsetY, moveModeX, moveModeY, cropOfsY);		}
+			moveToBounds(picTrg, displayNum, cineBarFactor, moveOffsetX, moveOffsetY, moveModeX, moveModeY, cropOfsY);
+		}
 	}
 
 	/**
@@ -1469,8 +1655,10 @@ public class Core  extends Thread {
 
 		// handling of forced subtitles
 		if (exportForced) {
-			maxNum = countForcedIncluded();		} else {
-			maxNum = countIncluded();		}
+			maxNum = countForcedIncluded();
+		} else {
+			maxNum = countIncluded();
+		}
 
 		try {
 			// handle file name extensions depending on mode
@@ -1544,14 +1732,18 @@ public class Core  extends Thread {
 		finally {
 			try {
 				if (out != null) {
-					out.close();				}
-			} catch (IOException ex) {			};
+					out.close();
+				}
+			} catch (IOException ex) {
+			};
 		}
 
 		boolean importedDVDPalette;
 		if (inMode == InputMode.VOBSUB || inMode == InputMode.SUPIFO) {
-			importedDVDPalette = true;		} else {
-			importedDVDPalette = false;		}
+			importedDVDPalette = true;
+		} else {
+			importedDVDPalette = false;
+		}
 
 		Palette trgPallete = null;
 		if (outMode == OutputMode.VOBSUB) {
@@ -1559,15 +1751,19 @@ public class Core  extends Thread {
 			/* return offets as array of ints */
 			int ofs[] = new int[offsets.size()];
 			for (int i=0; i<ofs.length; i++) {
-				ofs[i] = offsets.get(i);			}
+				ofs[i] = offsets.get(i);
+			}
 			int ts[] = new int[timestamps.size()];
 			for (int i=0; i<ts.length; i++) {
-				ts[i] = timestamps.get(i);			}
+				ts[i] = timestamps.get(i);
+			}
 			fname = ToolBox.stripExtension(fname)+".idx";
 			printX("\nWriting "+fname+"\n");
 			if (!importedDVDPalette || paletteMode != PaletteMode.KEEP_EXISTING) {
-				trgPallete = currentDVDPalette;			} else {
-				trgPallete = currentSourceDVDPalette;			}
+				trgPallete = currentDVDPalette;
+			} else {
+				trgPallete = currentSourceDVDPalette;
+			}
 			SubDVD.writeIdx(fname, subPictures[0], ofs, ts, trgPallete);
 		} else if (outMode == OutputMode.XML) {
 			// XML - write ML
@@ -1576,8 +1772,10 @@ public class Core  extends Thread {
 		} else if (outMode == OutputMode.SUPIFO) {
 			// SUP/IFO - write IFO
 			if (!importedDVDPalette || paletteMode != PaletteMode.KEEP_EXISTING) {
-				trgPallete = currentDVDPalette;			} else {
-				trgPallete = currentSourceDVDPalette;			}
+				trgPallete = currentDVDPalette;
+			} else {
+				trgPallete = currentSourceDVDPalette;
+			}
 			fname = ToolBox.stripExtension(fname)+".ifo";
 			printX("\nWriting "+fname+"\n");
 			SupDVD.writeIFO(fname, subPictures[0], trgPallete);
@@ -1622,19 +1820,26 @@ public class Core  extends Thread {
 		// first check the string
 		s = s.toLowerCase().trim();
 		if (s.equals("pal")  || s.equals("25p") || s.equals("25")) {
-			return Framerate.PAL.getValue();		}
+			return Framerate.PAL.getValue();
+		}
 		if (s.equals("ntsc") || s.equals("30p") || s.equals("29.97") || s.equals("29.970")) {
-			return Framerate.NTSC.getValue();		}
+			return Framerate.NTSC.getValue();
+		}
 		if (s.equals("24p")  || s.equals("23.976")) {
-			return Framerate.FPS_23_976.getValue();		}
+			return Framerate.FPS_23_976.getValue();
+		}
 		if (s.equals("23.975")) {
-			return Framerate.FPS_23_975.getValue();		}
+			return Framerate.FPS_23_975.getValue();
+		}
 		if (s.equals("24")) {
-			return Framerate.FPS_24.getValue();		}
+			return Framerate.FPS_24.getValue();
+		}
 		if (s.equals("50i")  || s.equals("50")) {
-			return Framerate.PAL_I.getValue();		}
+			return Framerate.PAL_I.getValue();
+		}
 		if (s.equals("60i")  || s.equals("59.94")) {
-			return Framerate.NTSC_I.getValue();		}
+			return Framerate.NTSC_I.getValue();
+		}
 
 		// now check the number
 		double d;
@@ -1644,19 +1849,26 @@ public class Core  extends Thread {
 			return -1.0;
 		}
 		if (Math.abs(d - Framerate.FPS_23_975.getValue()) < 0.001) {
-			return Framerate.FPS_23_975.getValue();		}
+			return Framerate.FPS_23_975.getValue();
+		}
 		if (Math.abs(d - Framerate.FPS_23_976.getValue()) < 0.001) {
-			return Framerate.FPS_23_976.getValue();		}
+			return Framerate.FPS_23_976.getValue();
+		}
 		if (Math.abs(d - Framerate.FPS_24.getValue()) < 0.001) {
-			return Framerate.FPS_24.getValue();		}
+			return Framerate.FPS_24.getValue();
+		}
 		if (Math.abs(d - Framerate.PAL.getValue()) < 0.001) {
-			return Framerate.PAL.getValue();		}
+			return Framerate.PAL.getValue();
+		}
 		if (Math.abs(d - Framerate.NTSC.getValue()) < 0.001) {
-			return Framerate.NTSC.getValue();		}
+			return Framerate.NTSC.getValue();
+		}
 		if (Math.abs(d - Framerate.NTSC_I.getValue()) < 0.001) {
-			return Framerate.NTSC_I.getValue();		}
+			return Framerate.NTSC_I.getValue();
+		}
 		if (Math.abs(d - Framerate.PAL_I.getValue()) < 0.001) {
-			return Framerate.PAL_I.getValue();		}
+			return Framerate.PAL_I.getValue();
+		}
 		return d;
 	}
 	
@@ -1680,12 +1892,14 @@ public class Core  extends Thread {
 		while (t.isAlive()) {
 			try  {
 				Thread.sleep(500);
-			} catch (InterruptedException ex) {			}
+			} catch (InterruptedException ex) {
+			}
 		}
 		state = CoreThreadState.INACTIVE;
 		Exception ex = threadException;
 		if (ex != null) {
-			throw ex;		}
+			throw ex;
+		}
 	}
 
 	/**
@@ -1717,17 +1931,20 @@ public class Core  extends Thread {
 		if (sy!= null) {
 			s += sy + " cinemascope bars";
 			if (sx != null) {
-				 s += " and to the " + sx;			}
+				 s += " and to the " + sx;
+			}
 			print(s+".\n");
 		} else if (sx != null) {
-			print(s+"to the "+sx+".\n");		}
+			print(s+"to the "+sx+".\n");
+		}
 
 		if (!cliMode) {
 			// in CLI mode, moving is done during export
 			for (int idx=0; idx<subPictures.length; idx++) {
 				setProgress(idx);
 				if (!subPictures[idx].wasDecoded) {
-					convertSup(idx, idx+1, subPictures.length, true);				}
+					convertSup(idx, idx+1, subPictures.length, true);
+				}
 				moveToBounds(subPictures[idx], idx+1, cineBarFactor, moveOffsetX, moveOffsetY, moveModeX, moveModeY, cropOfsY);
 			}
 		}
@@ -1759,9 +1976,13 @@ public class Core  extends Thread {
 		if (mmy != CaptionMoveModeY.KEEP_POSITION) {
 			// move vertically
 			if (y1 < h/2 && y2 < h/2) {
-				c = CaptionType.UP;			} else if (y1 > h/2 && y2 > h/2) {
-				c = CaptionType.DOWN;			} else {
-				c = CaptionType.FULL;			}			
+				c = CaptionType.UP;
+			} else if (y1 > h/2 && y2 > h/2) {
+				c = CaptionType.DOWN;
+			} else {
+				c = CaptionType.FULL;
+			}
+			
 			switch (c) {
 				case FULL:
 					// maybe add scaling later, but for now: do nothing
@@ -1776,29 +1997,37 @@ public class Core  extends Thread {
 					break;
 				case DOWN:
 					if (mmy == CaptionMoveModeY.MOVE_INSIDE_BOUNDS) {
-						pic.setOfsY(h-barHeight-offsetY-hi);					} else {
-						pic.setOfsY(h-offsetY-hi);					}
+						pic.setOfsY(h-barHeight-offsetY-hi);
+					} else {
+						pic.setOfsY(h-offsetY-hi);
+					}
 					print("Caption "+idx+" moved to y position "+pic.getOfsY()+"\n");
 					break;
 			}
 			if (pic.getOfsY() < cropOffsetY) {
-				pic.getOfsY();			} else {
+				pic.getOfsY();
+			} else {
 				int yMax = pic.height - pic.getImageHeight() - cropOffsetY;
 				if (pic.getOfsY() > yMax) {
-					pic.setOfsY(yMax);				}
+					pic.setOfsY(yMax);
+				}
 			}
 		}
 		// move horizontally
 		switch (mmx) {
 			case LEFT:
 				if (w-wi >= offsetX) {
-					pic.setOfsX(offsetX);				} else {
-					pic.setOfsX((w-wi)/2);				}
+					pic.setOfsX(offsetX);
+				} else {
+					pic.setOfsX((w-wi)/2);
+				}
 				break;
 			case RIGHT:
 				if (w-wi >= offsetX) {
-					pic.setOfsX(w-wi-offsetX);				} else {
-					pic.setOfsX((w-wi)/2);				}
+					pic.setOfsX(w-wi-offsetX);
+				} else {
+					pic.setOfsX((w-wi)/2);
+				}
 				break;
 			case CENTER:
 				pic.setOfsX((w-wi)/2);
@@ -1813,8 +2042,10 @@ public class Core  extends Thread {
 	public static void print(String s) {
 		if (Core.verbatim) {
 			if (mainFrame != null) {
-				mainFrame.printOut(s);			} else {
-				System.out.print(s);			}
+				mainFrame.printOut(s);
+			} else {
+				System.out.print(s);
+			}
 		}
 	}
 
@@ -1824,8 +2055,10 @@ public class Core  extends Thread {
 	 */
 	public static void printX(String s) {
 		if (mainFrame != null) {
-			mainFrame.printOut(s);		} else {
-			System.out.print(s);		}
+			mainFrame.printOut(s);
+		} else {
+			System.out.print(s);
+		}
 	}
 
 	/**
@@ -1836,8 +2069,10 @@ public class Core  extends Thread {
 		errors++;
 		s = "ERROR: " + s;
 		if (mainFrame != null) {
-			mainFrame.printErr(s);		} else {
-			System.out.print(s);		}
+			mainFrame.printErr(s);
+		} else {
+			System.out.print(s);
+		}
 	}
 
 	/**
@@ -1848,8 +2083,10 @@ public class Core  extends Thread {
 		warnings++;
 		s = "WARNING: "+s;
 		if (mainFrame != null) {
-			mainFrame.printWarn(s);		} else {
-			System.out.print(s);		}
+			mainFrame.printWarn(s);
+		} else {
+			System.out.print(s);
+		}
 	}
 
 	/**
@@ -1875,8 +2112,10 @@ public class Core  extends Thread {
 		finally {
 			try {
 				if (out != null) {
-					out.close();				}
-			} catch (IOException ex) {			};
+					out.close();
+				}
+			} catch (IOException ex) {
+			};
 		}
 	}
 
@@ -1888,7 +2127,9 @@ public class Core  extends Thread {
 		int n = 0;
 		for (SubPicture pic : subPictures) {
 			if (pic.isforced && !pic.exclude) {
-				n++;			}		}
+				n++;
+			}
+		}
 		return n;
 	}
 
@@ -1900,7 +2141,9 @@ public class Core  extends Thread {
 		int n = 0;
 		for (SubPicture pic : subPictures) {
 			if (!pic.exclude) {
-				n++;			}		}
+				n++;
+			}
+		}
 		return n;
 	}
 
@@ -1970,7 +2213,8 @@ public class Core  extends Thread {
 	public static void setOutputResolution(Resolution r) {
 		resolutionTrg = r;
 		if (props == null) {
-			resolutionTrgSet = true;		}
+			resolutionTrgSet = true;
+		}
 	}
 
 	/**
@@ -2093,7 +2337,9 @@ public class Core  extends Thread {
 		String s = props.get("resolutionTrg", getResolutionName(resolutionTrg));
 		for (Resolution r : Resolution.values()) {
 			if (Core.getResolutionName(r).equalsIgnoreCase(s)) {
-					return r;			}		}
+					return r;
+			}
+		}
 		return resolutionTrg;
 	}
 
@@ -2170,10 +2416,16 @@ public class Core  extends Thread {
 	 */
 	public static Resolution getResolution(int width, int height) {
 		if (width <= Resolution.NTSC.getDimensions()[0] && height <= Resolution.NTSC.getDimensions()[1]) {
-			return Resolution.NTSC;		} else if (width <= Resolution.PAL.getDimensions()[0] && height <= Resolution.PAL.getDimensions()[1]) {			return Resolution.PAL;		} else if (width <= Resolution.HD_720.getDimensions()[0] && height <= Resolution.HD_720.getDimensions()[1]) {
-			return Resolution.HD_720;		} else if (width <= Resolution.HD_1440x1080.getDimensions()[0] && height <= Resolution.HD_1440x1080.getDimensions()[1]) {
-			return Resolution.HD_1440x1080;		} else {
-			return Resolution.HD_1080;		}
+			return Resolution.NTSC;
+		} else if (width <= Resolution.PAL.getDimensions()[0] && height <= Resolution.PAL.getDimensions()[1]) {
+			return Resolution.PAL;
+		} else if (width <= Resolution.HD_720.getDimensions()[0] && height <= Resolution.HD_720.getDimensions()[1]) {
+			return Resolution.HD_720;
+		} else if (width <= Resolution.HD_1440x1080.getDimensions()[0] && height <= Resolution.HD_1440x1080.getDimensions()[1]) {
+			return Resolution.HD_1440x1080;
+		} else {
+			return Resolution.HD_1080;
+		}
 	}
 
 	/**
@@ -2214,7 +2466,8 @@ public class Core  extends Thread {
 	public static void setConvertFPS(boolean b) {
 		convertFPS = b;
 		if (props == null) {
-			convertFpsSet = true;		}
+			convertFpsSet = true;
+		}
 	}
 
 	/**
@@ -2240,7 +2493,8 @@ public class Core  extends Thread {
 	public static void setConvertResolution(boolean b) {
 		convertResolution = b;
 		if (props == null) {
-			convertResolutionSet = true;		}
+			convertResolutionSet = true;
+		}
 	}
 
 	/**
@@ -2329,7 +2583,8 @@ public class Core  extends Thread {
 		delayPTS = (int)syncTimePTS(delayPTS, trg);
 		minTimePTS = (int)syncTimePTS(minTimePTS, trg);
 		if (props == null) {
-			fpsTrgSet = true;		}
+			fpsTrgSet = true;
+		}
 	}
 
 	/**
@@ -2355,7 +2610,8 @@ public class Core  extends Thread {
 	public static void setDelayPTS(int delay) {
 		delayPTS = delay;
 		if (props == null) {
-			delayPtsSet = true;		}
+			delayPtsSet = true;
+		}
 	}
 
 	/**
@@ -2440,8 +2696,10 @@ public class Core  extends Thread {
 	 */
 	public static void setOutputMode(OutputMode m) {
 		if (props != null) {
-			props.set("outputMode", m.toString());		} else {
-			outModeSet = true;		}
+			props.set("outputMode", m.toString());
+		} else {
+			outModeSet = true;
+		}
 		outMode = m;
 	}
 
@@ -2497,9 +2755,12 @@ public class Core  extends Thread {
 				Bitmap trgBitmapPatched = new Bitmap(trgBitmapUnpatched);
 				int col = trgPal.getIndexOfMostTransparentPaletteEntry();
 				for (ErasePatch ep : pic.erasePatch) {
-					trgBitmapPatched.fillRectangularWithColorIndex(ep.x, ep.y, ep.width, ep.height, (byte)col);				}
+					trgBitmapPatched.fillRectangularWithColorIndex(ep.x, ep.y, ep.width, ep.height, (byte)col);
+				}
 				return trgBitmapPatched.getImage(trgPal.getColorModel());
-			} else {				return trgBitmapUnpatched.getImage(trgPal.getColorModel());			}
+			} else {
+				return trgBitmapUnpatched.getImage(trgPal.getColorModel());
+			}
 		}
 	}
 
@@ -2705,7 +2966,8 @@ public class Core  extends Thread {
 	public static void setFixShortFrames(boolean b) {
 		fixShortFrames = b;
 		if (props == null) {
-			fixShortFramesSet = true;		}
+			fixShortFramesSet = true;
+		}
 	}
 
 	/**
@@ -2731,7 +2993,8 @@ public class Core  extends Thread {
 	public static void setMinTimePTS(int t) {
 		minTimePTS = t;
 		if (props == null) {
-			minTimePtsSet = true;		}
+			minTimePtsSet = true;
+		}
 	}
 
 	/**
@@ -2818,8 +3081,10 @@ public class Core  extends Thread {
 	 */
 	public static void setPaletteMode(PaletteMode m) {
 		if (props != null) {
-			props.set("paletteMode", m.toString());		} else {
-			paletteModeSet = true;		}
+			props.set("paletteMode", m.toString());
+		} else {
+			paletteModeSet = true;
+		}
 		paletteMode = m;
 	}
 
@@ -2838,8 +3103,10 @@ public class Core  extends Thread {
 	public static void setVerbatim(boolean e) {
 		verbatim = e;
 		if (props != null) {
-			props.set("verbatim", e ? "true" : "false");		} else {
-			verbatimSet = true;		}
+			props.set("verbatim", e ? "true" : "false");
+		} else {
+			verbatimSet = true;
+		}
 	}
 
 	/**
@@ -2896,8 +3163,10 @@ public class Core  extends Thread {
 	 */
 	public static void setScalingFilter(ScalingFilter f) {
 		if (props != null) {
-			props.set("filter", f.toString());		} else {
-			scalingFilterSet = true;		}
+			props.set("filter", f.toString());
+		} else {
+			scalingFilterSet = true;
+		}
 		scalingFilter = f;
 	}
 
@@ -2916,8 +3185,10 @@ public class Core  extends Thread {
 	public static void setMergePTSdiff(int d) {
 		mergePTSdiff = d;
 		if (props != null) {
-			props.set("mergePTSdiff", d);		} else {
-			mergePTSdiffSet = true;		}
+			props.set("mergePTSdiff", d);
+		} else {
+			mergePTSdiffSet = true;
+		}
 	}
 
 	/**
@@ -2935,8 +3206,10 @@ public class Core  extends Thread {
 	public static void setAlphaCrop(int a) {
 		alphaCrop = a;
 		if (props != null) {
-			props.set("alphaCrop", a);		} else {
-			alphaCropSet = true;		}
+			props.set("alphaCrop", a);
+		} else {
+			alphaCropSet = true;
+		}
 	}
 
 	/**
@@ -2954,7 +3227,8 @@ public class Core  extends Thread {
 	public static void setApplyFreeScale(boolean f) {
 		applyFreeScale = f;
 		if (props == null) {
-			applyFreeScaleSet = true;		}
+			applyFreeScaleSet = true;
+		}
 	}
 
 	/**
@@ -2988,12 +3262,16 @@ public class Core  extends Thread {
 	 */
 	public static void setFreeScale(double x, double y) {
 		if (x < MIN_FREE_SCALE_FACTOR) {
-			x = MIN_FREE_SCALE_FACTOR;		} else if (x > MAX_FREE_SCALE_FACTOR) {
-			x = MAX_FREE_SCALE_FACTOR;		}
+			x = MIN_FREE_SCALE_FACTOR;
+		} else if (x > MAX_FREE_SCALE_FACTOR) {
+			x = MAX_FREE_SCALE_FACTOR;
+		}
 		freeScaleX = x;
 		if (y < MIN_FREE_SCALE_FACTOR) {
-			y = MIN_FREE_SCALE_FACTOR;		} else if (y > MAX_FREE_SCALE_FACTOR) {
-			y = MAX_FREE_SCALE_FACTOR;		}
+			y = MIN_FREE_SCALE_FACTOR;
+		} else if (y > MAX_FREE_SCALE_FACTOR) {
+			y = MAX_FREE_SCALE_FACTOR;
+		}
 		freeScaleY = y;
 	}
 
@@ -3004,12 +3282,16 @@ public class Core  extends Thread {
 	 */
 	public static void storeFreeScale(double x, double y) {
 		if (x < MIN_FREE_SCALE_FACTOR) {
-			x = MIN_FREE_SCALE_FACTOR;		} else if (x > MAX_FREE_SCALE_FACTOR) {
-			x = MAX_FREE_SCALE_FACTOR;		}
+			x = MIN_FREE_SCALE_FACTOR;
+		} else if (x > MAX_FREE_SCALE_FACTOR) {
+			x = MAX_FREE_SCALE_FACTOR;
+		}
 		props.set("freeScaleX", x);
 		if (y < MIN_FREE_SCALE_FACTOR) {
-			y = MIN_FREE_SCALE_FACTOR;		} else if (y > MAX_FREE_SCALE_FACTOR) {
-			y = MAX_FREE_SCALE_FACTOR;		}
+			y = MIN_FREE_SCALE_FACTOR;
+		} else if (y > MAX_FREE_SCALE_FACTOR) {
+			y = MAX_FREE_SCALE_FACTOR;
+		}
 		props.set("freeScaleY", y);
 	}
 
@@ -3134,8 +3416,10 @@ public class Core  extends Thread {
 	public static void setWritePGCEditPal(boolean e) {
 		writePGCEditPal = e;
 		if (props != null) {
-			props.set("writePGCEditPal", e ? "true" : "false");		} else {
-			writePGCEditPalSet = true;		}
+			props.set("writePGCEditPal", e ? "true" : "false");
+		} else {
+			writePGCEditPalSet = true;
+		}
 	}
 
 	/**
@@ -3153,8 +3437,10 @@ public class Core  extends Thread {
 	public static void setFixZeroAlpha(boolean e) {
 		fixZeroAlpha = e;
 		if (props != null) {
-			props.set("fixZeroAlpha", e ? "true" : "false");		} else {
-			fixZeroAlphaSet = true;		}
+			props.set("fixZeroAlpha", e ? "true" : "false");
+		} else {
+			fixZeroAlphaSet = true;
+		}
 	}
 
 	/**
@@ -3182,8 +3468,10 @@ public class Core  extends Thread {
 
 		SubstreamDVD substreamDVD = null;
 		if (inMode == InputMode.VOBSUB) {
-			substreamDVD = subDVD;		} else if (inMode == InputMode.SUPIFO) {
-			substreamDVD = supDVD;		}
+			substreamDVD = subDVD;
+		} else if (inMode == InputMode.SUPIFO) {
+			substreamDVD = supDVD;
+		}
 
 		substreamDVD.setSrcPalette(currentSourceDVDPalette);
 	}
@@ -3197,12 +3485,16 @@ public class Core  extends Thread {
 		SubstreamDVD substreamDVD = null;
 
 		if (inMode == InputMode.VOBSUB) {
-			substreamDVD = subDVD;		} else if (inMode == InputMode.SUPIFO) {
-			substreamDVD = supDVD;		}
+			substreamDVD = subDVD;
+		} else if (inMode == InputMode.SUPIFO) {
+			substreamDVD = supDVD;
+		}
 
 		if (substreamDVD != null) {
-			return substreamDVD.getFramePal(index);		} else {
-			return null;		}
+			return substreamDVD.getFramePal(index);
+		} else {
+			return null;
+		}
 	}
 
 	/**
@@ -3214,12 +3506,16 @@ public class Core  extends Thread {
 		SubstreamDVD substreamDVD = null;
 
 		if (inMode == InputMode.VOBSUB) {
-			substreamDVD = subDVD;		} else if (inMode == InputMode.SUPIFO) {
-			substreamDVD = supDVD;		}
+			substreamDVD = subDVD;
+		} else if (inMode == InputMode.SUPIFO) {
+			substreamDVD = supDVD;
+		}
 
 		if (substreamDVD != null) {
-			return substreamDVD.getFrameAlpha(index);		} else {
-			return null;		}
+			return substreamDVD.getFrameAlpha(index);
+		} else {
+			return null;
+		}
 	}
 
 	/**
@@ -3231,12 +3527,16 @@ public class Core  extends Thread {
 		SubstreamDVD substreamDVD = null;
 
 		if (inMode == InputMode.VOBSUB) {
-			substreamDVD = subDVD;		} else if (inMode == InputMode.SUPIFO) {
-			substreamDVD = supDVD;		}
+			substreamDVD = subDVD;
+		} else if (inMode == InputMode.SUPIFO) {
+			substreamDVD = supDVD;
+		}
 
 		if (substreamDVD != null) {
-			return substreamDVD.getOriginalFramePal(index);		} else {
-			return null;		}
+			return substreamDVD.getOriginalFramePal(index);
+		} else {
+			return null;
+		}
 	}
 
 	/**
@@ -3248,12 +3548,16 @@ public class Core  extends Thread {
 		SubstreamDVD substreamDVD = null;
 
 		if (inMode == InputMode.VOBSUB) {
-			substreamDVD = subDVD;		} else if (inMode == InputMode.SUPIFO) {
-			substreamDVD = supDVD;		}
+			substreamDVD = subDVD;
+		} else if (inMode == InputMode.SUPIFO) {
+			substreamDVD = supDVD;
+		}
 
 		if (substreamDVD != null) {
-			return substreamDVD.getOriginalFrameAlpha(index);		} else {
-			return null;		}
+			return substreamDVD.getOriginalFrameAlpha(index);
+		} else {
+			return null;
+		}
 	}
 
 }

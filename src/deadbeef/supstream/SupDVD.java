@@ -170,12 +170,12 @@ public class SupDVD implements Substream, SubstreamDVD {
 
 		// copy rle buffers
 		int ofs = 14;
-		for (int i=0; i < even.length; i++) {
-			buf[ofs++] = even[i];
-		}
-		for (int i=0; i < odd.length; i++) {
-			buf[ofs++] = odd[i];
-		}
+        for (byte b : even) {
+            buf[ofs++] = b;
+        }
+        for (byte b : odd) {
+            buf[ofs++] = b;
+        }
 
 		/* create control header */
 		/* palette (store reversed) */
@@ -595,7 +595,7 @@ public class SupDVD implements Substream, SubstreamDVD {
 
 			// get language index of subtitle streams (ignore all but first language)
 			if (buf.getWord(0x254) > 0 && buf.getByte(0x256) == 1) {
-				StringBuffer langSB = new StringBuffer(2);
+				StringBuilder langSB = new StringBuilder(2);
 				boolean found = false;
 				langSB.append((char)buf.getByte(0x258));
 				langSB.append((char)buf.getByte(0x259));

@@ -340,9 +340,9 @@ class BDSup2Sub {
 		} else {
 			// analyze parameters
 			String cmdLine = "";
-			for (int i=0; i<args.length;i++) {
-				cmdLine += args[i] + " ";
-			}
+            for (String arg : args) {
+                cmdLine += arg + " ";
+            }
 			System.out.println("\nCommand line:\n" + getJarName() + " " + cmdLine + "\n");
 
 			// parse parameters
@@ -356,430 +356,430 @@ class BDSup2Sub {
 			OutputMode mode = null;
 			boolean defineFPStrg = false;
 			double screenRatio = -1;
-			for (int i=0; i<args.length;i++) {
-				String a = args[i];
+            for (String arg : args) {
+                String a = arg;
 
-				// detect source and target
-				if (a.charAt(0) != '/') {
-					if (src==null) {
-						src = a;
-						continue;
-					} else if (trg == null) {
-						trg = a;
-						String ext = ToolBox.getExtension(trg);
-						if (ext == null) {
-							fatalError("No extension given for target "+trg);
-						}
-						if (ext.equals("sup")) {
-							mode = OutputMode.BDSUP;
-						} else if (ext.equals("sub") || ext.equals("idx")) {
-							mode = OutputMode.VOBSUB;
-						} else if (ext.equals("xml")) {
-							mode = OutputMode.XML;
-						} else if (ext.equals("ifo")) {
-							mode = OutputMode.SUPIFO;
-						} else {
-							fatalError("Unknown extension of target "+trg);
-						}
-						Core.setOutputMode(mode);
-						continue;
-					}
-				}
+                // detect source and target
+                if (a.charAt(0) != '/') {
+                    if (src == null) {
+                        src = a;
+                        continue;
+                    } else if (trg == null) {
+                        trg = a;
+                        String ext = ToolBox.getExtension(trg);
+                        if (ext == null) {
+                            fatalError("No extension given for target " + trg);
+                        }
+                        if (ext.equals("sup")) {
+                            mode = OutputMode.BDSUP;
+                        } else if (ext.equals("sub") || ext.equals("idx")) {
+                            mode = OutputMode.VOBSUB;
+                        } else if (ext.equals("xml")) {
+                            mode = OutputMode.XML;
+                        } else if (ext.equals("ifo")) {
+                            mode = OutputMode.SUPIFO;
+                        } else {
+                            fatalError("Unknown extension of target " + trg);
+                        }
+                        Core.setOutputMode(mode);
+                        continue;
+                    }
+                }
 
-				boolean switchOn = true;
+                boolean switchOn = true;
 
-				// analyze normal parameters
-				if (a.length() < 4 || a.charAt(0) != '/' ) {
-					fatalError("Illegal argument: "+a);
-				}
-				int pos = a.indexOf(':');
-				String val;
-				if (pos > -1) {
-					val = a.substring(pos+1,a.length());
-					a = a.substring(1,pos);
-				} else {
-					val = "";
-					a = a.substring(1);
-					// check +/- at end of parameter
-					int last = a.length()-1;
-					if (a.indexOf('+') == last) {
-						a = a.substring(0, last);
-					} else if (a.indexOf('-') == last) {
-						a = a.substring(0, last);
-						switchOn = false;
-					}
-				}
+                // analyze normal parameters
+                if (a.length() < 4 || a.charAt(0) != '/') {
+                    fatalError("Illegal argument: " + a);
+                }
+                int pos = a.indexOf(':');
+                String val;
+                if (pos > -1) {
+                    val = a.substring(pos + 1, a.length());
+                    a = a.substring(1, pos);
+                } else {
+                    val = "";
+                    a = a.substring(1);
+                    // check +/- at end of parameter
+                    int last = a.length() - 1;
+                    if (a.indexOf('+') == last) {
+                        a = a.substring(0, last);
+                    } else if (a.indexOf('-') == last) {
+                        a = a.substring(0, last);
+                        switchOn = false;
+                    }
+                }
 
-				String strSwitchOn;
-				if (switchOn) {
-					strSwitchOn = "ON";
-				} else {
-					strSwitchOn = "OFF";
-				}
+                String strSwitchOn;
+                if (switchOn) {
+                    strSwitchOn = "ON";
+                } else {
+                    strSwitchOn = "OFF";
+                }
 
-				Parameters p = getParam(a);
-				int ival = ToolBox.getInt(val);
-				switch (p) {
-					case ALPHATHR:
-						// alpha threshold for SUB/IDX conversion
-						if (ival <0 || ival > 255) {
-							fatalError("Illegal number range for alpha threshold: "+val);
-						} else {
-							alphaThr = ival;
-						}
-						System.out.println("OPTION: set alpha threshold to "+ival);
-						break; // useless
-					case LUMTHR1:
-						// luminance threshold low-med for SUB/IDX conversion
-						if (ival <0 || ival > 255) {
-							fatalError("Illegal number range for luminance: "+val);
-						} else {
-							lumThr1 = ival;
-						}
-						System.out.println("OPTION: set low/mid luminance threshold to "+ival);
-						break; // useless
-					case LUMTHR2:
-						// luminance threshold med-high for SUB/IDX conversion
-						if (ival <0 || ival > 255) {
-							fatalError("Illegal number range for luminance: "+val);
-						} else {
-							lumThr2 = ival;
-						}
-						System.out.println("OPTION: set mid/high luminance threshold to "+ival);
-						break; // useless
-					case RESOLUTION:
-						// resolution for export
-						if (val.toLowerCase().equals("keep")) {
-							Core.setConvertResolution(false);
-						} else {
-							Core.setConvertResolution(true);
-							if (val.toLowerCase().equals("pal") || ival == 576) {
-								r = Resolution.PAL;
-								if (!defineFPStrg) {
-									Core.setFPSTrg(Framerate.PAL.getValue());
-								}
-							} else if (val.toLowerCase().equals("ntsc") || ival == 480) {
-								r = Resolution.NTSC;
-								if (!defineFPStrg) {
-									Core.setFPSTrg(Framerate.NTSC.getValue());
-								}
-							} else if (val.toLowerCase().equals("720p") || ival == 720) {
-								r = Resolution.HD_720;
-								if (!defineFPStrg) {
-									Core.setFPSTrg(Framerate.FPS_23_976.getValue());
-								}
-							} else if (val.toLowerCase().equals("1440x1080")) {
-								r = Resolution.HD_1440x1080;
-								if (!defineFPStrg) {
-									Core.setFPSTrg(Framerate.FPS_23_976.getValue());
-								}
-							} else if (val.toLowerCase().equals("1080p") || ival == 1080) {
-								r = Resolution.HD_1080;
-								if (!defineFPStrg) {
-									Core.setFPSTrg(Framerate.FPS_23_976.getValue());
-								}
-							} else {
-								fatalError("Illegal resolution: "+val);
-							}
-						}
-						System.out.println("OPTION: set resolution to "+Core.getResolutionName(r));
-						break;
-					case LANGUAGE:
-						// language used for SUB/IDX export
-						langIdx = -1;
-						for (int l=0; l<LANGUAGES.length; l++)
-							if (LANGUAGES[l][1].equals(val)) {
-								langIdx = l;
-								break;
-							}
-						if (langIdx==-1) {
-							System.out.println("ERROR: Unknown language "+val);
-							System.out.println("Use one of the following 2 character codes:");
-							for (int l=0; l<LANGUAGES.length; l++) {
-								System.out.println("    "+LANGUAGES[l][1]+" - "+LANGUAGES[l][0]);
-							}
-							exit(1);
-						}
-						System.out.println("OPTION: set language to "+LANGUAGES[langIdx][0]+
-								" ("+LANGUAGES[langIdx][1]+")");
-						break;
-					case PALETTE:
-						// load color profile for for SUB/IDX conversion
-						File f = new File(val);
-						if (f.exists()) {
-							byte id[] = ToolBox.getFileID(val, 4);
-							if (id == null || id[0] != 0x23 || id[1] != 0x43 || id[2]!= 0x4F || id[3] != 0x4C) { //#COL
-								fatalError("No valid palette file: "+val);
-							}
-						} else {
-							fatalError("Palette file not found: "+val);
-						}
-						Props colProps = new Props();
-						colProps.load(val);
-						for (int c=0; c<15; c++) {
-							String s = colProps.get("Color_"+c, "0,0,0");
-							String sp[] = s.split(",");
-							if (sp.length >= 3) {
-								int red   = Integer.valueOf(sp[0].trim()) & 0xff;
-								int green = Integer.valueOf(sp[1].trim()) & 0xff;
-								int blue  = Integer.valueOf(sp[2].trim()) & 0xff;
-								Core.getCurrentDVDPalette().setColor(c+1, new Color(red,green,blue));
-							}
-						}
-						System.out.println("OPTION: loaded palette from "+val);
-						break;
-					case FORCED:
-						// export only forced subtitles (when converting from BD-SUP)
-						Core.setExportForced(switchOn);
-						System.out.println("OPTION: export only forced subtitles: "+strSwitchOn);
-						break;
-					case SWAP_CR_CB:
-						// export only forced subtitles (when converting from BD-SUP)
-						Core.setSwapCrCb(switchOn);
-						System.out.println("OPTION: swap Cr/Cb components: "+strSwitchOn);
-						break;
-					case FPS:
-						// set target (and source) frame rate
-						double fpsSrc, fpsTrg;
-						pos = val.indexOf(',');
-						if (pos > 0) {
-							boolean autoFPS;
-							// source and target: frame rate conversion
-							String srcStr = val.substring(0, pos).trim();
-							if (srcStr.toLowerCase().equals("auto")) {
-								// leave default value
-								autoFPS = true;
-								fpsSrc = 0; // stub to avoid undefined warning
-							} else {
-								autoFPS = false;
-								fpsSrc = Core.getFPS(srcStr);
-								if (fpsSrc <= 0) {
-									fatalError("invalid source framerate: " + srcStr);
-								}
-								Core.setFPSSrc(fpsSrc);
-							}
-							fpsTrg = Core.getFPS(val.substring(pos+1));
-							if (fpsTrg <= 0) {
-								fatalError("invalid target value: "+val.substring(pos+1));
-							}
-							if (!autoFPS) {
-								Core.setFPSTrg(fpsTrg);
-							}
-							Core.setConvertFPS(true);
-							System.out.println("OPTION: convert framerate from "
-									+(autoFPS?"<auto>":ToolBox.formatDouble(fpsSrc))
-									+"fps to "+ToolBox.formatDouble(fpsTrg)+"fps");
-							defineFPStrg = true;
-						} else {
-							// only target: frame rate synchronization
-							if (val.toLowerCase().equals("keep")) {
-								Core.setKeepFps(true);
-								System.out.println("OPTION: use source fps as target fps");
-							}else {
-								fpsTrg = Core.getFPS(val);
-								if (fpsTrg <= 0) {
-									fatalError("invalid target framerate: "+val);
-								}
-								Core.setFPSTrg(fpsTrg);
-								System.out.println("OPTION: synchronize target framerate to "+ToolBox.formatDouble(fpsTrg)+"fps");
-								defineFPStrg = true;
-							}
-						}
-						break;
-					case DELAY:
-						// add a delay
-						double delay=0;
-						try {
-							// don't use getDouble as the value can be negative
-							delay = Double.parseDouble(val.trim())*90.0;
-						} catch (NumberFormatException ex) {
-							fatalError("Illegal delay value: "+val);
-						}
-						int delayPTS = (int)Core.syncTimePTS((long)delay, Core.getFPSTrg());
-						Core.setDelayPTS(delayPTS);
-						System.out.println("OPTION: set delay to "+ToolBox.formatDouble(delayPTS/90.0));
-						break;
-					case MIN_TIME:
-						// set minimum duration
-						double t=0;
-						try {
-							t = Double.parseDouble(val.trim())*90.0;
-						} catch (NumberFormatException ex) {
-							fatalError("Illegal value for minimum display time: "+val);
-						}
-						int tMin = (int)Core.syncTimePTS((long)t, Core.getFPSTrg());
-						Core.setMinTimePTS(tMin);
-						Core.setFixShortFrames(true);
-						System.out.println("OPTION: set delay to "+ToolBox.formatDouble(tMin/90.0));
-						break;
-					case MOVE_INSIDE:
-					case MOVE_OUTSIDE:
-						// move captions
-						String sm;
-						if (p == Parameters.MOVE_OUTSIDE) {
-							Core.setMoveModeY(CaptionMoveModeY.MOVE_OUTSIDE_BOUNDS);
-							sm = "outside";
-						} else {
-							Core.setMoveModeY(CaptionMoveModeY.MOVE_INSIDE_BOUNDS);
-							sm = "inside";
-						}
-						String ratio;
-						pos = val.indexOf(',');
-						if (pos > 0) {
-							ratio = val.substring(0, pos);
-						} else {
-							ratio = val;
-						}
-						screenRatio = ToolBox.getDouble(ratio);
-						if (screenRatio <= (16.0/9)) {
-							fatalError("invalid screen ratio: "+ratio);
-						}
-						int moveOffsetY = Core.getMoveOffsetY();
-						if (pos > 0) {
-							moveOffsetY = ToolBox.getInt(val.substring(pos+1));
-							if (moveOffsetY < 0) {
-								fatalError("invalid pixel offset: "+val.substring(pos+1));
-							}
-							Core.setMoveOffsetY(moveOffsetY);
-						}
-						System.out.println("OPTION: moving captions "+sm+" "
-								+ToolBox.formatDouble(screenRatio)+":1 plus/minus "
-								+moveOffsetY+" pixels");
-						break;
-					case MOVE_X:
-						// move captions
-						String mx;
-						pos = val.indexOf(',');
-						if (pos > 0) {
-							mx = val.substring(0, pos);
-						} else {
-							mx = val;
-						}
-						if (mx.equalsIgnoreCase("left")) {
-							Core.setMoveModeX(CaptionMoveModeX.LEFT);
-						} else if (mx.equalsIgnoreCase("right")) {
-							Core.setMoveModeX(CaptionMoveModeX.RIGHT);
-						} else if (mx.equalsIgnoreCase("center")) {
-							Core.setMoveModeX(CaptionMoveModeX.CENTER);
-						} else {
-							fatalError("invalid moveX command:" + mx);
-						}
+                Parameters p = getParam(a);
+                int ival = ToolBox.getInt(val);
+                switch (p) {
+                    case ALPHATHR:
+                        // alpha threshold for SUB/IDX conversion
+                        if (ival < 0 || ival > 255) {
+                            fatalError("Illegal number range for alpha threshold: " + val);
+                        } else {
+                            alphaThr = ival;
+                        }
+                        System.out.println("OPTION: set alpha threshold to " + ival);
+                        break; // useless
+                    case LUMTHR1:
+                        // luminance threshold low-med for SUB/IDX conversion
+                        if (ival < 0 || ival > 255) {
+                            fatalError("Illegal number range for luminance: " + val);
+                        } else {
+                            lumThr1 = ival;
+                        }
+                        System.out.println("OPTION: set low/mid luminance threshold to " + ival);
+                        break; // useless
+                    case LUMTHR2:
+                        // luminance threshold med-high for SUB/IDX conversion
+                        if (ival < 0 || ival > 255) {
+                            fatalError("Illegal number range for luminance: " + val);
+                        } else {
+                            lumThr2 = ival;
+                        }
+                        System.out.println("OPTION: set mid/high luminance threshold to " + ival);
+                        break; // useless
+                    case RESOLUTION:
+                        // resolution for export
+                        if (val.toLowerCase().equals("keep")) {
+                            Core.setConvertResolution(false);
+                        } else {
+                            Core.setConvertResolution(true);
+                            if (val.toLowerCase().equals("pal") || ival == 576) {
+                                r = Resolution.PAL;
+                                if (!defineFPStrg) {
+                                    Core.setFPSTrg(Framerate.PAL.getValue());
+                                }
+                            } else if (val.toLowerCase().equals("ntsc") || ival == 480) {
+                                r = Resolution.NTSC;
+                                if (!defineFPStrg) {
+                                    Core.setFPSTrg(Framerate.NTSC.getValue());
+                                }
+                            } else if (val.toLowerCase().equals("720p") || ival == 720) {
+                                r = Resolution.HD_720;
+                                if (!defineFPStrg) {
+                                    Core.setFPSTrg(Framerate.FPS_23_976.getValue());
+                                }
+                            } else if (val.toLowerCase().equals("1440x1080")) {
+                                r = Resolution.HD_1440x1080;
+                                if (!defineFPStrg) {
+                                    Core.setFPSTrg(Framerate.FPS_23_976.getValue());
+                                }
+                            } else if (val.toLowerCase().equals("1080p") || ival == 1080) {
+                                r = Resolution.HD_1080;
+                                if (!defineFPStrg) {
+                                    Core.setFPSTrg(Framerate.FPS_23_976.getValue());
+                                }
+                            } else {
+                                fatalError("Illegal resolution: " + val);
+                            }
+                        }
+                        System.out.println("OPTION: set resolution to " + Core.getResolutionName(r));
+                        break;
+                    case LANGUAGE:
+                        // language used for SUB/IDX export
+                        langIdx = -1;
+                        for (int l = 0; l < LANGUAGES.length; l++)
+                            if (LANGUAGES[l][1].equals(val)) {
+                                langIdx = l;
+                                break;
+                            }
+                        if (langIdx == -1) {
+                            System.out.println("ERROR: Unknown language " + val);
+                            System.out.println("Use one of the following 2 character codes:");
+                            for (int l = 0; l < LANGUAGES.length; l++) {
+                                System.out.println("    " + LANGUAGES[l][1] + " - " + LANGUAGES[l][0]);
+                            }
+                            exit(1);
+                        }
+                        System.out.println("OPTION: set language to " + LANGUAGES[langIdx][0] +
+                                " (" + LANGUAGES[langIdx][1] + ")");
+                        break;
+                    case PALETTE:
+                        // load color profile for for SUB/IDX conversion
+                        File f = new File(val);
+                        if (f.exists()) {
+                            byte id[] = ToolBox.getFileID(val, 4);
+                            if (id == null || id[0] != 0x23 || id[1] != 0x43 || id[2] != 0x4F || id[3] != 0x4C) { //#COL
+                                fatalError("No valid palette file: " + val);
+                            }
+                        } else {
+                            fatalError("Palette file not found: " + val);
+                        }
+                        Props colProps = new Props();
+                        colProps.load(val);
+                        for (int c = 0; c < 15; c++) {
+                            String s = colProps.get("Color_" + c, "0,0,0");
+                            String sp[] = s.split(",");
+                            if (sp.length >= 3) {
+                                int red = Integer.valueOf(sp[0].trim()) & 0xff;
+                                int green = Integer.valueOf(sp[1].trim()) & 0xff;
+                                int blue = Integer.valueOf(sp[2].trim()) & 0xff;
+                                Core.getCurrentDVDPalette().setColor(c + 1, new Color(red, green, blue));
+                            }
+                        }
+                        System.out.println("OPTION: loaded palette from " + val);
+                        break;
+                    case FORCED:
+                        // export only forced subtitles (when converting from BD-SUP)
+                        Core.setExportForced(switchOn);
+                        System.out.println("OPTION: export only forced subtitles: " + strSwitchOn);
+                        break;
+                    case SWAP_CR_CB:
+                        // export only forced subtitles (when converting from BD-SUP)
+                        Core.setSwapCrCb(switchOn);
+                        System.out.println("OPTION: swap Cr/Cb components: " + strSwitchOn);
+                        break;
+                    case FPS:
+                        // set target (and source) frame rate
+                        double fpsSrc, fpsTrg;
+                        pos = val.indexOf(',');
+                        if (pos > 0) {
+                            boolean autoFPS;
+                            // source and target: frame rate conversion
+                            String srcStr = val.substring(0, pos).trim();
+                            if (srcStr.toLowerCase().equals("auto")) {
+                                // leave default value
+                                autoFPS = true;
+                                fpsSrc = 0; // stub to avoid undefined warning
+                            } else {
+                                autoFPS = false;
+                                fpsSrc = Core.getFPS(srcStr);
+                                if (fpsSrc <= 0) {
+                                    fatalError("invalid source framerate: " + srcStr);
+                                }
+                                Core.setFPSSrc(fpsSrc);
+                            }
+                            fpsTrg = Core.getFPS(val.substring(pos + 1));
+                            if (fpsTrg <= 0) {
+                                fatalError("invalid target value: " + val.substring(pos + 1));
+                            }
+                            if (!autoFPS) {
+                                Core.setFPSTrg(fpsTrg);
+                            }
+                            Core.setConvertFPS(true);
+                            System.out.println("OPTION: convert framerate from "
+                                    + (autoFPS ? "<auto>" : ToolBox.formatDouble(fpsSrc))
+                                    + "fps to " + ToolBox.formatDouble(fpsTrg) + "fps");
+                            defineFPStrg = true;
+                        } else {
+                            // only target: frame rate synchronization
+                            if (val.toLowerCase().equals("keep")) {
+                                Core.setKeepFps(true);
+                                System.out.println("OPTION: use source fps as target fps");
+                            } else {
+                                fpsTrg = Core.getFPS(val);
+                                if (fpsTrg <= 0) {
+                                    fatalError("invalid target framerate: " + val);
+                                }
+                                Core.setFPSTrg(fpsTrg);
+                                System.out.println("OPTION: synchronize target framerate to " + ToolBox.formatDouble(fpsTrg) + "fps");
+                                defineFPStrg = true;
+                            }
+                        }
+                        break;
+                    case DELAY:
+                        // add a delay
+                        double delay = 0;
+                        try {
+                            // don't use getDouble as the value can be negative
+                            delay = Double.parseDouble(val.trim()) * 90.0;
+                        } catch (NumberFormatException ex) {
+                            fatalError("Illegal delay value: " + val);
+                        }
+                        int delayPTS = (int) Core.syncTimePTS((long) delay, Core.getFPSTrg());
+                        Core.setDelayPTS(delayPTS);
+                        System.out.println("OPTION: set delay to " + ToolBox.formatDouble(delayPTS / 90.0));
+                        break;
+                    case MIN_TIME:
+                        // set minimum duration
+                        double t = 0;
+                        try {
+                            t = Double.parseDouble(val.trim()) * 90.0;
+                        } catch (NumberFormatException ex) {
+                            fatalError("Illegal value for minimum display time: " + val);
+                        }
+                        int tMin = (int) Core.syncTimePTS((long) t, Core.getFPSTrg());
+                        Core.setMinTimePTS(tMin);
+                        Core.setFixShortFrames(true);
+                        System.out.println("OPTION: set delay to " + ToolBox.formatDouble(tMin / 90.0));
+                        break;
+                    case MOVE_INSIDE:
+                    case MOVE_OUTSIDE:
+                        // move captions
+                        String sm;
+                        if (p == Parameters.MOVE_OUTSIDE) {
+                            Core.setMoveModeY(CaptionMoveModeY.MOVE_OUTSIDE_BOUNDS);
+                            sm = "outside";
+                        } else {
+                            Core.setMoveModeY(CaptionMoveModeY.MOVE_INSIDE_BOUNDS);
+                            sm = "inside";
+                        }
+                        String ratio;
+                        pos = val.indexOf(',');
+                        if (pos > 0) {
+                            ratio = val.substring(0, pos);
+                        } else {
+                            ratio = val;
+                        }
+                        screenRatio = ToolBox.getDouble(ratio);
+                        if (screenRatio <= (16.0 / 9)) {
+                            fatalError("invalid screen ratio: " + ratio);
+                        }
+                        int moveOffsetY = Core.getMoveOffsetY();
+                        if (pos > 0) {
+                            moveOffsetY = ToolBox.getInt(val.substring(pos + 1));
+                            if (moveOffsetY < 0) {
+                                fatalError("invalid pixel offset: " + val.substring(pos + 1));
+                            }
+                            Core.setMoveOffsetY(moveOffsetY);
+                        }
+                        System.out.println("OPTION: moving captions " + sm + " "
+                                + ToolBox.formatDouble(screenRatio) + ":1 plus/minus "
+                                + moveOffsetY + " pixels");
+                        break;
+                    case MOVE_X:
+                        // move captions
+                        String mx;
+                        pos = val.indexOf(',');
+                        if (pos > 0) {
+                            mx = val.substring(0, pos);
+                        } else {
+                            mx = val;
+                        }
+                        if (mx.equalsIgnoreCase("left")) {
+                            Core.setMoveModeX(CaptionMoveModeX.LEFT);
+                        } else if (mx.equalsIgnoreCase("right")) {
+                            Core.setMoveModeX(CaptionMoveModeX.RIGHT);
+                        } else if (mx.equalsIgnoreCase("center")) {
+                            Core.setMoveModeX(CaptionMoveModeX.CENTER);
+                        } else {
+                            fatalError("invalid moveX command:" + mx);
+                        }
 
-						int moveOffsetX = Core.getMoveOffsetX();
-						if (pos > 0) {
-							moveOffsetX = ToolBox.getInt(val.substring(pos+1));
-							if (moveOffsetX < 0) {
-								fatalError("invalid pixel offset: "+val.substring(pos+1));
-							}
-							Core.setMoveOffsetX(moveOffsetX);
-						}
-						System.out.println("OPTION: moving captions to the " + mx
-								+" plus/minus "+moveOffsetX+" pixels");
-						break;
-					case CROP_Y:
-						// add a delay
-						int cropY;
-						cropY = ToolBox.getInt(val.trim());
-						if (cropY >= 0) {
-							Core.setCropOfsY(cropY);
-							System.out.println("OPTION: set delay to "+cropY);
-						} else
-							fatalError("invalid crop y value: "+val.substring(0, pos));
-						break;
-					case PALETTE_MODE:
-						// select palette mode
-						if (val.toLowerCase().equals("keep")) {
-							Core.setPaletteMode(PaletteMode.KEEP_EXISTING);
-						} else if (val.toLowerCase().equals("create")) {
-							Core.setPaletteMode(PaletteMode.CREATE_NEW);
-						} else if (val.toLowerCase().equals("dither")) {
-							Core.setPaletteMode(PaletteMode.CREATE_DITHERED);
-						} else {
-							fatalError("invalid palette mode: " + val);
-						}
-						System.out.println("OPTION: set palette mode to "+val.toLowerCase());
-						break;
-					case VERBATIM:
-						// select verbatim console output
-						Core.setVerbatim(switchOn);
-						System.out.println("OPTION: enabled verbatim output mode: "+strSwitchOn);
-						break;
-					case FILTER:
-						// select scaling filter
-						ScalingFilter sfs = null;
-						for (ScalingFilter sf : ScalingFilter.values())
-							if (sf.toString().equalsIgnoreCase(val)) {
-								sfs = sf;
-								break;
-							}
-						if (sfs != null) {
-							Core.setScalingFilter(sfs);
-							System.out.println("OPTION: set scaling filter to: " + sfs.toString());
-						} else {
-							fatalError("invalid scaling filter: "+val);
-						}
-						break;
-					case TMERGE:
-						// set maximum difference for merging captions
-						t=0;
-						try {
-							t = Double.parseDouble(val.trim()) * 90.0;
-						} catch (NumberFormatException ex) {
-							fatalError("Illegal value for maximum merge time: "+val);
-						}
-						int ti = (int)(t+0.5);
-						Core.setMergePTSdiff(ti);
-						System.out.println("OPTION: set maximum merge time to "+ToolBox.formatDouble(ti/90.0));
-						break;
-					case SCALE:
-						// free x/y scaling factors
-						pos = val.indexOf(',');
-						if (pos > 0) {
-							double scaleX = ToolBox.getDouble(val.substring(0, pos));
-							if (scaleX < Core.MIN_FREE_SCALE_FACTOR || scaleX > Core.MAX_FREE_SCALE_FACTOR) {
-								fatalError("invalid x scaling factor: "+val.substring(0, pos));
-							}
-							double scaleY = ToolBox.getDouble(val.substring(pos+1));
-							if (scaleY < Core.MIN_FREE_SCALE_FACTOR || scaleY > Core.MAX_FREE_SCALE_FACTOR) {
-								fatalError("invalid y scaling factor: "+val.substring(pos+1));
-							}
-							Core.setFreeScale(scaleX, scaleY);
-							System.out.println("OPTION: set free scaling factors to "
-									+ToolBox.formatDouble(scaleX)+", "
-									+ToolBox.formatDouble(scaleY));
-						} else {
-							fatalError("invalid scale command (missing comma): "+val);
-						}
+                        int moveOffsetX = Core.getMoveOffsetX();
+                        if (pos > 0) {
+                            moveOffsetX = ToolBox.getInt(val.substring(pos + 1));
+                            if (moveOffsetX < 0) {
+                                fatalError("invalid pixel offset: " + val.substring(pos + 1));
+                            }
+                            Core.setMoveOffsetX(moveOffsetX);
+                        }
+                        System.out.println("OPTION: moving captions to the " + mx
+                                + " plus/minus " + moveOffsetX + " pixels");
+                        break;
+                    case CROP_Y:
+                        // add a delay
+                        int cropY;
+                        cropY = ToolBox.getInt(val.trim());
+                        if (cropY >= 0) {
+                            Core.setCropOfsY(cropY);
+                            System.out.println("OPTION: set delay to " + cropY);
+                        } else
+                            fatalError("invalid crop y value: " + val.substring(0, pos));
+                        break;
+                    case PALETTE_MODE:
+                        // select palette mode
+                        if (val.toLowerCase().equals("keep")) {
+                            Core.setPaletteMode(PaletteMode.KEEP_EXISTING);
+                        } else if (val.toLowerCase().equals("create")) {
+                            Core.setPaletteMode(PaletteMode.CREATE_NEW);
+                        } else if (val.toLowerCase().equals("dither")) {
+                            Core.setPaletteMode(PaletteMode.CREATE_DITHERED);
+                        } else {
+                            fatalError("invalid palette mode: " + val);
+                        }
+                        System.out.println("OPTION: set palette mode to " + val.toLowerCase());
+                        break;
+                    case VERBATIM:
+                        // select verbatim console output
+                        Core.setVerbatim(switchOn);
+                        System.out.println("OPTION: enabled verbatim output mode: " + strSwitchOn);
+                        break;
+                    case FILTER:
+                        // select scaling filter
+                        ScalingFilter sfs = null;
+                        for (ScalingFilter sf : ScalingFilter.values())
+                            if (sf.toString().equalsIgnoreCase(val)) {
+                                sfs = sf;
+                                break;
+                            }
+                        if (sfs != null) {
+                            Core.setScalingFilter(sfs);
+                            System.out.println("OPTION: set scaling filter to: " + sfs.toString());
+                        } else {
+                            fatalError("invalid scaling filter: " + val);
+                        }
+                        break;
+                    case TMERGE:
+                        // set maximum difference for merging captions
+                        t = 0;
+                        try {
+                            t = Double.parseDouble(val.trim()) * 90.0;
+                        } catch (NumberFormatException ex) {
+                            fatalError("Illegal value for maximum merge time: " + val);
+                        }
+                        int ti = (int) (t + 0.5);
+                        Core.setMergePTSdiff(ti);
+                        System.out.println("OPTION: set maximum merge time to " + ToolBox.formatDouble(ti / 90.0));
+                        break;
+                    case SCALE:
+                        // free x/y scaling factors
+                        pos = val.indexOf(',');
+                        if (pos > 0) {
+                            double scaleX = ToolBox.getDouble(val.substring(0, pos));
+                            if (scaleX < Core.MIN_FREE_SCALE_FACTOR || scaleX > Core.MAX_FREE_SCALE_FACTOR) {
+                                fatalError("invalid x scaling factor: " + val.substring(0, pos));
+                            }
+                            double scaleY = ToolBox.getDouble(val.substring(pos + 1));
+                            if (scaleY < Core.MIN_FREE_SCALE_FACTOR || scaleY > Core.MAX_FREE_SCALE_FACTOR) {
+                                fatalError("invalid y scaling factor: " + val.substring(pos + 1));
+                            }
+                            Core.setFreeScale(scaleX, scaleY);
+                            System.out.println("OPTION: set free scaling factors to "
+                                    + ToolBox.formatDouble(scaleX) + ", "
+                                    + ToolBox.formatDouble(scaleY));
+                        } else {
+                            fatalError("invalid scale command (missing comma): " + val);
+                        }
 
-						break;
-					case ALPHA_CROP:
-						// alpha threshold for cropping and patching background color to black
-						if (ival <0 || ival > 255) {
-							fatalError("Illegal number range for alpha cropping threshold: "+val);
-						} else {
-							Core.setAlphaCrop(ival);
-						}
-						System.out.println("OPTION: set alpha cropping threshold to "+ival);
-						break;
-					case EXPORT_PAL:
-						// export target palette in PGCEdit text format
-						Core.setWritePGCEditPal(switchOn);
-						System.out.println("OPTION: export target palette in PGCEDit text format: "+strSwitchOn);
-						break;
-					case FIX_ZERO_ALPHA:
-						// fix zero alpha frame palette for SUB/IDX and SUP/IFO
-						Core.setFixZeroAlpha(switchOn);
-						System.out.println("OPTION: fix zero alpha frame palette for SUB/IDX and SUP/IFO: "+strSwitchOn);
-						break; // useless
-					case FORCE_ALL:
-						// clear/set forced flag for all captions
-						Core.setForceAll(switchOn ? ForcedFlagState.SET : ForcedFlagState.CLEAR );
-						System.out.println("OPTION: set forced state of all captions to: "+strSwitchOn);
-						break;
-					default: //UNKNOWN:
-						fatalError("Illegal argument: "+args[i]);
-				}
-			}
+                        break;
+                    case ALPHA_CROP:
+                        // alpha threshold for cropping and patching background color to black
+                        if (ival < 0 || ival > 255) {
+                            fatalError("Illegal number range for alpha cropping threshold: " + val);
+                        } else {
+                            Core.setAlphaCrop(ival);
+                        }
+                        System.out.println("OPTION: set alpha cropping threshold to " + ival);
+                        break;
+                    case EXPORT_PAL:
+                        // export target palette in PGCEdit text format
+                        Core.setWritePGCEditPal(switchOn);
+                        System.out.println("OPTION: export target palette in PGCEDit text format: " + strSwitchOn);
+                        break;
+                    case FIX_ZERO_ALPHA:
+                        // fix zero alpha frame palette for SUB/IDX and SUP/IFO
+                        Core.setFixZeroAlpha(switchOn);
+                        System.out.println("OPTION: fix zero alpha frame palette for SUB/IDX and SUP/IFO: " + strSwitchOn);
+                        break; // useless
+                    case FORCE_ALL:
+                        // clear/set forced flag for all captions
+                        Core.setForceAll(switchOn ? ForcedFlagState.SET : ForcedFlagState.CLEAR);
+                        System.out.println("OPTION: set forced state of all captions to: " + strSwitchOn);
+                        break;
+                    default: //UNKNOWN:
+                        fatalError("Illegal argument: " + arg);
+                }
+            }
 
 			Core.setOutputResolution(r);
 
