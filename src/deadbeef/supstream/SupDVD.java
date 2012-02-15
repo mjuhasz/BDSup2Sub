@@ -244,13 +244,13 @@ public class SupDVD implements Substream, SubstreamDVD {
      * @throws CoreException
      */
     long readSupFrame(long ofs, FileBuffer buffer) throws CoreException  {
-        long ctrlOfs = -1;
-        int  ctrlOfsRel = 0;
-        int  rleSize = 0;
-        int  ctrlSize = -1;
+        long ctrlOfs;
+        int  ctrlOfsRel;
+        int  rleSize;
+        int  ctrlSize;
         ImageObjectFragment rleFrag;
         int  length;
-        byte ctrlHeader[] = null;
+        byte ctrlHeader[];
 
         try {
             // 2 bytes:  packet identifier 0x5350
@@ -376,9 +376,7 @@ public class SupDVD implements Substream, SubstreamDVD {
                             // only use more opaque colors
                             if (alphaUpdateSum > alphaSum) {
                                 alphaSum = alphaUpdateSum;
-                                for (int i = 0; i < 4; i++) {
-                                    pic.alpha[i] = alphaUpdate[i];
-                                }
+                                System.arraycopy(alphaUpdate, 0, pic.alpha, 0, 4);
                                 // take over frame palette
                                 b = getByte(ctrlHeader, index+8);
                                 pic.pal[3] = (b >> 4);
@@ -431,9 +429,7 @@ public class SupDVD implements Substream, SubstreamDVD {
 
                 if (alphaSum == 0) {
                     if (Core.getFixZeroAlpha()) {
-                        for (int i=0; i<4; i++) {
-                            pic.alpha[i] = lastAlpha[i];
-                        }
+                        System.arraycopy(lastAlpha, 0, pic.alpha, 0, 4);
                         Core.printWarn("Invisible caption due to zero alpha - used alpha info of last caption.\n");
                     } else {
                         Core.printWarn("Invisible caption due to zero alpha (not fixed due to user setting).\n");

@@ -48,7 +48,7 @@ public class Core  extends Thread {
         CREATESUP,
         /** move all captions */
         MOVEALL
-    };
+    }
 
     /** Enumeration of caption types (used for moving captions) */
     private enum CaptionType {
@@ -58,7 +58,7 @@ public class Core  extends Thread {
         DOWN,
         /** caption covering more or less the whole screen */
         FULL
-    };
+    }
 
     private static final int RECENT_FILE_COUNT = 5;
 
@@ -608,8 +608,7 @@ public class Core  extends Thread {
         fileName = fname;
         progressMax = (int)(new File(fname)).length();
         progressLast = 0;
-        progress = new Progress(parent, true);
-        progress.setMinMax(0, 100);
+        progress = new Progress(parent);
         progress.setTitle("Loading");
         progress.setText("Loading subtitle stream");
         if (xml || sid == StreamID.XML) {
@@ -651,8 +650,7 @@ public class Core  extends Thread {
         fileName = fname;
         progressMax = substream.getNumFrames();
         progressLast = 0;
-        progress = new Progress(parent, true);
-        progress.setMinMax(0, 100);
+        progress = new Progress(parent);
         progress.setTitle("Exporting");
         if (Core.outMode == OutputMode.VOBSUB) {
             progress.setText("Exporting SUB/IDX");
@@ -912,7 +910,7 @@ public class Core  extends Thread {
      * @param isVobSub True if SUB/IDX, false if SUP/IFO
      * @throws CoreException
      */
-    public static void readDVDSubstream(String fname, boolean isVobSub) throws CoreException {
+    private static void readDVDSubstream(String fname, boolean isVobSub) throws CoreException {
         printX("Loading " + fname + "\n");
         resetErrors();
         resetWarnings();
@@ -1088,7 +1086,7 @@ public class Core  extends Thread {
      * @param index Index of caption
      * @return true: image size has changed, false: image size didn't change.
      */
-    public static boolean updateTrgPic(int index) {
+    private static boolean updateTrgPic(int index) {
         SubPicture picSrc = substream.getSubPicture(index);
         SubPicture picTrg = subPictures[index];
         double scaleX = (double)picTrg.width/picSrc.width;
@@ -1170,13 +1168,7 @@ public class Core  extends Thread {
      */
     public static void scanSubtitles() {
         subPictures = new SubPicture[substream.getNumFrames()];
-        SubPicture picSrc;
-        double factTS = 1.0;
-
-        if (convertFPS) {
-            factTS = fpsSrc / fpsTrg;
-        } else
-            factTS = 1.0;
+        double factTS = convertFPS ? fpsSrc / fpsTrg : 1.0;
 
         // change target resolution to source resolution if no conversion is needed
         if (!convertResolution && getNumFrames() > 0) {
@@ -1194,6 +1186,7 @@ public class Core  extends Thread {
         }
 
         // first run: clone source subpics, apply speedup/down,
+        SubPicture picSrc;
         for (int i=0; i<subPictures.length; i++) {
             picSrc = substream.getSubPicture(i);
             subPictures[i] = picSrc.copy();
@@ -1304,7 +1297,7 @@ public class Core  extends Thread {
         //subPictures = new SubPicture[sup.getNumFrames()];
         SubPicture picOld;
         SubPicture picSrc;
-        double factTS = 1.0;
+        double factTS;
         double factX;
         double factY;
         double fsXNew;
@@ -1486,7 +1479,7 @@ public class Core  extends Thread {
      * @param skipScaling   true: skip bitmap scaling and palette transformation (used for moving captions)
      * @throws CoreException
      */
-    public static void convertSup(int index, int displayNum, int displayMax, boolean skipScaling) throws CoreException{
+    private static void convertSup(int index, int displayNum, int displayMax, boolean skipScaling) throws CoreException{
         int w,h;
         int startOfs = (int)substream.getStartOffset(index);
         SubPicture subPic = substream.getSubPicture(index);
@@ -1713,15 +1706,11 @@ public class Core  extends Thread {
                     out.close();
                 }
             } catch (IOException ex) {
-            };
+            }
         }
 
         boolean importedDVDPalette;
-        if (inMode == InputMode.VOBSUB || inMode == InputMode.SUPIFO) {
-            importedDVDPalette = true;
-        } else {
-            importedDVDPalette = false;
-        }
+        importedDVDPalette = (inMode == InputMode.VOBSUB) || (inMode == InputMode.SUPIFO);
 
         Palette trgPallete = null;
         if (outMode == OutputMode.VOBSUB) {
@@ -1858,8 +1847,7 @@ public class Core  extends Thread {
     public static void moveAllThreaded(JFrame parent) throws Exception {
         progressMax = substream.getNumFrames();
         progressLast = 0;
-        progress = new Progress(parent, true);
-        progress.setMinMax(0, 100);
+        progress = new Progress(parent);
         progress.setTitle("Moving");
         progress.setText("Moving all captions");
         runType = RunType.MOVEALL;
@@ -2073,7 +2061,7 @@ public class Core  extends Thread {
      * @param p     Palette
      * @throws CoreException
      */
-    public static void writePGCEditPal(String fname, Palette p) throws CoreException {
+    private static void writePGCEditPal(String fname, Palette p) throws CoreException {
         BufferedWriter out = null;
         try {
             out = new BufferedWriter(new FileWriter(fname));
@@ -2093,7 +2081,7 @@ public class Core  extends Thread {
                     out.close();
                 }
             } catch (IOException ex) {
-            };
+            }
         }
     }
 

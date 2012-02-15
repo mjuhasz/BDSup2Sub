@@ -74,8 +74,8 @@ public class FramePalDialog extends JDialog {
     private int palette[];
 
 
-    public FramePalDialog(JFrame frame, boolean modal) {
-        super(frame, "Edit Frame Palette", modal);
+    public FramePalDialog(JFrame frame) {
+        super(frame, "Edit Frame Palette", true);
         setSize(294, 209);
         setResizable(false);
         setContentPane(getJContentPane());

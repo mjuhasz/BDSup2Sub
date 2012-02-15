@@ -49,7 +49,7 @@ import java.util.zip.DeflaterOutputStream;
  *               PngEncoderB can inherit them (JDE)<br>
  *				 Fixed bug with calculation of nRows<br>
  */
-public class PngEncoder extends Object {
+public class PngEncoder {
 
     /** Constant specifying that alpha channel should be encoded. */
     public static final boolean ENCODE_ALPHA = true;

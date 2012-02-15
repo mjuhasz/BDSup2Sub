@@ -113,7 +113,7 @@ public class SupXml implements Substream {
      * @param fps source frame rate
      * @return next integer frame rate (yet returned as double)
      */
-    static double XmlFps(double fps) {
+    private static double XmlFps(double fps) {
         if (fps == Framerate.FPS_23_975.getValue()) {
             return Framerate.FPS_24.getValue();
         } else if (fps == Framerate.FPS_23_976.getValue()) {
@@ -301,7 +301,7 @@ public class SupXml implements Substream {
                     out.close();
                 }
             } catch (IOException ex) {
-            };
+            }
         }
     }
 
@@ -416,8 +416,9 @@ public class SupXml implements Substream {
         return fps;
     }
 
-    enum XmlState { BDN, DESCRIPT, NAME, LANGUAGE, FORMAT, EVENTS, EVENT, GRAPHIC, UNKNOWN};
-    static final String xmlStates[] = { "bdn", "description", "name", "language", "format", "events", "event", "graphic"};
+    enum XmlState { BDN, DESCRIPT, NAME, LANGUAGE, FORMAT, EVENTS, EVENT, GRAPHIC, UNKNOWN}
+
+    private static final String xmlStates[] = { "bdn", "description", "name", "language", "format", "events", "event", "graphic"};
 
     class XmlHandler extends DefaultHandler {
 

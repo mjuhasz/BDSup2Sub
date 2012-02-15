@@ -156,7 +156,7 @@ public class SubDVD implements Substream, SubstreamDVD {
      * @param width image width of encoded caption
      * @param maxPixels maximum number of pixels in caption
      */
-    static void decodeLine(byte src[], int srcOfs, int srcLen, byte trg[], int trgOfs, int width, int maxPixels) {
+    private static void decodeLine(byte src[], int srcOfs, int srcLen, byte trg[], int trgOfs, int width, int maxPixels) {
         // to make access to nibbles easier, copy bytes to a nibble array
         byte nibbles[] = new byte[srcLen * 2];
         int b;
@@ -239,7 +239,7 @@ public class SubDVD implements Substream, SubstreamDVD {
      * @return RLE buffer
      */
     static byte[] encodeLines(Bitmap bm, boolean even) {
-        int ofs = 0;
+        int ofs;
         byte color;
         int len;
         int y;
@@ -1113,9 +1113,7 @@ public class SubDVD implements Substream, SubstreamDVD {
                         // only use more opaque colors
                         if (alphaUpdateSum > alphaSum) {
                             alphaSum = alphaUpdateSum;
-                            for (int i = 0; i<4; i++) {
-                                pic.alpha[i] = alphaUpdate[i];
-                            }
+                            System.arraycopy(alphaUpdate, 0, pic.alpha, 0, 4);
                             // take over frame palette
                             b = getByte(ctrlHeader, index+8);
                             pic.pal[3] = (b >> 4);
@@ -1166,9 +1164,7 @@ public class SubDVD implements Substream, SubstreamDVD {
 
             if (alphaSum == 0) {
                 if (Core.getFixZeroAlpha()) {
-                    for (int i=0; i<4; i++) {
-                        pic.alpha[i] = lastAlpha[i];
-                    }
+                    System.arraycopy(lastAlpha, 0, pic.alpha, 0, 4);
                     Core.printWarn("Invisible caption due to zero alpha - used alpha info of last caption.\n");
                 } else {
                     Core.printWarn("Invisible caption due to zero alpha (not fixed due to user setting).\n");

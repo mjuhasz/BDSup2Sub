@@ -60,7 +60,7 @@ public class EditPane extends JPanel implements MouseListener, MouseMotionListen
     /** Y coordinate crop offset */
     private int cropOfsY = 0;
     /** minimum distance to left and right in pixels */
-    static final int INSET = 2;
+    private static final int INSET = 2;
     /** is this EditPane a LayoutPane ? */
     private boolean layoutPane;
     /** upper left x coordinate of selection rectangle */
@@ -80,7 +80,7 @@ public class EditPane extends JPanel implements MouseListener, MouseMotionListen
     /** caption excluded from export */
     private boolean excluded;
     /** selectionListener */
-    SelectListener selectListener;
+    private SelectListener selectListener;
     /** x scale of caption */
     private double xScaleCaption;
     /** y scale of caption */

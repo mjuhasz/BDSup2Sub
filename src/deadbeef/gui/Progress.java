@@ -54,10 +54,10 @@ public class Progress extends JDialog {
     /**
      * Constructor
      * @param owner parent window
-     * @param modal show as modal dialog
+     *
      */
-    public Progress(Frame owner, boolean modal) {
-        super(owner, modal);
+    public Progress(Frame owner) {
+        super(owner, true);
         initialize();
 
         Point p = owner.getLocation();
@@ -74,7 +74,7 @@ public class Progress extends JDialog {
     @Override
     public void setVisible(boolean b) {
         timer = new Timer();
-        timer.schedule( new progressTimer(), 200, 200 );
+        timer.schedule( new ProgressTimer(), 200, 200 );
         super.setVisible(b);
     }
 
@@ -164,18 +164,10 @@ public class Progress extends JDialog {
             jProgressBar.setPreferredSize(new Dimension(200, 20));
             jProgressBar.setMinimumSize(new Dimension(200, 20));
             jProgressBar.setStringPainted(true);
+            jProgressBar.setMinimum(0);
+            jProgressBar.setMaximum(100);
         }
         return jProgressBar;
-    }
-
-    /**
-     * Set minimum and maximum value for progress bar
-     * @param min minimum value for progress bar
-     * @param max maximum value for progress bar
-     */
-    public void setMinMax(int min, int max) {
-        jProgressBar.setMinimum(min);
-        jProgressBar.setMaximum(max);
     }
 
     /**
@@ -196,7 +188,7 @@ public class Progress extends JDialog {
      * Timer used to automatically dispose this dialog once the Core thread is no longer active
      * @author 0xdeadbeef
      */
-    class progressTimer extends TimerTask {
+    private class ProgressTimer extends TimerTask {
         @Override
         public void run() {
             if (Core.getStatus() != CoreThreadState.ACTIVE) {

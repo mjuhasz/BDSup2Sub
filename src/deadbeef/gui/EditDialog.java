@@ -161,10 +161,10 @@ public class EditDialog extends JDialog implements SelectListener {
     /**
      * Constructor
      * @param owner parent frame
-     * @param modal modal dialog
+     *
      */
-    public EditDialog(Frame owner, boolean modal) {
-        super(owner, modal);
+    public EditDialog(Frame owner) {
+        super(owner, true);
 
         Resolution r = Core.getOutputResolution();
         switch (r) {
@@ -819,7 +819,7 @@ public class EditDialog extends JDialog implements SelectListener {
                 }
             });
             jTextFieldX.getDocument().addDocumentListener(new DocumentListener() {
-                private void check(DocumentEvent e) {
+                private void check() {
                     if (isReady) {
                         int x = ToolBox.getInt(jTextFieldX.getText());
                         if (x < 0 || x > subPic.width - subPic.getImageWidth()) {
@@ -840,17 +840,17 @@ public class EditDialog extends JDialog implements SelectListener {
                 }
 
                 public void insertUpdate(DocumentEvent e) {
-                    check(e);
+                    check();
                 }
 
                 @Override
                 public void changedUpdate(DocumentEvent e) {
-                    check(e);
+                    check();
                 }
 
                 @Override
                 public void removeUpdate(DocumentEvent e) {
-                    check(e);
+                    check();
                 }
             });
         }
@@ -892,7 +892,7 @@ public class EditDialog extends JDialog implements SelectListener {
                 }
             });
             jTextFieldY.getDocument().addDocumentListener(new DocumentListener() {
-                private void check(DocumentEvent e) {
+                private void check() {
                     if (isReady) {
                         int y = ToolBox.getInt(jTextFieldY.getText());
                         if (y < Core.getCropOfsY() || y > subPic.height - subPic.getImageHeight() - Core.getCropOfsY()) {
@@ -913,17 +913,17 @@ public class EditDialog extends JDialog implements SelectListener {
                 }
 
                 public void insertUpdate(DocumentEvent e) {
-                    check(e);
+                    check();
                 }
 
                 @Override
                 public void changedUpdate(DocumentEvent e) {
-                    check(e);
+                    check();
                 }
 
                 @Override
                 public void removeUpdate(DocumentEvent e) {
-                    check(e);
+                    check();
                 }
             });
         }
@@ -991,7 +991,7 @@ public class EditDialog extends JDialog implements SelectListener {
                 }
             });
             jTextFieldStart.getDocument().addDocumentListener(new DocumentListener() {
-                private void check(DocumentEvent e) {
+                private void check() {
                     if (isReady) {
                         isReady = false;
                         long t = Core.syncTimePTS(timeStrToPTS(jTextFieldStart.getText()), Core.getFPSTrg());
@@ -1011,17 +1011,17 @@ public class EditDialog extends JDialog implements SelectListener {
                     }
                 }
                 public void insertUpdate(DocumentEvent e) {
-                    check(e);
+                    check();
                 }
 
                 @Override
                 public void changedUpdate(DocumentEvent e) {
-                    check(e);
+                    check();
                 }
 
                 @Override
                 public void removeUpdate(DocumentEvent e) {
-                    check(e);
+                    check();
                 }
             });
         }
@@ -1063,7 +1063,7 @@ public class EditDialog extends JDialog implements SelectListener {
                 }
             });
             jTextFieldEnd.getDocument().addDocumentListener(new DocumentListener() {
-                private void check(DocumentEvent e) {
+                private void check() {
                     if (isReady) {
                         isReady = false;
                         long t = Core.syncTimePTS(timeStrToPTS(jTextFieldEnd.getText()), Core.getFPSTrg());
@@ -1083,17 +1083,17 @@ public class EditDialog extends JDialog implements SelectListener {
                     }
                 }
                 public void insertUpdate(DocumentEvent e) {
-                    check(e);
+                    check();
                 }
 
                 @Override
                 public void changedUpdate(DocumentEvent e) {
-                    check(e);
+                    check();
                 }
 
                 @Override
                 public void removeUpdate(DocumentEvent e) {
-                    check(e);
+                    check();
                 }
             });
         }
@@ -1135,7 +1135,7 @@ public class EditDialog extends JDialog implements SelectListener {
                 }
             });
             jTextFieldDuration.getDocument().addDocumentListener(new DocumentListener() {
-                private void check(DocumentEvent e) {
+                private void check() {
                     if (isReady) {
                         isReady = false;
                         long t = (long)(ToolBox.getDouble(jTextFieldDuration.getText())*90);
@@ -1160,17 +1160,17 @@ public class EditDialog extends JDialog implements SelectListener {
                     }
                 }
                 public void insertUpdate(DocumentEvent e) {
-                    check(e);
+                    check();
                 }
 
                 @Override
                 public void changedUpdate(DocumentEvent e) {
-                    check(e);
+                    check();
                 }
 
                 @Override
                 public void removeUpdate(DocumentEvent e) {
-                    check(e);
+                    check();
                 }
             });
         }

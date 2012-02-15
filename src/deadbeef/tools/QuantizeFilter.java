@@ -130,7 +130,7 @@ public class QuantizeFilter  {
         int[] table =  quantizer.buildColorTable();
 
         if (dither) {
-            int index = 0;
+            int index;
             for (int y = 0; y < height; y++) {
                 boolean reverse = serpentine && (y & 1) == 1;
                 int direction;

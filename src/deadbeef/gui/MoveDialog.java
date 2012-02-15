@@ -162,10 +162,10 @@ public class MoveDialog extends JDialog {
     /**
      * Constructor
      * @param owner parent frame
-     * @param modal modal dialog
+     *
      */
-    public MoveDialog(Frame owner, boolean modal) {
-        super(owner, modal);
+    public MoveDialog(Frame owner) {
+        super(owner, true);
         initialize();
         // center dialog
         Point p = owner.getLocation();
@@ -697,7 +697,7 @@ public class MoveDialog extends JDialog {
                 }
             });
             jTextFieldRatio.getDocument().addDocumentListener(new DocumentListener() {
-                private void check(DocumentEvent e) {
+                private void check() {
                     if (isReady) {
                         double r = ToolBox.getDouble(jTextFieldRatio.getText());
                         if (r < ASPECT_RATIO || r > 4.0 ) {
@@ -713,17 +713,17 @@ public class MoveDialog extends JDialog {
                 }
 
                 public void insertUpdate(DocumentEvent e) {
-                    check(e);
+                    check();
                 }
 
                 @Override
                 public void changedUpdate(DocumentEvent e) {
-                    check(e);
+                    check();
                 }
 
                 @Override
                 public void removeUpdate(DocumentEvent e) {
-                    check(e);
+                    check();
                 }
             });
         }
@@ -765,7 +765,7 @@ public class MoveDialog extends JDialog {
                 }
             });
             jTextFieldOffsetY.getDocument().addDocumentListener(new DocumentListener() {
-                private void check(DocumentEvent e) {
+                private void check() {
                     if (isReady) {
                         int y = ToolBox.getInt(jTextFieldOffsetY.getText());
 
@@ -782,17 +782,17 @@ public class MoveDialog extends JDialog {
                 }
 
                 public void insertUpdate(DocumentEvent e) {
-                    check(e);
+                    check();
                 }
 
                 @Override
                 public void changedUpdate(DocumentEvent e) {
-                    check(e);
+                    check();
                 }
 
                 @Override
                 public void removeUpdate(DocumentEvent e) {
-                    check(e);
+                    check();
                 }
             });
         }
@@ -1062,7 +1062,7 @@ public class MoveDialog extends JDialog {
                 }
             });
             jTextFieldCropOfsY.getDocument().addDocumentListener(new DocumentListener() {
-                private void check(DocumentEvent e) {
+                private void check() {
                     if (isReady) {
                         int y = ToolBox.getInt(jTextFieldCropOfsY.getText());
 
@@ -1080,17 +1080,17 @@ public class MoveDialog extends JDialog {
                 }
 
                 public void insertUpdate(DocumentEvent e) {
-                    check(e);
+                    check();
                 }
 
                 @Override
                 public void changedUpdate(DocumentEvent e) {
-                    check(e);
+                    check();
                 }
 
                 @Override
                 public void removeUpdate(DocumentEvent e) {
-                    check(e);
+                    check();
                 }
             });
         }
@@ -1249,7 +1249,7 @@ public class MoveDialog extends JDialog {
                 }
             });
             jTextFieldOffsetX.getDocument().addDocumentListener(new DocumentListener() {
-                private void check(DocumentEvent e) {
+                private void check() {
                     if (isReady) {
                         int x = ToolBox.getInt(jTextFieldOffsetX.getText());
 
@@ -1266,17 +1266,17 @@ public class MoveDialog extends JDialog {
                 }
 
                 public void insertUpdate(DocumentEvent e) {
-                    check(e);
+                    check();
                 }
 
                 @Override
                 public void changedUpdate(DocumentEvent e) {
-                    check(e);
+                    check();
                 }
 
                 @Override
                 public void removeUpdate(DocumentEvent e) {
-                    check(e);
+                    check();
                 }
             });
         }

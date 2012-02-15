@@ -120,7 +120,7 @@ class BDSup2Sub {
         public static Parameters get(int val) {
             return LOOKUP.get(val);
         }
-    };
+    }
 
     /**
      * Return the fitting member of enumeration {@link Parameters} for a given parameter string.
@@ -483,8 +483,8 @@ class BDSup2Sub {
                         if (langIdx == -1) {
                             System.out.println("ERROR: Unknown language " + val);
                             System.out.println("Use one of the following 2 character codes:");
-                            for (int l = 0; l < LANGUAGES.length; l++) {
-                                System.out.println("    " + LANGUAGES[l][1] + " - " + LANGUAGES[l][0]);
+                            for (String[] language : LANGUAGES) {
+                                System.out.println("    " + language[1] + " - " + language[0]);
                             }
                             exit(1);
                         }
@@ -939,7 +939,7 @@ class BDSup2Sub {
                 r += APP_NAME + ".jar";
             }
         } catch (UnsupportedEncodingException ex) {
-        };
+        }
 
         r = r.replace('/', File.separatorChar);
         if (r.length() > 3 && r.charAt(2) == ':' && r.charAt(0) == '\\') {
@@ -961,7 +961,7 @@ class BDSup2Sub {
 class FileFilter implements FilenameFilter {
 
     /** file name pattern */
-    String fnPattern;
+    private String fnPattern;
 
     /**
      * Constructor - creates regular expression for given string with simple wildcards

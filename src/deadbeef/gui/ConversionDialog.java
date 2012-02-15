@@ -142,15 +142,15 @@ public class ConversionDialog extends JDialog {
     /** apply move settings */
     private boolean moveCaptions;
 
-    static Dimension lDim = new Dimension(70,20);
+    private static Dimension lDim = new Dimension(70,20);
 
     /**
      * Constructor
      * @param owner parent frame
-     * @param modal show as modal dialog
+     *
      */
-    public ConversionDialog(Frame owner, boolean modal) {
-        super(owner, modal);
+    public ConversionDialog(Frame owner) {
+        super(owner, true);
 
         // initialize internal variables
         fpsTrgEditor = new JTextField();
@@ -853,7 +853,7 @@ public class ConversionDialog extends JDialog {
                 }
             });
             fpsSrcEditor.getDocument().addDocumentListener(new DocumentListener() {
-                private void check(DocumentEvent e) {
+                private void check() {
                     if (isReady) {
                         String s = fpsSrcEditor.getText();
                         double d = Core.getFPS(s);
@@ -870,17 +870,17 @@ public class ConversionDialog extends JDialog {
                 }
 
                 public void insertUpdate(DocumentEvent e) {
-                    check(e);
+                    check();
                 }
 
                 @Override
                 public void changedUpdate(DocumentEvent e) {
-                    check(e);
+                    check();
                 }
 
                 @Override
                 public void removeUpdate(DocumentEvent e) {
-                    check(e);
+                    check();
                 }
             });
         }
@@ -914,13 +914,12 @@ public class ConversionDialog extends JDialog {
                         jTextFieldDelay.setText(ToolBox.formatDouble(delayPTS/90.0));
                         //
                         minTimePTS = (int)Core.syncTimePTS(minTimePTS,fpsTrg);
-                        d = minTimePTS;
                         jTextFieldMinTime.setText(ToolBox.formatDouble(minTimePTS/90.0));
                     }
                 }
             });
             fpsTrgEditor.getDocument().addDocumentListener(new DocumentListener() {
-                private void check(DocumentEvent e) {
+                private void check() {
                     if (isReady) {
                         String s = fpsTrgEditor.getText();
                         double d = Core.getFPS(s);
@@ -940,17 +939,17 @@ public class ConversionDialog extends JDialog {
                 }
 
                 public void insertUpdate(DocumentEvent e) {
-                    check(e);
+                    check();
                 }
 
                 @Override
                 public void changedUpdate(DocumentEvent e) {
-                    check(e);
+                    check();
                 }
 
                 @Override
                 public void removeUpdate(DocumentEvent e) {
-                    check(e);
+                    check();
                 }
             });
         }
@@ -981,7 +980,7 @@ public class ConversionDialog extends JDialog {
                 }
             });
             jTextFieldDelay.getDocument().addDocumentListener(new DocumentListener() {
-                private void check(DocumentEvent e) {
+                private void check() {
                     if (isReady) {
                         String s = jTextFieldDelay.getText();
                         try {
@@ -999,17 +998,17 @@ public class ConversionDialog extends JDialog {
                 }
 
                 public void insertUpdate(DocumentEvent e) {
-                    check(e);
+                    check();
                 }
 
                 @Override
                 public void changedUpdate(DocumentEvent e) {
-                    check(e);
+                    check();
                 }
 
                 @Override
                 public void removeUpdate(DocumentEvent e) {
-                    check(e);
+                    check();
                 }
             });
         }
@@ -1101,7 +1100,7 @@ public class ConversionDialog extends JDialog {
                                 d = Core.MIN_FREE_SCALE_FACTOR;
                             }
                             scaleX = d;
-                        };
+                        }
                         // scaleY
                         s = jTextFieldScaleY.getText();
                         d = ToolBox.getDouble(s);
@@ -1112,7 +1111,7 @@ public class ConversionDialog extends JDialog {
                                 d = Core.MIN_FREE_SCALE_FACTOR;
                             }
                             scaleY = d;
-                        };
+                        }
                         // set scale X/Y
                         Core.storeApplyFreeScale(changeScale);
                         if (changeScale) {
@@ -1290,7 +1289,7 @@ public class ConversionDialog extends JDialog {
                 }
             });
             jTextFieldMinTime.getDocument().addDocumentListener(new DocumentListener() {
-                private void check(DocumentEvent e) {
+                private void check() {
                     if (isReady) {
                         String s = jTextFieldMinTime.getText();
                         try {
@@ -1307,17 +1306,17 @@ public class ConversionDialog extends JDialog {
                 }
 
                 public void insertUpdate(DocumentEvent e) {
-                    check(e);
+                    check();
                 }
 
                 @Override
                 public void changedUpdate(DocumentEvent e) {
-                    check(e);
+                    check();
                 }
 
                 @Override
                 public void removeUpdate(DocumentEvent e) {
-                    check(e);
+                    check();
                 }
             });
             }
@@ -1387,7 +1386,7 @@ public class ConversionDialog extends JDialog {
                                 d = Core.MIN_FREE_SCALE_FACTOR;
                             }
                             scaleX = d;
-                        };
+                        }
                         // scaleY
                         s = jTextFieldScaleY.getText();
                         d = ToolBox.getDouble(s);
@@ -1398,7 +1397,7 @@ public class ConversionDialog extends JDialog {
                                 d = Core.MIN_FREE_SCALE_FACTOR;
                             }
                             scaleY = d;
-                        };
+                        }
                         // set scale X/Y
                         Core.setApplyFreeScale(changeScale);
                         if (changeScale) {
@@ -1442,14 +1441,14 @@ public class ConversionDialog extends JDialog {
                                 d = Core.MIN_FREE_SCALE_FACTOR;
                             }
                             scaleX = d;
-                        };
+                        }
                         jTextFieldScaleX.setText(ToolBox.formatDouble(scaleX));
                         jTextFieldScaleX.setBackground(okBgnd);
                     }
                 }
             });
             jTextFieldScaleX.getDocument().addDocumentListener(new DocumentListener() {
-                private void check(DocumentEvent e) {
+                private void check() {
                     if (isReady) {
                         String s = jTextFieldScaleX.getText();
                         double d = ToolBox.getDouble(s);
@@ -1463,17 +1462,17 @@ public class ConversionDialog extends JDialog {
                 }
 
                 public void insertUpdate(DocumentEvent e) {
-                    check(e);
+                    check();
                 }
 
                 @Override
                 public void changedUpdate(DocumentEvent e) {
-                    check(e);
+                    check();
                 }
 
                 @Override
                 public void removeUpdate(DocumentEvent e) {
-                    check(e);
+                    check();
                 }
             });
         }
@@ -1502,13 +1501,13 @@ public class ConversionDialog extends JDialog {
                                 d = Core.MIN_FREE_SCALE_FACTOR;
                             }
                             scaleY = d;
-                        };
+                        }
                         jTextFieldScaleY.setText(ToolBox.formatDouble(scaleY));
                     }
                 }
             });
             jTextFieldScaleY.getDocument().addDocumentListener(new DocumentListener() {
-                private void check(DocumentEvent e) {
+                private void check() {
                     if (isReady) {
                         String s = jTextFieldScaleY.getText();
                         double d = ToolBox.getDouble(s);
@@ -1522,17 +1521,17 @@ public class ConversionDialog extends JDialog {
                 }
 
                 public void insertUpdate(DocumentEvent e) {
-                    check(e);
+                    check();
                 }
 
                 @Override
                 public void changedUpdate(DocumentEvent e) {
-                    check(e);
+                    check();
                 }
 
                 @Override
                 public void removeUpdate(DocumentEvent e) {
-                    check(e);
+                    check();
                 }
             });
         }

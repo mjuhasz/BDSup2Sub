@@ -1436,7 +1436,7 @@ public class MainFrame extends JFrame implements ClipboardOwner {
             jMenuItemEditFrame.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     if (Core.isReady()) {
-                        EditDialog ed = new EditDialog(mainFrame, true);
+                        EditDialog ed = new EditDialog(mainFrame);
                         ed.setIndex(subIndex);
                         ed.setVisible(true);
                         subIndex = ed.getIndex();
@@ -1477,7 +1477,7 @@ public class MainFrame extends JFrame implements ClipboardOwner {
             jMenuItemBatchMove.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     if (Core.isReady()) {
-                        MoveDialog ed = new MoveDialog(mainFrame, true);
+                        MoveDialog ed = new MoveDialog(mainFrame);
                         ed.setIndex(subIndex);
                         ed.setVisible(true);
                         if (Core.getMoveCaptions()) {
@@ -1644,7 +1644,7 @@ public class MainFrame extends JFrame implements ClipboardOwner {
                         fsYOld = 1.0;
                     }
                     // show dialog
-                    ConversionDialog trans = new ConversionDialog(mainFrame, true);
+                    ConversionDialog trans = new ConversionDialog(mainFrame);
                     trans.enableOptionMove(false);
                     trans.setVisible(true);
 
@@ -1688,7 +1688,7 @@ public class MainFrame extends JFrame implements ClipboardOwner {
             jMenuItemEditColors.setDisplayedMnemonicIndex(5);
             jMenuItemEditColors.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
-                    ColorDialog cDiag = new ColorDialog(mainFrame, true);
+                    ColorDialog cDiag = new ColorDialog(mainFrame);
                     final String cName[] = {
                             "white","light gray","dark gray",
                             "Color 1 light","Color 1 dark",
@@ -1750,7 +1750,7 @@ public class MainFrame extends JFrame implements ClipboardOwner {
             jMenuItemEditCurColors.setDisplayedMnemonicIndex(5);
             jMenuItemEditCurColors.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
-                    ColorDialog cDiag = new ColorDialog(mainFrame, true);
+                    ColorDialog cDiag = new ColorDialog(mainFrame);
                     final String cName[] = {
                             "Color 0", "Color 1", "Color 2", "Color 3",
                             "Color 4", "Color 5", "Color 6", "Color 7",
@@ -1812,7 +1812,7 @@ public class MainFrame extends JFrame implements ClipboardOwner {
             jMenuItemEditFramePalAlpha.setMnemonic('f');
             jMenuItemEditFramePalAlpha.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
-                    FramePalDialog cDiag = new FramePalDialog(mainFrame, true);
+                    FramePalDialog cDiag = new FramePalDialog(mainFrame);
                     cDiag.setCurrentSubtitleIndex(subIndex);
                     cDiag.setVisible(true);
                     (new Thread() {
@@ -1982,7 +1982,7 @@ public class MainFrame extends JFrame implements ClipboardOwner {
                                 }
                             }
 
-                            ConversionDialog trans = new ConversionDialog(mainFrame, true);
+                            ConversionDialog trans = new ConversionDialog(mainFrame);
                             trans.enableOptionMove(Core.getMoveCaptions());
                             trans.setVisible(true);
                             if (!trans.wasCanceled()) {
@@ -2123,7 +2123,7 @@ public class MainFrame extends JFrame implements ClipboardOwner {
                     boolean showException = true;
                     String path;
                     try {
-                        ExportDialog exp = new ExportDialog(mainFrame, true);
+                        ExportDialog exp = new ExportDialog(mainFrame);
                         path = savePath + File.separatorChar + saveFilename+"_exp.";
                         if (Core.getOutputMode() == OutputMode.VOBSUB) {
                             path += "idx";
@@ -2368,7 +2368,7 @@ public class MainFrame extends JFrame implements ClipboardOwner {
                 public void mouseClicked(MouseEvent e) {
                     if (e.getButton() == MouseEvent.BUTTON1) {
                         if (Core.isReady()) {
-                            EditDialog ed = new EditDialog(mainFrame, true);
+                            EditDialog ed = new EditDialog(mainFrame);
                             ed.setIndex(subIndex);
                             ed.setVisible(true);
                             subIndex = ed.getIndex();

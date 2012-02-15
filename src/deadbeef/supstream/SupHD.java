@@ -62,7 +62,7 @@ public class SupHD implements Substream {
         }
         int bufsize = (int)buffer.getSize();
 
-        SubPictureHD pic = null;
+        SubPictureHD pic;
         int index = 0;
         try {
             while (index < bufsize) {
@@ -92,10 +92,10 @@ public class SupHD implements Substream {
                 index += 2; // 2 bytes: dcsq
                 int nextIndex = buffer.getDWord(index) + masterIndex; // offset to next dcsq
                 index += 5;  // 4 bytes: offset, 1 byte: start
-                int cmd = 0;
+                int cmd;
                 boolean stopDisplay = false;
                 boolean stopCommand = false;
-                int alphaSum = 0;
+                int alphaSum;
                 int minAlphaSum = 256 * 256; // 256 fully transparent entries
                 while(!stopDisplay) {
                     cmd = buffer.getByte(index++);
@@ -209,7 +209,7 @@ public class SupHD implements Substream {
      */
     private static void decodeLine(byte[] trg, int trgOfs, int width, int maxPixels, BitStream src) {
         int x=0;
-        int pixelsLeft = 0;
+        int pixelsLeft;
         int sumPixels = 0;
         boolean lf = false;
 

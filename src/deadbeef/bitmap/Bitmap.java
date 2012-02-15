@@ -179,7 +179,6 @@ public class Bitmap {
                 newColorIndex = existingColorIndex;
             }
             else {
-                newColorIndex = 0;
                 if (alpha < alphaThreshold) {
                     newColorIndex = 0; // transparent color
                 } else {
@@ -333,7 +332,6 @@ public class Bitmap {
                 colIdx = idxEx;
             }
             else {
-                colIdx = 0;
                 int alpha = (color >> 24) & 0xff;
                 int red   = (color >> 16) & 0xff;
                 int green = (color >>  8) & 0xff;

@@ -132,10 +132,10 @@ public class ColorDialog extends JDialog {
     /**
      * Constructor for modal dialog in parent frame
      * @param frame parent frame
-     * @param modal create modal dialog?
+     *
      */
-    public ColorDialog(JFrame frame, boolean modal) {
-        super(frame, modal);
+    public ColorDialog(JFrame frame) {
+        super(frame, true);
         thisFrame = this;
         initialize();
 

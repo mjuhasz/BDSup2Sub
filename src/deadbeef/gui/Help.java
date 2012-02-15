@@ -173,7 +173,7 @@ public class Help extends JFrame {
                             }
                         } catch (IOException ex) {
                             ToolBox.showException(ex);
-                        };
+                        }
                     }
                 }
 

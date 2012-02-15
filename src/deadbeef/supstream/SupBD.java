@@ -960,7 +960,7 @@ public class SupBD implements Substream {
         int b;
         int index = 0;
         int ofs = 0;
-        int size = 0;
+        int size;
         int xpos = 0;
 
         try {
@@ -1116,7 +1116,7 @@ public class SupBD implements Substream {
      */
     private Palette decodePalette(SubPictureBD pic) throws CoreException {
         boolean fadeOut = false;
-        int palIndex = 0;
+        int palIndex;
         ArrayList<PaletteInfo> pl = pic.palettes.get(pic.getImgObj().paletteID);
         if (pl == null) {
             throw new CoreException("Palette ID out of bounds.");

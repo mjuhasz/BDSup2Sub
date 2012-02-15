@@ -37,7 +37,7 @@ public class Props {
      */
     public Props() {
         this.hash = new Properties();
-        this.header = new String();
+        this.header = "";
     }
 
     /**

@@ -77,10 +77,10 @@ public class ExportDialog extends JDialog {
     /**
      * Constructor
      * @param owner parent frame
-     * @param modal show modal dialog
+     *
      */
-    public ExportDialog(Frame owner, boolean modal) {
-        super(owner, modal);
+    public ExportDialog(Frame owner) {
+        super(owner, true);
         initialize();
 
         Point p = owner.getLocation();
