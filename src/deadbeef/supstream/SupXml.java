@@ -531,11 +531,7 @@ public class SupXml implements Substream {
                         pic.endTime   = (pic.endTime * 1001 + 500) / 1000;
                     }
                     at = atts.getValue("Forced");
-                    if (at != null) {
-                        pic.isforced = at.equalsIgnoreCase("true");
-                    } else {
-                        pic.isforced = false;
-                    }
+                    pic.isforced = at != null && at.equalsIgnoreCase("true");
                     if (pic.isforced) {
                         numForcedFrames++;
                     }
