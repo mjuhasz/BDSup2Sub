@@ -11,6 +11,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 
+import static deadbeef.gui.GuiUtils.centerRelativeToParent;
+
 /*
  * Copyright 2009 Volker Oth (0xdeadbeef)
  *
@@ -66,10 +68,11 @@ public class FramePalDialog extends JDialog {
 
     public FramePalDialog(JFrame frame) {
         super(frame, "Edit Frame Palette", true);
+
         setSize(294, 209);
-        setResizable(false);
         setContentPane(getJContentPane());
-        centerRelativeToParent(frame);
+        centerRelativeToParent(this, frame);
+        setResizable(false);
 
         Palette palette = Core.getCurSrcDVDPalette();
         colorPreviewIcon = new ImageIcon[16];
@@ -149,11 +152,6 @@ public class FramePalDialog extends JDialog {
             jContentPane.add(getJButtonReset(), null);
         }
         return jContentPane;
-    }
-
-    private void centerRelativeToParent(JFrame frame) {
-        Point p = frame.getLocation();
-        this.setLocation(p.x + frame.getWidth()/2 - getWidth()/2, p.y + frame.getHeight()/2 - getHeight()/2);
     }
 
     /**

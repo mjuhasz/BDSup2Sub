@@ -42,7 +42,7 @@ import java.net.URL;
 public class Help extends JFrame {
     private static final long serialVersionUID = 0x000000001;
 
-    private javax.swing.JPanel jContentPane;
+    private JPanel jContentPane;
     private JScrollPane jScrollPane;
     private JPopupMenu jPopupMenu;
     private JMenuItem jPopupMenuItemCopy;
@@ -51,6 +51,17 @@ public class Help extends JFrame {
 
     private URL helpURL;
     private Props chapters;
+
+
+    public Help() {
+        super(Constants.APP_NAME_AND_VERSION + " Help");
+
+        setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        setSize(600,600);
+        setContentPane(getJContentPane());
+
+        init();
+    }
 
     /**
      * init function. loads html page.
@@ -62,7 +73,7 @@ public class Help extends JFrame {
         chapters.load(loader.getResource("help.ini"));
 
         try {
-            thisEditor = new JEditorPane( helpURL );
+            thisEditor = new JEditorPane(helpURL);
             thisEditor.setEditable( false );
             // needed to open browser via clicking on a link
             thisEditor.addHyperlinkListener(new HyperlinkListener() {
@@ -104,7 +115,7 @@ public class Help extends JFrame {
                     jPopupMenu.add(j);
                     helpAnchorListener h = new helpAnchorListener();
                     h.setEditor(thisEditor);
-                    h.setUrl(new URL(helpURL.toExternalForm()+"#"+str[0]));
+                    h.setChapterUrl(new URL(helpURL.toExternalForm() + "#" + str[0]));
                     j.addActionListener(h);
                 }
                 i++;
@@ -117,25 +128,11 @@ public class Help extends JFrame {
         }
     }
 
-    public Help() throws HeadlessException {
-        super();
-        initialize();
-        init();
-    }
-
-    /**
-     * write a string to the system clipboard.
-     * @param str string to write to the clipboard
-     */
     private static void setClipboard(String str) {
         StringSelection ss = new StringSelection(str);
         Toolkit.getDefaultToolkit().getSystemClipboard().setContents(ss, null);
     }
 
-    /**
-     * This method initializes jPopupMenu
-     * @return javax.swing.JPopupMenu
-     */
     private JPopupMenu getJPopupMenu() {
         if (jPopupMenu == null) {
             jPopupMenu = new JPopupMenu();
@@ -145,15 +142,12 @@ public class Help extends JFrame {
         return jPopupMenu;
     }
 
-    /**
-     * This method initializes jPopupMenuItemOpen
-     * @return javax.swing.JMenuItem
-     */
     private JMenuItem getJPopupMenuItemOpen() {
         if (jPopupMenuItemOpen == null) {
             jPopupMenuItemOpen = new JMenuItem();
             jPopupMenuItemOpen.setText("Open in browser");  // Generated
             jPopupMenuItemOpen.addActionListener(new ActionListener() {
+                @Override
                 public void actionPerformed(ActionEvent e) {
                     BufferedWriter fw = null;
                     try {
@@ -182,16 +176,12 @@ public class Help extends JFrame {
         return jPopupMenuItemOpen;
     }
 
-
-    /**
-     * This method initializes jPopupMenuItemCopy
-     * @return javax.swing.JMenuItem
-     */
     private JMenuItem getJPopupMenuItemCopy() {
         if (jPopupMenuItemCopy == null) {
             jPopupMenuItemCopy = new JMenuItem();
             jPopupMenuItemCopy.setText("Copy");  // Generated
             jPopupMenuItemCopy.addActionListener(new ActionListener() {
+                @Override
                 public void actionPerformed(ActionEvent e) {
                     String s = thisEditor.getSelectedText();
                     if (s != null) {
@@ -203,32 +193,15 @@ public class Help extends JFrame {
         return jPopupMenuItemCopy;
     }
 
-    /**
-     * This method initializes this frame
-     */
-    private void initialize() {
-        this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-        this.setSize(600,600);
-        this.setContentPane(getJContentPane());
-        this.setTitle(Constants.APP_NAME_AND_VERSION + " Help");
-    }
-
-    /**
-     * This method initializes jContentPane
-     * @return javax.swing.JPanel
-     */
     private JPanel getJContentPane() {
         if(jContentPane == null) {
-            jContentPane = new javax.swing.JPanel();
+            jContentPane = new JPanel();
             jContentPane.setLayout(new BoxLayout(jContentPane, BoxLayout.X_AXIS));
             jContentPane.add(getJScrollPane(), null);
         }
         return jContentPane;
     }
-    /**
-     * This method initializes jScrollPane
-     * @return javax.swing.JScrollPane
-     */
+
     private JScrollPane getJScrollPane() {
         if (jScrollPane == null) {
             jScrollPane = new JScrollPane();
@@ -236,10 +209,6 @@ public class Help extends JFrame {
         return jScrollPane;
     }
 
-    /**
-     * Listener for the popup menu
-     * @author 0xdeadbeef
-     */
     class PopupListener extends MouseAdapter {
         @Override
         public void mousePressed(MouseEvent e) {
@@ -266,30 +235,20 @@ public class Help extends JFrame {
  * @author 0xdeadbeef
  */
 class helpAnchorListener implements ActionListener {	
-    /** the URL of the chapter */
-    private URL url;
-    /** reference to the editor */
+    private URL chapterUrl;
     private JEditorPane editor;
 
-    /**
-     * Set anchor URL for this chapter
-     * @param u URL of this chapter
-     */
-    public void setUrl(URL u) {
-        url = u;
+    public void setChapterUrl(URL url) {
+        chapterUrl = url;
     }
 
-    /**
-     * Set editor pane
-     * @param e editor pane
-     */
-    public void setEditor(JEditorPane e) {
-        editor = e;
+    public void setEditor(JEditorPane editor) {
+        this.editor = editor;
     }
 
     public void actionPerformed(ActionEvent e) {
         try {
-            editor.setPage(url);
+            editor.setPage(chapterUrl);
         } catch (IOException ex) {
         }
     }

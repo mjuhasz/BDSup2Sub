@@ -19,6 +19,7 @@ import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
+import static deadbeef.gui.GuiUtils.centerRelativeToParent;
 import static deadbeef.utils.TimeUtils.ptsToTimeStr;
 import static deadbeef.utils.TimeUtils.timeStrToPTS;
 
@@ -173,10 +174,8 @@ public class EditDialog extends JDialog implements SelectListener {
         }
 
         initialize();
-        // center dialog
-        Point p = owner.getLocation();
-        this.setLocation(p.x+owner.getWidth()/2-getWidth()/2, p.y+owner.getHeight()/2-getHeight()/2);
-        this.setResizable(false);
+        centerRelativeToParent(this, owner);
+        setResizable(false);
         // determine frame time
         frameTime = (int)(90000/Core.getFPSTrg());
         // allow selection

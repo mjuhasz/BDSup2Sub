@@ -13,6 +13,8 @@ import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.*;
 
+import static deadbeef.gui.GuiUtils.centerRelativeToParent;
+
 /*
  * Copyright 2009 Volker Oth (0xdeadbeef)
  *
@@ -157,12 +159,8 @@ public class ConversionDialog extends JDialog {
         fpsSrcEditor = new JTextField();
 
         initialize();
-
-        // center to parent frame
-        Point p = owner.getLocation();
-        this.setLocation(p.x+owner.getWidth()/2-getWidth()/2, p.y+owner.getHeight()/2-getHeight()/2);
-
-        this.setResizable(false);
+        centerRelativeToParent(this, owner);
+        setResizable(false);
 
         changeResolution = Core.getConvertResolution();
         // fix output resolution in case that it should not be changed

@@ -10,6 +10,7 @@ import java.awt.*;
 import java.awt.event.*;
 
 import static deadbeef.core.Constants.LANGUAGES;
+import static deadbeef.gui.GuiUtils.centerRelativeToParent;
 
 /*
  * Copyright 2009 Volker Oth (0xdeadbeef)
@@ -37,19 +38,12 @@ public class ExportDialog extends JDialog {
     private static final long serialVersionUID = 1L;
 
     private JPanel jContentPane;
-
     private JTextField jTextFieldFileName;
-
     private JButton jButtonFileName;
-
     private JComboBox jComboBoxLanguage;
-
     private JButton jButtonCancel;
-
     private JButton jButtonSave;
-
     private JCheckBox jCheckBoxForced;
-
     private JCheckBox jCheckBoxWritePGCPal;
 
 
@@ -70,18 +64,13 @@ public class ExportDialog extends JDialog {
     /** file extension */
     private String extension;
 
-    /**
-     * Constructor
-     * @param owner parent frame
-     *
-     */
+
     public ExportDialog(Frame owner) {
         super(owner, true);
-        initialize();
 
-        Point p = owner.getLocation();
-        this.setLocation(p.x+owner.getWidth()/2-getWidth()/2, p.y+owner.getHeight()/2-getHeight()/2);
-        this.setResizable(false);
+        initialize();
+        centerRelativeToParent(this, owner);
+        setResizable(false);
 
         // init internal variables
         mainFrame = (JFrame)owner;
@@ -140,16 +129,13 @@ public class ExportDialog extends JDialog {
         isReady = true;
     }
 
-    /**
-     * This method initializes this dialog
-     */
     private void initialize() {
-        this.setPreferredSize(new Dimension(350, 160));
-        this.setBounds(new Rectangle(0, 0, 350, 160));
-        this.setMaximumSize(new Dimension(350, 160));
-        this.setMinimumSize(new Dimension(350, 160));
-        this.setContentPane(getJContentPane());
-        this.addWindowListener(new WindowAdapter() {
+        setPreferredSize(new Dimension(350, 160));
+        setBounds(new Rectangle(0, 0, 350, 160));
+        setMaximumSize(new Dimension(350, 160));
+        setMinimumSize(new Dimension(350, 160));
+        setContentPane(getJContentPane());
+        addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
                 cancel = true;
@@ -158,11 +144,6 @@ public class ExportDialog extends JDialog {
         });
     }
 
-    /**
-     * This method initializes jContentPane
-     *
-     * @return javax.swing.JPanel
-     */
     private JPanel getJContentPane() {
         if (jContentPane == null) {
             GridBagConstraints gridBagConstraints = new GridBagConstraints();
@@ -233,11 +214,6 @@ public class ExportDialog extends JDialog {
         return jContentPane;
     }
 
-    /**
-     * This method initializes jTextFieldFileName
-     *
-     * @return javax.swing.JTextField
-     */
     private JTextField getJTextFieldFileName() {
         if (jTextFieldFileName == null) {
             jTextFieldFileName = new JTextField();
@@ -245,6 +221,7 @@ public class ExportDialog extends JDialog {
             jTextFieldFileName.setHorizontalAlignment(JTextField.LEADING);
             jTextFieldFileName.setToolTipText("Set file name for export");
             jTextFieldFileName.addActionListener(new ActionListener() {
+                @Override
                 public void actionPerformed(ActionEvent e) {
                     if (isReady) {
                         String s = jTextFieldFileName.getText();
@@ -258,11 +235,6 @@ public class ExportDialog extends JDialog {
         return jTextFieldFileName;
     }
 
-    /**
-     * This method initializes jButtonFileName
-     *
-     * @return javax.swing.JButton
-     */
     private JButton getJButtonFileName() {
         if (jButtonFileName == null) {
             jButtonFileName = new JButton();
@@ -270,6 +242,7 @@ public class ExportDialog extends JDialog {
             jButtonFileName.setMnemonic('b');
             jButtonFileName.setToolTipText("Open file dialog to select file name for export");
             jButtonFileName.addActionListener(new ActionListener() {
+                @Override
                 public void actionPerformed(ActionEvent e) {
                     if (isReady) {
                         String[] ext = new String[1];
@@ -288,11 +261,6 @@ public class ExportDialog extends JDialog {
         return jButtonFileName;
     }
 
-    /**
-     * This method initializes jComboBoxLanguage
-     *
-     * @return javax.swing.JComboBox
-     */
     private JComboBox getJComboBoxLanguage() {
         if (jComboBoxLanguage == null) {
             jComboBoxLanguage = new JComboBox();
@@ -300,6 +268,7 @@ public class ExportDialog extends JDialog {
             jComboBoxLanguage.setEditable(false);
             jComboBoxLanguage.setToolTipText("Set language identifier");
             jComboBoxLanguage.addItemListener(new ItemListener() {
+                @Override
                 public void itemStateChanged(ItemEvent e) {
                     if (isReady) {
                         languageIdx = jComboBoxLanguage.getSelectedIndex();
@@ -310,11 +279,6 @@ public class ExportDialog extends JDialog {
         return jComboBoxLanguage;
     }
 
-    /**
-     * This method initializes jButtonCancel
-     *
-     * @return javax.swing.JButton
-     */
     private JButton getJButtonCancel() {
         if (jButtonCancel == null) {
             jButtonCancel = new JButton();
@@ -322,6 +286,7 @@ public class ExportDialog extends JDialog {
             jButtonCancel.setToolTipText("Cancel export and return");
             jButtonCancel.setMnemonic('c');
             jButtonCancel.addActionListener(new ActionListener() {
+                @Override
                 public void actionPerformed(ActionEvent e) {
                     cancel = true;
                     dispose();
@@ -331,11 +296,6 @@ public class ExportDialog extends JDialog {
         return jButtonCancel;
     }
 
-    /**
-     * This method initializes jButtonSave
-     *
-     * @return javax.swing.JButton
-     */
     private JButton getJButtonSave() {
         if (jButtonSave == null) {
             jButtonSave = new JButton();
@@ -343,6 +303,7 @@ public class ExportDialog extends JDialog {
             jButtonSave.setToolTipText("Start creation of export stream");
             jButtonSave.setMnemonic('s');
             jButtonSave.addActionListener(new ActionListener() {
+                @Override
                 public void actionPerformed(ActionEvent e) {
                     if (isReady) {
                         // read values of editable boxes
@@ -366,10 +327,6 @@ public class ExportDialog extends JDialog {
         return jButtonSave;
     }
 
-    /**
-     * get file name used for export
-     * @return file name used for export
-     */
     public String getFileName() {
         if (fileName.length() == 0) {
             return null;
@@ -377,39 +334,21 @@ public class ExportDialog extends JDialog {
         return fileName;
     }
 
-    /**
-     * set file name used for export
-     * @param fn file name used for export
-     */
     public void setFileName(String fn) {
         fileName = fn;
         jTextFieldFileName.setText(fileName);
     }
 
-    /**
-     * enable and set state of the "export forced" checkbox
-     * @param en enable checkbox
-     * @param set checkbox select state
-     */
-    private void setForced(boolean en, boolean set) {
-        exportForced = set;
-        jCheckBoxForced.setEnabled(en);
-        jCheckBoxForced.setSelected(set);
+    private void setForced(boolean enable, boolean state) {
+        exportForced = state;
+        jCheckBoxForced.setEnabled(enable);
+        jCheckBoxForced.setSelected(state);
     }
 
-    /**
-     * get cancel state
-     * @return true if canceled
-     */
     public boolean wasCanceled() {
         return cancel;
     }
 
-    /**
-     * This method initializes jCheckBoxForced
-     *
-     * @return javax.swing.JCheckBox
-     */
     private JCheckBox getJCheckBoxForced() {
         if (jCheckBoxForced == null) {
             jCheckBoxForced = new JCheckBox();
@@ -417,6 +356,7 @@ public class ExportDialog extends JDialog {
             jCheckBoxForced.setText("                 Export only forced");
             jCheckBoxForced.setMnemonic('f');
             jCheckBoxForced.addItemListener(new ItemListener() {
+                @Override
                 public void itemStateChanged(ItemEvent e) {
                     if (isReady) {
                         exportForced = jCheckBoxForced.isSelected();
@@ -427,11 +367,6 @@ public class ExportDialog extends JDialog {
         return jCheckBoxForced;
     }
 
-    /**
-     * This method initializes jCheckBoxWritePGCPal
-     *
-     * @return javax.swing.JCheckBox
-     */
     private JCheckBox getJCheckBoxWritePGCPal() {
         if (jCheckBoxWritePGCPal == null) {
             jCheckBoxWritePGCPal = new JCheckBox();
@@ -440,6 +375,7 @@ public class ExportDialog extends JDialog {
             jCheckBoxWritePGCPal.setMnemonic('p');
             jCheckBoxWritePGCPal.setDisplayedMnemonicIndex(24);
             jCheckBoxWritePGCPal.addItemListener(new ItemListener() {
+                @Override
                 public void itemStateChanged(ItemEvent e) {
                     if (isReady) {
                         writePGCPal = jCheckBoxWritePGCPal.isSelected();

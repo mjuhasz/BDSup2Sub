@@ -14,6 +14,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import static deadbeef.gui.GuiUtils.centerRelativeToParent;
+
 
 /*
  * Copyright 2009 Volker Oth (0xdeadbeef)
@@ -41,61 +43,42 @@ public class Progress extends JDialog {
     private static final long serialVersionUID = 1L;
 
     private JPanel jContentPane;
-
     private JButton jButtonCancel;
-
     private JProgressBar jProgressBar;
-
     private JLabel jLabelProgress;
 
-    /** timer used to dispose when thread was canceled */
     private Timer timer;
 
-    /**
-     * Constructor
-     * @param owner parent window
-     *
-     */
+
     public Progress(Frame owner) {
         super(owner, true);
         initialize();
 
-        Point p = owner.getLocation();
-        this.setLocation(p.x+owner.getWidth()/2-getWidth()/2, p.y+owner.getHeight()/2-getHeight()/2);
-        this.setResizable(false);
-        jProgressBar.setMaximum(100);
+        centerRelativeToParent(this, owner);
+        setResizable(false);
         jProgressBar.setMinimum(0);
+        jProgressBar.setMaximum(100);
         jProgressBar.setValue(0);
     }
 
-    /* (non-Javadoc)
-     * @see java.awt.Dialog#setVisible(boolean)
-     */
     @Override
     public void setVisible(boolean b) {
         timer = new Timer();
-        timer.schedule( new ProgressTimer(), 200, 200 );
+        timer.schedule(new ProgressTimer(), 200, 200);
         super.setVisible(b);
     }
 
-    /**
-     * Set text to display in dialog
-     * @param s text to display
-     */
     public void setText(String s) {
         jLabelProgress.setText(s);
     }
 
-    /**
-     * This method initializes this
-     */
     private void initialize() {
-        this.setMinimumSize(new Dimension(224, 139));
-        this.setResizable(false);
-        this.setBounds(new Rectangle(0, 0, 224, 139));
-        this.setMaximumSize(new Dimension(224, 139));
-        this.setContentPane(getJContentPane());
-        this.addWindowListener(new WindowAdapter() {
+        setMinimumSize(new Dimension(224, 139));
+        setResizable(false);
+        setBounds(new Rectangle(0, 0, 224, 139));
+        setMaximumSize(new Dimension(224, 139));
+        setContentPane(getJContentPane());
+        addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
                 Core.cancel();
@@ -103,11 +86,6 @@ public class Progress extends JDialog {
         });
     }
 
-    /**
-     * This method initializes jContentPane
-     *
-     * @return javax.swing.JPanel
-     */
     private JPanel getJContentPane() {
         if (jContentPane == null) {
             GridBagConstraints gridBagBtnCancel = new GridBagConstraints();
@@ -135,16 +113,12 @@ public class Progress extends JDialog {
         return jContentPane;
     }
 
-    /**
-     * This method initializes jButtonCancel
-     *
-     * @return javax.swing.JButton
-     */
     private JButton getJButtonCancel() {
         if (jButtonCancel == null) {
             jButtonCancel = new JButton();
             jButtonCancel.setText("Cancel");
             jButtonCancel.addActionListener(new ActionListener() {
+                @Override
                 public void actionPerformed(ActionEvent e) {
                     Core.cancel();
                 }
@@ -170,13 +144,15 @@ public class Progress extends JDialog {
         return jProgressBar;
     }
 
-    /**
-     * Set value for progress bar
-     * @param val value for progress bar
-     */
     public void setProgress(final int val) {
         try {
-            SwingUtilities.invokeAndWait(new Runnable() { public void run() { jProgressBar.setValue( val ); jProgressBar.repaint();} } );
+            SwingUtilities.invokeAndWait(new Runnable() {
+                @Override
+                public void run() {
+                    jProgressBar.setValue(val);
+                    jProgressBar.repaint();
+                }
+            });
         } catch (InterruptedException e) {
             e.printStackTrace();
         } catch (InvocationTargetException e) {
@@ -186,7 +162,6 @@ public class Progress extends JDialog {
 
     /**
      * Timer used to automatically dispose this dialog once the Core thread is no longer active
-     * @author 0xdeadbeef
      */
     private class ProgressTimer extends TimerTask {
         @Override

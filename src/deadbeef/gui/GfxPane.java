@@ -45,7 +45,7 @@ public class GfxPane extends JPanel implements MouseListener {
         super();
         scale = 1;
         thisPanel = this;
-        this.addMouseListener(this);
+        addMouseListener(this);
     }
 
     @Override

@@ -88,12 +88,9 @@ public class EditPane extends JPanel implements MouseListener, MouseMotionListen
     /** y offset after cropping */
     private int yCrop;
 
-    /**
-     *  Constructor
-     * @param isLayoutPane true if this EditPane is a LayoutPane
-     */
     public EditPane(boolean isLayoutPane) {
         super();
+
         layoutPane = isLayoutPane;
         width = 1920;
         height = 1080;
@@ -108,25 +105,16 @@ public class EditPane extends JPanel implements MouseListener, MouseMotionListen
         allowSelection = false;
     }
 
-    /**
-     * Constructor
-     */
     public EditPane() {
         this(false);
     }
 
-    /* (non-Javadoc)
-     * @see javax.swing.JComponent#paint(java.awt.Graphics)
-     */
     @Override
     public void paint(Graphics g) {
         super.paint(g);
         draw(g);
     }
 
-    /* (non-Javadoc)
-     * @see javax.swing.JComponent#update(java.awt.Graphics)
-     */
     @Override
     public void update(Graphics g) {
         super.update(g);
@@ -391,19 +379,12 @@ public class EditPane extends JPanel implements MouseListener, MouseMotionListen
         return ret;
     }
 
-    /**
-     * remove active selection
-     */
     public void removeSelection() {
         if (allowSelection && validSelection) {
             validSelection = false;
         }
     }
 
-    /**
-     * Add selection listener
-     * @param s SelectListener
-     */
     public void addSelectListener(SelectListener s) {
         selectListener = s;
     }

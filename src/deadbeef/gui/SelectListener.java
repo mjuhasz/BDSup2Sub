@@ -22,8 +22,5 @@ package deadbeef.gui;
  * @author 0xdeadbeef
  */
 public interface SelectListener {
-    /** called if a valid selection was performed
-     * @param valid selection is valid
-     */
     void selectionPerformed(boolean valid);
 }

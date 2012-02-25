@@ -12,6 +12,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 
 import static deadbeef.core.Constants.APP_NAME_AND_VERSION;
+import static deadbeef.gui.GuiUtils.centerRelativeToParent;
 
 /*
  * Copyright 2009 Volker Oth (0xdeadbeef)
@@ -138,9 +139,7 @@ public class ColorDialog extends JDialog {
         thisFrame = this;
         initialize();
 
-        // center to parent frame
-        Point p = frame.getLocation();
-        this.setLocation(p.x+frame.getWidth()/2-getWidth()/2, p.y+frame.getHeight()/2-getHeight()/2);
+        centerRelativeToParent(this, frame);
         this.setResizable(false);
     }
 
