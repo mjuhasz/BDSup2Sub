@@ -55,21 +55,11 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 
     private JPanel jPanelDown;
 
-    private JLabel jLabelAlphaThr;
-
-    private JLabel jLabelHiMedThr;
-
-    private JLabel jLabelMedLowThr;
-
-    private JLabel jLabelOutFormat;
-
     private GfxPane jPanelSrc;
 
     private GfxPane jPanelTrg;
 
     private JComboBox jComboBoxSubNum;
-
-    private JLabel jLabelSubNum;
 
     private JComboBox jComboBoxAlphaThr;
 
@@ -142,10 +132,6 @@ public class MainFrame extends JFrame implements ClipboardOwner {
     private EditPane jLayoutPane;
 
     private JComboBox jComboBoxPalette;
-
-    private JLabel jLabelPalette;
-
-    private JLabel jLabelFilter;
 
     private JComboBox jComboBoxFilter;
 
@@ -603,7 +589,7 @@ public class MainFrame extends JFrame implements ClipboardOwner {
             gridBagLabelFilter.anchor = GridBagConstraints.WEST;
             gridBagLabelFilter.insets = new Insets(0, 4, 0, 4);
             gridBagLabelFilter.gridy = 0;
-            jLabelFilter = new JLabel();
+            JLabel jLabelFilter = new JLabel();
             jLabelFilter.setPreferredSize(new Dimension(120, 20));
             jLabelFilter.setText("Filter");
             GridBagConstraints gridBagLabelPalette = new GridBagConstraints();
@@ -611,7 +597,7 @@ public class MainFrame extends JFrame implements ClipboardOwner {
             gridBagLabelPalette.anchor = GridBagConstraints.WEST;
             gridBagLabelPalette.gridx = 6;
             gridBagLabelPalette.gridy = 0;
-            jLabelPalette = new JLabel();
+            JLabel jLabelPalette = new JLabel();
             jLabelPalette.setPreferredSize(new Dimension(120, 20));
             jLabelPalette.setText("Palette");
             GridBagConstraints gridBagComboPalette = new GridBagConstraints();
@@ -690,19 +676,19 @@ public class MainFrame extends JFrame implements ClipboardOwner {
             gridBagComboBoxOutFormat.ipadx = 10;
             gridBagComboBoxOutFormat.insets = new Insets(0, 4, 0, 4);
 
-            jLabelSubNum = new JLabel();
+            JLabel jLabelSubNum = new JLabel();
             jLabelSubNum.setText("Subtitle");
             jLabelSubNum.setPreferredSize(new Dimension(100, 20));
-            jLabelOutFormat = new JLabel();
+            JLabel jLabelOutFormat = new JLabel();
             jLabelOutFormat.setText("Output Format");
             jLabelOutFormat.setPreferredSize(new Dimension(120, 20));
-            jLabelMedLowThr = new JLabel();
+            JLabel jLabelMedLowThr = new JLabel();
             jLabelMedLowThr.setText("Med/Low Threshold");
             jLabelMedLowThr.setPreferredSize(new Dimension(100, 20));
-            jLabelHiMedThr = new JLabel();
+            JLabel jLabelHiMedThr = new JLabel();
             jLabelHiMedThr.setText("Hi/Med Threshold");
             jLabelHiMedThr.setPreferredSize(new Dimension(100, 20));
-            jLabelAlphaThr = new JLabel();
+            JLabel jLabelAlphaThr = new JLabel();
             jLabelAlphaThr.setText("Alpha Threshold");
             jLabelAlphaThr.setPreferredSize(new Dimension(100, 20));
 

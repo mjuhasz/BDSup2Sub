@@ -77,10 +77,6 @@ public class EditDialog extends JDialog implements SelectListener {
 
     private JSlider jSliderHorizontal;
 
-    private JLabel jLabelX;
-
-    private JLabel jLabelY;
-
     private JButton jButtonCancel;
 
     private JButton jButtonOk;
@@ -90,12 +86,6 @@ public class EditDialog extends JDialog implements SelectListener {
     private JTextField jTextFieldY;
 
     private JButton jButtonCenter;
-
-    private JLabel jLabelStart;
-
-    private JLabel jLabelEnd;
-
-    private JLabel jLabelDuration;
 
     private JTextField jTextFieldStart;
 
@@ -428,7 +418,7 @@ public class EditDialog extends JDialog implements SelectListener {
             gridBagLabelY.weighty = 10.0;
             gridBagLabelY.insets = new Insets(4, 6, 0, 4);
             gridBagLabelY.gridy = 1;
-            jLabelY = new JLabel();
+            JLabel jLabelY = new JLabel();
             jLabelY.setText("Y Offset  ");
             jLabelY.setPreferredSize(new Dimension(80, 14));
             jLabelY.setMinimumSize(new Dimension(80, 14));
@@ -439,7 +429,7 @@ public class EditDialog extends JDialog implements SelectListener {
             gridBagLabelX.weighty = 0.0;
             gridBagLabelX.insets = new Insets(4, 6, 2, 4);
             gridBagLabelX.gridy = 0;
-            jLabelX = new JLabel();
+            JLabel jLabelX = new JLabel();
             jLabelX.setText("X Offset  ");
             jLabelX.setPreferredSize(new Dimension(80, 14));
             jLabelX.setMinimumSize(new Dimension(80, 14));
@@ -502,7 +492,7 @@ public class EditDialog extends JDialog implements SelectListener {
             gridBagLabelDuration.weightx = 0.0;
             gridBagLabelDuration.weighty = 0.0;
             gridBagLabelDuration.gridy = 2;
-            jLabelDuration = new JLabel();
+            JLabel jLabelDuration = new JLabel();
             jLabelDuration.setText("Duration (ms)");
             jLabelDuration.setPreferredSize(new Dimension(80, 14));
             jLabelDuration.setMinimumSize(new Dimension(80, 14));
@@ -513,7 +503,7 @@ public class EditDialog extends JDialog implements SelectListener {
             gridBagLabelEnd.weightx = 0.0;
             gridBagLabelEnd.weighty = 0.0;
             gridBagLabelEnd.gridy = 1;
-            jLabelEnd = new JLabel();
+            JLabel jLabelEnd = new JLabel();
             jLabelEnd.setText("End Time");
             jLabelEnd.setPreferredSize(new Dimension(80, 14));
             jLabelEnd.setMinimumSize(new Dimension(80, 14));
@@ -524,7 +514,7 @@ public class EditDialog extends JDialog implements SelectListener {
             gridBagLabelStart.weightx = 0.0;
             gridBagLabelStart.weighty = 0.0;
             gridBagLabelStart.gridy = 0;
-            jLabelStart = new JLabel();
+            JLabel jLabelStart = new JLabel();
             jLabelStart.setText("Start Time");
             jLabelStart.setPreferredSize(new Dimension(80, 14));
             jLabelStart.setMinimumSize(new Dimension(80, 14));

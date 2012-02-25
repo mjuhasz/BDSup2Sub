@@ -38,13 +38,9 @@ public class ExportDialog extends JDialog {
 
     private JPanel jContentPane;
 
-    private JLabel jLabelFilename;
-
     private JTextField jTextFieldFileName;
 
     private JButton jButtonFileName;
-
-    private JLabel jLabelLanguage;
 
     private JComboBox jComboBoxLanguage;
 
@@ -200,7 +196,7 @@ public class ExportDialog extends JDialog {
             gridBagLabelLanguage.anchor = GridBagConstraints.WEST;
             gridBagLabelLanguage.insets = new Insets(2, 6, 2, 0);
             gridBagLabelLanguage.gridy = 1;
-            jLabelLanguage = new JLabel();
+            JLabel jLabelLanguage = new JLabel();
             jLabelLanguage.setText("Language");
             GridBagConstraints gridBagButtonFileName = new GridBagConstraints();
             gridBagButtonFileName.gridx = 2;
@@ -220,7 +216,7 @@ public class ExportDialog extends JDialog {
             gridBagLabelFilename.anchor = GridBagConstraints.WEST;
             gridBagLabelFilename.insets = new Insets(2, 6, 2, 0);
             gridBagLabelFilename.gridy = 0;
-            jLabelFilename = new JLabel();
+            JLabel jLabelFilename = new JLabel();
             jLabelFilename.setText("Filename");
             jContentPane = new JPanel();
             jContentPane.setLayout(new GridBagLayout());

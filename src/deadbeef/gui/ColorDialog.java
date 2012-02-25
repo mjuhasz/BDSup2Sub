@@ -37,8 +37,7 @@ import static deadbeef.core.Constants.APP_NAME_AND_VERSION;
 public class ColorDialog extends JDialog {
     private static final long serialVersionUID = 0x000000001;
 
-    private javax.swing.JPanel jContentPane;
-    private JLabel lblColor;
+    private JPanel jContentPane;
     private JScrollPane jScrollPane;
     private JList jList;
     private JButton btnOk;
@@ -164,9 +163,9 @@ public class ColorDialog extends JDialog {
      * This method initializes jContentPane
      * @return javax.swing.JPanel
      */
-    private javax.swing.JPanel getJContentPane() {
+    private JPanel getJContentPane() {
         if(jContentPane == null) {
-            lblColor = new JLabel();
+            JLabel lblColor = new JLabel();
             jContentPane = new JPanel();
             jContentPane.setLayout(null);
             lblColor.setText("Choose Color");

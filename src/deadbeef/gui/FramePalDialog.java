@@ -41,16 +41,6 @@ public class FramePalDialog extends JDialog {
 
     private JPanel jContentPane;
 
-    private JLabel jLabelColor1;
-    private JLabel jLabelColor2;
-    private JLabel jLabelColor3;
-    private JLabel jLabelColor4;
-
-    private JLabel jLabelAlpha1;
-    private JLabel jLabelAlpha2;
-    private JLabel jLabelAlpha3;
-    private JLabel jLabelAlpha4;
-
     private JComboBox jComboBoxColor1;
     private JComboBox jComboBoxColor2;
     private JComboBox jComboBoxColor3;
@@ -109,28 +99,28 @@ public class FramePalDialog extends JDialog {
 
     private JPanel getJContentPane() {
         if (jContentPane == null) {
-            jLabelAlpha1 = new JLabel();
+            JLabel jLabelAlpha1 = new JLabel();
             jLabelAlpha1.setBounds(new Rectangle(155, 10, 41, 16));
             jLabelAlpha1.setText("Alpha 1");
-            jLabelAlpha2 = new JLabel();
+            JLabel jLabelAlpha2 = new JLabel();
             jLabelAlpha2.setBounds(new Rectangle(155, 35, 36, 16));
             jLabelAlpha2.setText("Alpha 2");
-            jLabelAlpha3 = new JLabel();
+            JLabel jLabelAlpha3 = new JLabel();
             jLabelAlpha3.setBounds(new Rectangle(155, 60, 36, 16));
             jLabelAlpha3.setText("Alpha 3");
-            jLabelAlpha4 = new JLabel();
+            JLabel jLabelAlpha4 = new JLabel();
             jLabelAlpha4.setBounds(new Rectangle(155, 85, 36, 16));
             jLabelAlpha4.setText("Alpha 4");
-            jLabelColor1 = new JLabel();
+            JLabel jLabelColor1 = new JLabel();
             jLabelColor1.setBounds(new Rectangle(15, 10, 46, 16));
             jLabelColor1.setText("Color 1");
-            jLabelColor2 = new JLabel();
+            JLabel jLabelColor2 = new JLabel();
             jLabelColor2.setBounds(new Rectangle(15, 35, 46, 16));
             jLabelColor2.setText("Color 2");
-            jLabelColor3 = new JLabel();
+            JLabel jLabelColor3 = new JLabel();
             jLabelColor3.setBounds(new Rectangle(15, 60, 46, 16));
             jLabelColor3.setText("Color 3");
-            jLabelColor4 = new JLabel();
+            JLabel jLabelColor4 = new JLabel();
             jLabelColor4.setBounds(new Rectangle(15, 85, 45, 16));
             jLabelColor4.setText("Color 4");
 

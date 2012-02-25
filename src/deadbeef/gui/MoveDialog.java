@@ -61,8 +61,6 @@ public class MoveDialog extends JDialog {
 
     private EditPane jPanelPreview;
 
-    private JLabel jLabelRatio;
-
     private JLabel jLabelOffsetY;
 
     private JButton jButtonCancel;
@@ -75,8 +73,6 @@ public class MoveDialog extends JDialog {
 
     private JButton jButton21_9;
 
-    private JLabel jLabelRatio1;
-
     private JButton jButton240_1;
 
     private JButton jButton235_1;
@@ -87,13 +83,7 @@ public class MoveDialog extends JDialog {
 
     private JRadioButton jRadioButtonOutside;
 
-    private ButtonGroup radioButtonsY;
-
-    private ButtonGroup radioButtonsX;
-
     private JPanel jPanelCrop;
-
-    private JLabel jLabelCropOfsY;
 
     private JTextField jTextFieldCropOfsY;
 
@@ -104,8 +94,6 @@ public class MoveDialog extends JDialog {
     private JRadioButton jRadioButtonLeft;
 
     private JRadioButton jRadioButtonRight;
-
-    private JLabel jLabelOffsetX;
 
     private JTextField jTextFieldOffsetX;
 
@@ -202,15 +190,15 @@ public class MoveDialog extends JDialog {
                 break;
         }
 
-        radioButtonsY = new ButtonGroup();
-        radioButtonsY.add( jRadioButtonKeepY );
-        radioButtonsY.add( jRadioButtonInside );
-        radioButtonsY.add( jRadioButtonOutside );
-        radioButtonsX = new ButtonGroup();
-        radioButtonsX.add( jRadioButtonKeepX);
-        radioButtonsX.add( jRadioButtonLeft);
-        radioButtonsX.add( jRadioButtonRight);
-        radioButtonsX.add( jRadioButtonCenter);
+        ButtonGroup radioButtonsY = new ButtonGroup();
+        radioButtonsY.add(jRadioButtonKeepY);
+        radioButtonsY.add(jRadioButtonInside);
+        radioButtonsY.add(jRadioButtonOutside);
+        ButtonGroup radioButtonsX = new ButtonGroup();
+        radioButtonsX.add(jRadioButtonKeepX);
+        radioButtonsX.add(jRadioButtonLeft);
+        radioButtonsX.add(jRadioButtonRight);
+        radioButtonsX.add(jRadioButtonCenter);
 
         jTextFieldRatio.setText(ToolBox.formatDouble(aspectRatioTrg));
         jTextFieldOffsetY.setText(""+offsetY);
@@ -376,7 +364,7 @@ public class MoveDialog extends JDialog {
             gridBagLabelRatio1.anchor = GridBagConstraints.WEST;
             gridBagLabelRatio1.insets = new Insets(0, 6, 0, 0);
             gridBagLabelRatio1.gridy = 1;
-            jLabelRatio1 = new JLabel();
+            JLabel jLabelRatio1 = new JLabel();
             jLabelRatio1.setText(" : 1");
             jLabelRatio1.setHorizontalAlignment(SwingConstants.LEFT);
             jLabelRatio1.setHorizontalTextPosition(SwingConstants.LEFT);
@@ -407,7 +395,7 @@ public class MoveDialog extends JDialog {
             gridBagLabelRatio.weighty = 0.0;
             gridBagLabelRatio.insets = new Insets(0, 6, 0, 4);
             gridBagLabelRatio.gridy = 1;
-            jLabelRatio = new JLabel();
+            JLabel jLabelRatio = new JLabel();
             jLabelRatio.setText("Aspect ratio");
             jLabelRatio.setPreferredSize(DIMENSION_LABEL);
             jLabelRatio.setSize(DIMENSION_LABEL);
@@ -452,7 +440,7 @@ public class MoveDialog extends JDialog {
             gridBagLabelOfsX.anchor = GridBagConstraints.WEST;
             gridBagLabelOfsX.weightx = 0.0;
             gridBagLabelOfsX.gridy = 4;
-            jLabelOffsetX = new JLabel();
+            JLabel jLabelOffsetX = new JLabel();
             jLabelOffsetX.setText("Offset X");
             jLabelOffsetX.setPreferredSize(DIMENSION_LABEL);
             jLabelOffsetX.setSize(DIMENSION_LABEL);
@@ -1010,7 +998,7 @@ public class MoveDialog extends JDialog {
             gridBagTextCropY.insets = new Insets(0, 0, 0, 0);
             gridBagTextCropY.anchor = GridBagConstraints.WEST;
             gridBagTextCropY.weightx = 2.0;
-            jLabelCropOfsY = new JLabel();
+            JLabel jLabelCropOfsY = new JLabel();
             jLabelCropOfsY.setPreferredSize(DIMENSION_LABEL);
             jLabelCropOfsY.setSize(DIMENSION_LABEL);
             jLabelCropOfsY.setMinimumSize(DIMENSION_LABEL);
