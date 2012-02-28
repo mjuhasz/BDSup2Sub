@@ -2,29 +2,33 @@ package deadbeef.utils;
 
 import org.junit.Test;
 
+import java.io.File;
+
 import static org.junit.Assert.assertEquals;
 
 public class FilenameUtilsTest {
 
-    private final String unixFilename = "/home/user/someFile.txt";
-    private final String winFilename = "C:\\Windows\\someFile.txt";
+    private static final char SEPARATOR_CHAR = File.separatorChar;
+    private static final String PARENT_DIR_PATH = SEPARATOR_CHAR + "home" + SEPARATOR_CHAR + "user";
+    private static final String BASENAME = "someFile";
+    private static final String EXTENSION = "txt";
+    private static final String FILENAME = BASENAME + "." + EXTENSION;
+    private static final String FILENAME_FULL_PATH = PARENT_DIR_PATH + SEPARATOR_CHAR + FILENAME;
 
     @Test
     public void shouldGetExtension() throws Exception {
-        assertEquals("txt", FilenameUtils.getExtension(unixFilename));
-        assertEquals("txt", FilenameUtils.getExtension(winFilename));
+        assertEquals(EXTENSION, FilenameUtils.getExtension(FILENAME_FULL_PATH));
     }
 
     @Test
     public void shouldReturnEmptyStringIfNoExtensionFound() throws Exception {
-        assertEquals("", FilenameUtils.getExtension("someFile"));
-        assertEquals("", FilenameUtils.getExtension("../someFile"));
+        assertEquals("", FilenameUtils.getExtension(BASENAME));
+        assertEquals("", FilenameUtils.getExtension(".." + SEPARATOR_CHAR + BASENAME));
     }
 
     @Test
     public void shouldRemoveExtension() throws Exception {
-        assertEquals("/home/user/someFile", FilenameUtils.removeExtension(unixFilename));
-        assertEquals("C:\\Windows\\someFile", FilenameUtils.removeExtension(winFilename));
+        assertEquals(PARENT_DIR_PATH + SEPARATOR_CHAR + BASENAME, FilenameUtils.removeExtension(FILENAME_FULL_PATH));
     }
 
     @Test
@@ -35,12 +39,12 @@ public class FilenameUtilsTest {
 
     @Test
     public void shouldGetName() throws Exception {
-        assertEquals("someFile.txt", FilenameUtils.getName(unixFilename));
+        assertEquals(FILENAME, FilenameUtils.getName(FILENAME_FULL_PATH));
     }
 
     @Test
     public void shouldGetPath() throws Exception {
-        assertEquals("/home/user", FilenameUtils.getParent(unixFilename));
+        assertEquals(PARENT_DIR_PATH, FilenameUtils.getParent(FILENAME_FULL_PATH));
     }
 
     @Test
@@ -50,7 +54,7 @@ public class FilenameUtilsTest {
 
     @Test
     public void shouldMakeSurePathEndsWithASeparator() throws Exception {
-        assertEquals("/home/", FilenameUtils.addSeparator("/home"));
-        assertEquals("/home/", FilenameUtils.addSeparator("/home/"));
+        assertEquals(PARENT_DIR_PATH + SEPARATOR_CHAR, FilenameUtils.addSeparator(PARENT_DIR_PATH));
+        assertEquals(PARENT_DIR_PATH + SEPARATOR_CHAR, FilenameUtils.addSeparator(PARENT_DIR_PATH + SEPARATOR_CHAR));
     }
 }
