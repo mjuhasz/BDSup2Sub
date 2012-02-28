@@ -10,6 +10,7 @@ import deadbeef.gui.Progress;
 import deadbeef.supstream.*;
 import deadbeef.tools.EnhancedPngEncoder;
 import deadbeef.tools.Props;
+import deadbeef.utils.FilenameUtils;
 import deadbeef.utils.ToolBox;
 
 import javax.swing.*;
@@ -321,7 +322,7 @@ public class Core  extends Thread {
                 fnameProps = fnameProps.substring(0,pos);
             }
             // special handling for JAR
-            s = ToolBox.exchangeSeparators(fnameProps.toLowerCase());
+            s = FilenameUtils.separatorsToUnix(fnameProps.toLowerCase());
             pos = s.lastIndexOf(".jar");
             if (pos != -1) {
                 pos = s.substring(0,pos).lastIndexOf('/');
@@ -601,9 +602,9 @@ public class Core  extends Thread {
      * @throws Exception
      */
     public static void readStreamThreaded(String fname, JFrame parent, StreamID sid) throws Exception {
-        boolean xml = ToolBox.getExtension(fname).equalsIgnoreCase("xml");
-        boolean idx = ToolBox.getExtension(fname).equalsIgnoreCase("idx");
-        boolean ifo = ToolBox.getExtension(fname).equalsIgnoreCase("ifo");
+        boolean xml = FilenameUtils.getExtension(fname).equalsIgnoreCase("xml");
+        boolean idx = FilenameUtils.getExtension(fname).equalsIgnoreCase("idx");
+        boolean ifo = FilenameUtils.getExtension(fname).equalsIgnoreCase("ifo");
 
         fileName = fname;
         progressMax = (int)(new File(fname)).length();
@@ -772,7 +773,7 @@ public class Core  extends Thread {
         resetWarnings();
 
         // try to find matching language idx if filename contains language string
-        String fnl = ToolBox.getFileName(fname.toLowerCase());
+        String fnl = FilenameUtils.getName(fname.toLowerCase());
         for (int i=0; i < LANGUAGES.length; i++) {
             if (fnl.contains(LANGUAGES[i][0].toLowerCase())) {
                 languageIdx = i;
@@ -928,10 +929,10 @@ public class Core  extends Thread {
             // SUB/IDX
             if (currentStreamID == StreamID.DVDSUB) {
                 fnS = fname;
-                fnI = ToolBox.stripExtension(fname)+".idx";
+                fnI = FilenameUtils.removeExtension(fname) + ".idx";
             } else {
                 fnI = fname;
-                fnS = ToolBox.stripExtension(fname)+".sub";
+                fnS = FilenameUtils.removeExtension(fname) + ".sub";
             }
             subDVD = new SubDVD(fnS, fnI);
             substream = subDVD;
@@ -940,7 +941,7 @@ public class Core  extends Thread {
         } else {
             // SUP/IFO
             fnI = fname;
-            fnS = ToolBox.stripExtension(fname)+".sup";
+            fnS = FilenameUtils.removeExtension(fname) + ".sup";
             supDVD = new SupDVD(fnS, fnI);
             substream = supDVD;
             inMode = InputMode.SUPIFO;
@@ -1634,18 +1635,18 @@ public class Core  extends Thread {
         try {
             // handle file name extensions depending on mode
             if (outMode == OutputMode.VOBSUB) {
-                fname = ToolBox.stripExtension(fname)+".sub";
+                fname = FilenameUtils.removeExtension(fname) + ".sub";
                 out = new BufferedOutputStream(new FileOutputStream(fname));
                 offsets = new ArrayList<Integer>();
                 timestamps = new ArrayList<Integer>();
             } else if (outMode == OutputMode.SUPIFO) {
-                fname = ToolBox.stripExtension(fname)+".sup";
+                fname = FilenameUtils.removeExtension(fname) + ".sup";
                 out = new BufferedOutputStream(new FileOutputStream(fname));
             } else if (outMode == OutputMode.BDSUP) {
-                fname = ToolBox.stripExtension(fname)+".sup";
+                fname = FilenameUtils.removeExtension(fname) + ".sup";
                 out = new BufferedOutputStream(new FileOutputStream(fname));
             } else {
-                fn = ToolBox.stripExtension(fname);
+                fn = FilenameUtils.removeExtension(fname);
                 fname = fn+".xml";
             }
             printX("\nWriting "+fname+"\n");
@@ -1724,7 +1725,7 @@ public class Core  extends Thread {
             for (int i=0; i<ts.length; i++) {
                 ts[i] = timestamps.get(i);
             }
-            fname = ToolBox.stripExtension(fname)+".idx";
+            fname = FilenameUtils.removeExtension(fname) + ".idx";
             printX("\nWriting "+fname+"\n");
             if (!importedDVDPalette || paletteMode != PaletteMode.KEEP_EXISTING) {
                 trgPallete = currentDVDPalette;
@@ -1743,14 +1744,14 @@ public class Core  extends Thread {
             } else {
                 trgPallete = currentSourceDVDPalette;
             }
-            fname = ToolBox.stripExtension(fname)+".ifo";
+            fname = FilenameUtils.removeExtension(fname) + ".ifo";
             printX("\nWriting "+fname+"\n");
             SupDVD.writeIFO(fname, subPictures[0], trgPallete);
         }
 
         // only possible for SUB/IDX and SUP/IFO (else there is no public palette)
         if (trgPallete != null && writePGCEditPal) {
-            String fnp = ToolBox.stripExtension(fname)+".txt";
+            String fnp = FilenameUtils.removeExtension(fname) + ".txt";
             printX("\nWriting "+fnp+"\n");
             writePGCEditPal(fnp, trgPallete);
         }

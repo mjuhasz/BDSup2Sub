@@ -3,6 +3,7 @@ package deadbeef.gui;
 
 import deadbeef.core.Core;
 import deadbeef.core.OutputMode;
+import deadbeef.utils.FilenameUtils;
 import deadbeef.utils.ToolBox;
 
 import javax.swing.*;
@@ -226,7 +227,7 @@ public class ExportDialog extends JDialog {
                     if (isReady) {
                         String s = jTextFieldFileName.getText();
                         if (s != null) {
-                            fileName = ToolBox.stripExtension(s)+"."+extension;
+                            fileName = FilenameUtils.removeExtension(s) + "." + extension;
                         }
                     }
                 }
@@ -247,11 +248,11 @@ public class ExportDialog extends JDialog {
                     if (isReady) {
                         String[] ext = new String[1];
                         ext[0] = extension;
-                        String p = ToolBox.getPathName(fileName);
-                        String fn = ToolBox.getFileName(fileName);
+                        String p = FilenameUtils.getParent(fileName);
+                        String fn = FilenameUtils.getName(fileName);
                         String fname = ToolBox.getFileName(p, fn, ext, false, mainFrame);
                         if (fname != null) {
-                            fileName = ToolBox.stripExtension(fname)+"."+extension;
+                            fileName = FilenameUtils.removeExtension(fname) + "." + extension;
                             jTextFieldFileName.setText(fileName);
                         }
                     }
@@ -311,7 +312,7 @@ public class ExportDialog extends JDialog {
                         // file name
                         s = jTextFieldFileName.getText();
                         if (s != null)
-                            fileName = ToolBox.stripExtension(s)+"."+extension;
+                            fileName = FilenameUtils.removeExtension(s) + "." + extension;
                         // exit
                         Core.setExportForced(exportForced);
                         Core.setLanguageIdx(languageIdx);

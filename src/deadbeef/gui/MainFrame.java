@@ -3,6 +3,7 @@ package deadbeef.gui;
 
 import deadbeef.bitmap.Palette;
 import deadbeef.core.*;
+import deadbeef.utils.FilenameUtils;
 import deadbeef.utils.ToolBox;
 
 import javax.swing.*;
@@ -1757,17 +1758,17 @@ public class MainFrame extends JFrame implements ClipboardOwner {
                         "File not found!", JOptionPane.WARNING_MESSAGE);
             } else {
                 synchronized (threadSemaphore) {
-                    boolean xml = ToolBox.getExtension(fname).equalsIgnoreCase("xml");
-                    boolean idx = ToolBox.getExtension(fname).equalsIgnoreCase("idx");
-                    boolean ifo = ToolBox.getExtension(fname).equalsIgnoreCase("ifo");
+                    boolean xml = FilenameUtils.getExtension(fname).equalsIgnoreCase("xml");
+                    boolean idx = FilenameUtils.getExtension(fname).equalsIgnoreCase("idx");
+                    boolean ifo = FilenameUtils.getExtension(fname).equalsIgnoreCase("ifo");
                     byte id[] = ToolBox.getFileID(fname, 4);
                     StreamID sid = (id == null) ? StreamID.UNKNOWN : Core.getStreamID(id);
                     if (idx || xml || ifo || sid != StreamID.UNKNOWN) {
                         mainFrame.setTitle(APP_NAME_AND_VERSION + " - " + fname);
                         subIndex = 0;
                         loadPath = fname;
-                        saveFilename = ToolBox.stripExtension(ToolBox.getFileName(loadPath));
-                        savePath = ToolBox.getPathName(loadPath);
+                        saveFilename = FilenameUtils.removeExtension(FilenameUtils.getName(loadPath));
+                        savePath = FilenameUtils.getParent(loadPath);
                         enableCoreComponents(false);
                         enableVobsubStuff(false);
                         try {
@@ -1852,8 +1853,8 @@ public class MainFrame extends JFrame implements ClipboardOwner {
                     ext[3] = "sup";
                     ext[4] = "xml";
                     console.setText("");
-                    String p = ToolBox.getPathName(loadPath);
-                    String fn = ToolBox.getFileName(loadPath);
+                    String p = FilenameUtils.getParent(loadPath);
+                    String fn = FilenameUtils.getName(loadPath);
                     final String fname = ToolBox.getFileName(p, fn, ext, true, mainFrame);
                     (new Thread() {
                         @Override
@@ -1934,19 +1935,19 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 
                         String fn = exp.getFileName();
                         if (!exp.wasCanceled() && fn != null) {
-                            savePath = ToolBox.getPathName(fn);
-                            saveFilename = ToolBox.stripExtension(ToolBox.getFileName(fn));
+                            savePath = FilenameUtils.getParent(fn);
+                            saveFilename = FilenameUtils.removeExtension(FilenameUtils.getName(fn));
                             saveFilename = saveFilename.replaceAll("_exp$","");
                             //
                             File fi,fs;
                             if (Core.getOutputMode() == OutputMode.VOBSUB) {
-                                fi = new File(ToolBox.stripExtension(fn)+".idx");
-                                fs = new File(ToolBox.stripExtension(fn)+".sub");
+                                fi = new File(FilenameUtils.removeExtension(fn) + ".idx");
+                                fs = new File(FilenameUtils.removeExtension(fn) + ".sub");
                             } else if (Core.getOutputMode() == OutputMode.SUPIFO) {
-                                fi = new File(ToolBox.stripExtension(fn)+".ifo");
-                                fs = new File(ToolBox.stripExtension(fn)+".sup");
+                                fi = new File(FilenameUtils.removeExtension(fn) + ".ifo");
+                                fs = new File(FilenameUtils.removeExtension(fn) + ".sup");
                             } else {
-                                fs = new File(ToolBox.stripExtension(fn)+".sup");
+                                fs = new File(FilenameUtils.removeExtension(fn) + ".sup");
                                 fi = fs; // we don't need the idx file
                             }
                             if (fi.exists() || fs.exists()) {

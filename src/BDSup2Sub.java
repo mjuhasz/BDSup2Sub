@@ -1,6 +1,7 @@
 import deadbeef.core.*;
 import deadbeef.gui.MainFrame;
 import deadbeef.tools.Props;
+import deadbeef.utils.FilenameUtils;
 import deadbeef.utils.ToolBox;
 
 import javax.swing.*;
@@ -354,8 +355,8 @@ class BDSup2Sub {
                         continue;
                     } else if (trg == null) {
                         trg = a;
-                        String ext = ToolBox.getExtension(trg);
-                        if (ext == null) {
+                        String ext = FilenameUtils.getExtension(trg);
+                        if (ext.isEmpty()) {
                             fatalError("No extension given for target " + trg);
                         }
                         if (ext.equals("sup")) {
@@ -795,13 +796,13 @@ class BDSup2Sub {
             String path;
             // multiple files
             if (src.indexOf('*') != -1) {
-                path = ToolBox.getPathName(src);
+                path = FilenameUtils.getParent(src);
                 if (path == null || path.length() == 0) {
                     path = "." + File.separatorChar;
                 }
-                File[] srcFiles = (new File(path)).listFiles(new FileFilter(ToolBox.getFileName(src)));
+                File[] srcFiles = (new File(path)).listFiles(new FileFilter(FilenameUtils.getName(src)));
                 if (srcFiles.length == 0) {
-                    fatalError("No match found for '"+ToolBox.addSeparator(path)+src+"'");
+                    fatalError("No match found for '" + FilenameUtils.addSeparator(path) + src + "'");
                 }
                 if (trg.indexOf('*') == -1) {
                     fatalError("No wildcards in target string!");
@@ -809,8 +810,8 @@ class BDSup2Sub {
                 srcFileNames = new String[srcFiles.length];
                 trgFileNames = new String[srcFiles.length];
                 for (int i=0; i<srcFiles.length; i++) {
-                    srcFileNames[i] = ToolBox.addSeparator(path)+srcFiles[i].getName();
-                    trgFileNames[i] = trg.replace("*", ToolBox.stripExtension(srcFiles[i].getName()));
+                    srcFileNames[i] = FilenameUtils.addSeparator(path) + srcFiles[i].getName();
+                    trgFileNames[i] = trg.replace("*", FilenameUtils.removeExtension(srcFiles[i].getName()));
                     //System.out.println(srcFileNames[i]+" - "+trgFileNames[i]);
                 }
             } else {
@@ -820,7 +821,7 @@ class BDSup2Sub {
                 int aPos = trg.indexOf('*');
                 if (aPos != -1) {
                     // replace asterisk by path+filename of source without the extension
-                    trgFileNames[0] = trg.replace("*", ToolBox.stripExtension(src));
+                    trgFileNames[0] = trg.replace("*", FilenameUtils.removeExtension(src));
                 } else {
                     trgFileNames[0] = trg;
                 }
@@ -839,9 +840,9 @@ class BDSup2Sub {
                     if (!new File(src).exists()) {
                         throw new CoreException("File '"+src+"' does not exist.");
                     }
-                    boolean xml = ToolBox.getExtension(src).equalsIgnoreCase("xml");
-                    boolean idx = ToolBox.getExtension(src).equalsIgnoreCase("idx");
-                    boolean ifo = ToolBox.getExtension(src).equalsIgnoreCase("ifo");
+                    boolean xml = FilenameUtils.getExtension(src).equalsIgnoreCase("xml");
+                    boolean idx = FilenameUtils.getExtension(src).equalsIgnoreCase("idx");
+                    boolean ifo = FilenameUtils.getExtension(src).equalsIgnoreCase("ifo");
                     byte id[] = ToolBox.getFileID(src, 4);
                     StreamID sid = (id == null) ? StreamID.UNKNOWN : Core.getStreamID(id);
                     if (!idx && !xml && !ifo && sid == StreamID.UNKNOWN) {
@@ -851,15 +852,15 @@ class BDSup2Sub {
                     // check output file(s)
                     File fi,fs;
                     if (Core.getOutputMode() == OutputMode.VOBSUB) {
-                        fi = new File(ToolBox.stripExtension(trg)+".idx");
-                        fs = new File(ToolBox.stripExtension(trg)+".sub");
+                        fi = new File(FilenameUtils.removeExtension(trg) + ".idx");
+                        fs = new File(FilenameUtils.removeExtension(trg) + ".sub");
                     } else {
-                        fs = new File(ToolBox.stripExtension(trg)+".sup");
+                        fs = new File(FilenameUtils.removeExtension(trg) + ".sup");
                         fi = fs; // we don't need the idx file
                     }
                     if (fi.exists() || fs.exists()) {
                         if ((fi.exists() && !fi.canWrite()) || (fs.exists() && !fs.canWrite())) {
-                            throw new CoreException("Target file '"+trg+"' is write protected.");
+                            throw new CoreException("Target file '" + trg + "' is write protected.");
                         }
                     }
                     // read input file

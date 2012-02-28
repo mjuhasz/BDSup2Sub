@@ -9,6 +9,7 @@ import deadbeef.core.CoreException;
 import deadbeef.core.Framerate;
 import deadbeef.core.Resolution;
 import deadbeef.tools.QuantizeFilter;
+import deadbeef.utils.FilenameUtils;
 import deadbeef.utils.ToolBox;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
@@ -88,8 +89,8 @@ public class SupXml implements Substream {
      * @throws CoreException
      */
     public SupXml(String fn) throws CoreException {
-        this.pathName = ToolBox.addSeparator(ToolBox.getPathName(fn));
-        this.title = ToolBox.stripExtension(ToolBox.getFileName(fn));
+        this.pathName = FilenameUtils.addSeparator(FilenameUtils.getParent(fn));
+        this.title = FilenameUtils.removeExtension(FilenameUtils.getName(fn));
 
         SAXParserFactory factory = SAXParserFactory.newInstance();
         SAXParser saxParser;
@@ -234,7 +235,7 @@ public class SupXml implements Substream {
         double fpsXml = XmlFps(fps);
         long t;
         BufferedWriter out = null;
-        String name = ToolBox.stripExtension(ToolBox.getFileName(fname));
+        String name = FilenameUtils.removeExtension(FilenameUtils.getName(fname));
         try {
             out = new BufferedWriter(new FileWriter(fname));
             out.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
@@ -397,7 +398,7 @@ public class SupXml implements Substream {
      * @return PNG name
      */
     public static String getPNGname(String fn, int idx) {
-        return ToolBox.stripExtension(fn) + "_" + ToolBox.leftZeroPad(idx, 4) + ".png";
+        return FilenameUtils.removeExtension(fn) + "_" + ToolBox.leftZeroPad(idx, 4) + ".png";
     }
 
     /**

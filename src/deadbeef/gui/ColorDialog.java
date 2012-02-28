@@ -3,6 +3,7 @@ package deadbeef.gui;
 
 import deadbeef.core.CoreException;
 import deadbeef.tools.Props;
+import deadbeef.utils.FilenameUtils;
 import deadbeef.utils.ToolBox;
 
 import javax.swing.*;
@@ -335,11 +336,11 @@ public class ColorDialog extends JDialog {
                 public void actionPerformed(ActionEvent e) {
                     String[] ext = new String[1];
                     ext[0] = "ini";
-                    String p = ToolBox.getPathName(colorPath);
-                    String fn = ToolBox.getFileName(colorPath);
+                    String p = FilenameUtils.getParent(colorPath);
+                    String fn = FilenameUtils.getName(colorPath);
                     String fname = ToolBox.getFileName(p, fn, ext, false, thisFrame);
                     if (fname != null) {
-                        fname = ToolBox.stripExtension(fname)+".ini";
+                        fname = FilenameUtils.removeExtension(fname) + ".ini";
                         File f = new File(fname);
                         try {
                             if (f.exists()) {
@@ -387,8 +388,8 @@ public class ColorDialog extends JDialog {
                 public void actionPerformed(ActionEvent e) {
                     String[] ext = new String[1];
                     ext[0] = "ini";
-                    String p = ToolBox.getPathName(colorPath);
-                    String fn = ToolBox.getFileName(colorPath);
+                    String p = FilenameUtils.getParent(colorPath);
+                    String fn = FilenameUtils.getName(colorPath);
                     String fname = ToolBox.getFileName(p, fn, ext, true, thisFrame);
                     if (fname != null) {
                         File f = new File(fname);

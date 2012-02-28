@@ -92,7 +92,7 @@ public final class ToolBox {
     public static String getFileName(String path, String fn, String ext[], boolean load, Component parent) {
         String p = path;
         File f;
-        if (p.length() == 0) {
+        if (p == null || p.isEmpty()) {
             p = ".";
         }
         JFileChooser fc = new JFileChooser(p);
@@ -105,7 +105,7 @@ public final class ToolBox {
         }
         fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
         if (fn != null) {
-            f = new File(addSeparator(path) + fn);
+            f = new File(FilenameUtils.addSeparator(path) + fn);
             fc.setSelectedFile(f);
         }
         if (!load) {
@@ -119,105 +119,6 @@ public final class ToolBox {
             }
         }
         return null;
-    }
-
-    /**
-     * Add (system default) path separator to string (if there isn't one already)
-     * @param fName String containing path name
-     * @return String that ends with the (system default) path separator for sure
-     */
-    public static String addSeparator(String fName) {
-        int pos = fName.lastIndexOf(File.separator);
-        if (pos != fName.length()-1) {
-            pos = fName.lastIndexOf("/");
-        }
-        if (pos != fName.length()-1) {
-            return fName + File.separator;
-        } else {
-            return fName;
-        }
-    }
-
-    /**
-     * Exchange any DOS style path separator ("\") with a Unix style separator ("/")
-     * @param fName String containing file/path name
-     * @return String with only Unix style path separators
-     */
-    public static String exchangeSeparators(String fName) {
-        int pos;
-        StringBuilder sb = new StringBuilder(fName);
-        while ((pos = sb.indexOf("\\")) != -1) {
-            sb.setCharAt(pos,'/');
-        }
-        return sb.toString();
-    }
-
-    /**
-     * Return file name from path
-     * @param path String of a path with a file name
-     * @return String containing only the file name
-     */
-    public static String getFileName(String path) {
-        int p1 = path.lastIndexOf("/");
-        int p2 = path.lastIndexOf("\\");
-        if (p2 > p1) {
-            p1 = p2;
-        }
-        if (p1 < 0) {
-            p1 = 0;
-        } else {
-            p1++;
-        }
-        return path.substring(p1);
-    }
-
-    /**
-     * Return path name from a file name
-     * @param path String of file name with a path
-     * @return String containing only the path (excluding path separator)
-     */
-    public static String getPathName(String path) {
-        int p1 = path.lastIndexOf("/");
-        int p2 = path.lastIndexOf("\\");
-        if (p2 > p1) {
-            p1 = p2;
-        }
-        if (p1 < 0) {
-            p1 = 0;
-        }
-        return path.substring(0, p1);
-    }
-
-
-    /**
-     * Returns the extension (".XXX") of a filename without the dot
-     * @param path String containing file name
-     * @return String containing only the extension (without the dot) or null (if no extension found)
-     */
-    public static String getExtension(String path) {
-        int p1 = path.lastIndexOf("/");
-        int p2 = path.lastIndexOf("\\");
-        int p = path.lastIndexOf(".");
-        if (p==-1 || p<p1 || p<p2) {
-            return null;
-        }
-        return path.substring(p + 1);
-    }
-
-    /**
-     * Strips the extension (".XXX") from a file name (including the dot)
-     * If no extension is found, the unchanged string is returned.
-     * @param path String containing a file name
-     * @return String to a filename without the extension
-     */
-    public static String stripExtension(String path) {
-        int p1 = path.lastIndexOf("/");
-        int p2 = path.lastIndexOf("\\");
-        int p = path.lastIndexOf(".");
-        if (p == -1 || p < p1 || p < p2) {
-            return path;
-        }
-        return path.substring(0, p);
     }
 
     /**
