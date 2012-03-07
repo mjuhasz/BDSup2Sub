@@ -1,0 +1,2186 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head>
+<meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>BDSUP2SUB</title></head>
+<body>
+<h1><a name="Intro"></a>BDSup2Sub</h1>
+<h2><strong>A tool to convert and tweak bitmap based
+subtitle streams</strong></h2>
+<h3>Version 4.0.1 &nbsp;released 06.01.2012</h3>
+BDSup2Sub is a tool I wrote initially to convert captions
+demuxed from a Blu-Ray transport stream (M2TS) into the DVD VobSub
+format (SUB/IDX) used by many DVD authoring tools - hence the
+name.&nbsp;Many more features were added over time as was support
+for
+other
+formats. So in the meantime the name seems a little inappropriate. In a
+nutshell, it's a subtitle conversion tool for image based stream
+formats
+with scaling capabilities and some other nice features.<br>
+A complete <a href="#Change_History">revision history</a> can be found at the end of
+this document.<br>
+<h3>Supported Formats</h3>
+<ul>
+<li>Blu-Ray SUP: import (since 1.0) and export&nbsp;(since
+1.6)</li>
+<li>Sony BDN XML (as used by Sonic Scenarist HDMV): import and
+export&nbsp;(since 3.3.0)</li>
+<li>HD-DVD SUP: import (since 1.9)</li>
+<li>VobSub (SUB/IDX): import &nbsp;(since 3.5.0) and export
+(since 1.0)</li>
+<li>DVD-SUP (SUP/IFO): import and export (since 3.9.0)</li>
+</ul>
+<h3><font size="4">What it can do</font></h3>
+<ul>
+<li>convert any supported import format to any supported export
+format</li>
+<li>add a fixed delay to all timestamps (since 1.0)</li>
+<li>perform a frame rate conversion e.g. for pal speedup (since
+1.0)</li>
+<li>synchronize time stamps to output frame rate (since 2.0)</li>
+<li>edit times and position of each caption (since 2.3)</li>
+<li>control all features (except editing) from the command line
+(since 1.7)</li>
+<li>move all captions inside or outside a given area (since
+2.7) or horizontally (since 3.9.6)</li>
+<li>crop the target screen size (since 3.0)</li>
+<li>scale up/down with a variety of filters (from bilinear over
+bicubic to Lanczos3 and Mitchell) (since 3.4.0)</li>
+<li>edit "forced" flags (since 3.6.0)</li>
+<li>exclude single captions from export (since 3.6.0)</li>
+<li>erase rectangular regions of a caption (since 3.6.0)</li>
+<li>scale captions independently of screen size (since 3.7.0)</li>
+<li>automatically remove fade in/out from imported subtitle
+streams.</li>
+<li>export the target palette in PGCEdit text format (RGB
+values 0..255)&nbsp;(since 3.9.0)</li>
+<li>edit the imported DVD palette when input is either VobSub
+or SUP/IFO&nbsp;(since 3.9.1)</li>
+<li>edit the frame palette and alpha values when input is
+either VobSub or SUP/IFO&nbsp;(since 3.9.3)</li>
+<li>set/clear forced flags for all captions (since 3.9.9)</li>
+</ul>
+<h3>What it can't do</h3>
+BDSup2Sub only supports image based subtitle
+streams. It doesn't (and probably won't ever) support &nbsp;text
+based
+formats as SRT or SSA. Note that to convert image based subtitles to
+text based subtitles would need an OCR (Optical Character Recognition)
+approach which is beyond the idea of converting between image based
+formats. There are other tools like SubRip and SupRip to convert image
+based subtitles to SRT. For the other way round (SRT to BD-SUP), you
+may have a look <a href="http://forum.doom9.org/showthread.php?t=146488">here</a>.<br>
+While importing
+HD-DVD SUPs is supported, BDSup2Sub can't export this format currently
+- and with the commercial death of HD-DVD I think adding this feature
+would be a waste of time.&nbsp;
+<h3>Author</h3>
+0xdeadbeef<br>
+<h3>Home</h3>
+<a href="http://forum.doom9.org/showthread.php?t=145277">Official
+thread on Doom9.org</a><br>
+<br>
+<h3>Feedback</h3>
+Please
+post comments and bug reports to the above thread.
+Feedback is welcome - especially from the authors of SubRip, SupRip,
+SubtitleCreator or TsMuxer to discuss compatibility issues. To report
+problems with a subtitle stream, please either post the stream (if it is
+compliant with the forum rules) or upload it to a "one click hoster"
+and send me a PM with the link. And don't forget a detailed error
+description.<br>
+<h3>Credits</h3>
+I
+dug through hundreds of postings, mainly on Doom9 (started by
+Pelican9), several source codes (especially FFmpeg) and all the
+documents I could find. Sam Hocevar's DVD subtitle documentation is
+especially worth noting. Also the information on exar.ch (while far
+from being complete) helped me a lot to understand the HD-DVD SUP
+format. Still, I rifled
+through hexdumps for hours and hours and hours to find out the details.
+Really, you can't imagine.<br>
+BDSup2Sub uses a palette quantizer (octree) routine by Jerry
+Huxtable which was slightly adapted to the needs of BDSup2Sub (e.g.
+extended to include alpha as 4th component).<br>
+BDSup2Sub uses the PNG Encoder by J. David Eisenberg to have
+better
+control over the written palettes of exported PNG images (in BDN XML
+mode). I just added the missing code to
+write the tRNS segment for transparency.<br>
+The scaling algorithm is partly based on the <a href="http://code.google.com/p/java-image-scaling/">Java
+image scaling library</a> &nbsp;by Morten Nobel-Joergensen
+which again is based on the "Java Image Util".<br>
+See <a href="#Source_Code">Source Code</a> and <a href="#Disclaimer">Disclaimer</a> for
+license details.<br>
+<h3>Known issues</h3>
+Reading/writing
+data from/to transport streams is quite a hassle since the formats are
+usually not well documented&nbsp; and you will always stumble
+over a stream that either contains authoring errors or uses features so
+uncommon that they are not documented anywhere. Indeed, most of the
+time it's impossible to tell if some weird stream is only on the edge
+of what is allowed or simply faulty. So often enough, programs that
+read or write transport streams
+will only support a certain amount of commonly used (and known)
+sub-features. <br>
+Therefore
+it's likely that BDSup2Sub will stumble over the streams
+created by other programs or other programs will have problems reading
+the streams created by BDSup2Sub. It's generally hard to tell
+who's fault it is, but here's a
+list of issues that I'm aware of:<br>
+<ul>
+<li>BDSup2Sub exports only plain subtitles (one image with
+start
+and end time). If an imported SUP contains anything beyond this (e.g.
+palette animations, cropping animations, image animations) etc.
+BDSup2Sub will remove them and output a warning. This
+might lead to unexpected results. E.g. if a BD-SUP contains animated
+palettes, only the final state of the palette will be displayed and
+exported. While BDSup2Sub tries to detect alpha
+changes for fading in and out and use the most opaque color for
+display, this detection may fail under certain circumstances or the
+displayed palette may even be a mixture of different animation/fading
+stages. Also, if a BD-SUP contains more than one image ("composition
+object") per frame, only the first image will
+be displayed and exported.</li>
+<li>Alpha/palette
+updates are only partly supported for SUB/IDX and SUP/IFO. For the
+experts among
+you: only the first LN_CTLI and the first PX_CTLI is considered per
+update. Also the line/column values are completely ignored and the
+palette/alpha update is assumed to be valid for the whole bitmap.</li>
+<li>Although
+BDSup2Sup can export SUB/IDX (or SUP/IFO) in higher resolutions (720p
+or 1080p),
+keep in mind that this is not a standard format. While some programs
+might accept these high resolution files, others might crash or
+show erratic results (e.g. this seems to be the case for SubRip).
+Use this
+feature at your own risk. For full compatibility, especially if the
+conversion target is a DVD, use PAL or NTSC only. Also read the <a href="#Notes_on_SUPIFO">notes
+about SUP/IFO</a>.</li>
+<li>HD-DVD
+SUPs don't seem to contain any information about the screen resolution.
+Therefore BDSup2Sub assumes a resolution of 1920x1080. If there are
+HD-DVDs with lower resolutions (e.g. 720p), this will be a problem. I'd
+have to add some kind of resolution selection then.</li>
+</ul>
+I
+tried to catch the most common problems (e.g. out of bounds access due
+to corrupt size information or wrong RLE info), yet it's kinda
+impossible to catch every possible fault in every possible stream. So
+don't be surprised if BDSUP2SUB shuts down with or without an
+error message. I recommend to start it via the command line in this
+case to see
+every exception thrown. E.g. a problem of the Java Runtime can't be
+caught &nbsp;by &nbsp;the application and is therefore only
+printed to
+the console.<br><br>
+<h2><a name="Using_the_GUI"></a>Using the GUI</h2>
+The main window is split into five Sections:<br>
+<table style="width: 570px; height: 300px; text-align: left; margin-left: auto; margin-right: auto;" border="1" cellpadding="2" cellspacing="2">
+<tbody>
+<tr align="center">
+<td style="height: 24px; width: 393px;" colspan="2" rowspan="1"><big><big>Control Panel</big></big></td>
+</tr>
+<tr align="center">
+<td style="height: 84px; width: 393px;" colspan="2" rowspan="1"><big><big>Source Panel</big></big></td>
+</tr>
+<tr align="center">
+<td style="width: 393px;" colspan="2" rowspan="1"><big><big>Target
+Panel</big></big></td>
+</tr>
+<tr>
+<td style="width: 358px; text-align: center;"><big><big>Console
+Panel</big></big></td>
+<td style="width: 393px; text-align: center;"><big><big>Preview
+Panel</big></big></td>
+</tr>
+</tbody>
+</table>
+<br>
+<ul>
+<li>Control Panel<br>Allows e.g. choosing the current subtitle, setting
+<a href="#Palette">alpha/luminance threshold</a>
+for conversion into DVD formats, selection of
+<a href="#Output_Format">output format</a> and <a href="#Palette">palette mode</a> and
+the <a href="#Filter_Modes">filter</a> used for
+scaling.</li>
+<li>Source Panel<br>Shows the current frame the loaded input stream. Use
+left/right mouse button to <a href="#Zooming_in_and_out_">zoom
+in/out</a>.</li>
+<li>Target Panel<br>Shows the current frame of the converted output stream. Use
+left/right mouse button to <a href="#Zooming_in_and_out_">zoom
+in/out</a>.</li>
+<li>Console Panel<br>Is used to print out information and
+warnings.</li>
+<li>Preview Pane<br>Shows a preview of the current subtitle frame (size and
+position inside screen). Left click to open the <a href="#Editing">Edit
+Dialog</a>.</li>
+</ul>
+<br>
+BDSup2Sub uses a straightforward GUI design. Most actions are triggered
+by menu items.<br>
+Menu structure:<span style="font-weight: bold;"><br>
+</span>
+<ul>
+<li>File</li>
+<ul>
+<li>Load: loads a stream (opens a file selection dialog)</li><li>Recent Files: let's you select from a list of previously loaded files</li>
+<li>Save/Export: stores the target stream (opens the <a href="#Export_Dialog">Export Dialog</a>)</li>
+<li>Close: unloads the currently loaded stream</li>
+<li>Exit: leaves the application</li>
+</ul>
+<li>Edit</li>
+<ul>
+<li>Edit Frame: <a href="#Edit_Dialog">edit position and times</a> of current frame</li>
+<li>Edit default DVD Palette: <a href="#Editing_the_default_DVD_palette_for">edit &nbsp;the palette used
+for conversion</a> from 256 color HD formats to DVD formats</li>
+<li>Edit imported DVD Palette:<a href="#Editing_the_imported_DVD_palette"> edit the palette of an
+imported DVD</a> subtitle stream (SUP/IFO or SUB/IDX)</li>
+<li>Edit DVD frame palette: <a href="#Editing_the_Frame_Palette_and_Alpha">edit the frame palette</a> of an &nbsp;imported DVD subtitle stream</li>
+<li>Move all caption:<a href="#Move_Crop_Dialog"> apply global moving/cropping of
+subtitles</a></li>
+<li>Reset crop offset: reset a formerly applied <a href="#Cropping_of_screen_size">cropping
+offset</a> to zero</li>
+</ul>
+<li>Settings</li>
+<ul>
+<li>Conversion Settings: opens the <a href="#Conversion_Dialog">conversion dialog</a>
+(scaling, frame rate etc.)</li>
+<li>Swap Cr/Cb: <a href="#Interpreting_the_SUP_palette">swaps
+color components</a> for imported BD-SUPs</li>
+<li>Fix invisible frames: &nbsp;enables/disables
+<a href="#Automatic_fixing_of_invisible_subtitles">automatic fixing of invisible captions</a></li>
+<li>Verbatim output: enables/disables verbatim console output</li>
+</ul>
+<li>Help</li>
+<ul>
+<li>Help: display a HTML based online help</li>
+</ul>
+</ul>
+<span style="font-weight: bold;"></span>
+<h3>Editing text fields</h3>BDSup2Sub supports input checking while typing in
+all text input fields (including editable combo boxes):<br>
+<ul>
+<li>If the background of a text field is white,&nbsp;the
+current value is ok and/or has already been applied.</li>
+<li>If
+the background becomes yellow,&nbsp;the currently entered value is
+valid, but a modified value will be used. E.g. a valid time value will
+be changed due to frame rate synchronization. To see the value that
+will be actually used, simply press return. </li>
+<li>If
+the background becomes red, the current value is invalid and will be
+replaced by a fitting value (if possible) or the the previous value of
+the input field. To see the value that will be actually used, simply
+press return.</li>
+</ul>
+<h3>Using Keyboard shortcuts (Hotkeys/Mnemonics)</h3>There are keyboard shortcuts for most menu items,
+buttons and checkboxes. Note that the support for these hotkeys depends
+on your Operating System and its user interface settings. E.g. on
+Windows, the hotkeys are displayed only if you press the "Alt" key by
+default. There's a global setting to hide the hotkeys under "Display
+Properties/Appearance/Effects" which defined whether the hotkeys are
+displayed or hidden by default in all applications. Some programs as
+Firefox seem to ignore this setting, the Java Runtime Environment (and
+thus BDSup2Sub) doesn't.<br>
+Exception for the rule: until I come up
+with a more convenient solution, Alt+Left Cursor and Alt+Right cursor
+move to previous or next subtitle in the edit and move dialogs (without
+saving). On Linux and Mac OS, the accelerator key may differ or the
+hotkeys may not work at all. Sorry, I can't test this.
+<h3><a name="Zooming_in_and_out_"></a>Zooming
+in and out<br>
+</h3>
+In
+case you didn't notice: by clicking left/right in the source and
+target&nbsp;panels, you can zoom in and out to view details of the
+current sub
+picture. This is especially useful for finding the correct
+alpha/luminance thresholds in SUB/IDX (or SUP/IFO) mode.<br>
+<br>
+<h2><a name="Color_Palettes"></a>Color Palettes</h2>
+
+The
+subtitle data on a Blu-Ray consists of run length encoded images up
+to 1920x1080 pixels with a color/alpha palette of up to 256 entries
+(where each undefined entry and the 256th entry are completely
+transparent by definition).
+Each single subpicture
+frame can have a separate palette. The subpicture data on HD-DVD is
+similar, the main difference is that the palette for each frame has
+always 256 entries.<br>
+The subpicture data on a DVD
+consists of run length encoded images up to 720x576 (PAL) or 720x480
+(NTSC) pixels, where each image can use up to 4 colors from a common
+palette consisting of 16 colors. This global palette is defined in the
+IFO
+files of a DVD. For SUP/IFO streams, this info is read from an IFO file
+was well; for subtitles in SUB/IDX format, the information is
+stored in the IDX file. <br>
+All
+bitmap based subtitle formats are able to define transparency in a way.
+For DVD based subtitles, each of the colors per frame can have a
+transparency between 0..15. The HD formats can define an alpha value
+between 0..255 for each palette entry. Transparency is usually used for
+a transparent background, but it can be also used for fading. BDSup2Sub
+tries to detect fading and remove it to be able to display and convert
+each subtitle. <br>
+<h3><a name="Palette_Modes"></a>Palette Modes</h3>
+So to convert from SUP (BD/HD-DVD) to SUB/IDX (or SUP/IFO), not
+only the pictures and display offsets have to be scaled, but also the
+color/alpha information has to be reduced. This is the reason why only
+"create new" palette mode is available when converting a 256 color
+format like BD-SUP to a DVD
+format like SUB/IDX.<br>
+<br>
+In "create palette" mode for SUB/IDX (or SUP/IFO) output, BDSup2Sub
+uses the following approach for each
+subpicture frame:<br>
+<ol>
+<li>the dominant color in the original picture is identified
+((non-)transparency and luminance are used as weight factors)</li>
+<li>the
+dominant color is matched with the default primary colors in the global
+palette (white, red, green, blue, yellow, cyan, magenta)<br>
+The
+closest match is chosen as main color. A darker tone of the same color
+is chosen as 2nd color. The two other colors are always black and a
+transparent color.</li>
+<li>the subpicture is downsized to either PAL or NTSC,
+depending on the setting of "Output Format"<br>
+Scaling up/down &nbsp;is done with a selectable scaling filter.
+However,
+only transparency (alpha) and luminance are considered: if the mean
+value of the alpha channel is below "Alpha Threshold" , &nbsp;the
+target pixel is considered to be transparent (palette entry 0). Else it
+is set to either the primary color (palette entry 1), the darker
+primary color (palette entry) or black (palette entry 3) depending on
+whether the pixels's luminance is above/below "Hi/Med Threshold" or
+"Med/Low Threshold".<br>
+Note that the luminance thresholds are
+automatically detected (when loading a SUP), while the alpha threshold
+is set to a default value.</li>
+</ol>
+<br>
+In
+SUP or BDN XML export mode, three different palette creation modes can
+be selected
+when scaling SUPs: "keep existing" doesn't change the palette, but uses
+the nearest existing color for each scaled pixel. This leads usually to
+good results, but if the palette lacks alpha/brightness/color
+gradations, the result may be suboptimal. The mode "create new" creates
+a new palette for each caption and "dithered" creates a new palette and
+applies a Floyd-Steinberg dithering matrix. This last approach is the
+slowest, but usually there is no visual difference to "create new". The
+default setting is "create new".<br>
+<br>
+In
+VobSub or SUP/IFO export mode, the palette creation can be only changed
+if the
+imported caption stream was a VobSub&nbsp;or SUP/IFO as well. Then
+you may choose to
+keep the existing (i.e. imported) palette. In any other case, the
+palette has to be
+created anyway so the option is grayed out.<br>
+<h3><a name="Interpreting_the_SUP_palette"></a>Interpreting
+the SUP palette</h3>
+BDSup2Sub
+assumes that the palette entries in SUP streams (BD as well as HD-DVD)
+are stored as Y, Cr, Cb (three bytes in this order). I can't validate
+this for HD-DVDs, but for BDs, the resulting colors displayed in
+BDSup2Sub match exactly what my PS3 displays. I'm aware though that
+some other programs like SupRip and MPC-HC caption renderers seems to
+assume a different color order than BDSup2Sub or the PS3 (Y, Cb, Cr
+instead of Y, Cr, Cb). This&nbsp;means of course that they will
+display
+colors differently
+(e.g. Cyan becomes Yellow and vice versa). <br>While I'm pretty sure that BDSup2Sub uses the correct order, just
+for the case that the byte order Y, Cb, Cr is needed instead, there's
+an an menu item "Settings-&gt;Swap Cr/Cb" to swap the Cr and Cb
+components when reading a SUP. When exporting a SUP with the swap
+option enabled, this also means that the Cr/Cb components are swapped
+then compared to those in the imported SUP. So while BDSup2Sub shows
+the colors like e.g. SupRip for the imported SUP then, SupRip won't
+show the same colors for the <span style="font-style: italic;">exported</span>
+SUP. Note that with the swap option disabled, the exported SUP has
+exactly the same palette as the imported SUP. <br>
+When exporting SUB/IDX though, the&nbsp;colors displayed by
+BDSup2Sub <span style="font-style: italic;">do</span>
+matter, as the color matching is done in RGB space. Also the palette
+colors written to the IDX file are stored as RGB values. As long as
+other tools respect this definition, the colors should appear as they
+are displayed by BDSup2Sub.<br>
+<h3><a name="Editing_the_default_DVD_palette_for"></a>Editing the "default" DVD palette (for "create new" palette
+mode)</h3>
+To
+allow a at least a minimum of anti-aliasing during scaling down/up with
+SUB/IDX (or SUP/IFO) as output format, the 16 color palette used by BDSup2Sup in "create
+palette" mode has one light and one
+dark tone for each predefined color. &nbsp;E.g. there is a dark
+blue and a light
+blue. White is a special case, since it's the most common subtitle
+color: in addition to white, there is also a light and a dark gray. So
+for lighter subtitles, the conversion can select white and dark gray,
+while it can select light gray and dark gray for darker subtitles.<br>
+If
+you're unhappy with the default palette, you can edit the default
+palette used for conversion to SUB/IDX via the according menu item
+"Edit default DVD palette" in
+the "Preferences" menu. Just keep in mind that if you edit a light
+color, you should also change the dark color accordingly (and vice
+versa). Also "white, "light gray" and "dark gray" must be different
+tones of the same color or else you'll get erratic results.<br>
+Also
+note that when you use VobSub or SUP/IFO as import and export format,
+you may as
+well choose to keep the existing palette. Then BDSup2Sub's
+default&nbsp;
+palette is completely ignored. Note that when you're scaling, this
+might lead to worse results than the "create new" palette mode if no
+intermediate color is present (in the frame palette) for antialiasing.<br>
+<h3><a name="Editing_the_imported_DVD_palette"></a>Editing the "imported" DVD palette</h3>
+When
+the import format is either VobSub or SUP/IFO, the menu item ""Edit
+imported DVD palette" is enabled,
+which let's you edit the 16 color palette imported from the IDX or IFO.
+You can change any of the 16 colors as you wish. Just keep in mind that
+each caption is still limited to a 4 color frame palette which can be
+edited via a separate menu item ("Edit DVD Frame Palette" described in
+the next chapter).<br>
+Note
+that editing the imported palette and editing the frame palette/alpha
+values are the only edit features in BDSup2Sub that actually change the
+source image. Though this might seem a little inconsistent (in that all
+other edit features only influence the target subtitle), I decided that
+these features make more sense this way since else they would only work
+when converting from SUB/IDX to SUP/IFO or vice versa and using the
+"keep palette" mode.<br>
+<h3><a name="Editing_the_Frame_Palette_and_Alpha"></a>Editing the Frame Palette and Alpha values (DVD input only)</h3>
+As
+already mentioned,&nbsp;DVD subtitle formats (SUB/IDX or SUP/IFO)
+use a
+4 color palette and 4 alpha values for each frame. All the values can
+vary from 0 to 15, where the number means the palette entry from the
+global 16 color palette for the palette while it defines the absolute
+transparency for the alpha values: 0 is completely transparent, 15 is
+completely opaque. As editing the imported DVD palette, editing the
+frame palette/alpha is only available when the import format is either
+VobSub to SUP/IFO and it also influences the source image displayed in
+the upper half of the main screen. <br>
+Note that apart from changing
+the palette/alpha values for the current caption, you can also apply
+the same setting to all subtitles ("Set All"). This is true for
+restoring the default values (as defined in the original stream): you
+can either restore only the values for the current caption ("Reset") or
+for the whole stream ("Reset All").<br>
+<h3><a name="Automatic_fixing_of_invisible_subtitles"></a>Automatic fixing of invisible subtitles due to zero alpha
+frame palette&nbsp;(DVD input only)</h3>
+In
+some DVD subtitle streams (SUB/IDX and SUP/IFO) single subtitles are
+invisible since all four alpha values are zero (due to an authoring
+fault). In some cases, this hides a useful subtitle, in some cases it
+hides a garbage bitmap. Anyway, apart from manually setting the
+according alpha values via the "Edit DVD Frame Palette" menu item,
+BDSup2Sub can also try to fix this problem automatically by keeping the
+last non-zero frame palette (i.e. the one from the previous subtitle).
+This feature can be switched on/off either via the command line
+(/fixinv) or with the menu item "Fix invisible frames" from the
+settings menu.<span style="font-weight: bold;"><br></span>Note that changing this setting in the menu has no
+influence on the currently loaded subtitle since the alpha fixing
+already took place then. You need to reload the current subtitle file
+to see an effect.<br>
+<br>
+<h2><a name="Concepts_and_Features"></a>Other concepts and features</h2><h3><a name="Output_Format"></a>Output Format</h3>While
+the output format is indeed a conversion option, currently it's not
+located in the conversion dialog but in the control panel of the main
+window. The main reason for this is to keep those options in the
+control panel which directly affect the bitmap in the target panel.<br>There are four output modes available:<br><ul><li>SUB/IDX: also known as VobSub, a DVD subtitle format</li><li>SUP/IFO: a DVD subtitle format defined by the author of IFOEdit</li><li>SUP(BD): &nbsp;a Blu-Ray PGS stream demultiplexed from a M2TS by tools like EAC3TO or tsMuxeR.</li><li>XML/PNG: the Sony BDN subtitle format consisting of an XML file containing the times etc. and palettized bitmaps in PNG format.</li></ul>Depending
+on the selected output format, the bitmap displayed in the target panel
+will be updated (4 color palette in DVD modes vs. 256 color palette in
+BD modes).<br><h3><a name="Output_resolution"></a>Output Resolution</h3>BDSup2Sub supports only default output resolutions:<br><ul><li>NTSC: 720x480<br>Command line options ntsc, 480</li><li>PAL: 720x576<br>Command line&nbsp;options: pal, 576</li><li>HD 720: 1280x720<br>Command line&nbsp;options: 720p and 720</li><li>HD 1440: 1440x1080<br>Command line option:&nbsp;1440x1080</li><li>FULL HD: 1920x1080<br>Command line&nbsp;options: 1080p and 1080</li></ul>
+<h3><a name="Forced_subtitles"></a>Forced
+subtitles</h3>
+In BD-SUP, VobSub and SUP/IFO streams,
+individual subtitles can be marked as "forced" which tells the player
+to display them even if subtitles are switched off. This
+means that forced subtitles and normal subtitles can be stored in the
+same
+stream. If forced subtitle frames are detected in an imported stream
+(and <span style="font-style: italic;">only</span>
+then), you can choose to export only the forced subtitles to SUB/IDX or
+SUP by checking the according checkbox in the export dialog (or by
+using the "/forced" parameter on the command line).<br><h3><a name="Source_and_target_frame_rate"></a>Source
+and target frame rate</h3>
+When
+reading a BD-SUP, BDSup2Sub tries to read the source frame rate from
+the stream. Keep in mind that it might be wrong or inaccurate! For
+HD-DVD SUPs, there is no frame rate information, so always 24p is
+assumed. However the source frame rate is only important if you change
+the frame rate during export. In this case, it's used together with the
+target frame rate to calculate the factor used to manipulate the time
+stamps. Note that to convert a movie from NTSC (3:2 pulldown) to PAL,
+you would still need to select 24p as source and not NTSC or 30p
+because the source timing is natively 24p and this is the only thing
+that matters for the conversion.<br>
+The target frame rate is always important, as
+it's always used to synchronize the start/end times with the frame
+rate. For best results, always select the correct target frame rate.
+Note that the default setting only depends on the resolution (PAL
+-&gt; 25p, NTSC -&gt; 30p, HD -&gt; 24p).<span style="font-weight: bold;"></span><br>
+<h3><a name="Filter_Modes"></a>Filter Modes</h3>
+You
+can select a scaling filter in the according combo box in the main
+view. The fastest algorithm is Bilinear, the slowest modes are Lanczos3
+and Mitchell. For SUP/XML export with a 256 color palette, Mitchell or Lanczos3 are
+usually the best choice. For VobSub (or SUP/IFO) with only 4 colors, this
+is harder
+to predict. Just play around with the filters, alpha threshold and
+luminance thresholds to find the best quality.<br>
+<h3><a name="Free_Scaling"></a>Free Scaling</h3>BDSup2Sub allows to scale captions in X and Y direction
+independently of the screen resolution. This feature can be used to
+e.g. enlarge the captions to make them more readable or to shrink them
+a little bit to make them fit into the cinemascope bars. Simply enter
+any value between 0.5 and 2.0 for scaling in X and Y direction. Indeed,
+for conversion from BD to DVD it's often a good idea to scale the
+subtitles by a factor of e.g. 1.2 to make them more readable. To
+compensate for the slightly increased size, you may want to move the
+captions with the "move all" feature then.<br><h3><a name="Fixing_of_too_short_frames"></a>Fixing of too short frames</h3>Some
+streams contains single subtitles which are too short to read. It's
+possible to let BDSup2Sub automatically fix these subtitles. There's <a href="#Command_Line_Interface">command line option</a> ("/tmin") as well as an option in the <a href="#Conversion_Dialog">conversion dialog</a>.
+Every time that a caption is shorter than the&nbsp;given time (in
+milliseconds), BDSup2Sub will try to increase the display time to the
+given time. Note however that this is not possible if the next subtitle
+starts before that. In this case, the end time of the subtitle in
+question will be set to the start time of the following frame.<br><h3><a name="Merging_frames"></a>Merging frames</h3>For
+some reason (probably due to a buggy authoring tool), there are quite a
+few BD subtitle streams which contain duplicated subtitle frames. I.e.
+the very same frame is repeated two, three or even more times with no
+or very short gaps between it. BDSup2Sub automatically tries to fix
+this issue, yet sometimes this behavior might not be wanted. Therefore
+it's possible to configure this feature via the command line option
+"/tmerge:&lt;t&gt;". The default value is 200ms, which means that two
+identical subtitles with a gap smaller or equal to 200ms will be merged
+to one subtitle. Setting the time to 0ms ("/tmerge:0") effectively
+disables the feature.<br><h3><a name="Language_info"></a>Language info</h3>Some
+subtitle streams contain information about the language of the stream.
+E.g. SUB/IDX, SUP/IFO and XML do, SUP BD and SUP HD don't. For those
+formats that don't support language information, BDSup2Sub tries to
+guess the correct language from the file name. If a file name for a
+BD-SUP or SUP-HD input stream contains a valid English&nbsp;language
+name (e.g. "german" or "french"), this will be used as default. Note
+that this can fail if the file name contains language names for other
+reason (e.g. movie titles like "Greek Wedding" or "Johnny English").
+Therefore, there's always the possibility to edit the language in the <a href="#Export_Dialog">export dialog</a>.
+Then again, the language info is only needed if the export format
+supports it. If you export to BD-SUP, there's no need to define it and
+the option in the export dialog is grayed out.<br>
+<h2><a name="Export_Dialog"></a>Export Dialog</h2>
+When a stream is saved, the export dialog pops up. It contains the
+following items:<br>
+<ul>
+<li>Filename<br>
+The file name used for export. You can open a file browser by clicking
+the "Browse" button or edit the text manually.<br>
+Note that the correct extension is always appended/replaced
+automatically.</li>
+<li>Language:<br>
+This option is only available if the exported format supports
+it.&nbsp;<br>
+If
+the <a href="#Language_info">language setting</a> of the input stream is known (or was guessed from
+its file name),the according language is already selected.</li>
+<li>Export only forced<br>
+If this checkbox is checked, only subtitles with a&nbsp;<a href="#Forced_subtitles">forced flag</a> will be
+exported</li>
+<li>Export palette in PGCEdit text format<br>
+This option is only available for DVD output formats (SUB/IDX or
+SUP/IFO).<br>
+If
+selected, a file with the same name as the output stream, but with the
+extension "txt" will be created that contains the palette in a format
+that can be imported into <a href="http://download.videohelp.com/r0lz/pgcedit/">PGCEdit</a>.</li><br>
+</ul>
+
+<h2><a name="Conversion_Dialog"></a>Conversion
+Dialog</h2>
+The conversion dialog pops up after a subtitle stream was loaded. You
+can also open it via the "Settings" menu.<br>
+It shows the following items:<br>
+<ul>
+<li>Resolution<br>
+If
+you check the checkbox, the <a href="#Output_resolution">resolution</a> of the output stream is changed
+to the&nbsp;resolution selected in the listbox "Resolution" below.</li>
+<li>Move<br>
+If you check the checkbox "Apply 'move all' settings', a previously
+selected <a href="#Moving">move setting</a> will be
+applied after the import.<br>
+Note that this option is only available if &nbsp;a move setting
+exists and a new stream is loaded.</li>
+<li>Frame Rate<br>
+If the checkbox "Change frame rate" is checked, a <a href="#Source_and_target_frame_rate">frame rate conversion</a>
+is done. Else only the target frame rate is used to synchronize the
+frame times.&nbsp;</li>
+<li>Global forced flags<br>
+The listbox "Force All" let's you choose whether to keep the imported <a href="#Forced_subtitles">forced flags</a> or to
+set/clear the flags of all subtitles in the output stream.</li>
+<li>Apply free scaling<br>
+In
+addition to the normal scaling due to resolution conversion, which
+retains the ratio between subtitle and screen size, this option allows
+to <a href="#Free_Scaling">scale the subtitles independently</a>.<br>
+A factor of 1.0 means 100%, so to increase the subtitles to 120% in
+width and height, use 1.2 for "Scale X" and "Scale Y"</li>
+<li>Times</li>
+<ul>
+<li>Delay<br>
+A signed delay value in milliseconds that is added to each subtitle
+start/end time.</li>
+</ul>
+<ul>
+<li><a href="#Fixing_of_too_short_frames">Fix too short frames</a><br>
+If
+this option is checked, each subtitle that is shown for less than "Min
+Time" milliseconds will be patched to be shown for at least this value.</li>
+</ul>
+<li>Defaults</li>
+<ul>
+<li>Store: stores the current settings in the <a href="#The_INI_file_persistence">ini file</a>. They
+will be used as default values the next time the dialog is shown.</li>
+<li>Restore: restores the last stored settings from the <a href="#The_INI_file_persistence">ini file</a>.</li>
+<li>Reset: resets setting to the "factory defaults" that are
+also used if the ini file doesn't exist yet.</li><br>
+</ul>
+</ul>
+
+<h2><a name="Edit_Dialog"></a>Edit Dialog</h2>
+<h3>Editing time stamps and position</h3>
+This dialog let's you edit the subtitle data of a single frame. Like position, times and forced flag. <br>You can access this dialog via the Edit menu or by left clicking in the preview panel
+(lower right) of the main window.<br>&nbsp;<br><table style="text-align: left; margin-left: auto; margin-right: auto; width: 461px; height: 241px;" border="1" cellpadding="2" cellspacing="2"><tbody><tr align="center"><td style="width: 441px;" colspan="2" rowspan="1">Control Panel</td></tr><tr align="center"><td style="width: 441px; height: 123px;" colspan="2" rowspan="1">Preview Panel</td></tr><tr><td style="width: 422px; height: 0px;">Times Panel</td><td style="width: 441px; height: 0px;">Position Panel</td></tr><tr><td style="width: 422px;">Flags Panel</td><td style="width: 441px;">Patches Panel</td></tr><tr align="center"><td style="width: 441px;" colspan="2" rowspan="1">Buttons Panel</td></tr></tbody></table><br><ul><li>Control Panel<br>The
+number of current subtitle is displayed on the left. With the buttons
+on the right you can navigate to the previous/next frame.<br>The black buttons (right) just skip to the next frame without saving, the red buttons (left) store the last edits first.<br>Note that Alt+Cursor left/right is the keyboard shortcut for the (black) previous/next buttons.</li><li>Preview Panel<br>Shows the current subtitle position inside the screen. Via the sliders you can move the subtitle position directly</li><li>Times Panel<br>
+The start/end display time can be
+edited in the text fields "Start Time" and "End Time". The times are
+automatically synchronized to the target frame rate. Also illegal
+values (overlapping with previous end time or next start time) are
+automatically corrected.Note however that the minimum display time
+defined in the conversion dialog is not checked or forced when editing
+manually. Instead of editing the end time, you can also set the
+duration directly by editing the "Duration" text field (given in
+milliseconds). Again, the duration is synchronized to the frame rate
+and automatically fixed to not overlap with the beginning of the next
+subtitle.<br>
+Additionally, you can set the duration with the buttons
+"Min" and "Max". "Min" will set the duration to the minimum value
+defined in the conversion dialog, "Max" will set it one frame before
+the beginning of the next subtitle. If there is no next subtitle,
+(because the current&nbsp;is the last one), a duration of 10
+seconds
+will be applied.</li><li>Position Panel<br>Instead of using the sliders in the preview panel, you can also enter the subtitle position  via the edit
+fields " X Offset" and "Y Offset".Illegal values are automatically corrected.<br>Furthermore
+there are some buttons for default positions. "Center" centers the
+subtitle horizontally, "Top" and "Bottom" move it to the upper/lower
+cinemascope bar (if possible).&nbsp;</li><li>Flags Panel<br>Checking/unchecking "Forced Caption" will make the current subtitle a forced subtitle.<br>By
+checking "Exlude from Export", you can delete a subtitle from the
+exported stream. It will be displayed with a large red cross to show
+that it will not be exported.</li><li>Patches Panel<br>
+Sometimes
+you might want to keep only parts of a caption, e.g. because there's
+text for the hearing impaired like "[birds chirping]" mixed with normal
+subtitles. To avoid the necessity to use OCR or to export to XML BDN to
+edit the bitmap manually, BDSup2Sub features a very simple system of
+erasing rectangular regions inside a caption.<br>
+In the edit dialog,
+just draw a rectangle by left clicking where the upper left corner
+should be located, dragging the mouse to the lower right corner and
+releasing it there. You can see a yellow rectangle while dragging- if
+you release the mouse button, this selection rectangle will be
+automatically adjusted to be completely within the green box which
+shows the borders of the caption's bitmap.<br>
+When a valid selection
+has been made, the "Erase" button in the edit dialog will become
+active. If you press it, the pixels inside the selection will be erased
+by filling the region with fully transparent pixels. Note that you can
+apply multiple of these erase regions to one caption. Also, as these
+erase command are put on a stack internally, you can undo them as long
+as you didn't&nbsp; close the program or load another stream. Just
+press "Undo Erase" do remove the last erase region or "Undo all" to
+remove all of them for this caption.</li><li>Buttons Panel<br>"Ok"
+stores the changes and returns, "Cancel" returns without taking over
+the changes, "Save Changes" stores the changes but doesn't close the
+dialog. "Prev" and "Next" skip to the previous/next subtitle without
+(!) saving the changes.<br></li></ul>
+<span style="font-weight: bold;"></span>
+<h2><a name="Move_Crop_Dialog"></a>Move/Crop
+Dialog</h2>
+<h3><a name="Moving_all_captions_insideoutside"></a>Moving all captions inside/outside bounds</h3>
+BDSup2Sub 2.7 introduced a feature to move all captions outside/inside
+certain bounds. The idea is to either move the captions <span style="font-style: italic;">outside</span> the visible
+cinemascope picture (to not cover parts of the picture) or to move them
+completely <span style="font-style: italic;">inside</span>
+the picture to e.g. use a 21:9 screen without losing the captions. The
+implemented algorithm is pretty simple: captions that are completely
+inside the upper half of the screen are defined as "upper" captions,
+while those completely inside the lower half of the screen are defined
+as "lower" captions. Captions that begin in the upper half and end in
+the lower half are not moved at all.<br>
+When moving captions "outside",
+the upper captions are simply moved to the top of the screen plus a
+given offset in pixels. The lower captions are moved to bottom of the
+screen, where again the pixel offset between the bottom of the caption
+and the bottom of the screen is kept.<br>
+When moving captions "inside",
+it's important to define the correct target picture aspect ratio. E.g.
+if you want to move the captions inside a 21:9 picture, you need to
+select a aspect ratio 2.33 (or push the button labeled "21:9"). Now the
+upper captions are positioned <span style="font-style: italic;">offset</span>
+pixels below the upper border of the 21:9 screen and the lower captions
+are positioned <span style="font-style: italic;">"Y
+offset"</span>
+pixels above the lower border of the 21:9 screen.<br>
+Indeed,
+"inside" and "outside" work pretty much exactly the same apart from the
+fact that when moving "inside", the screen height is virtually
+decreased by the given factor.<br>
+<h3><a name="Moving_all_captions_horizontally"></a>Moving all captions horizontally</h3>
+Since BDSup2Sub 3.9.6 &nbsp;it's also possible to move (all)
+captions horizontally<span style="font-style: italic;"></span>.
+You can either move to the left, to the right or center the captions to
+the middle of the screen,. When moving to the left or to the right,
+BDSup2Sub will try to keep a minimum distance of "<span style="font-style: italic;">X offset</span>"
+to the left or right screen border. However, when the caption is too
+wide, the actual distance to the border might be smaller or even 0.<br>
+<h3><a name="Cropping_of_screen_size"></a>Cropping (of screen size)</h3>
+Implemented
+due to user request. If a crop offset is defined, the exported Y
+coordinates will be reduced by the cropping offset. Usually, this
+should be used in combination with moving captions inside bounds -
+that's why it's located there in the GUI. Anyway, the crop offset is
+also the minimum Y coordinate for exported captions. E.g. if the crop
+offset is 100, all captions with a higher Y coordinate will be moved up
+by 100 pixels and captions with Y &lt;= crop offset will have an Y
+coordinate of 0 after the export. The crop offset will be displayed as
+red line in all preview windows. It can be reset to 0 (without moving
+captions) by using the according menu command (reset crop offset).<br>
+Since
+3.0.1, the crop offset is assumed to be symmetrical. Hence two red
+lines are displayed and also the maximum Y coordinate is reduced to fit
+into the cropped screen. Now also the screen size in exported IDX or
+SUP files is reduced&nbsp;by 2*Crop Offset Y. E.g. if the target
+resolution is 1080p without cropping and you select a crop offset of
+100, the resulting screen size is 1920*880.<br>
+<h3><a name="Automatic_Cropping_of_caption_images"></a>Automatic Cropping (of caption images)</h3>
+In
+some subtitle
+streams the images that contain the captions are much larger than it
+would be necessary. Indeed, in some cases, the image is as large as the
+whole screen area (e.g. 720x576 for PAL). While this doesn't really
+matter when just displaying the stream, it makes certain features of
+BDSup2Sub unusable (e.g. moving captions).&nbsp; Since I saw this
+only
+happen in VobSubs, SUP/IFO and BDN XMLs, BDSup2Sub applies automatic
+cropping
+for these input formats. This means that BDSup2Sub crops the first/last
+lines/columns of each image that don't contain any opaque pixels
+resulting in an image that contains only the subtitle but no empty
+border.<br>
+Unfortunately,
+probably due to wrong RGB/YCBCr conversion in certain tools, the
+transparent color is not fully transparent (i.e.
+alpha = 0) in some streams, but the alpha value is just very small
+(e.g. alpha = 7). To work around this, BDSup2Sub defines an "alpha
+cropping threshold": if &nbsp;a
+pixel's alpha value is smaller than this threshold, it will be
+considered invisible. The default value for this threshold is 14, but
+it can be set (only) via the CLI option "/acrop". Note that setting
+"/acrop" to 0 disables automatic cropping.<br>
+<br>
+It's worth to mention that the alpha
+cropping threshold is also used to decide whether to patch the colors
+of transparent pixels. Again, when displaying a subtitle stream, it
+doesn't matter if a fully transparent pixel is yellow or black. For
+scaling this matters though, as all 4 components (alpha, r ,g ,b) are
+used to determine a new color/alpha value. Now if all transparent
+pixels are yellow instead of black, the pixels at the outer border of
+each character will&nbsp; get a yellow tint. To avoid this effect,
+BDSup2Sub patches all colors with an alpha value smaller than the alpha
+cropping &nbsp;threshold to be (transparent) black. Note that if
+you
+disable automatic cropping by setting the alpha cropping threshold to
+0, this also disables palette patching and might lead to a color tint
+when scaling.<br>
+<h2><a name="Formats"></a>Details on supported
+formats</h2>
+<h3>Sony BDN XML format</h3>
+This
+format consists of an XML file containing all the information but the
+caption graphics and a number of PNG image files (one for each caption).<br>
+The XML file looks like this:<br>
+<br>
+<table style="text-align: left; width: 100%;" border="0" cellpadding="2" cellspacing="2">
+<tbody>
+<tr>
+<td style="background-color: rgb(239, 239, 239);"><span style="font-family: monospace;"><span style="font-family: monospace;">&lt;?xml version="1.0"
+encoding="UTF-8"?&gt;</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&lt;BDN
+Version="0.93" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:noNamespaceSchemaLocation="BD-03-006-0093b BDN File
+Format.xsd"&gt;</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;
+&lt;Description&gt;</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
+&lt;Name Title="BDN Example" Content=""/&gt;</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
+&lt;Language Code="eng"/&gt;</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
+&lt;Format VideoFormat="720p" FrameRate="23.976"
+DropFrame="False"/&gt;</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
+&lt;Events Type="Graphic" FirstEventInTC="00:00:00:00"
+LastEventOutTC="02:26:38:18" NumberofEvents="22"/&gt;</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;
+&lt;/Description&gt;</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;
+&lt;Events&gt;</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
+&lt;Event InTC="00:00:00:00" OutTC="00:00:05:00"
+Forced="False"&gt;</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt;Graphic Width="1" Height="1" X="0"
+Y="0"&gt;subtitles_0001.png&lt;/Graphic&gt;</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
+&lt;/Event&gt;</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;
+&nbsp; ...</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
+&lt;Event InTC="02:26:35:12" OutTC="02:26:38:18"
+Forced="False"&gt;</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt;Graphic Width="601" Height="88" X="343"
+Y="511"&gt;subtitles_0022.png&lt;/Graphic&gt;</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
+&lt;/Event&gt;</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;
+&lt;/Events&gt;</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&lt;/BDN&gt;</span></span></td>
+</tr>
+</tbody>
+</table>
+<br>
+Palettized or 24bit ARGB&nbsp;images are supported for import - the
+latter will be converted to a 256 color
+palette automatically. As a matter of fact, the BDN implementation of
+BDSup2Sub is pretty unrestricted regarding the image formats for
+import. Apart from PNG, also e.g. BMP, JPG or GIF files should work.
+Indeed every format supported by Java's ImageIO library will work. <br>
+Note
+that BDSup2Sub will only export 8bit palettized PNGs with transparency
+(via tRNS tag) for maximum compatibility with Sonic Scenarist HDMV.
+Unfortunately, only a few (free) graphic programs support this format
+correctly. <a href="http://www.getpaint.net/">Paint.NET</a>
+however
+seems to work just fine. So via BDN SUP export/import, it's even
+possible to alter any caption beyond the built-in possibilities of
+BDSup2Sub.<br>
+<br>
+Note: although the BDN XML looks pretty straight forward and
+clean,&nbsp;the
+timing information in this format is a little weird for unknown
+reasons. Indeed the
+timings are always based on an integer frame rate. E.g. in the above
+example, while the frame rate is 23.976 Hz (24p), the
+time codes are related to a 24Hz Signal.<br>
+E.g. for the end time this means:<span style="font-family: monospace;"><span style="font-family: monospace;"><br>
+<br>
+</span></span>
+<table style="text-align: left; width: 963px; height: 212px;" border="0" cellpadding="2" cellspacing="2">
+<tbody>
+<tr>
+<td style="background-color: rgb(239, 239, 239);"><span style="font-family: monospace;"><span style="font-family: monospace;">02:26:38:18 (time code in
+XML)<br>
+2 hours = 2*60*60 seconds = 7200s <br>
+26 minutes = 26*60 seconds = 1560s<br>
+38 seconds = 38s<br>
+18 frames = 18/24 s = 750ms<br>
+In sum this equals 8798750 ms.<br>
+Now since the given frame rate is really 23.976Hz, this value is
+multiplied by 1.001<br>
+This equals 8807548.75ms<br>
+This equals 2 hours, 26 minutes, 47 seconds and 549ms<br>
+2:26:47.549 (real time code displayed in BDSup2Sub)</span></span></td>
+</tr>
+</tbody>
+</table>
+<span style="font-family: monospace;"><span style="font-family: monospace;"><br>
+</span></span>Keep
+this in mind when editing the XML manually. It's weird, and believe me:
+I would have defined it in a more sensible way, but that's
+unfortunately how it works.<br>
+<h3>VobSub IDX file</h3>
+There
+are several keywords in the IDX file that some tools may use and other
+don't. Here's a list of the keywords and what BDSup2Sub makes of them:<br>
+<table style="text-align: left; width: 970px; height: 172px;" border="0" cellpadding="2" cellspacing="0">
+<tbody>
+<tr>
+<td style="background-color: rgb(204, 204, 204); width: 126px;">keyword</td>
+<td style="background-color: rgb(204, 204, 204); width: 385px;">example</td>
+<td style="background-color: rgb(204, 204, 204); width: 439px;">remark</td>
+</tr>
+<tr>
+<td style="font-weight: bold; width: 126px;">size</td>
+<td style="width: 385px;">size: 720x576</td>
+<td style="width: 439px;">screen size: <span style="font-weight: bold;">mandatory</span></td>
+</tr>
+<tr>
+<td style="width: 126px; background-color: rgb(239, 239, 239);"><span style="font-weight: bold;">org</span></td>
+<td style="width: 385px; background-color: rgb(239, 239, 239);">org:
+10, 10</td>
+<td style="width: 439px; background-color: rgb(239, 239, 239);">origin:
+x,y position of upper left corner in pixels. <span style="font-weight: bold;">Optional</span>.</td>
+</tr>
+<tr>
+<td style="width: 126px;"><span style="font-weight: bold;">scale</span></td>
+<td style="width: 385px;">scale: 104%, 164%</td>
+<td style="width: 439px;">scaling factors for image:
+<span style="font-weight: bold;">Ignored</span>
+<br>
+(use conversion dialog settings or CLI options instead)</td>
+</tr>
+<tr>
+<td style="width: 126px; background-color: rgb(239, 239, 239);"><span style="font-weight: bold;">alpha</span></td>
+<td style="width: 385px; background-color: rgb(239, 239, 239);">alpha:
+0%</td>
+<td style="width: 439px; background-color: rgb(239, 239, 239);">global
+alpha blending factor: <span style="font-weight: bold;">Ignored</span>.</td>
+</tr>
+<tr>
+<td style="width: 126px;"><span style="font-weight: bold;">smooth</span></td>
+<td style="width: 385px;">smooth: OFF</td>
+<td style="width: 439px;">apply smoothing algorithm:
+<span style="font-weight: bold;">Ignored</span>.</td>
+</tr>
+<tr>
+<td style="width: 126px; background-color: rgb(239, 239, 239);"><span style="font-weight: bold;">fadein/out</span></td>
+<td style="width: 385px; background-color: rgb(239, 239, 239);">fadein/out:
+50, 50</td>
+<td style="width: 439px; background-color: rgb(239, 239, 239);">create
+fade in/out (times in ms): <span style="font-weight: bold;">Ignored</span>.</td>
+</tr>
+<tr>
+<td style="width: 126px;"><span style="font-weight: bold;">align</span></td>
+<td style="width: 385px;">align: OFF at LEFT TOP</td>
+<td style="width: 439px;">force caption placement: <span style="font-weight: bold;">Ignored</span>.</td>
+</tr>
+<tr>
+<td style="width: 126px; background-color: rgb(239, 239, 239);"><span style="font-weight: bold;">time offset</span></td>
+<td style="width: 385px; background-color: rgb(239, 239, 239);">time
+offset: 0</td>
+<td style="width: 439px; background-color: rgb(239, 239, 239);">Global
+delay in in ms or hh:mm:ss:ms: <span style="font-weight: bold;">Optional</span></td>
+</tr>
+<tr>
+<td style="width: 126px;"><span style="font-weight: bold;">forced subs</span></td>
+<td style="width: 385px;">forced subs: OFF</td>
+<td style="width: 439px;">Show only forced captions:
+<span style="font-weight: bold;">Ignored</span>.<br>
+(use export dialog setting or CLI options instead)</td>
+</tr>
+<tr>
+<td style="width: 126px; background-color: rgb(239, 239, 239);"><span style="font-weight: bold;">palette</span></td>
+<td style="width: 385px; background-color: rgb(239, 239, 239);">palette:
+000000, 141207, [...], bdab4f</td>
+<td style="width: 439px; background-color: rgb(239, 239, 239);">16
+color DVD subtitle palette: <span style="font-weight: bold;">mandatory</span></td>
+</tr>
+<tr>
+<td style="width: 126px;"><span style="font-weight: bold;">custom colors</span></td>
+<td style="width: 385px;">custom colors: OFF, tridx:
+1111, colors: 000000,&nbsp;[...], bdab4f</td>
+<td style="width: 439px;">Global palette/alpha
+setting: <span style="font-weight: bold;">Ignored</span>.</td>
+</tr>
+<tr>
+<td style="width: 126px; background-color: rgb(239, 239, 239);"><span style="font-weight: bold;">langidx</span></td>
+<td style="width: 385px; background-color: rgb(239, 239, 239);">langidx:
+7</td>
+<td style="width: 439px; background-color: rgb(239, 239, 239);">Active
+language index: <span style="font-weight: bold;">mandatory</span></td>
+</tr>
+<tr>
+<td style="width: 126px;"><span style="font-weight: bold;">id</span>, <span style="font-weight: bold;">index</span></td>
+<td style="width: 385px;">id: en, index: 7</td>
+<td style="width: 439px;">Language ID and caption
+index: <span style="font-weight: bold;">mandatory<br>
+</span>(at least one index in the file must fit langidx)<span style="font-weight: bold;"></span></td>
+</tr>
+<tr>
+<td style="width: 126px; background-color: rgb(239, 239, 239);"><span style="font-weight: bold;">timestamp</span>, <span style="font-weight: bold;">filepos</span></td>
+<td style="width: 385px; background-color: rgb(239, 239, 239);">timestamp:
+00:01:47:520, filepos: 000000000</td>
+<td style="width: 439px; background-color: rgb(239, 239, 239);">Timestamp
+and file offset of one caption: <span style="font-weight: bold;">mandatory</span></td>
+</tr>
+</tbody>
+</table>
+<br>
+Regarding
+the language index: there are some tools that store multiple subtitle
+streams inside one SUB/IDX file (e.g. for different language). In this
+case, the "id, index" keyword does exist several times, where each
+appearance has a different index and a separate section of
+timestamps,filepos pairs defining the captions for this index.<br>
+Note
+that BDSup2Sub ignores all captions but those after the id,index header
+that fits the language index defined via the "langidx" keyword.<br>
+<h3><a name="Notes_on_SUPIFO"></a>Notes on SUP/IFO</h3>
+The
+SUP/IFO format as defined by IfoEdit/VobEdit is supported since version
+3.9.0 due to public demand. Internally (e.g. regarding RLE encoding,
+palette definitions etc.) it's virtually the same as SUB/IDX. Note that
+there are some limitations to this format though. <br>
+Firstly, the
+palette and the screen size are stored inside an IFO file. BDSup2Sub
+needs a valid IFO file for each SUP file and both have to share the
+same file name (except the extension of course). If you e.g. exported a
+file "english.sup" from a "VTS_02_1.VOB" and the according IFO is
+"VTS_02_0.IFO", then you need to copy the IFO and rename it to
+"english.ifo" to make BDSup2Sub accept it as input.<br>
+<span style="font-weight: bold;">Note that
+BDSup2Sub recognizes the extension "IFO" for SUP/IFO, but not "SUP"</span>.
+The reason is that BDSup2Sub can differ between BD-SUP and HD-DVD-SUP
+during import only because both format have different packet
+identifiers.
+Unfortunately, HD-DVD-SUP and DVD-SUP use the same (outer) package
+structure so they can only be distinguished between during parsing of
+the&nbsp;command buffer. At this time, BDSup2Sub already decided to
+treat a SUP with that package header as "HD-DVD-SUP" and will throw an
+error.<br>
+When exporting, you should be aware that there are only PAL
+and NTSC resolutions defined in the DVD format (and therefore in the
+IFO).Thus hires or cropped formats will lead to major problems, even
+when importing these files back in BDSup2Sub. I'd strongly suggest to
+use VobSub in such cases.<br>
+<br>
+<span style="font-family: monospace;"><span style="font-family: monospace;"></span></span>
+<h2><a name="Command_Line_Interface"></a>Command
+line interface</h2>
+While BDSup2Sub has a graphical interface, it can be used from the
+command line as well. Note that to start the GUI without an open
+console, use "javaw" instead under Windows.<br>
+<br>
+Syntax1:<br>
+<div style="margin-left: 40px; width: 620px;"><span style="font-family: monospace;">java -jar BDSup2Sub.jar
+[options]</span><span style="font-family: monospace;"><br>
+</span></div>
+<br>
+If there is no file name given (all passed parameters are options
+starting with "/"), the GUI is started. Still you can pass options to
+e.g. preselect the target frame rate or resolution. If there's only one
+parameter which is either "/help" or "/?",&nbsp;a short help will
+be
+displayed&nbsp; in the console instead (i.e. the GUI will <span style="font-style: italic;">not</span> start). <br>
+<br>
+Syntax2:<br>
+<div style="margin-left: 40px; width: 620px;"><span style="font-family: monospace;">java -jar BDSup2Sub.jar
+&lt;in&gt; </span><span style="font-family: monospace;">[options]</span><span style="font-family: monospace;"><br>
+</span></div>
+<br>
+If there is only file name ("&lt;in&gt;") given, the
+GUI is started and the file with the given name is loaded immediately.
+Options passed will be used as default settings if possible. <br>
+<br>
+Syntax3:<br>
+<div style="margin-left: 40px; width: 620px;"><span style="font-family: monospace;">java -jar BDSup2Sub.jar
+&lt;in&gt; &lt;out&gt; [options]</span><br>
+</div>
+<br>
+If
+there is an source file name &lt;in&gt; and a target file
+name&nbsp;&lt;out&gt;, the GUI is not started, but
+BDSup2Sub behaves
+like a command line application.Note that it's mandatory that the
+target file name has an extension, which might be either ".sup",
+".ifo", ".idx" or ".sub". If the extension of the output file name is
+".idx" or
+".sub", the output format will be SUB/IDX. If the extension of the
+output file name is ".sup", the output format will be BD-SUP. If the
+extension is ":ifo", the output format is SUP/IFO.<br>
+<br>
+Any of the following options may passed:<br>
+<table style="text-align: left; width: 714px; height: 844px;" border="0" cellpadding="2" cellspacing="2">
+<tbody>
+<tr>
+<td style="vertical-align: top; background-color: rgb(239, 239, 239);"><span style="font-family: monospace;">&nbsp; &nbsp;
+/res:&lt;n&gt;</span></td>
+<td style="background-color: rgb(239, 239, 239);">set
+<a href="#Output_resolution">output resolution</a> to either 480, 576, 720 or 1080 - default 576.<br>
+You can also use "pal", "ntsc", "720p" or "1080p" instead.<br>
+For 1440x1080 use "/res:1440x1080"<br>
+Use "/res:keep" to keep the resolution of the source</td>
+</tr>
+<tr>
+<td><span style="font-family: monospace;">&nbsp;
+&nbsp; /dly:&lt;n&gt;</span></td>
+<td>set delay in ms - default: 0.0. Will be synchronized to
+target frame rate.</td>
+</tr>
+<tr>
+<td style="background-color: rgb(239, 239, 239);"><span style="font-family: monospace;">&nbsp;
+&nbsp; /forced[+/-]</span></td>
+<td style="background-color: rgb(239, 239, 239);">export
+only <a href="#Forced_subtitles">forced subtitles</a> - default: off (all subtitles
+are exported).</td>
+</tr>
+<tr>
+<td><span style="font-family: monospace;">&nbsp;
+&nbsp; /forceall[+/-]</span></td>
+<td>set/clear forced flag for all subs - default: off (keep)</td>
+</tr>
+<tr>
+<td style="background-color: rgb(239, 239, 239);"><span style="font-family: monospace;">&nbsp;
+&nbsp; /swap[+/-]</span></td>
+<td style="background-color: rgb(239, 239, 239);"><a href="#Interpreting_the_SUP_palette">swap
+Cr/Cb component</a>s - default: off (don't swap).</td>
+</tr>
+<tr>
+<td><span style="font-family: monospace;">&nbsp;
+&nbsp; /tmin:&lt;t&gt;</span></td>
+<td>set <a href="#Fixing_of_too_short_frames">minimum display time</a> in ms - default: 500</td>
+</tr>
+<tr>
+<td style="background-color: rgb(239, 239, 239);"><span style="font-family: monospace;">&nbsp;
+&nbsp; /tmerge:&lt;t&gt;</span></td>
+<td style="background-color: rgb(239, 239, 239);">set
+maximum time difference for <a href="#Merging_frames">merging captions</a> in ms - default: 200<br>
+Note: currently only supported for BD-SUPs</td>
+</tr>
+<tr>
+<td style="vertical-align: top; font-family: monospace;">&nbsp;
+&nbsp; /fps:&lt;src&gt;,&lt;trg&gt;</td>
+<td>convert <a href="#Source_and_target_frame_rate">frame rate</a> from &lt;src&gt; to
+&lt;trg&gt; given as floating point values. <br>
+Predefined values;&nbsp;24p=23.976, pal or 25p=25, ntsc or
+30p=29.967<br>
+/fps:auto,&lt;t&gt; detects source frame rate automatically</td>
+</tr>
+<tr>
+<td style="font-family: monospace; background-color: rgb(239, 239, 239);">&nbsp;
+&nbsp; /fps:&lt;trg&gt;</td>
+<td style="background-color: rgb(239, 239, 239);">synchronize
+target frame rate to &lt;trg&gt;.
+Default: automatic (dumb!).<br>
+Predefined values;&nbsp;24p=23.976, pal or 25p=25, ntsc or
+30p=29.967<br>
+"/fps:keep" preserves the source fps (for BD&amp;XML, else default)</td>
+</tr>
+<tr>
+<td style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
+/filter:&lt;f&gt;</td>
+<td>set <a href="#Filter_Modes">scaling filter</a> - default: bilinear. Supported types:<br>
+bilinear, triangle, bicubic, bell, b-spline, hermite, lanczos3, mitchell</td>
+</tr>
+<tr>
+<td style="font-family: monospace; background-color: rgb(239, 239, 239);">&nbsp;
+&nbsp; /movin:&lt;r&gt;[,&lt;o&gt;]</td>
+<td style="background-color: rgb(239, 239, 239);"><a href="#Moving_all_captions_insideoutside">move
+captions</a> inside screen ratio &lt;r&gt;,
+plus/minus offset &lt;o&gt;</td>
+</tr>
+<tr>
+<td style="font-family: monospace;">&nbsp;
+&nbsp; /movout:&lt;r&gt;[,&lt;o&gt;]</td>
+<td><a href="#Moving_all_captions_insideoutside">move captions</a> outside screen ratio &lt;r&gt;,
+plus/minus offset &lt;o&gt;</td>
+</tr>
+<tr>
+<td style="font-family: monospace; background-color: rgb(239, 239, 239);">&nbsp;
+&nbsp; /movex:&lt;t&gt;[,&lt;o&gt;]]</td>
+<td style="background-color: rgb(239, 239, 239);"><a href="#Moving_all_captions_horizontally">move
+captions horizontally</a>. &lt;t&gt; may be "left", "right" or
+"center".<br>
++/- optional offset &lt;o&gt; (only used if moving left or
+right)</td>
+</tr>
+<tr>
+<td style="font-family: monospace;">&nbsp;
+&nbsp; /cropy:&lt;n&gt;</td>
+<td><a href="#Cropping_of_screen_size">crop</a> the upper and lower n lines - default: 0</td>
+</tr>
+<tr>
+<td style="font-family: monospace; background-color: rgb(239, 239, 239);">&nbsp;
+&nbsp; /acrop:&lt;n&gt;</td>
+<td style="background-color: rgb(239, 239, 239);">set
+<a href="#Automatic_Cropping_of_caption_images">alpha cropping threshold</a> - default: 10</td>
+</tr>
+<tr>
+<td style="font-family: monospace;">&nbsp;
+&nbsp; /scale:&lt;x&gt;,&lt;y&gt;</td>
+<td><a href="#Free_Scaling">scale captions with free factors</a> - default: 1.0,1.0
+&nbsp;(min: 0.5, max: 2.0)</td>
+</tr>
+<tr>
+<td style="font-family: monospace; background-color: rgb(239, 239, 239);">&nbsp;
+&nbsp; /exppal[+/-]</td>
+<td style="background-color: rgb(239, 239, 239);">export
+target palette in PGCEdit text format - default: off (don't export)</td>
+</tr>
+<tr>
+<td style="font-family: monospace;">&nbsp;
+&nbsp; /fixinv[+/-]</td>
+<td><a href="#Automatic_fixing_of_invisible_subtitles">fix zero alpha frame palette</a>&nbsp;- default: off
+(don't fix)<br>
+Note: ignored if import format is neither SUB/IDX nor SUP/IFO.</td>
+</tr>
+<tr>
+<td style="font-family: monospace; background-color: rgb(239, 239, 239);">&nbsp;
+&nbsp; /verbatim[+/-]</td>
+<td style="background-color: rgb(239, 239, 239);">switch
+on verbatim console output mode - default: off</td>
+</tr>
+<tr>
+<td style="font-family: monospace;"><span style="font-family: monospace;">&nbsp;
+&nbsp; /palmode:&lt;s&gt;</span></td>
+<td><a href="#Palette_Modes">palette mode</a>:&nbsp;keep, create,&nbsp;dither -
+default:&nbsp;create<br>
+Note: if the export format is SUB/IDX, but the import format isn't, this<br>
+setting is ignored. If both input and output format are SUB/IDX,
+"dither"<br>
+is identical to "create".</td>
+</tr>
+</tbody>
+</table>
+<br>
+The following options only make sense for SUB/IDX or SUP/IFO exports:<br>
+<table style="text-align: left; width: 715px; height: 153px;" border="0" cellpadding="2" cellspacing="2">
+<tbody>
+<tr>
+<td style="background-color: rgb(239, 239, 239);"><span style="font-family: monospace;">&nbsp;
+&nbsp; /atr:&lt;n&gt;</span></td>
+<td style="background-color: rgb(239, 239, 239);">set
+alpha threshold 0..255. Default 80</td>
+</tr>
+<tr>
+<td><span style="font-family: monospace;">&nbsp;
+&nbsp; /ltr1:&lt;n&gt; &nbsp; &nbsp; &nbsp;
+&nbsp;</span></td>
+<td>set luminance low/mid threshold 0..255. Default
+automatic.</td>
+</tr>
+<tr>
+<td style="background-color: rgb(239, 239, 239);"><span style="font-family: monospace;">&nbsp;
+&nbsp; /ltr2:&lt;n&gt;</span></td>
+<td style="background-color: rgb(239, 239, 239);">set
+luminance mid/high threshold 0..255. Default
+automatic.</td>
+</tr>
+<tr>
+<td><span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
+/lang:&lt;s&gt;</span></td>
+<td>set <a href="#Language_info">language</a> to string &lt;s&gt; (e.g. "en" for
+English or "de" for German). Default: "de"<br>For a complete list, try /lang:?<br>Note that this also works for XML and BD-SUP exports, yet the full language selection is limited.<span style="font-family: monospace;"></span></td>
+</tr>
+<tr>
+<td style="background-color: rgb(239, 239, 239);"><span style="font-family: monospace;">&nbsp;
+&nbsp; /pal:&lt;s&gt;</span></td>
+<td style="background-color: rgb(239, 239, 239);">load
+palette file named &lt;s&gt; (ini files
+exported from BDSup2Subs&nbsp;color edit dialog)&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<br>
+Note: boolean parameters like "/verbatim" or "/fixinv" can be
+switched on/off with a trailing "+" or "-". So "/verbatim" is the same
+as "/verbatim+", while "/verbatim-" switches the feature off. If a
+boolean switch is not used, the current value from the (automatically
+created) INI file is used. Only if no INI file exists, the default
+value is used.<br>
+<br>
+Examples:<br>
+<div style="margin-left: 40px; font-family: monospace; width: 930px;">java
+-jar BDSUp2Sub.jar&nbsp;sup2.sup&nbsp;sup2.sub /lang:en
+/res:ntsc<br>
+java -jar BDSUp2Sub.jar&nbsp;sup2.sup&nbsp;sup2.sub
+/lang:no /atr:40&nbsp;/res:1080 /forced /fps:24p,25p<br>
+java -jar BDSUp2Sub.jar&nbsp;sup2.sup&nbsp;sup2_exp.sup
+/lang:no /atr:40&nbsp;/res:720p /forced-</div>
+<br>
+<h3>Using wildcards at the command line</h3>
+Since version 2.0,
+wildcards are supported at the command line (if both, source and target
+file name are given). Due to limitations of the Java runtime, <span style="font-weight: bold;">the complete parameter string has
+to be enclosed in double quotes if wildcards are used</span>!!!
+To still allow file names with spaces, use single quotes (apostrophes)
+then to enclose such file names.<br>
+Supported
+wildcards are "*" (asterisk) for at least one&nbsp;alphanumeric
+character including underscore and dot (a-z,A-Z,"_", ".") and "?"
+(question mark) for exactly one occurrence of an alphanumeric character.<br>
+<br>
+Examples:<br>
+<div style="margin-left: 40px; font-family: monospace; width: 930px;">java
+-jar BDSUp2Sub.jar "reference\m?trix*.sup out\*.idx /lang:en
+/res:ntsc"<br>
+java -jar BDSUp2Sub.jar&nbsp;"'in path\m?trix*.sup' 'out
+path\*.idx'
+/lang:no /atr:40&nbsp;/res:1080 /forced"<br>
+</div>
+<br>
+Note: the target file name must contain exactly one asterisk ("*") as
+wildcard. It will be replaced with the according source file name
+(stripped off its path and extension). If the source file name doesn't
+contain wildcards, the asterisk in the target file name will be
+replaced with the source filename stripped off its extension, but
+including the path.<br>
+<br>
+<h2><a name="Application_Hints"></a>Application
+Hints</h2>
+<h3>Increasing the RAM size</h3>
+Java application only get a maximum of 64MB of RAM per default. This
+can lead to memory problems when loading SUPs with thousands of
+warnings or if importing XML/PNG with very large images. The java
+runtime supports command line switches to increase the RAM size though:<br>
+<br>
+<div style="margin-left: 40px; font-family: monospace; width: 620px;">java
+<span style="font-weight: bold;">-Xmx256m</span>
+-jar BDSUp2Sub.jar<br>
+</div>
+<br>
+This will increase the maximum heap to 256MB of RAM which should be
+enough in all cases. Since this is a parameter to the virtual machine,
+it must be used before the "-jar" and it has no influence on
+BDSup2Sub's command line switches.<br>
+<h3>Disabling&nbsp;Direct3D support in case of problems</h3>
+When
+running in Windows, the Java runtime environment tries to make use of
+Direct3D for hardware accelerated blitting and storing images in the
+RAM of the video card. However due to implementation bugs in the JRE
+and or the video card drivers, this can lead to problems with certain
+combinations of hardware, video card drivers and JRE versions which
+start with visual artefacts (redraw problems, flickering, displaced
+graphics) and can end with system crashes. If this
+happens, the use of Direct3D can be disabled by adding the command line
+switch&nbsp;"-Dsun.java2d.d3d=false" when starting a Java
+application.<br>
+To
+affect any Java application, it's usually a good idea to disable the
+use of Direct3D globally by creating an environment variable called
+"_JAVA_OPTIONS" with the value "-Dsun.java2d.d3d=false". This can be
+done in the System control of the Windows control panel.<br>
+Just in
+case that you're using Eclipse, I'd like to mention that setting this
+environment variable makes it impossible to start current versions of
+Eclipse with the default launcher (Eclipse.exe). This is obviously a
+weird bug in the launcher - then again, you can still start Eclipse
+directly via the correct Jar.
+<h3>Integration in the Windows Explorer</h3>
+Unfortunately
+it's impossible to change the Windows registry in Java without
+sacrificing platform independence. So to register BDSup2Sub as default
+application for SUP files, some manual work is needed.<br>
+Cut out this text and save it with a plain text editor (e.g. NotePad)
+as BDSup2Sub.reg (the extension ".reg" is important!).<br>
+<br>
+<table style="text-align: left; height: 232px; width: 710px;" border="0" cellpadding="2" cellspacing="2">
+<tbody>
+<tr>
+<td style="background-color: rgb(239, 239, 239); width: 700px;">Windows
+Registry Editor Version 5.00<br>
+<br>
+[HKEY_CLASSES_ROOT\.sup]<br>
+@="SUP BD/HD-DVD caption stream"<br>
+<br>
+[HKEY_CLASSES_ROOT\.sup\shell]<br>
+<br>
+[HKEY_CLASSES_ROOT\.sup\shell\open]<br>
+<br>
+[HKEY_CLASSES_ROOT\.sup\shell\open\command]<br>
+@="E:\\dev\\java\\jre_6_0\\bin\\javaw.exe -jar
+d:\\src\\java\\BDSup2Sub\\BDSup2Sub.jar \"%1\""</td>
+</tr>
+</tbody>
+</table>
+<br>
+Then
+replace "E:\\dev\\java\\jre_6_0\\bin" with the path to your Java
+runtime and &nbsp;"d:\\src\\java\\BDSup2Sub" with your installation
+directory of BDSup2Sub. Remember to use double backlashes ("\\" instead
+of "\")!!!<br>
+Now save the file and double click it from the Explorer. Chose "yes" in
+the following two dialogs.<br>
+If you (and I) did everything right, BDSup2Sub should be used now to
+open SUP files when you double click on them.<br>
+You
+can use the same approach of course to open VobSubs. Just replace "sup"
+with "idx" and&nbsp;"SUP BD/HD-DVD caption stream" with "SUB/IDX
+caption stream" or whatever you like as name.<br>
+<h3>Desktop Integration (Icons)</h3>While BDSup2Sub has an application
+icon, unfortunately, the default coffee cup of the Java Virtual Machine
+is used if you created yourself a desktop icon to start
+BDSup2Sub.&nbsp;This is because a
+JAR is always opened with the installed JVM and so you get the icon of
+the JVM, not the one of the application inside the JAR. Still it's
+possible to change the icon manually (at least in windows, but I assume
+this is the same in Linux and MacOS). For your convenience, not only
+the PNG picture (icon_32.png) used by the application is included in
+the JAR,
+but also an ICO file for Windows and an ICNS file for MacOS X. I don't
+know too much about Linux icons, but I's guess you should be able to
+use the PNG. Anyway, to extract these icons, simply rename the JAR to
+ZIP and extract the files.
+<h3>Drag'n'Drop</h3>BDSup2Sub is able to open files via Drag'n'Drop. Just drag
+a SUP, XML, IFO or IDX file on the application window and release the
+mouse
+button. As
+BDSup2Sub is not able to open more than one subtitle stream at a time,
+only
+one&nbsp;file will be opened if you drag&amp;drop multiple
+files.
+Internally, always the first file in the passed
+list is opened - this might however not be the file that is displayed
+first in your selection. Anyway, this feature is meant for <span style="font-style: italic;">one file only</span>
+anyway.<br>
+Note:
+as explained in the SUP/IFO section, Drag'n'Drop of a DVD-SUP will lead
+to wrong detection as HD-DVD-SUP and the import will fail with error
+messages. Drag'n'Drop of the IFO works though.<br>
+<h3><a name="The_INI_file_persistence"></a>The
+INI file (persistence)</h3>
+BDSup2Sub
+stores some settings in an INI file that is located in the same folder
+as the JAR. You should usually not need to edit or delete the INI file.
+Yet both is possible. If the INI file (or entries within it) is
+missing, BDSup2Sub will use some default settings.<br>
+<table style="text-align: left; height: 312px; width: 708px;" border="0" cellpadding="2" cellspacing="2">
+<tbody>
+<tr>
+<td style="background-color: rgb(239, 239, 239); width: 698px;">#BDSup2Sub
+3.9.5 settings - don't modify manually<br>
+#Sat Jun 27 13:28:05 CEST 2009<br>
+fixZeroAlpha=true<br>
+filter=Mitchell<br>
+loadPath=D\:\\src\\Java\\BDSup2Sub\\reference\\colored-forced.idx<br>
+mergePTSdiff=18000<br>
+frameHeight=600<br>
+framePosY=197<br>
+framePosX=241<br>
+alphaCrop=14<br>
+frameWidth=799<br>
+verbatim=true<br>
+savePath=D\:\\src\\Java\\BDSup2Sub\\reference\\colored-forced.idx<br>
+colorPath=<br>
+paletteMode=keep existing</td>
+</tr>
+</tbody>
+</table>
+<br>
+As
+you can see, some (yet not nearly all) program settings are stored in
+the INI file. E.g. the default filter (in this case: "Mitchell") or the
+verbatim output setting. Note that also "alphaCrop" and "mergePTSdiff"
+are stored which can be (currently) only selected via the command line
+(by using the parameters&nbsp;"/acrop" and "/tmerge"). This means
+that
+you don't need to set e.g. "/tmerge" every time you call BDSup2Sub.
+This however also means that this setting is kept until you actively
+change it again (or delete the INI file).<br>
+<br>
+<h2><a name="Source_Code"></a>Source Code</h2>
+As of version 4.0.0, BDSup2Sub became an Open Source project. All files
+that are my own creation are released under the <a href="http://www.apache.org/licenses/LICENSE-2.0.html">Apache
+License 2.0</a>. In a nutshell that means you can use them and
+modify them
+even for closed source or commercial projects, as long as you leave
+some copyright
+info in&nbsp;and give appropriate credit. See the linked Apache
+License for details.<br>
+Note&nbsp;that
+there are also some sources included which are based on the work of
+other people and thus have partly different license models:<br>
+<ul>
+<li>PNG Encoder by J. David Eisenberg (modified to support
+transparency for palette mode via the tRNS tag). Licensed under the
+LGPL.</li>
+<li>Octree
+Quantize Filter by Jerry Huxtable (modified to support alpha component
+and better palette reduction). Licensed under the Apache License 2.0.</li>
+<li>Scaling/filter routine based on Morten Nobel-Joergensen's
+ResampleOp from his
+Java image scaling library. Licensed under the LGPL.</li>
+<li>JFileFilter
+based on ExampleFileFilter&nbsp;from the FileChooserDemo included
+in
+the JDK. Licensed under proprietary Sun license (similar to Apache).</li>
+</ul>
+Each file of the source code should contain a header with the license
+information.<br>
+Note
+that now that all sources are freely available, the JAR doesn't contain
+sources any more. The whole source code, the icons and the HTML help
+are now stored in a <a href="http://subversion.tigris.org/">Subversion</a>
+repository hosted on <a href="http://javaforge.com">Javaforge</a>.
+For more information on Subversion, you may have a look <a href="http://svnbook.red-bean.com">here</a>.<br>
+To
+access the repository you need an installation of a Subversion
+application. Apart from the command line tools, there are also GUIs
+like <a href="http://rapidsvn.tigris.org/">RapidSVN</a>
+or IDE plugins like <a href="http://www.eclipse.org/subversive/">Subversive</a>
+for Eclipse.<br>
+<table style="text-align: left; width: 492px;" border="1" cellpadding="2" cellspacing="2">
+<tbody>
+<tr>
+<td style="width: 113px; background-color: rgb(239, 239, 239);">Repository
+URL</td>
+<td style="width: 359px; background-color: rgb(239, 239, 239);"><a href="http://javaforge.com/svn/bdsup2sub">http://javaforge.com/svn/bdsup2sub</a></td>
+</tr>
+<tr>
+<td style="width: 113px;">login</td>
+<td style="width: 359px;">anonymous</td>
+</tr>
+<tr>
+<td style="width: 113px; background-color: rgb(239, 239, 239);">password</td>
+<td style="width: 359px; background-color: rgb(239, 239, 239);">anon</td>
+</tr>
+</tbody>
+</table>
+<br>
+<h2><a name="Disclaimer"></a>Disclaimer</h2>
+BDSup2Sub is provided "as is" without warranty of any kind. Use it at
+your own risk. <br>
+<br>
+BDSup2Sub is freeware in the sense of "free for all to use". Download
+it, give it to your friends or whatever.<br>
+If
+you intend to put it as
+download on your site, please make a reference to the thread in the
+Doom9 forum. Same is true for distribution on magazine CDs/DVDs.<br>
+If you
+plan to distribute BDSup2Sub as part of a commercial tool (which
+includes Shareware tools), please contact me
+before via PM.<br>
+<br>
+As
+of version 4.0.0, BDSup2Sub is also "free software", as all parts of
+the source are released under licenses approved by the Free Software
+Foundation. See chapter <a href="#Source_Code">Source Code</a>
+for details.<br>
+<br>
+If you wish to use the JAR as a
+library for converting subtitles, you're invited to as long as you
+honor the terms defined above.&nbsp;JavaDocs are
+included for all interesting public interfaces, so you just need to
+integrate the JAR in your project. For an example how to interface the
+core objects, just drop me a note. <br>
+<h2><a name="Change_History"></a>Change History</h2>
+26.02.2009 1.0 -&gt; 1.1<br>
+<ul>
+<li>Added progress dialog for import</li>
+<li>Added check for existing target files and write protection</li>
+<li>Added detection of forced subtitles and the possibility to
+export only forced subs</li>
+<li>Removed some checks from RLE decoding to support some
+non-standard frames which write to the next line without EOL</li>
+<li>Fixed two small bugs in run length decoding (fixes reading
+exports from SupRead)</li>
+<li>Support for multi-packet pictures (well, exactly two
+packets are supported for the moment)</li>
+</ul>
+<br>
+02.03.2009 1.1 -&gt; 1.2<br>
+<ul>
+<li>Reworked SUP multipacket parsing to support unlimited
+packets (kinda untested though for &gt; 2 packets).</li>
+<li>Fixed bug in detection of primary color &amp; luminance
+thresholds.</li>
+<li>Added workaround to prevent crash when loading SUPs in
+NTSC/PAL resolution.</li>
+<li>Note that "upscaling" NTSC to PAL will not change the size
+of the bitmap, only the offsets.</li>
+<li>Also downsizing from PAL to NTSC might fail - I'll have to
+reconsider this issue later.</li>
+<li>Info was not updated when switching output format</li>
+<li>Added fixed line feed after even and off RLE buffer since
+VobSub sometimes skipped the last line</li>
+</ul>
+<br>
+04.03.2009 1.2 -&gt; 1.3<br>
+<ul>
+<li>x/y ofs from start PCS is used instead of that from the
+window definition (fixes most misaligned subtitles)</li>
+<li>Time stamp inconsistencies are reported and fixed</li>
+<li>Swapped checkboxes in export dialog to emphasize the
+relation between the "Change frame rate" checkbox and the src/trg FPS</li>
+<li>Added ini file to store frame size/position and load/save
+paths. Probably more to follow.</li>
+<li>Added upscaling (indeed the scaling algorithm already
+supported it, only the factors were wrong)</li>
+<li>Allowed all output formats for the moment. Dunno where this
+will take us, but it's worth a try.</li>
+<li>Added layout panel that shows the location of the subtitle</li>
+<li>Worked a bit on the user interface (less rescaling of
+components)</li>
+<li>Removed warnings about empty palettes since this seems to
+be pretty common.</li>
+<li>All editable fields of export dialog read out again before
+saving (indeed already done in 1.2)</li>
+</ul>
+<br>
+06.03.2009 1.3 -&gt; 1.4<br>
+<ul>
+<li>Tinkered around with progress dialog to solve problems
+under Vista. Can't test it though.</li>
+<li>Added frame/sequence number checks/warnings</li>
+<li>Added automatic elimination of double subtitle start frames.</li>
+</ul>
+<br>
+06.03.2009 1.4 -&gt; 1.5<br>
+<ul>
+<li>Fixed redraw bug and reduced memory needed for zoom modes.</li>
+<li>Fixed bug that caused wrong start time in case of multiple
+start packets or missing end packets.</li>
+<li>Extended primary color detection to support "white,light
+gray" in addition to "dark gray, light gray"</li>
+<li>Added possibility to edit/save/load Vobsub palettes</li>
+<li>Fixed blatant bug in export of forced subtitles which would
+export the same frames over and over again</li>
+<li>Set default alpha threshold to 80</li>
+</ul>
+08.03.2009 1.5 -&gt; 1.6<br>
+<ul>
+<li>Added support to write SUPs (kinda experimental though,
+SupRip doesn't like'em).<br>
+This included a major rework of the program's structure, so I hope I
+didn't break anything.</li>
+<li>Rewrote upscaling function (bilinear: slower, but much
+better quality)</li>
+<li>Fixed: half of the languages in the language selection box
+were not displayed</li>
+<li>While I was at it, I sorted the lower part of the list
+alphabetically</li>
+</ul>
+10.03.2009 1.6 -&gt; 1.7<br>
+<ul>
+<li>BDSup2Sub now also works from the command line. See online
+help for parameter description.</li>
+<li>Some minor tweaks and correction here and there</li>
+<li>Optimized RLE encoding for SUPs a little bit (two pixels of
+the same color don't use RLE code)</li>
+<li>Tried to add some better (?) fake time stamps to the
+ODS/WDS/PDS/END packets.</li>
+</ul>
+13.03.2009 1.7 -&gt; 1.8<br>
+<ul>
+<li>Fixed bug in the palette
+conversion introduced in r1.6 that could lead to artefacts on the left
+side of the subpic (SUB/IDX export only)</li>
+<li>Fixed wrong alpha threshold default in command line version
+(SUB/IDX export only)</li>
+<li>Introduced new resolution 1440x1080</li>
+</ul>
+11.03.2009 1.8 -&gt; 1.9<br>
+<ul>
+<li>Added support for reading HD-DVD SUPs (I own only one
+HD-DVD, so chances are it won't work with many HD-DVDs)</li>
+<li>The same selectable values appear in the ComboBox for
+source and target FPS (still can be edited)</li>
+<li>Reworked online help a little bit (also added working
+Hyperlink to Doom9 thread and copy to clipboard functionality)</li>
+<li>Renamed Mode/Format ComboBoxes to "Output Format" and
+"Output Resolution"</li>
+<li>Fixed wrong display&nbsp;of target image size
+(introduced in r1.6)</li>
+</ul>
+15.03.2009 1.9 -&gt; 2.0<br>
+<ul>
+<li>SUP: palette is only exported up to the highest entry
+actually used (previous versions always exported 256 entries)</li>
+<li>Increased resolution of all internal time stamps to 90kHz
+(was 1kHz)</li>
+<li>During
+export, start/end time (or start/delay) are synchronized to the target
+frame rate (special handling for PAL, NTSC and 24P)</li>
+<li>HD-DVD SUPs were refused from the command line: fixed.</li>
+<li>New frame rate: 23.975Hz. equal handling of frame rates for
+command line and export dialog (e.g. aliases)</li>
+<li>Frame rate info is written into the PCS headers of created
+BD-SUPs (and read for src fps detection)</li>
+<li>Wildcard support for command line (read online help for
+details)</li>
+</ul>
+17.03.2009 2.0 -&gt; 2.1<br>
+<ul>
+<li>Fixed: usage of wild card from the command line would cause
+exception when source file name didn't contain a path</li>
+<li>Fixed:
+wrong VobSub packet size if only the control header was shifted to the
+next packet, but the first packet was not completely filled.</li>
+<li>Fixed: delay can be entered in milliseconds again. It's
+adjusted to target frame rate automatically.</li>
+<li>Added command line parameter "/dly" to define a delay</li>
+<li>Added target frame rate auto detection for command line</li>
+<li>Changed command line parameter "/fps" to allow setting of
+only the target frame rate</li>
+</ul>
+18.03.2009 2.1 -&gt; 2.2<br>
+<ul>
+<li>Fixed: missing end times were not handled correctly.</li>
+</ul>
+22.03.2009 2.2 -&gt; 2.3<br>
+<ul>
+<li>Split export dialog into conversion dialog and export
+dialog. Moved resolution setting to conversion dialog.</li>
+<li>Completely reworked the time stamp check. It's done at
+import now, not at export.<br>
+Also the source time stamps are not altered any more to fix
+missing/invalid times.</li>
+<li>Added edit dialog to change offsets and timestamps</li>
+<li>Added check/fix possibility for very short display
+durations. Also new command line option "/tmin".</li>
+<li>Automatic selection of language for SUB/IDX export if
+filename contains (English) language name (e.g. "spanish")</li>
+</ul>
+25.03.2009 2.3 -&gt; 2.4<br>
+<ul>
+<li>Improved support for HD-DVD-SUPs (multiple DCSQ START
+commands are supported, DCSQ is accumulated)</li>
+<li>BD-SUP: subtitles without RLE buffer are ignored (led to
+NullpointerException)</li>
+<li>Fully transparent colors are always interpreted as
+transparent black to not mess with scaling</li>
+<li>Automatic language selection now only considers file name,
+not the path name</li>
+<li>Bilinear scaling is also used for scaling down</li>
+<li>Better exception handling for general exceptions inside
+threads</li>
+<li>Edit dialog: duration can be entered as float value now
+(just for consistency)</li>
+<li>Accidentally changed time format from "hh:mm:ss:ms" to
+"hh:mm:ss.ms" in IDX files. Fixed.</li>
+</ul>
+26.03.2009 2.4 -&gt; 2.5<br>
+<ul>
+<li>Fixed:&nbsp;Cr and Cb color components were switched
+when reading BD-SUPs (in since 1.0)</li>
+<li>Fixed:&nbsp;inconsistent behavior of "export forced"
+checkbox (probably introduced in 2.3)</li>
+<li>Changed: console is cleared before loading a SUP to avoid
+heap and performance problems (Swing text components are SLOW).</li>
+<li>Changed: when copying console output to clipboard, the
+clipboard is reset first to avoid OutOfMemoryException.</li>
+<li>Changed: improved console output for BD-SUP reading to use
+less lines in the console</li>
+</ul>
+27.03.2009 2.5 -&gt; 2.6<br>
+<ul>
+<li>Fixed: Cr and Cb color components were switched when
+writing BD-SUPs (introduced in 2.5)</li>
+<li>Fixed: DSCQ is updated instead of accumulated for
+HD-DVD-SUPs with multiple DSCQs</li>
+<li>Changed: better detection for faded HD-DVD-SUPs</li>
+<li>Changed: improved luminance threshold detection</li>
+<li>Changed: added menu entry to swap Cr/Cb components</li>
+</ul>
+31.3.2009 2.6 -&gt; 2.7<br>
+<ul>
+<li>Changed: added option to move all captions inside/outside
+bounds (typically the cinemascope bars)</li>
+<li>Changed: temporarily added workaround for (what I consider
+a) bug in SupRip's RLE decoder</li>
+<li>Changed: automatic language selection also from the CLI if
+no language is given explicitly</li>
+</ul>
+02.04.2009 2.7 -&gt; 2.8<br>
+<ul>
+<li>Changed: added drag'n'drop support</li>
+<li>Changed: if one parameter (which is neither "/?" nor
+"/help") is given, it's used as input file for the GUI</li>
+<li>Fixed: HD-DVD-SUPs: next DSCQ is checked to avoid endless
+loops.</li>
+</ul>
+05.04.2009 2.8 -&gt; 2.9<br>
+<ul>
+<li>Changed:
+DTS (and internal PTS) time stamps are calculated now based on decoding
+and composition pixel rates. Should hopefully improve muxing results of
+exported SUP streams.</li>
+<li>Changed: improved detection of start/end of caption -
+should result in less warnings and better handling of problematic SUPs</li>
+<li>Changed: better handling of BD-SUP palettes (multiple IDs,
+palette update, alpha blending detection)</li>
+<li>Changed:
+much more flexible handling of CLI parameters. Options are allowed now
+even if no target file name and/or no source file name is given. </li>
+<li>Changed:
+support for one asterisk in target file name even if there is no
+wildcard in the source file name.&nbsp;The asterisk will be
+replaced
+with source path+filename without the extension.</li>
+<li>Fixed: calling
+BDSup2Sub with source file name as only parameter would fail if the
+file name contained spaces. Now it should work with all file names as
+long as they don't have multiple SUP/SUB/IDX extensions in them.</li>
+<li>Fixed:
+when changing the caption number in the edit and move dialogs, the
+wrong caption number was displayed after returning to the the main view.</li>
+</ul>
+08.04.2009 2.9 -&gt; 3.0<br>
+<ul>
+<li>Changed: reworked BD-SUP parser again to support multiple
+objects per epoch and to split the epoch were it makes sense.<br>
+Also equal captions can be merged now even if they're in separate
+epochs. <br>
+The rework also fixes RLE decoding errors caused by wrong handling of
+multiple objects in 2.9.</li>
+<li>Changed: added cropping support (crop the first n lines)</li>
+<li>Changed: colorspace conversion according to BT.709 instead
+of BT.601. Doesn't seem to make much of a difference though.</li>
+<li>Fixed: the alpha fading detection for BD-SUPs could create
+wrong colors in certain cases.</li>
+</ul>
+10.04.2009 3.0 -&gt; 3.1.0<br>
+<ul>
+<li>Changed: depending on the resolution of an imported SUP,
+either BT.601 (PAL/NTSC) or BT.709 (HD) is selected.</li>
+<li>Changed: cropping is assumed to be symmetrical and now also
+affects screen size in exported IDX or SUP.</li>
+<li>Changed:
+reworked default VobSub colors a little to provide better
+anti-aliasing. Also white is used in combination with dark gray now.</li>
+<li>Changed: minimum distance between two equal captions is now
+fixed to 200ms and doesn't depend on minimum display time any more.</li>
+<li>Changed: merged code and look of preview windows.</li>
+<li>Changed:
+all (?) edit boxes select smallest/biggest valid value if given value
+is out of bounds instead of just ignoring invalid inputs.</li>
+<li>Fixed: Merging captions failed in certain cases, which also
+resulted in wrong end times</li>
+<li>Fixed: BT.709 color space assumes Cr/Cb values to be inside
+0..240 instead of 0..235</li>
+<li>Fixed: exporting forced captions didn't work any more
+(introduced in 2.9)</li>
+<li>Fixed: value for min display time is also used if fix short
+frames checkbox is unchecked.</li>
+<li>Fixed: move dialog remembers screen ratio.</li>
+</ul>
+14.04.2009 3.1.0 -&gt; 3.2.0<br>
+<ul>
+<li>Changed: palette is&nbsp;created by default when
+scaling, mode can be selected (keep palette, new palette, dither)</li>
+<li>Changed: reduced text output to a minimum. To get full
+output, select "verbatim" mode.</li>
+<li>Fixed: progress bar was never updated when importing
+HD-SUPs, also cancel didn't work</li>
+<li>Fixed: progress bar didn't work for very large files
+(during load)</li>
+</ul>
+18.04.2009 3.2.0 -&gt; 3.3.0<br>
+<ul>
+<li>Changed: added support for importing/exporting Sony BDN
+XML/PNG format (used by Sonic Scenarist).<br>
+Images are automatically cropped on import.</li>
+<li>Changed: new command line option "/fps:keep" uses source
+frame rate as target frame rate (for BD-SUP and XML)</li>
+<li>Fixed: a little inaccuracy in (all) the scaling algorithms
+led to slightly suboptimal results.<br>
+The result of bilinear scaling is now very, very close to a reference
+implementation.</li>
+<li>Fixed: conversion dialog fps comboboxes showed "29.967"
+instead of "29.97" for NTSC frame rates.</li>
+<li>Fixed: crash when BD-SUP starts with invalid epoch.</li>
+</ul>
+18.04.2009 3.3.0 -&gt; 3.3.1<br>
+<ul>
+<li>Fixed: using XML as input didn't work from command line if
+also a target was given.</li>
+<li>Fixed: output resolution given via command line did not
+influence selection in GUI.</li>
+</ul>
+18.04.2009 3.3.1 -&gt; 3.3.2<br>
+<ul>
+<li>Fixed: exported PNGs had changed palette order (so palette
+entry 255 was not guaranteed to be transparent)</li>
+</ul>
+19.04.2009 3.3.2 -&gt; 3.4.0<br>
+<ul>
+<li>Changed: added miscellaneous scaling filter modes (amongst
+others: Bicubic, Lanczos3 and Mitchell)</li>
+<li>Changed: improved quantizer to leave no multiple entries in
+the palette</li>
+<li>Changed: rewrote PNG importer to use palette of image if
+that is possible</li>
+<li>Fixed: added semaphore to synchronize GUI threads decoding
+captions (fixes crashes when quickly jumping through captions)</li>
+</ul>
+21.04.2009 3.4.0 -&gt; 3.4.1<br>
+<ul>
+<li>Fixed:
+scaling images from/to 1 pixel width/height led to division by zero/out
+of memory in scalers (happened with empty PNGs after cropping).<br>
+Now scaling from/to this small sizes is inhibited. Also bitmaps in the
+target are limited to a minimum of 2x2 pixels.</li>
+<li>Fixed:&nbsp;lower
+right coordinates displayed for target were wrong, also the window
+offsets were displayed for the source instead of image offsets.</li>
+</ul>
+24.04.2009 3.4.1 -&gt; 3.4.2<br>
+<ul>
+<li>Fixed: crash when the very last epoch was discarded because
+of missing ODS/PDS.</li>
+</ul>
+26.04.2009 3.4.2 -&gt; 3.4.3<br>
+<ul>
+<li>Fixed: when merging equal captions inside an epoch, the end
+time was not always updated correctly.</li>
+</ul>
+<br>
+03.05.2009 3.4.3 -&gt; 3.5.0<br>
+<ul>
+<li>Changed: added support for importing VobSub (SUB/IDX).</li>
+<li>Changed: forced flags are preserved when exporting to
+VobSub.</li>
+<li>Changed: added/changed comments in IDX files to workaround
+bug in VobsubMuxer.</li>
+<li>Changed: added command line switch (/tmerge) for setting
+the maximum time for merging (BD-SUP) captions.</li>
+<li>Changed: end time of one frame can be start time of the
+next frame (no forced gap of 1 frame any more).</li>
+<li>Fixed: assumed number of pixels in odd/even RLE buffers was
+wrong for captions with odd line numbers.</li>
+<li>Fixed: scaling of very small captions (like 3x3) could
+still lead to crashes when using filters with large radius</li>
+</ul>
+03.05.2009 3.5.0 -&gt; 3.5.1<br>
+<ul>
+<li>Fixed: VobSub: delay was read from wrong position of
+control buffer (-&gt; wrong end time).</li>
+</ul>
+06.05.2009 3.5.1 -&gt; 3.5.2<br>
+<ul>
+<li>Changed: VobSub: wrong packet length is detected and fixed
+(-&gt; now SUB/IDX files exported before 2.1 can be imported).</li>
+<li>Changed: VobSub: improved luminance threshold detection
+when importing SUB/IDX files.</li>
+</ul>
+07.05.2009 3.5.2 -&gt; 3.5.3<br>
+<ul>
+<li>Changed:&nbsp;when converting multiple files from the
+command line, a fatal
+error will not quit the program but just skip the file.</li>
+<li>Fixed: BDN XML: 576i and 480i&nbsp; are used for PAL
+and NTSC instead of 576p and 480p.</li>
+</ul>
+10.05.2009 3.5.3 -&gt; 3.5.4<br>
+<ul>
+<li>Changed: VobSub: control header now can be split over two
+packets. Seems to increase compatibility with SubtitleCreator.</li>
+<li>Changed: some more info is printed in the non-verbatim
+output mode (loading/writing files)</li>
+<li>Fixed: BDN XML: due to the last fix in 3.5.3, 720p was not
+recognized any more</li>
+</ul>
+12.05.2009 3.5.4 -&gt; 3.5.5<br>
+<ul>
+<li>Changed: VobSub: added padding packets (and stuffing bytes
+via PTS length) to the exported stream.</li>
+<li>Changed: VobSub: invalid offset to end sequence only throws
+a warning, but import continues.</li>
+<li>Fixed: VobSub: entries in 4 color frame palette were
+truncated to two bits during import.</li>
+<li>Fixed: VobSub: padding by manipulating the PTS length was
+not always processed correctly during import.</li>
+</ul>
+15.05.2009 3.5.5 -&gt; 3.5.6<br>
+<ul>
+<li>Changed:
+VobSub: parsing of packet is now always stopped when reaching offset of
+next caption even if control buffer is incomplete.</li>
+</ul>
+16.05.2009 3.5.6 -&gt; 3.6.0<br>
+<ul>
+<li>Changed: added editing of "forced" flags (via edit dialog)</li>
+<li>Changed: added possibility to exclude single captions from
+export (via edit dialog)</li>
+<li>Changed: added erasing of rectangular regions (via edit
+dialog)</li>
+<li>Changed: VobSub: bitmaps are automatically cropped on import</li>
+</ul>
+18.05.2009 3.6.0 -&gt; 3.7.0 <br>
+<ul>
+<li>Changed: added free scaling factors (x,y) to resize
+captions independently of resolution changes.</li>
+<li>Changed: all text fields react while typing and use
+background colors to give status feedback. </li>
+<li>Fixed: when converting from HD-DVD-SUP to BD-SUP it was not
+guaranteed that each last palette entry was transparent.</li>
+</ul>
+19.05.2009 3.7.0 -&gt; 3.7.1<br>
+<ul>
+<li>Fixed: BD-SUP palette fix (when converting from HD-DVD-SUP)
+introduced in 3.7.0 didn't work reliably.</li>
+</ul>
+21.05.2009 3.7.1 -&gt; 3.8.0<br>
+<ul>
+<li>Changed: VobSub: added basic support for alpha fading
+detection (one LN_CTLI, one PX_CTLI per udpate, ignoring
+line&amp;column).</li>
+<li>Changed: VobSub: keeping existing palette is possible now
+if import and export format is VobSub.</li>
+<li>Changed: VobSub: the active language index ("langidx:") is
+now parsed and only captions fitting this index will be used.</li>
+<li>Fixed: VobSub: global offsets &gt; 0 in IDX led to
+wrong image size (and wrong RLE decoding in some cases).</li>
+<li>Fixed: target bitmap and palette where not updated at the
+same time leading to GUI redraw issues.</li>
+<li>Fixed: erase patches were not updated correctly if free
+scaling was limited to screen size.</li>
+</ul>
+22.05.2009 3.8.0 -&gt; 3.8.1<br>
+<ul>
+<li>Changed: VobSub/BDN XML: transparent colors are assumed
+black to avoid scaling artifacts (same handling now for all formats).</li>
+<li>Changed: introduced CLI option "/acrop" to set alpha value
+for cropping and patching color values to black.</li>
+<li>Changed: edit dialog's preview window better matches the
+target resolution for less scaling artefacts in preview.</li>
+<li>Changed: reworked limitation of selection window. Now based
+on unscaled coordinates to guarantee accuracy to single pixels.</li>
+</ul>
+24.05.2009 3.8.1 -&gt; 3.8.2<br>
+<ul>
+<li>Changed: VobSub: alpha of completely invisible captions is
+patched.</li>
+<li>Fixed:
+alpha/luminance comboboxes were disabled since 3.8.0 when switching to
+VobSub output mode and palette mode was "keep existing"</li>
+<li>Fixed: "move all captions" didn't work correctly for
+BDN/XML and VobSub imports (since 3.6.0) if a bitmap was cropped.</li>
+</ul>
+12.06.2009 3.8.2 -&gt; 3.9.0<br>
+<ul>
+<li>Changed: introduced import and export of SUP/IFO.</li>
+<li>Changed: Opening SUB/IDX files via the SUB file (instead of
+the IDX) file is supported (also via drag'n'drop).</li>
+<li>Changed: added store+prev/next buttons to edit dialog.</li>
+<li>Changed: added mnemonics for most menus/buttons/checkboxes
+(Windows: press Alt to see the mnemonics).</li>
+<li>Changed: target palette can be exported to PCGEdit text
+format (via export dialog or CLI parameter "/exppal").</li>
+<li>Changed: JAR contains (only the) sources which are released
+under the LGPL and Apache license.</li>
+</ul>
+13.06.2009: 3.9.0 -&gt; 3.9.1<br>
+<ul>
+<li>Changed: editing of imported DVD palette is now possible</li>
+<li>Changed: exporting PCGEdit palette only possible if VobSub
+or SUP/IFO is exported.</li>
+<li>Changed: alpha cropping, minimum merge time and PGCEdit
+palette export settings are stored in the ini now.</li>
+<li>Changed: improved color edit dialog to allow editing colors
+by double clicking.</li>
+<li>Fixed:&nbsp;updated embedded JavaDoc (forgot about this
+in 3.9.0)</li>
+</ul>
+14.06.2009: 3.9.1 -&gt; 3.9.2<br>
+<ul>
+<li>Changed: added another workaround for corrupted VobSub
+streams.</li>
+</ul>
+16.06.2009: 3.9.2 -&gt; 3.9.3<br>
+<ul>
+<li>Changed: editing of frame palette/alpha values is now
+possible if the input is either SUB/IDX or SUP/IFO.</li>
+<li>Changed: editing of imported DVD palette works on the
+source image now (seems to make more sense).</li>
+</ul>
+21.06.2009: 3.9.3 -&gt; 3.9.4<br>
+<ul>
+<li>Changed: VobSub: stream ID is used to skip packets to work
+around problems with interleaved multi-language streams.</li>
+<li>Changed: added tooltips for most buttons, combo boxes etc.</li>
+</ul>
+27.06.2009: 3.9.4 -&gt; 3.9.5<br>
+<ul>
+<li>Changed:
+VobSub+SUP/IFO: fixing completely invisible subtitles is now disabled
+by default. Can be enabled via command line (/fixinv) or via "Settings"
+menu.</li>
+<li>Changed: CLI: Boolean parameters like "verbatim" can be
+switched on/off now with trailing +/- (e.g. "/verbatim-").</li>
+<li>Changed: released Bitmap and Palette classes under the
+Apache License.</li>
+<li>Fixed: GUI: default background color handling missing in
+"min time" textfield.</li>
+</ul>
+11.07.2009: 3.9.5 -&gt; 3.9.6<br>
+<ul>
+<li>Changed: added "Close" menu item in File menu.</li>
+<li>Changed: added horizontal moving of captions (left, right,
+center).</li>
+</ul>
+07.09.2009: 3.9.6 -&gt; 3.9.7<br>
+<ul>
+<li>Fixed:&nbsp; Vobsub+SUP/IFO: streams with swapped
+odd/even field order in the RLE buffer were not handled correctly.</li>
+</ul>
+07.10.2009: 3.9.7 -&gt; 3.9.8<br>
+<ul>
+<li>Changed:
+reworked dialog for conversion options, added: store/reset defaults,
+stored defaults are automatically loaded in GUI mode</li>
+<li>Changed: added "/res:keep" CLI switch to keep the
+resolution by default. Note that CLI switches overwrite GUI defaults.</li>
+<li>Changed: appending "_exp" to the save file name is no
+longer done repeatedly but only once.</li>
+</ul>
+15.11.2009: 3.9.8 -&gt; 3.9.9<br>
+<ul>
+<li>Changed: added "auto" option for CLI switch
+"/fps:&lt;x&gt;,&lt;y&gt;", e.g. "/fps:auto,24p"</li>
+<li>Changed: added "/forceall" CLI switch to set/clear all
+forced flags</li>
+<li>Changed: reworked conversion dialog to allow
+setting/clearing of all forced flags via GUI</li>
+<li>Changed: added an application icon to get rid of that
+coffee cup</li>
+<li>Fixed: source FPS given via CLI was overwritten by FPS read
+from stream</li>
+<li>Fixed: source FPS detection for SUB/IDX and SUP/IFO was
+buggy and (nearly) always resulted in 24p</li>
+</ul>
+14.12.2009: 3.9.9 -&gt; 4.0.0<br>
+<ul>
+<li>Changed: BDSup2Sub is now open source (see integrated HTML
+help for details about repository and license)</li><li>Changed: reworked built-in HTML help.</li><li>Changed: added "recent files" menu.</li><li>Changed: output format is now persistent. Changed order of output formats in listbox.</li>
+<li>Changed:
+added option "apply move settings" to conversion dialog that let's you
+choose whether to apply the existing "move all"settings or not when a
+new stream is loaded.</li>
+<li>Changed: "move all" decodes/scales each frame before
+moving. Added a progress bar since this takes a little longer now.</li>
+<li>Changed: added tooptip for the links in the HTML help. Also
+anchors inside the document are now supported.</li>
+<li>Changed: added chapter entries in context menu of built-in
+HTML help.</li>
+<li>Changed: built-in HTML help can now be opened in external
+browser (via context menu). "copy" only enabled if text selected.</li><li>Changed: the cancel button in the conversion dialog now cancels loading a stream.</li>
+<li>Fixed: moving subtitles that are cropped during import
+could result in erratic subtitle positions or inappropriate warnings.</li>
+<li>Fixed:
+conversion settings dialog didn't open when no subtitle was loaded and
+INI file was missing or the item convertResolution in the INI was
+either missing or set to false.</li>
+<li>Fixed: erasing the extension in
+the file browser of the export dialog could lead to erratic behavior if
+the path contained dots. Generally, path separators were ignored when
+stripping the extension from file names.</li>
+</ul>
+06.01.2012: 4.0.0 -&gt; 4.0.1<br>
+<ul>
+<li>Fixed: Flashing subtitles - if the end time of the current subtitle picture is beyond the start time of the next one the subtitle was set to zero length.</li>
+<li>Fixed: Resolution incorrectly read from the dvd ifo file in cases other than 720x576/720x480 16:9.</li>
+<li>Fixed: Incorrect (too short) subtitle duration for dvd subtitle frames using subtitle effects</li>
+</ul>
+</body></html>
