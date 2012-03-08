@@ -1,17 +1,5 @@
-package bdsup2sub.utils;
-
-import bdsup2sub.tools.JFileFilter;
-
-import javax.swing.*;
-import java.awt.*;
-import java.io.File;
-import java.io.FileInputStream;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
-import java.util.Locale;
-
 /*
- * Copyright 2009 Volker Oth (0xdeadbeef)
+ * Copyright 2012 Volker Oth (0xdeadbeef) / Miklos Juhasz (mjuhasz)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,12 +13,18 @@ import java.util.Locale;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package bdsup2sub.utils;
 
-/**
- * Selection of utility functions.
- *
- * @author 0xdeadbeef, mjuhasz
- */
+import bdsup2sub.tools.JFileFilter;
+
+import javax.swing.*;
+import java.awt.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.Locale;
+
 public final class ToolBox {
 
     private static final DecimalFormat FPS_FORMATTER = new DecimalFormat("##.###", DecimalFormatSymbols.getInstance(Locale.US));

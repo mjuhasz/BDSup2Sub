@@ -1,12 +1,5 @@
-package bdsup2sub.gui;
-
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import javax.swing.plaf.basic.BasicComboBoxEditor;
-import java.awt.*;
-
 /*
- * Copyright 2009 Volker Oth (0xdeadbeef)
+ * Copyright 2012 Volker Oth (0xdeadbeef) / Miklos Juhasz (mjuhasz)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,12 +13,16 @@ import java.awt.*;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package bdsup2sub.gui;
+
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.plaf.basic.BasicComboBoxEditor;
+import java.awt.*;
 
 /**
- * ComboBox Editor - part of BDSup2Sub GUI classes.
+ * ComboBox Editor.
  * Implementation needed to be able to change the background color of editable ComboBoxes.
- *
- * @author 0xdeadbeef
  */
 class MyComboBoxEditor extends BasicComboBoxEditor {
 

@@ -1,3 +1,18 @@
+/*
+ * Copyright 2012 J. David Eisenberg / Miklos Juhasz (mjuhasz)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package bdsup2sub.tools;
 
 import java.awt.*;
@@ -12,42 +27,6 @@ import java.util.zip.DeflaterOutputStream;
 /**
  * PngEncoder takes a Java Image object and creates a byte string which can be saved as a PNG file.
  * The Image is presumed to use the DirectColorModel.
- *
- * <p>Thanks to Jay Denny at KeyPoint Software
- *    http://www.keypoint.com/
- * who let me develop this code on company time.</p>
- *
- * <p>You may contact me with (probably very-much-needed) improvements,
- * comments, and bug fixes at:</p>
- *
- *   <p><code>david@catcode.com</code></p>
- *
- * <p>This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.</p>
- *
- * <p>This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.</p>
- *
- * <p>You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- * A copy of the GNU LGPL may be found at
- * <code>http://www.gnu.org/copyleft/lesser.html</code></p>
- *
- * @author J. David Eisenberg
- * @version 1.5, 19 Oct 2003
- *
- * CHANGES:<br>
- * --------<br>
- * 19-Nov-2002 : CODING STYLE CHANGES ONLY (by David Gilbert for Object Refinery Limited);<br>
- * 19-Sep-2003 : Fix for platforms using EBCDIC (contributed by Paulo Soares);<br>
- * 19-Oct-2003 : Change private fields to protected fields so that<br>
- *               PngEncoderB can inherit them (JDE)<br>
- *				 Fixed bug with calculation of nRows<br>
  */
 public class PngEncoder {
 

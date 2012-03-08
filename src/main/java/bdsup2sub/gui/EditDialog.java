@@ -1,5 +1,19 @@
+/*
+ * Copyright 2012 Volker Oth (0xdeadbeef) / Miklos Juhasz (mjuhasz)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package bdsup2sub.gui;
-
 
 import bdsup2sub.bitmap.ErasePatch;
 import bdsup2sub.core.Core;
@@ -23,99 +37,44 @@ import static bdsup2sub.gui.GuiUtils.centerRelativeToParent;
 import static bdsup2sub.utils.TimeUtils.ptsToTimeStr;
 import static bdsup2sub.utils.TimeUtils.timeStrToPTS;
 
-/*
- * Copyright 2009 Volker Oth (0xdeadbeef)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/**
- * Edit dialog - part of BDSup2Sub GUI classes.
- *
- * @author 0xdeadbeef
- */
 public class EditDialog extends JDialog implements SelectListener {
 
     private static final long serialVersionUID = 1L;
 
     private JPanel jContentPane;
-
     private JPanel jPanelUp;
-
     private JPanel jPanelLayout;
-
     private JPanel jPanelOffsets;
-
     private JPanel jPanelTimes;
-
     private JPanel jPanelButtons;
-
     private JPanel jPanelCheck;
-
     private JLabel jLabelInfo;
-
     private JButton jButtonPrev;
-
     private JButton jButtonNext;
-
     private JButton jButtonStoreNext;
-
     private JButton jButtonStorePrev;
-
     private EditPane jPanelPreview;
-
     private JSlider jSliderVertical;
-
     private JSlider jSliderHorizontal;
-
     private JButton jButtonCancel;
-
     private JButton jButtonOk;
-
     private JTextField jTextFieldX;
-
     private JTextField jTextFieldY;
-
     private JButton jButtonCenter;
-
     private JTextField jTextFieldStart;
-
     private JTextField jTextFieldEnd;
-
     private JTextField jTextFieldDuration;
-
     private JButton jButtonMin;
-
     private JButton jButtonMax;
-
     private JButton jButtonTop;
-
     private JButton jButtonBottom;
-
     private JButton jButtonStore;
-
     private JCheckBox jCheckBoxForced;
-
     private JCheckBox jCheckBoxExclude;
-
     private JPanel jPanelPatches;
-
     private JButton jButtonAddPatch;
-
     private JButton jButtonUndoPatch;
-
     private JButton jButtonUndoAllPatches;
-
 
     /** width of preview pane */
     private static int miniWidth = 768;

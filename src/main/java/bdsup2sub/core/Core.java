@@ -1,3 +1,18 @@
+/*
+ * Copyright 2012 Volker Oth (0xdeadbeef) / Miklos Juhasz (mjuhasz)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package bdsup2sub.core;
 
 import bdsup2sub.bitmap.Bitmap;
@@ -26,8 +41,6 @@ import static bdsup2sub.utils.TimeUtils.ptsToTimeStr;
 /**
  * This class contains the core functionality of BDSup2Sub.<br>
  * It's meant to be used from the command line as well as from the GUI.
- *
- * @author 0xdeadbeef, mjuhasz
  */
 public class Core  extends Thread {
 
@@ -1517,7 +1530,7 @@ public class Core  extends Thread {
                     f = new BiCubicFilter();
                     break;
                 case BICUBIC_SPLINE:
-                    f = new BSplineFilter();
+                    f = new BicubicSplineFilter();
                     break;
                 case HERMITE:
                     f = new HermiteFilter();

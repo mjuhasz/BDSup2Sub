@@ -1,5 +1,19 @@
+/*
+ * Copyright 2012 Volker Oth (0xdeadbeef) / Miklos Juhasz (mjuhasz)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package bdsup2sub.gui;
-
 
 import bdsup2sub.core.CoreException;
 import bdsup2sub.tools.Props;
@@ -15,27 +29,6 @@ import java.io.File;
 import static bdsup2sub.core.Constants.APP_NAME_AND_VERSION;
 import static bdsup2sub.gui.GuiUtils.centerRelativeToParent;
 
-/*
- * Copyright 2009 Volker Oth (0xdeadbeef)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/**
- * A more or less generic color dialog - part of BDSup2Sub GUI classes.
- *
- * @author 0xdeadbeef
- */
 public class ColorDialog extends JDialog {
     private static final long serialVersionUID = 0x000000001;
 
@@ -262,7 +255,6 @@ public class ColorDialog extends JDialog {
 
     /**
      * Modified ListCellRenderer to display text and color icons
-     * @author 0xdeadbeef
      */
     private class myListCellRenderer extends DefaultListCellRenderer {
         private static final long serialVersionUID = 0x000000001;

@@ -1,7 +1,5 @@
-package bdsup2sub.filters;
-
 /*
- * Copyright 2009 Volker Oth (0xdeadbeef)
+ * Copyright 2012 Volker Oth (0xdeadbeef) / Miklos Juhasz (mjuhasz)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +13,9 @@ package bdsup2sub.filters;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package bdsup2sub.filters;
 
-/**
- * Bicubic spline filter.
- *
- * @author 0xdeadbeef
- */
-public class BSplineFilter implements Filter {
+public class BicubicSplineFilter implements Filter {
 
     public float getRadius() {
         return 2.0f;

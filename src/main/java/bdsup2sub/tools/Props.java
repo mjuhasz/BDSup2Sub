@@ -1,11 +1,5 @@
-package bdsup2sub.tools;
-
-import java.io.*;
-import java.net.URL;
-import java.util.Properties;
-
 /*
- * Copyright 2009 Volker Oth (0xdeadbeef)
+ * Copyright 2012 Volker Oth (0xdeadbeef) / Miklos Juhasz (mjuhasz)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,11 +13,14 @@ import java.util.Properties;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package bdsup2sub.tools;
+
+import java.io.*;
+import java.net.URL;
+import java.util.Properties;
 
 /**
  * Property class to ease use of ini files to save/load properties
- *
- * @author 0xdeadbeef
  */
 public class Props {
 
@@ -32,9 +29,6 @@ public class Props {
     /** header string */
     private String header;
 
-    /**
-     * Constructor
-     */
     public Props() {
         this.hash = new Properties();
         this.header = "";

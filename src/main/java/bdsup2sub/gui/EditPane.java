@@ -1,14 +1,5 @@
-package bdsup2sub.gui;
-
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
-import java.awt.image.BufferedImage;
-
 /*
- * Copyright 2009 Volker Oth (0xdeadbeef)
+ * Copyright 2012 Volker Oth (0xdeadbeef) / Miklos Juhasz (mjuhasz)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,12 +13,18 @@ import java.awt.image.BufferedImage;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package bdsup2sub.gui;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import java.awt.image.BufferedImage;
 
 /**
- * Preview pane for edit dialog  - part of BDSup2Sub GUI classes.
+ * Preview pane for edit dialog.
  * Shows color gradient, cinemascope bars and scaled down subtitle image.
- *
- * @author 0xdeadbeef
  */
 public class EditPane extends JPanel implements MouseListener, MouseMotionListener {
 

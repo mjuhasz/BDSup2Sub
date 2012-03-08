@@ -1,14 +1,5 @@
-package bdsup2sub.supstream;
-
-
-import bdsup2sub.bitmap.Bitmap;
-import bdsup2sub.bitmap.Palette;
-import bdsup2sub.core.CoreException;
-
-import java.awt.image.BufferedImage;
-
 /*
- * Copyright 2009 Volker Oth (0xdeadbeef)
+ * Copyright 2012 Volker Oth (0xdeadbeef) / Miklos Juhasz (mjuhasz)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,11 +13,16 @@ import java.awt.image.BufferedImage;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package bdsup2sub.supstream;
+
+import bdsup2sub.bitmap.Bitmap;
+import bdsup2sub.bitmap.Palette;
+import bdsup2sub.core.CoreException;
+
+import java.awt.image.BufferedImage;
 
 /**
  * Interface to handle different subtitle input streams in the same way.
- *
- * @author 0xdeadbeef
  */
 public interface Substream {
 

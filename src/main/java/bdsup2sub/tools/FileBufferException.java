@@ -1,7 +1,5 @@
-package bdsup2sub.tools;
-
 /*
- * Copyright 2009 Volker Oth (0xdeadbeef)
+ * Copyright 2012 Volker Oth (0xdeadbeef) / Miklos Juhasz (mjuhasz)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +13,8 @@ package bdsup2sub.tools;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package bdsup2sub.tools;
 
-/**
- * Generic exception class for FileBuffer.
- *
- * @author 0xdeadbeef
- */
 public class FileBufferException extends Exception {
 
     public static final long serialVersionUID = 0x000000001;

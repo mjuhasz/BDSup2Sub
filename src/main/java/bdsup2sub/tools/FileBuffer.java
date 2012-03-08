@@ -1,13 +1,5 @@
-package bdsup2sub.tools;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.nio.channels.FileChannel;
-
 /*
- * Copyright 2009 Volker Oth (0xdeadbeef)
+ * Copyright 2012 Volker Oth (0xdeadbeef) / Miklos Juhasz (mjuhasz)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,13 +13,17 @@ import java.nio.channels.FileChannel;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package bdsup2sub.tools;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.channels.FileChannel;
 
 /**
  * Very simple version of a read only memory mapped file used for parsing large packet based files.
- *
- * @author 0xdeadbeef
  */
-
 public class FileBuffer {
 
     /** Size of the buffer in memory */

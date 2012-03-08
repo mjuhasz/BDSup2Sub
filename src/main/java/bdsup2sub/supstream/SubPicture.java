@@ -1,3 +1,18 @@
+/*
+ * Copyright 2012 Volker Oth (0xdeadbeef) / Miklos Juhasz (mjuhasz)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package bdsup2sub.supstream;
 
 import bdsup2sub.bitmap.ErasePatch;
@@ -14,8 +29,6 @@ import java.util.ArrayList;
  * This also means that the setter functions for these members are pretty much useless as they
  * only change the members of the parent class, but don't influence the values returned by the getters.
  * This is a little unclean but by design to not allow write access to the internal structures.
- *
- * @author 0xdeadbeef
  */
 public class SubPicture implements Cloneable {
 
@@ -166,7 +179,6 @@ public class SubPicture implements Cloneable {
 }
 
 /**
- * @author 0xdeadbeef
  * Extends SubPicture to store information read from BD SUP
  */
 class SubPictureBD extends SubPicture implements Cloneable {
@@ -282,7 +294,6 @@ class SubPictureBD extends SubPicture implements Cloneable {
 }
 
 /**
- * @author 0xdeadbeef
  * Extends SubPicture to store information read from HD-DVD SUP
  */
 class SubPictureHD extends SubPicture implements Cloneable {
@@ -339,7 +350,6 @@ class ImageObject implements Cloneable  {
 }
 
 /**
- * @author 0xdeadbeef
  * contains offset and size of one fragment containing (parts of the) RLE buffer
  */
 class ImageObjectFragment implements Cloneable  {
@@ -362,7 +372,6 @@ class ImageObjectFragment implements Cloneable  {
 }
 
 /**
- * @author 0xdeadbeef
  * contains offset and size of one update of a palette
  */
 class PaletteInfo implements Cloneable {
@@ -385,7 +394,6 @@ class PaletteInfo implements Cloneable {
 }
 
 /**
- * @author 0xdeadbeef
  * Extends SubPicture to store information read from Xml
  */
 class SubPictureXml extends SubPicture implements Cloneable {

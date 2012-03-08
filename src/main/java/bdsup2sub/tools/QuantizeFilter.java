@@ -1,20 +1,19 @@
-package bdsup2sub.tools;
-
 /*
-Copyright 2006 Jerry Huxtable - modified for BDSup2Sub by Volker Oth/0xdeadbeef (extended to alpha component)
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-   http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Copyright 2012 Jerry Huxtable / Volker Oth (0xdeadbeef) / Miklos Juhasz (mjuhasz)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package bdsup2sub.tools;
 
 import java.util.HashMap;
 import java.util.Set;
@@ -28,10 +27,7 @@ import java.util.Vector;
  * methods such as median cut. Note: at present, the filter produces an image which
  * uses the RGB color model (because the application it was written for required it).
  * I hope to extend it to produce an IndexColorModel by request.
- *
- * @author Jerry Huxtable - modified for BDSup2Sub by 0xdeadbeef (extended to alpha component)
  */
-
 public class QuantizeFilter  {
 
     /**

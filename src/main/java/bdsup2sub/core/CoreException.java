@@ -1,8 +1,5 @@
-package bdsup2sub.core;
-
-
 /*
- * Copyright 2009 Volker Oth (0xdeadbeef)
+ * Copyright 2012 Miklos Juhasz (mjuhasz)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +13,8 @@ package bdsup2sub.core;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package bdsup2sub.core;
 
-/**
- * Application exception class.
- *
- * @author 0xdeadbeef
- */
 public class CoreException extends Exception {
 
     public static final long serialVersionUID = 0x000000001;

@@ -1,18 +1,5 @@
-package bdsup2sub.bitmap;
-
-import bdsup2sub.core.Core;
-import bdsup2sub.filters.Filter;
-import bdsup2sub.filters.FilterOp;
-import bdsup2sub.tools.QuantizeFilter;
-
-import java.awt.image.*;
-import java.util.Arrays;
-import java.util.HashMap;
-
-import static bdsup2sub.bitmap.ColorSpaceUtils.RGB2YCbCr;
-
 /*
- * Copyright 2009 Volker Oth (0xdeadbeef)
+ * Copyright 2012 Volker Oth (0xdeadbeef) / Miklos Juhasz (mjuhasz)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,12 +13,21 @@ import static bdsup2sub.bitmap.ColorSpaceUtils.RGB2YCbCr;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package bdsup2sub.bitmap;
+
+import bdsup2sub.core.Core;
+import bdsup2sub.filters.Filter;
+import bdsup2sub.filters.FilterOp;
+import bdsup2sub.tools.QuantizeFilter;
+
+import java.awt.image.*;
+import java.util.Arrays;
+import java.util.HashMap;
+
+import static bdsup2sub.bitmap.ColorSpaceUtils.RGB2YCbCr;
 
 /**
  * Class to handle byte based bitmaps with a separate palette up to 256 colors.
- *
- * @author 0xdeadbeef
- *
  */
 public class Bitmap {
 

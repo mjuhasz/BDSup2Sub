@@ -1,20 +1,5 @@
-package bdsup2sub.gui;
-
-
-import bdsup2sub.core.Core;
-import bdsup2sub.core.OutputMode;
-import bdsup2sub.utils.FilenameUtils;
-import bdsup2sub.utils.ToolBox;
-
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.*;
-
-import static bdsup2sub.core.Constants.LANGUAGES;
-import static bdsup2sub.gui.GuiUtils.centerRelativeToParent;
-
 /*
- * Copyright 2009 Volker Oth (0xdeadbeef)
+ * Copyright 2012 Volker Oth (0xdeadbeef) / Miklos Juhasz (mjuhasz)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,12 +13,20 @@ import static bdsup2sub.gui.GuiUtils.centerRelativeToParent;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package bdsup2sub.gui;
 
-/**
- * Export dialog - part of BDSup2Sub GUI classes.
- *
- * @author 0xdeadbeef
- */
+import bdsup2sub.core.Core;
+import bdsup2sub.core.OutputMode;
+import bdsup2sub.utils.FilenameUtils;
+import bdsup2sub.utils.ToolBox;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+
+import static bdsup2sub.core.Constants.LANGUAGES;
+import static bdsup2sub.gui.GuiUtils.centerRelativeToParent;
+
 public class ExportDialog extends JDialog {
 
     private static final long serialVersionUID = 1L;
