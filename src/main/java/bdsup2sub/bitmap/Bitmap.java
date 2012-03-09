@@ -16,7 +16,6 @@
 package bdsup2sub.bitmap;
 
 import bdsup2sub.core.Core;
-import bdsup2sub.filters.FilterOp;
 import bdsup2sub.tools.QuantizeFilter;
 import com.mortennobel.imagescaling.ResampleFilter;
 
@@ -311,9 +310,7 @@ public class Bitmap {
      * @return Scaled Bitmap which uses a fixed frame Palette.
      */
     public Bitmap scaleFilterLm(final int sizeX, final int sizeY, final Palette pal, final int alphaThr, final int lumThr[], final ResampleFilter f) {
-        FilterOp fOp = new FilterOp();
-        fOp.setFilter(f);
-        final int[] trg = fOp.filter(this, pal, sizeX, sizeY);
+        final int[] trg = new FilterOp(f, sizeX, sizeY).filter(this, pal);
 
         Bitmap bm = new Bitmap(sizeX, sizeY);
 
@@ -590,9 +587,7 @@ public class Bitmap {
         final byte[] b = pal.getB();
         final byte[] a = pal.getAlpha();
 
-        FilterOp fOp = new FilterOp();
-        fOp.setFilter(f);
-        final int[] trg = fOp.filter(this, pal, sizeX, sizeY);
+        final int[] trg = new FilterOp(f, sizeX, sizeY).filter(this, pal);
 
         final Bitmap bm = new Bitmap(sizeX, sizeY);
 
@@ -645,9 +640,7 @@ public class Bitmap {
      * @return Scaled Bitmap and new Palette
      */
     public BitmapWithPalette scaleFilter(final int sizeX, final int sizeY, final Palette pal, final ResampleFilter f, final boolean dither) {
-        FilterOp fOp = new FilterOp();
-        fOp.setFilter(f);
-        final int[] trg = fOp.filter(this, pal, sizeX, sizeY);
+        final int[] trg = new FilterOp(f, sizeX, sizeY).filter(this, pal);
 
         // quantize image
         QuantizeFilter qf = new QuantizeFilter();

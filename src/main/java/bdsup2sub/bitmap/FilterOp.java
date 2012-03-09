@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package bdsup2sub.filters;
+package bdsup2sub.bitmap;
 
 import bdsup2sub.bitmap.Bitmap;
 import bdsup2sub.bitmap.Palette;
@@ -31,32 +31,6 @@ import com.mortennobel.imagescaling.ResampleFilters;
  */
 
 public class FilterOp {
-
-    private class SubSamplingData {
-        /** Number of samples */
-        private final int[] sampleCount;
-        /** 2D matrix of pixel positions */
-        private final int[] pixelPositions;
-        /** 2D matrix of weight factors */
-        private final float[] weightFactors;
-        /** Width of 2D matrices pixelPos and weight */
-        private final int matrixWidth;
-
-        /**
-         * Private storage class to hold precalculated values for subsampling or supersampling
-         * @param sampleCount   Number of samples contributing to the pixel
-         * @param pixelPositions   2D matrix of pixel positions
-         * @param weightFactors   2D matrix of weight factors
-         * @param matrixWidth Width of 2D matrices pixelPos and weight
-         */
-        private SubSamplingData(int[] sampleCount, int[] pixelPositions, float[] weightFactors, int matrixWidth) {
-            this.sampleCount = sampleCount;
-            this.pixelPositions = pixelPositions;
-            this.weightFactors = weightFactors;
-            this.matrixWidth = matrixWidth;
-        }
-    }
-
     private int srcWidth;
     private int srcHeight;
     private int dstWidth;
@@ -69,43 +43,28 @@ public class FilterOp {
 
     private SubSamplingData horizontalSubsamplingData;
     private SubSamplingData verticalSubsamplingData;
-    private ResampleFilter filter = ResampleFilters.getMitchellFilter();
+    private ResampleFilter filter;
 
-    public ResampleFilter getFilter() {
-        return filter;
-    }
-
-    public void setFilter(final ResampleFilter filter) {
+    public FilterOp(ResampleFilter filter, int dstWidth, int dstHeight) {
         this.filter = filter;
+        this.dstWidth = dstWidth;
+        this.dstHeight = dstHeight;
     }
 
-    /**
-     * @param source Source bitmap
-     * @param palette Palette
-     * @param width Destination width
-     * @param height Destination height
-     * @return Destination integer array (filled with ARGB samples)
-     */
-    public int[] filter(Bitmap source, Palette palette, int width, int height) {
-        dstWidth = width;
-        dstHeight = height;
-        srcWidth  = source.getWidth();
-        srcHeight = source.getHeight();
+    public int[] filter(Bitmap bitmap, Palette palette) {
+        this.srcWidth  = bitmap.getWidth();
+        this.srcHeight = bitmap.getHeight();
 
         r = palette.getR();
         g = palette.getG();
         b = palette.getB();
         a = palette.getAlpha();
 
-        float xscale = (float)(dstWidth - 1) / (float)(srcWidth - 1);
-        float yscale = (float)(dstHeight - 1) / (float)(srcHeight - 1);
-
-        // Precalculate  subsampling/supersampling
-        horizontalSubsamplingData = createSubSampling(srcWidth, dstWidth, xscale);
-        verticalSubsamplingData = createSubSampling(srcHeight, dstHeight, yscale);
+        horizontalSubsamplingData = createSubSampling(srcWidth, dstWidth);
+        verticalSubsamplingData = createSubSampling(srcHeight, dstHeight);
 
         int[] workPixels = new int[srcHeight * dstWidth];
-        filterHorizontally(source.getInternalBuffer(), workPixels);
+        filterHorizontally(bitmap.getInternalBuffer(), workPixels);
 
         int[] outPixels = new int[dstHeight * dstWidth];
         filterVertically(workPixels, outPixels);
@@ -113,14 +72,8 @@ public class FilterOp {
         return outPixels;
     }
 
-    /**
-     * Create data structure holding precalculated values for subsampling or supersampling
-     * @param srcSize Number of pixels in source data line (might be image line or column)
-     * @param dstSize Number of pixels in destination data line (might be image line or column)
-     * @param scalingFactor   Scaling factor
-     * @return Data structure holding precalculated values for subsampling or supersampling
-     */
-    private SubSamplingData createSubSampling(int srcSize, int dstSize, float scalingFactor) {
+    private SubSamplingData createSubSampling(int srcSize, int dstSize) {
+        float scalingFactor = (float)(dstSize - 1) / (float)(srcSize - 1);
         int[] arrN = new int[dstSize];
         int numContributors;
         float[] arrWeight;
@@ -131,7 +84,7 @@ public class FilterOp {
         if (scalingFactor < 1.0f) {
             // scale down -> subsampling
             float width = fwidth / scalingFactor;
-            numContributors= (int)(width * 2.0f + 2); // Heinz: added 1 to be save with the ceilling
+            numContributors= (int)(width * 2.0f + 2); // Heinz: added 1 to be safe with the ceilling
             arrWeight = new float[dstSize * numContributors];
             arrPixel = new int[dstSize * numContributors];
 
@@ -143,9 +96,7 @@ public class FilterOp {
                 int left = (int)Math.floor(center - width);
                 int right = (int)Math.ceil(center + width);
                 for (int j=left; j <= right; j++) {
-                    float weight;
-                    weight= filter.apply((center - j) * fNormFac);
-
+                    float weight = filter.apply((center - j) * fNormFac);
                     if (weight == 0.0f) {
                         continue;
                     }
@@ -290,7 +241,7 @@ public class FilterOp {
     }
 
     /**
-     * Apply filter to sample horizontally from Src to Work
+     * Apply filter to sample horizontally from src to Work
      * @param src Byte array holding source image data
      * @param trg Integer array to store temporary result from filtering horizontally
      */
@@ -344,6 +295,31 @@ public class FilterOp {
 
                 trg[i + destOfsY] = ( (ai<<24) | (ri<<16) | (gi << 8) | bi);
             }
+        }
+    }
+
+    private class SubSamplingData {
+        /** Number of samples */
+        private final int[] sampleCount;
+        /** 2D matrix of pixel positions */
+        private final int[] pixelPositions;
+        /** 2D matrix of weight factors */
+        private final float[] weightFactors;
+        /** Width of 2D matrices pixelPos and weight */
+        private final int matrixWidth;
+
+        /**
+         * Private storage class to hold precalculated values for subsampling or supersampling
+         * @param sampleCount   Number of samples contributing to the pixel
+         * @param pixelPositions   2D matrix of pixel positions
+         * @param weightFactors   2D matrix of weight factors
+         * @param matrixWidth Width of 2D matrices pixelPos and weight
+         */
+        private SubSamplingData(int[] sampleCount, int[] pixelPositions, float[] weightFactors, int matrixWidth) {
+            this.sampleCount = sampleCount;
+            this.pixelPositions = pixelPositions;
+            this.weightFactors = weightFactors;
+            this.matrixWidth = matrixWidth;
         }
     }
 }
