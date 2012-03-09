@@ -16,9 +16,9 @@
 package bdsup2sub.bitmap;
 
 import bdsup2sub.core.Core;
-import bdsup2sub.filters.Filter;
 import bdsup2sub.filters.FilterOp;
 import bdsup2sub.tools.QuantizeFilter;
+import com.mortennobel.imagescaling.ResampleFilter;
 
 import java.awt.image.*;
 import java.util.Arrays;
@@ -310,7 +310,7 @@ public class Bitmap {
      * @param f Filter for scaling
      * @return Scaled Bitmap which uses a fixed frame Palette.
      */
-    public Bitmap scaleFilterLm(final int sizeX, final int sizeY, final Palette pal, final int alphaThr, final int lumThr[], final Filter f) {
+    public Bitmap scaleFilterLm(final int sizeX, final int sizeY, final Palette pal, final int alphaThr, final int lumThr[], final ResampleFilter f) {
         FilterOp fOp = new FilterOp();
         fOp.setFilter(f);
         final int[] trg = fOp.filter(this, pal, sizeX, sizeY);
@@ -584,7 +584,7 @@ public class Bitmap {
      * @param f     Filter for scaling
      * @return Scaled Bitmap which uses the same Palette as the source Bitmap.
      */
-    public Bitmap scaleFilter(final int sizeX, final int sizeY, final Palette pal, final Filter f) {
+    public Bitmap scaleFilter(final int sizeX, final int sizeY, final Palette pal, final ResampleFilter f) {
         final byte[] r = pal.getR();
         final byte[] g = pal.getG();
         final byte[] b = pal.getB();
@@ -644,7 +644,7 @@ public class Bitmap {
      * @param dither True: apply dithering
      * @return Scaled Bitmap and new Palette
      */
-    public BitmapWithPalette scaleFilter(final int sizeX, final int sizeY, final Palette pal, final Filter f, final boolean dither) {
+    public BitmapWithPalette scaleFilter(final int sizeX, final int sizeY, final Palette pal, final ResampleFilter f, final boolean dither) {
         FilterOp fOp = new FilterOp();
         fOp.setFilter(f);
         final int[] trg = fOp.filter(this, pal, sizeX, sizeY);

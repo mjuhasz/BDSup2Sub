@@ -19,7 +19,6 @@ import bdsup2sub.bitmap.Bitmap;
 import bdsup2sub.bitmap.BitmapWithPalette;
 import bdsup2sub.bitmap.ErasePatch;
 import bdsup2sub.bitmap.Palette;
-import bdsup2sub.filters.*;
 import bdsup2sub.gui.MainFrame;
 import bdsup2sub.gui.Progress;
 import bdsup2sub.supstream.*;
@@ -27,6 +26,8 @@ import bdsup2sub.tools.EnhancedPngEncoder;
 import bdsup2sub.tools.Props;
 import bdsup2sub.utils.FilenameUtils;
 import bdsup2sub.utils.ToolBox;
+import com.mortennobel.imagescaling.ResampleFilter;
+import com.mortennobel.imagescaling.ResampleFilters;
 
 import javax.swing.*;
 import java.awt.image.BufferedImage;
@@ -37,6 +38,7 @@ import java.util.ArrayList;
 
 import static bdsup2sub.core.Constants.*;
 import static bdsup2sub.utils.TimeUtils.ptsToTimeStr;
+import static com.mortennobel.imagescaling.ResampleFilters.*;
 
 /**
  * This class contains the core functionality of BDSup2Sub.<br>
@@ -1521,28 +1523,28 @@ public class Core  extends Thread {
         }
 
         if (!skipScaling) {
-            Filter f;
+            ResampleFilter f;
             switch (scalingFilter) {
                 case BELL:
-                    f = new BellFilter();
+                    f = getBellFilter();
                     break;
                 case BICUBIC:
-                    f = new BiCubicFilter();
+                    f = getBiCubicFilter();
                     break;
                 case BICUBIC_SPLINE:
-                    f = new BicubicSplineFilter();
+                    f = getBSplineFilter();
                     break;
                 case HERMITE:
-                    f = new HermiteFilter();
+                    f = getHermiteFilter();
                     break;
                 case LANCZOS3:
-                    f = new Lanczos3Filter();
+                    f = getLanczos3Filter();
                     break;
                 case TRIANGLE:
-                    f = new TriangleFilter();
+                    f = getTriangleFilter();
                     break;
                 case MITCHELL:
-                    f = new MitchellFilter();
+                    f = getMitchellFilter();
                     break;
                 default:
                     f = null;
