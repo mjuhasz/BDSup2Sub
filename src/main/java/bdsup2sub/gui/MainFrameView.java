@@ -66,8 +66,8 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
     private JMenuItem jMenuItemEditDvdFramePalette;
     private JMenuItem jMenuItemConversionSettings;
     private JCheckBoxMenuItem jMenuItemSwapCrCb;
-    private JCheckBoxMenuItem jMenuItemVerbatim;
-    private JCheckBoxMenuItem jMenuItemFixAlpha;
+    private JCheckBoxMenuItem jMenuItemVerbatimOutput;
+    private JCheckBoxMenuItem jMenuItemFixInvisibleFrames;
     private JMenu jMenuEdit;
     private JMenuItem jMenuItemEditFrame;
     private JMenuItem jMenuItemMoveAll;
@@ -181,8 +181,8 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
         }
         jComboBoxFilter.setSelectedIndex(Core.getScalingFilter().ordinal());
 
-        jMenuItemVerbatim.setSelected(Core.getVerbatim());
-        jMenuItemFixAlpha.setSelected(Core.getFixZeroAlpha());
+        jMenuItemVerbatimOutput.setSelected(Core.getVerbatim());
+        jMenuItemFixInvisibleFrames.setSelected(Core.getFixZeroAlpha());
 
         // console
         Font f = new Font("Monospaced", Font.PLAIN, fontSize );
@@ -1187,8 +1187,8 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
             jMenuPrefs.setMnemonic('s');
             jMenuPrefs.add(getJMenuItemConversionSettings());
             jMenuPrefs.add(getJMenuItemSwapCrCb());
-            jMenuPrefs.add(getJMenuItemFixAlpha());
-            jMenuPrefs.add(getJMenuItemVerbatim());
+            jMenuPrefs.add(getJMenuItemFixInvisibleFrames());
+            jMenuPrefs.add(getJMenuItemVerbatimOutput());
         }
         return jMenuPrefs;
     }
@@ -1282,69 +1282,52 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
             jMenuItemSwapCrCb.setText("Swap Cr/Cb");
             jMenuItemSwapCrCb.setMnemonic('s');
             jMenuItemSwapCrCb.setSelected(false);
-            jMenuItemSwapCrCb.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    boolean selected = jMenuItemSwapCrCb.isSelected();
-                    Core.setSwapCrCb(selected);
-                    // create and show image
-                    (new Thread() {
-                        @Override
-                        public void run() {
-                            synchronized (threadSemaphore) {
-                                try {
-                                    if (Core.isReady()) {
-                                        int subIndex = model.getSubIndex();
-                                        Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
-                                        refreshSrcFrame(subIndex);
-                                        refreshTrgFrame(subIndex);
-                                    }
-                                } catch (CoreException ex) {
-                                    error(ex.getMessage());
-                                } catch (Exception ex) {
-                                    ToolBox.showException(ex);
-                                    exit(4);
-                                }
-
-                            } } }).start();
-                }
-            });
         }
         return jMenuItemSwapCrCb;
     }
 
-    private JMenuItem getJMenuItemVerbatim() {
-        if (jMenuItemVerbatim == null) {
-            jMenuItemVerbatim = new JCheckBoxMenuItem();
-            jMenuItemVerbatim.setText("Verbatim Output");
-            jMenuItemVerbatim.setMnemonic('v');
-            jMenuItemVerbatim.setSelected(false);
-            jMenuItemVerbatim.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    boolean selected = jMenuItemVerbatim.isSelected();
-                    Core.setVerbatim(selected);
-                }
-            });
-        }
-        return jMenuItemVerbatim;
+    void addSwapCrCbMenuItemActionListener(ActionListener actionListener) {
+        jMenuItemSwapCrCb.addActionListener(actionListener);
     }
 
-    private JMenuItem getJMenuItemFixAlpha() {
-        if (jMenuItemFixAlpha == null) {
-            jMenuItemFixAlpha = new JCheckBoxMenuItem();
-            jMenuItemFixAlpha.setText("Fix invisible frames");  // Generated
-            jMenuItemFixAlpha.setMnemonic('f');
-            jMenuItemFixAlpha.setSelected(false);
-            jMenuItemFixAlpha.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    boolean selected = jMenuItemFixAlpha.isSelected();
-                    Core.setFixZeroAlpha(selected);
-                }
-            });
+    boolean isSwapCrCbSelected() {
+        return jMenuItemSwapCrCb.isSelected();
+    }
+
+    private JMenuItem getJMenuItemVerbatimOutput() {
+        if (jMenuItemVerbatimOutput == null) {
+            jMenuItemVerbatimOutput = new JCheckBoxMenuItem();
+            jMenuItemVerbatimOutput.setText("Verbatim Output");
+            jMenuItemVerbatimOutput.setMnemonic('v');
+            jMenuItemVerbatimOutput.setSelected(false);
         }
-        return jMenuItemFixAlpha;
+        return jMenuItemVerbatimOutput;
+    }
+
+    void addVerbatimOutputMenuItemActionListener(ActionListener actionListener) {
+        jMenuItemVerbatimOutput.addActionListener(actionListener);
+    }
+
+    boolean isVerbatimOutputSelected() {
+        return jMenuItemVerbatimOutput.isSelected();
+    }
+
+    private JMenuItem getJMenuItemFixInvisibleFrames() {
+        if (jMenuItemFixInvisibleFrames == null) {
+            jMenuItemFixInvisibleFrames = new JCheckBoxMenuItem();
+            jMenuItemFixInvisibleFrames.setText("Fix invisible frames");
+            jMenuItemFixInvisibleFrames.setMnemonic('f');
+            jMenuItemFixInvisibleFrames.setSelected(false);
+        }
+        return jMenuItemFixInvisibleFrames;
+    }
+
+    void addFixInvisibleFramesMenuItemActionListener(ActionListener actionListener) {
+        jMenuItemFixInvisibleFrames.addActionListener(actionListener);
+    }
+
+    boolean isFixInvisibleFramesSelected() {
+        return jMenuItemFixInvisibleFrames.isSelected();
     }
 
     private JMenuItem getJMenuItemConversionSettings() {
@@ -1352,52 +1335,12 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
             jMenuItemConversionSettings = new JMenuItem();
             jMenuItemConversionSettings.setText("Conversion Settings");
             jMenuItemConversionSettings.setMnemonic('c');
-            jMenuItemConversionSettings.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    final Resolution rOld = Core.getOutputResolution();
-                    final double fpsTrgOld = Core.getFPSTrg();
-                    final boolean changeFpsOld = Core.getConvertFPS();
-                    final int delayOld = Core.getDelayPTS();
-                    final double fsXOld;
-                    final double fsYOld;
-                    if (Core.getApplyFreeScale()) {
-                        fsXOld = Core.getFreeScaleX();
-                        fsYOld = Core.getFreeScaleY();
-                    } else {
-                        fsXOld = 1.0;
-                        fsYOld = 1.0;
-                    }
-                    // show dialog
-                    ConversionDialog trans = new ConversionDialog(mainFrame);
-                    trans.enableOptionMove(false);
-                    trans.setVisible(true);
-
-                    if (!trans.wasCanceled()) {
-                        // create and show image
-                        (new Thread() {
-                            @Override
-                            public void run() {
-                                synchronized (threadSemaphore) {
-                                    try {
-                                        if (Core.isReady()) {
-                                            int subIndex = model.getSubIndex();
-                                            Core.reScanSubtitles(rOld, fpsTrgOld, delayOld, changeFpsOld,fsXOld,fsYOld);
-                                            Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
-                                            refreshTrgFrame(subIndex);
-                                        }
-                                    } catch (CoreException ex) {
-                                        error(ex.getMessage());
-                                    } catch (Exception ex) {
-                                        ToolBox.showException(ex);
-                                        exit(4);
-                                    }
-                                } } }).start();
-                    }
-                }
-            });
         }
         return jMenuItemConversionSettings;
+    }
+
+    void addConversionSettingsMenuItemActionListener(ActionListener actionListener) {
+        jMenuItemConversionSettings.addActionListener(actionListener);
     }
 
     private JMenuItem getJMenuItemEditDefaultDvdPalette() {
@@ -1572,12 +1515,12 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
         int size = recentFiles.size();
         if (size>0) {
             jMenuRecentFiles.removeAll();
-            for (int i=0; i<size; i++) {
+            for (int i=0; i < size; i++) {
                 JMenuItem j = new JMenuItem();
                 String s = recentFiles.get(i);
-                j.setText(i+": "+s);
+                j.setText(i + ": " + s);
                 j.setActionCommand(s);
-                j.setMnemonic((""+i).charAt(0));
+                j.setMnemonic(Character.forDigit(i, 10));
                 j.addActionListener(recentFilesMenuActionListener);
                 jMenuRecentFiles.add(j);
             }

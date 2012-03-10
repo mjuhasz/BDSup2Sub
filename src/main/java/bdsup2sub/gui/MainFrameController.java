@@ -45,6 +45,8 @@ public class MainFrameController {
 
         addFileMenuActionListeners();
         addEditMenuActionListeners();
+        addSettingsMenuActionListeners();
+
         view.addTransferHandler(new DragAndDropTransferHandler());
 
         if (model.isSourceFileSpecifiedOnCmdLine()) {
@@ -67,6 +69,13 @@ public class MainFrameController {
         view.addEditDvdFramePaletteMenuItemActionListener(new EditDvdFramePaletteMenuItemActionListener());
         view.addMoveAllMenuItemActionListener(new MoveAllMenuItemActionListener());
         view.addResetCropOffsetMenuItemActionListener(new ResetCropOffsetMenuItemActionListener());
+    }
+
+    private void addSettingsMenuActionListeners() {
+        view.addConversionSettingsMenuItemActionListener(new ConversionSettingsMenuItemActionListener());
+        view.addSwapCrCbMenuItemActionListener(new SwapCrCbMenuItemActionListener());
+        view.addFixInvisibleFramesMenuItemActionListener(new FixInvisibleFramesMenuItemActionListener());
+        view.addVerbatimOutputMenuItemActionListener(new VerbatimOutputMenuItemActionListener());
     }
 
 
@@ -310,7 +319,9 @@ public class MainFrameController {
                                 ToolBox.showException(ex);
                                 view.exit(4);
                             }
-                        } } }).start();
+                        }
+                    }
+                }).start();
             }
         }
     }
@@ -487,7 +498,9 @@ public class MainFrameController {
                                 ToolBox.showException(ex);
                                 view.exit(4);
                             }
-                        } } }).start();
+                        }
+                    }
+                }).start();
             }
         }
     }
@@ -498,6 +511,99 @@ public class MainFrameController {
             Core.setCropOfsY(0);
             view.setLayoutPaneCropOffsetY(Core.getCropOfsY());
             view.repaintLayoutPane();
+        }
+    }
+
+    private class ConversionSettingsMenuItemActionListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            final Resolution rOld = Core.getOutputResolution();
+            final double fpsTrgOld = Core.getFPSTrg();
+            final boolean changeFpsOld = Core.getConvertFPS();
+            final int delayOld = Core.getDelayPTS();
+            final double fsXOld;
+            final double fsYOld;
+            if (Core.getApplyFreeScale()) {
+                fsXOld = Core.getFreeScaleX();
+                fsYOld = Core.getFreeScaleY();
+            } else {
+                fsXOld = 1.0;
+                fsYOld = 1.0;
+            }
+            // show dialog
+            ConversionDialog trans = new ConversionDialog(view);
+            trans.enableOptionMove(false);
+            trans.setVisible(true);
+
+            if (!trans.wasCanceled()) {
+                // create and show image
+                (new Thread() {
+                    @Override
+                    public void run() {
+                        synchronized (view.threadSemaphore) {
+                            try {
+                                if (Core.isReady()) {
+                                    int subIndex = model.getSubIndex();
+                                    Core.reScanSubtitles(rOld, fpsTrgOld, delayOld, changeFpsOld,fsXOld,fsYOld);
+                                    Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
+                                    view.refreshTrgFrame(subIndex);
+                                }
+                            } catch (CoreException ex) {
+                                view.error(ex.getMessage());
+                            } catch (Exception ex) {
+                                ToolBox.showException(ex);
+                                view.exit(4);
+                            }
+                        }
+                    }
+                }).start();
+            }
+        }
+    }
+
+    private class SwapCrCbMenuItemActionListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            boolean selected = view.isSwapCrCbSelected();
+            Core.setSwapCrCb(selected);
+            // create and show image
+            (new Thread() {
+                @Override
+                public void run() {
+                    synchronized (view.threadSemaphore) {
+                        try {
+                            if (Core.isReady()) {
+                                int subIndex = model.getSubIndex();
+                                Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
+                                view.refreshSrcFrame(subIndex);
+                                view.refreshTrgFrame(subIndex);
+                            }
+                        } catch (CoreException ex) {
+                            view.error(ex.getMessage());
+                        } catch (Exception ex) {
+                            ToolBox.showException(ex);
+                            view.exit(4);
+                        }
+
+                    }
+                }
+            }).start();
+        }
+    }
+
+    private class FixInvisibleFramesMenuItemActionListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            boolean selected = view.isFixInvisibleFramesSelected();
+            Core.setFixZeroAlpha(selected);
+        }
+    }
+
+    private class VerbatimOutputMenuItemActionListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            boolean selected = view.isVerbatimOutputSelected();
+            Core.setVerbatim(selected);
         }
     }
 }
