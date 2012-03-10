@@ -36,7 +36,7 @@ import java.util.List;
 
 import static bdsup2sub.core.Constants.*;
 
-public class MainFrame extends JFrame implements ClipboardOwner {
+public class MainFrameView extends JFrame implements ClipboardOwner {
 
     private static final long serialVersionUID = 1L;
 
@@ -92,21 +92,13 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 
 
     /** semaphore for synchronization of threads */
-    private final Object threadSemaphore = new Object();
+    final Object threadSemaphore = new Object();
     /** reference to this frame (to allow access to "this" from inner classes */
     private JFrame mainFrame;
-    /** current caption index */
-    private int subIndex;
-    /** path to load SUP from */
-    private String loadPath;
-    /** file name of last file loaded/stored */
-    private String saveFilename;
-    /** path to save SUP to */
-    private String savePath;
     /** path to load color profiles from */
     private String colorPath;
     /** transfer handler for Drag'n'Drop support */
-    private TransferHandler thandler;
+//    private TransferHandler thandler;
 
     /** font size for output console */
     private int fontSize = 12;
@@ -116,15 +108,11 @@ public class MainFrame extends JFrame implements ClipboardOwner {
     /** background color for ok */
     private Color okBgnd = UIManager.getColor("TextField.background");
 
-
-    public MainFrame(String fname) {
-        this();
-        loadPath = fname;
-        load(fname);
-    }
-
-    public MainFrame() {
+    private MainFrameModel model;
+    
+    public MainFrameView(MainFrameModel model) {
         super(APP_NAME_AND_VERSION);
+        this.model = model;
 
         jTextSubNum = new JTextField();
         jTextAlphaThr = new JTextField();
@@ -145,12 +133,11 @@ public class MainFrame extends JFrame implements ClipboardOwner {
             }
         });
 
-        ClassLoader loader = MainFrame.class.getClassLoader();
+        ClassLoader loader = MainFrameView.class.getClassLoader();
         Image img = Toolkit.getDefaultToolkit().getImage(loader.getResource("icon_32.png"));
         setIconImage(img);
 
         Core.setMainFrame(this);
-        Core.init(this);
 
         // read properties, set window size and position
         int w = Core.props.get("frameWidth", 800);
@@ -167,12 +154,9 @@ public class MainFrame extends JFrame implements ClipboardOwner {
             setLocationRelativeTo(null);
         }
 
-        loadPath = Core.props.get("loadPath", "");
         //savePath = Core.props.get("savePath", "");
         colorPath = Core.props.get("colorPath", "");
         mainFrame = this;
-
-        subIndex = 0;
 
         updateRecentFilesMenu();
 
@@ -220,41 +204,14 @@ public class MainFrame extends JFrame implements ClipboardOwner {
         console.addMouseListener(popupListener);
         setVisible(true);
 
-        // drag'n'drop
-        thandler = new TransferHandler() {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public boolean canImport(TransferHandler.TransferSupport support) {
-                return support.isDataFlavorSupported(DataFlavor.javaFileListFlavor);
-            }
-
-            @SuppressWarnings("unchecked")
-            @Override
-            public boolean importData(TransferHandler.TransferSupport support) {
-                if (!canImport(support))
-                    return false;
-
-                Transferable t = support.getTransferable();
-
-                try {
-                    List<File> flist = (List<File>)t.getTransferData(DataFlavor.javaFileListFlavor);
-                    load(flist.get(0).getAbsolutePath());
-                } catch (UnsupportedFlavorException e) {
-                    return false;
-                } catch (IOException e) {
-                    return false;
-                }
-
-                return true;
-            }
-        };
-        setTransferHandler(thandler);
-
         print(APP_NAME_AND_VERSION + " - a converter from Blu-Ray/HD-DVD SUP to DVD SUB/IDX and more\n");
         print(AUTHOR_AND_DATE + "\n");
         print("Official thread at Doom9: http://forum.doom9.org/showthread.php?t=145277\n\n");
         flush();
+    }
+
+    void addTransferHandler(TransferHandler transferHandler) {
+        setTransferHandler(transferHandler);
     }
 
     /**
@@ -331,18 +288,22 @@ public class MainFrame extends JFrame implements ClipboardOwner {
         JOptionPane.showMessageDialog(mainFrame, message, "Error!", JOptionPane.WARNING_MESSAGE);
     }
 
+    void setConsoleText(String text) {
+        console.setText(text);
+    }
+
     /**
      * Update all components belonging to the target window
      * @param index caption index
      */
-    private void refreshTrgFrame(final int index) {
+    void refreshTrgFrame(final int index) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
                 jLayoutPane.setDim(Core.getTrgWidth(index), Core.getTrgHeight(index));
                 jLayoutPane.setOffsets(Core.getTrgOfsX(index), Core.getTrgOfsY(index));
                 jLayoutPane.setCropOfsY(Core.getCropOfsY());
-                jLayoutPane.setImage(Core.getTrgImage(),Core.getTrgImgWidth(index), Core.getTrgImgHeight(index));
+                jLayoutPane.setImage(Core.getTrgImage(), Core.getTrgImgWidth(index), Core.getTrgImgHeight(index));
                 jLayoutPane.setExcluded(Core.getTrgExcluded(index));
                 jPanelTrg.setImage(Core.getTrgImage());
                 printInfoTrg(index);
@@ -355,7 +316,7 @@ public class MainFrame extends JFrame implements ClipboardOwner {
      * Update all components belonging to the source window
      * @param index caption index
      */
-    private void refreshSrcFrame(final int index) {
+    void refreshSrcFrame(final int index) {
         SwingUtilities.invokeLater( new Runnable() {
             @Override
             public void run() {
@@ -370,11 +331,11 @@ public class MainFrame extends JFrame implements ClipboardOwner {
      * Common exit routine, stores properties and releases Core file handles
      * @param code exit code
      */
-    private void exit(int code) {
+    void exit(int code) {
         if (code == 0) {
             // store width and height
             Dimension d = getSize();
-            if (this.getExtendedState() != MainFrame.MAXIMIZED_BOTH) {
+            if (this.getExtendedState() != MainFrameView.MAXIMIZED_BOTH) {
                 Core.props.set("frameWidth", d.width);
                 Core.props.set("frameHeight", d.height);
                 // store frame pos
@@ -382,9 +343,6 @@ public class MainFrame extends JFrame implements ClipboardOwner {
                 Core.props.set("framePosX", p.x);
                 Core.props.set("framePosY", p.y);
             }
-            // store load/save path
-            Core.props.set("loadPath", loadPath);
-            //Core.props.set("savePath", savePath);
             Core.props.set("colorPath", colorPath);
         }
         Core.exit();
@@ -397,9 +355,9 @@ public class MainFrame extends JFrame implements ClipboardOwner {
      */
     private void setClipboard(String str) {
         // clear
-        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(""), (ClipboardOwner)mainFrame);
+        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(""), (ClipboardOwner) mainFrame);
         // set
-        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(str), (ClipboardOwner)mainFrame);
+        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(str), (ClipboardOwner) mainFrame);
     }
 
     /**
@@ -407,7 +365,7 @@ public class MainFrame extends JFrame implements ClipboardOwner {
      */
     private void initialize() {
         setSize(800, 600);
-        setMinimumSize(new Dimension(700,300));
+        setMinimumSize(new Dimension(700, 300));
         setJMenuBar(getjMenuBar());
         setContentPane(getJContentPane());
     }
@@ -693,7 +651,7 @@ public class MainFrame extends JFrame implements ClipboardOwner {
                         try {
                             idx = Integer.parseInt(jComboBoxSubNum.getSelectedItem().toString())-1;
                         } catch (NumberFormatException ex) {
-                            idx = subIndex; // invalid number -> keep old value
+                            idx = model.getSubIndex(); // invalid number -> keep old value
                         }
 
                         if (idx < 0) {
@@ -702,15 +660,16 @@ public class MainFrame extends JFrame implements ClipboardOwner {
                         if (idx >= num) {
                             idx = num-1;
                         }
-                        subIndex = idx;
-                        jComboBoxSubNum.setSelectedIndex(subIndex);
+                        model.setSubIndex(idx);
+                        jComboBoxSubNum.setSelectedIndex(model.getSubIndex());
 
                         (new Thread() {
                             @Override
                             public void run() {
                                 synchronized (threadSemaphore) {
                                     try {
-                                        Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
+                                        int subIndex = model.getSubIndex();
+                                        Core.convertSup(subIndex, subIndex +1, Core.getNumFrames());
                                         refreshSrcFrame(subIndex);
                                         refreshTrgFrame(subIndex);
                                     } catch (CoreException ex) {
@@ -731,13 +690,14 @@ public class MainFrame extends JFrame implements ClipboardOwner {
                         if (idx < 0 || idx >= Core.getNumFrames()) {
                             jTextSubNum.setBackground(errBgnd);
                         } else {
-                            subIndex = idx;
+                            model.setSubIndex(idx);
                             (new Thread() {
                                 @Override
                                 public void run() {
                                     synchronized (threadSemaphore) {
                                         try {
-                                            Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
+                                            int subIndex = model.getSubIndex();
+                                            Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
                                             refreshSrcFrame(subIndex);
                                             refreshTrgFrame(subIndex);
                                         } catch (CoreException ex) {
@@ -770,6 +730,14 @@ public class MainFrame extends JFrame implements ClipboardOwner {
             });
         }
         return jComboBoxSubNum;
+    }
+
+    void initComboBoxSubNum(int subCount) {
+        jComboBoxSubNum.removeAllItems();
+        for (int i=1; i <= subCount; i++) {
+            jComboBoxSubNum.addItem(String.valueOf(i));
+        }
+        jComboBoxSubNum.setSelectedIndex(0);
     }
 
     private JComboBox getJComboBoxAlphaThr() {
@@ -806,7 +774,8 @@ public class MainFrame extends JFrame implements ClipboardOwner {
                             public void run() {
                                 synchronized (threadSemaphore) {
                                     try {
-                                        Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
+                                        int subIndex = model.getSubIndex();
+                                        Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
                                         refreshTrgFrame(subIndex);
                                     } catch (CoreException ex) {
                                         error(ex.getMessage());
@@ -831,7 +800,8 @@ public class MainFrame extends JFrame implements ClipboardOwner {
                                 public void run() {
                                     synchronized (threadSemaphore) {
                                         try {
-                                            Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
+                                            int subIndex = model.getSubIndex();
+                                            Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
                                             refreshTrgFrame(subIndex);
                                         } catch (CoreException ex) {
                                             error(ex.getMessage());
@@ -863,6 +833,12 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 
         }
         return jComboBoxAlphaThr;
+    }
+
+    void initComboBoxThrSelectedIndices() {
+        jComboBoxAlphaThr.setSelectedIndex(Core.getAlphaThr());
+        jComboBoxHiMedThr.setSelectedIndex(Core.getLumThr()[0]);
+        jComboBoxMedLowThr.setSelectedIndex(Core.getLumThr()[1]);
     }
 
     private JComboBox getJComboBoxHiMedThr() {
@@ -905,7 +881,8 @@ public class MainFrame extends JFrame implements ClipboardOwner {
                             public void run() {
                                 synchronized (threadSemaphore) {
                                     try {
-                                        Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
+                                        int subIndex = model.getSubIndex();
+                                        Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
                                         refreshTrgFrame(subIndex);
                                     } catch (CoreException ex) {
                                         error(ex.getMessage());
@@ -933,7 +910,8 @@ public class MainFrame extends JFrame implements ClipboardOwner {
                                 public void run() {
                                     synchronized (threadSemaphore) {
                                         try {
-                                            Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
+                                            int subIndex = model.getSubIndex();
+                                            Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
                                             refreshTrgFrame(subIndex);
                                         } catch (CoreException ex) {
                                             error(ex.getMessage());
@@ -1010,7 +988,8 @@ public class MainFrame extends JFrame implements ClipboardOwner {
                             public void run() {
                                 synchronized (threadSemaphore) {
                                     try {
-                                        Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
+                                        int subIndex = model.getSubIndex();
+                                        Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
                                         refreshTrgFrame(subIndex);
                                     } catch (CoreException ex) {
                                         error(ex.getMessage());
@@ -1038,7 +1017,8 @@ public class MainFrame extends JFrame implements ClipboardOwner {
                                 public void run() {
                                     synchronized (threadSemaphore) {
                                         try {
-                                            Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
+                                            int subIndex = model.getSubIndex();
+                                            Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
                                             refreshTrgFrame(subIndex);
                                         } catch (CoreException ex) {
                                             error(ex.getMessage());
@@ -1096,7 +1076,8 @@ public class MainFrame extends JFrame implements ClipboardOwner {
                             public void run() {
                                 synchronized (threadSemaphore) {
                                     try {
-                                        Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
+                                        int subIndex = model.getSubIndex();
+                                        Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
                                         refreshTrgFrame(subIndex);
                                         if (Core.getOutputMode() == OutputMode.VOBSUB || Core.getOutputMode() == OutputMode.SUPIFO)
                                             enableVobsubStuff(true);
@@ -1109,7 +1090,9 @@ public class MainFrame extends JFrame implements ClipboardOwner {
                                         exit(4);
                                     }
 
-                                } } }).start();
+                                }
+                            }
+                        }).start();
                     }
                 }
             });
@@ -1250,8 +1233,8 @@ public class MainFrame extends JFrame implements ClipboardOwner {
             jMenuItemHelp.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     Help help = new Help();
-                    help.setLocation(getX()+30,getY()+30);
-                    help.setSize(800,600);
+                    help.setLocation(getX() + 30, getY() + 30);
+                    help.setSize(800, 600);
                     help.setVisible(true);
                 }
             });
@@ -1270,15 +1253,16 @@ public class MainFrame extends JFrame implements ClipboardOwner {
                 public void actionPerformed(ActionEvent e) {
                     if (Core.isReady()) {
                         EditDialog ed = new EditDialog(mainFrame);
-                        ed.setIndex(subIndex);
+                        ed.setIndex(model.getSubIndex());
                         ed.setVisible(true);
-                        subIndex = ed.getIndex();
+                        model.setSubIndex(ed.getIndex());
                         (new Thread() {
                             @Override
                             public void run() {
                                 synchronized (threadSemaphore) {
                                     try {
-                                        Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
+                                        int subIndex = model.getSubIndex();
+                                        Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
                                         refreshSrcFrame(subIndex);
                                         refreshTrgFrame(subIndex);
                                         jComboBoxSubNum.setSelectedIndex(subIndex);
@@ -1307,7 +1291,7 @@ public class MainFrame extends JFrame implements ClipboardOwner {
                 public void actionPerformed(ActionEvent e) {
                     if (Core.isReady()) {
                         MoveDialog ed = new MoveDialog(mainFrame);
-                        ed.setCurrentSubtitleIndex(subIndex);
+                        ed.setCurrentSubtitleIndex(model.getSubIndex());
                         ed.setVisible(true);
                         if (Core.getMoveCaptions()) {
                             try {
@@ -1319,14 +1303,15 @@ public class MainFrame extends JFrame implements ClipboardOwner {
                                 exit(4);
                             }
                         }
-                        subIndex = ed.getCurrentSubtitleIndex();
+                        model.setSubIndex(ed.getCurrentSubtitleIndex());
                         jLayoutPane.setAspectRatio(ed.getTrgRatio());
                         (new Thread() {
                             @Override
                             public void run() {
                                 synchronized (threadSemaphore) {
                                     try {
-                                        Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
+                                        int subIndex = model.getSubIndex();
+                                        Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
                                         refreshSrcFrame(subIndex);
                                         refreshTrgFrame(subIndex);
                                         jComboBoxSubNum.setSelectedIndex(subIndex);
@@ -1379,7 +1364,8 @@ public class MainFrame extends JFrame implements ClipboardOwner {
                             synchronized (threadSemaphore) {
                                 try {
                                     if (Core.isReady()) {
-                                        Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
+                                        int subIndex = model.getSubIndex();
+                                        Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
                                         refreshSrcFrame(subIndex);
                                         refreshTrgFrame(subIndex);
                                     }
@@ -1465,8 +1451,9 @@ public class MainFrame extends JFrame implements ClipboardOwner {
                                 synchronized (threadSemaphore) {
                                     try {
                                         if (Core.isReady()) {
+                                            int subIndex = model.getSubIndex();
                                             Core.reScanSubtitles(rOld, fpsTrgOld, delayOld, changeFpsOld,fsXOld,fsYOld);
-                                            Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
+                                            Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
                                             refreshTrgFrame(subIndex);
                                         }
                                     } catch (CoreException ex) {
@@ -1525,7 +1512,8 @@ public class MainFrame extends JFrame implements ClipboardOwner {
                                 synchronized (threadSemaphore) {
                                     try {
                                         if (Core.isReady()) {
-                                            Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
+                                            int subIndex = model.getSubIndex();
+                                            Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
                                             refreshTrgFrame(subIndex);
                                         }
                                     } catch (CoreException ex) {
@@ -1586,7 +1574,8 @@ public class MainFrame extends JFrame implements ClipboardOwner {
                                 synchronized (threadSemaphore) {
                                     try {
                                         if (Core.isReady()) {
-                                            Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
+                                            int subIndex = model.getSubIndex();
+                                            Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
                                             refreshSrcFrame(subIndex);
                                             refreshTrgFrame(subIndex);
                                         }
@@ -1617,7 +1606,7 @@ public class MainFrame extends JFrame implements ClipboardOwner {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     FramePalDialog cDiag = new FramePalDialog(mainFrame);
-                    cDiag.setCurrentSubtitleIndex(subIndex);
+                    cDiag.setCurrentSubtitleIndex(model.getSubIndex());
                     cDiag.setVisible(true);
 
                     (new Thread() {
@@ -1626,7 +1615,8 @@ public class MainFrame extends JFrame implements ClipboardOwner {
                             synchronized (threadSemaphore) {
                                 try {
                                     if (Core.isReady()) {
-                                        Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
+                                        int subIndex = model.getSubIndex();
+                                        Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
                                         refreshSrcFrame(subIndex);
                                         refreshTrgFrame(subIndex);
                                     }
@@ -1646,7 +1636,7 @@ public class MainFrame extends JFrame implements ClipboardOwner {
         return jMenuItemEditFramePalAlpha;
     }
 
-    private void enableCoreComponents(boolean state) {
+    void enableCoreComponents(boolean state) {
         jMenuItemLoad.setEnabled(state);
         jMenuRecentFiles.setEnabled(state && Core.getRecentFiles().size() > 0);
         jMenuItemSave.setEnabled(state && Core.getNumFrames() > 0);
@@ -1679,7 +1669,7 @@ public class MainFrame extends JFrame implements ClipboardOwner {
      * Enable/disable components dependent only available for VobSubs
      * @param b true: enable
      */
-    private void enableVobsubStuff(boolean b) {
+    void enableVobsubStuff(boolean b) {
         boolean ready = Core.isReady();
         Core.setReady(false);
         jComboBoxPalette.removeAllItems();
@@ -1707,7 +1697,7 @@ public class MainFrame extends JFrame implements ClipboardOwner {
     /**
      * Output a dialog with number of warnings and errors
      */
-    private void warningDialog() {
+    void warningDialog() {
         int w = Core.getWarnings();
         Core.resetWarnings();
         int e = Core.getErrors();
@@ -1739,95 +1729,8 @@ public class MainFrame extends JFrame implements ClipboardOwner {
             }
 
             JOptionPane.showMessageDialog(mainFrame,
-                    s+"\nCheck the log for details",
+                    s + "\nCheck the log for details",
                     "Warning!", JOptionPane.WARNING_MESSAGE);
-        }
-    }
-
-    private void load(String fname) {
-        if (fname != null) {
-            if (!new File(fname).exists()) {
-                JOptionPane.showMessageDialog(mainFrame, "File '"+fname+"' does not exist",
-                        "File not found!", JOptionPane.WARNING_MESSAGE);
-            } else {
-                synchronized (threadSemaphore) {
-                    boolean xml = FilenameUtils.getExtension(fname).equalsIgnoreCase("xml");
-                    boolean idx = FilenameUtils.getExtension(fname).equalsIgnoreCase("idx");
-                    boolean ifo = FilenameUtils.getExtension(fname).equalsIgnoreCase("ifo");
-                    byte id[] = ToolBox.getFileID(fname, 4);
-                    StreamID sid = (id == null) ? StreamID.UNKNOWN : Core.getStreamID(id);
-                    if (idx || xml || ifo || sid != StreamID.UNKNOWN) {
-                        mainFrame.setTitle(APP_NAME_AND_VERSION + " - " + fname);
-                        subIndex = 0;
-                        loadPath = fname;
-                        saveFilename = FilenameUtils.removeExtension(FilenameUtils.getName(loadPath));
-                        savePath = FilenameUtils.getParent(loadPath);
-                        enableCoreComponents(false);
-                        enableVobsubStuff(false);
-                        try {
-                            Core.readStreamThreaded(loadPath, mainFrame, sid);
-                            warningDialog();
-                            int num = Core.getNumFrames();
-                            Core.setReady(false);
-                            jComboBoxSubNum.removeAllItems();
-                            for (int i=1; i<=num; i++) {
-                                jComboBoxSubNum.addItem(Integer.toString(i));
-                            }
-                            jComboBoxSubNum.setSelectedIndex(subIndex);
-                            jComboBoxAlphaThr.setSelectedIndex(Core.getAlphaThr());
-                            jComboBoxHiMedThr.setSelectedIndex(Core.getLumThr()[0]);
-                            jComboBoxMedLowThr.setSelectedIndex(Core.getLumThr()[1]);
-                            //
-                            if (Core.getCropOfsY() > 0) {
-                                if (JOptionPane.showConfirmDialog(mainFrame, "Reset Crop Offset?",
-                                        "", JOptionPane.YES_NO_OPTION) == 0) {
-                                    Core.setCropOfsY(0);
-                                }
-                            }
-
-                            ConversionDialog trans = new ConversionDialog(mainFrame);
-                            trans.enableOptionMove(Core.getMoveCaptions());
-                            trans.setVisible(true);
-                            if (!trans.wasCanceled()) {
-                                Core.scanSubtitles();
-                                if (Core.getMoveCaptions()) {
-                                    Core.moveAllThreaded(mainFrame);
-                                }
-                                Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
-                                Core.setReady(true);
-                                jMenuItemExit.setEnabled(true);
-                                refreshSrcFrame(subIndex);
-                                refreshTrgFrame(subIndex);
-                                enableCoreComponents(true);
-                                if (Core.getOutputMode() == OutputMode.VOBSUB || Core.getInputMode() == InputMode.SUPIFO) {
-                                    enableVobsubStuff(true);
-                                }
-                                // tell the core that a stream was loaded via the GUI
-                                Core.loadedHook();
-                                Core.addRecent(loadPath);
-                                updateRecentFilesMenu();
-                            } else {
-                                closeSub();
-                                printWarn("Loading cancelled by user.");
-                                Core.close();
-                            }
-                        } catch (CoreException ex) {
-                            jMenuItemLoad.setEnabled(true);
-                            updateRecentFilesMenu();
-                            jComboBoxOutFormat.setEnabled(true);
-                            error(ex.getMessage());
-                        } catch (Exception ex) {
-                            ToolBox.showException(ex);
-                            exit(4);
-                        } finally {
-                            flush();
-                        }
-                    } else {
-                        JOptionPane.showMessageDialog(mainFrame, "This is not a supported SUP stream",
-                                "Wrong format!", JOptionPane.WARNING_MESSAGE);
-                    }
-                }
-            }
         }
     }
 
@@ -1836,31 +1739,27 @@ public class MainFrame extends JFrame implements ClipboardOwner {
             jMenuItemLoad = new JMenuItem();
             jMenuItemLoad.setText("Load");
             jMenuItemLoad.setMnemonic('l');
-            jMenuItemLoad.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    String[] ext = new String[5];
-                    ext[0] = "idx";
-                    ext[1] = "ifo";
-                    ext[2] = "sub";
-                    ext[3] = "sup";
-                    ext[4] = "xml";
-                    console.setText("");
-                    String p = FilenameUtils.getParent(loadPath);
-                    String fn = FilenameUtils.getName(loadPath);
-                    final String fname = ToolBox.getFileName(p, fn, ext, true, mainFrame);
-                    (new Thread() {
-                        @Override
-                        public void run() {
-                            load(fname);
-                        } }).start();
-                }
-            });
         }
         return jMenuItemLoad;
     }
 
-    private void updateRecentFilesMenu() {
+    void addLoadMenuActionListener(ActionListener actionListener) {
+        jMenuItemLoad.addActionListener(actionListener);
+    }
+
+    void setLoadMenuItemEnabled(boolean enable) {
+        jMenuItemLoad.setEnabled(enable);
+    }
+
+    void setComboBoxOutFormatEnabled(boolean enable) {
+        jComboBoxOutFormat.setEnabled(enable);
+    }
+
+    void setMenuItemExitEnabled(boolean enable) {
+        jMenuItemExit.setEnabled(enable);
+    }
+
+    void updateRecentFilesMenu() {
         jMenuRecentFiles.setEnabled(false);
         ArrayList<String> recentFiles = Core.getRecentFiles();
         int size = recentFiles.size();
@@ -1872,21 +1771,15 @@ public class MainFrame extends JFrame implements ClipboardOwner {
                 j.setText(i+": "+s);
                 j.setActionCommand(s);
                 j.setMnemonic((""+i).charAt(0));
-                j.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        console.setText("");
-                        final String fname = e.getActionCommand();
-                        (new Thread() {
-                            @Override
-                            public void run() {
-                                load(fname);
-                            } }).start();
-                    }
-                });
                 jMenuRecentFiles.add(j);
             }
             jMenuRecentFiles.setEnabled(true);
+        }
+    }
+
+    void addRecentMenuActionListener(ActionListener actionListener) {
+        for(int i=0; i < jMenuRecentFiles.getItemCount(); i++) {
+            jMenuRecentFiles.getItem(i).addActionListener(actionListener);
         }
     }
 
@@ -1912,7 +1805,7 @@ public class MainFrame extends JFrame implements ClipboardOwner {
                     String path;
                     try {
                         ExportDialog exp = new ExportDialog(mainFrame);
-                        path = savePath + File.separatorChar + saveFilename+"_exp.";
+                        path = model.getSavePath() + File.separatorChar + model.getSaveFilename() + "_exp.";
                         if (Core.getOutputMode() == OutputMode.VOBSUB) {
                             path += "idx";
                         } else if (Core.getOutputMode() == OutputMode.SUPIFO) {
@@ -1928,9 +1821,8 @@ public class MainFrame extends JFrame implements ClipboardOwner {
 
                         String fn = exp.getFileName();
                         if (!exp.wasCanceled() && fn != null) {
-                            savePath = FilenameUtils.getParent(fn);
-                            saveFilename = FilenameUtils.removeExtension(FilenameUtils.getName(fn));
-                            saveFilename = saveFilename.replaceAll("_exp$","");
+                            model.setSavePath(FilenameUtils.getParent(fn));
+                            model.setSaveFilename(FilenameUtils.removeExtension(FilenameUtils.getName(fn)).replaceAll("_exp$",""));
                             //
                             File fi,fs;
                             if (Core.getOutputMode() == OutputMode.VOBSUB) {
@@ -1975,7 +1867,7 @@ public class MainFrame extends JFrame implements ClipboardOwner {
         return jMenuItemSave;
     }
 
-    private void closeSub() {
+    void closeSub() {
         jComboBoxSubNum.removeAllItems();
         enableCoreComponents(false);
         jMenuItemLoad.setEnabled(true);
@@ -2121,15 +2013,16 @@ public class MainFrame extends JFrame implements ClipboardOwner {
                     if (e.getButton() == MouseEvent.BUTTON1) {
                         if (Core.isReady()) {
                             EditDialog ed = new EditDialog(mainFrame);
-                            ed.setIndex(subIndex);
+                            ed.setIndex(model.getSubIndex());
                             ed.setVisible(true);
-                            subIndex = ed.getIndex();
+                            model.setSubIndex(ed.getIndex());
                             (new Thread() {
                                 @Override
                                 public void run() {
                                     synchronized (threadSemaphore) {
                                         try {
-                                            Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
+                                            int subIndex = model.getSubIndex();
+                                            Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
                                             refreshSrcFrame(subIndex);
                                             refreshTrgFrame(subIndex);
                                             jComboBoxSubNum.setSelectedIndex(subIndex);
@@ -2197,7 +2090,8 @@ public class MainFrame extends JFrame implements ClipboardOwner {
                             public void run() {
                                 synchronized (threadSemaphore) {
                                     try {
-                                        Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
+                                        int subIndex = model.getSubIndex();
+                                        Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
                                         refreshTrgFrame(subIndex);
                                     } catch (CoreException ex) {
                                         error(ex.getMessage());
@@ -2239,7 +2133,8 @@ public class MainFrame extends JFrame implements ClipboardOwner {
                             public void run() {
                                 synchronized (threadSemaphore) {
                                     try {
-                                        Core.convertSup(subIndex, subIndex+1, Core.getNumFrames());
+                                        int subIndex = model.getSubIndex();
+                                        Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
                                         refreshTrgFrame(subIndex);
                                     } catch (CoreException ex) {
                                         error(ex.getMessage());

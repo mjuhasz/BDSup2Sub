@@ -19,7 +19,7 @@ import bdsup2sub.bitmap.Bitmap;
 import bdsup2sub.bitmap.BitmapWithPalette;
 import bdsup2sub.bitmap.ErasePatch;
 import bdsup2sub.bitmap.Palette;
-import bdsup2sub.gui.MainFrame;
+import bdsup2sub.gui.MainFrameView;
 import bdsup2sub.gui.Progress;
 import bdsup2sub.supstream.*;
 import bdsup2sub.tools.EnhancedPngEncoder;
@@ -27,7 +27,6 @@ import bdsup2sub.tools.Props;
 import bdsup2sub.utils.FilenameUtils;
 import bdsup2sub.utils.ToolBox;
 import com.mortennobel.imagescaling.ResampleFilter;
-import com.mortennobel.imagescaling.ResampleFilters;
 
 import javax.swing.*;
 import java.awt.image.BufferedImage;
@@ -250,7 +249,7 @@ public class Core  extends Thread {
     private static String fileName;
 
     /** Reference to main GUI class */
-    private static MainFrame mainFrame;
+    private static MainFrameView mainFrame;
     /** Progress dialog for loading/exporting */
     private static Progress progress;
     /** Maximum absolute value for progress bar */
@@ -2608,7 +2607,7 @@ public class Core  extends Thread {
      * Get reference to the main frame.
      * @return Reference to the main frame
      */
-    public static MainFrame getMainFrame() {
+    public static MainFrameView getMainFrame() {
         return mainFrame;
     }
 
@@ -2616,7 +2615,7 @@ public class Core  extends Thread {
      * Set reference to the main frame.
      * @param mf Reference to the main frame
      */
-    public static void setMainFrame(final MainFrame mf) {
+    public static void setMainFrame(final MainFrameView mf) {
         mainFrame = mf;
     }
 

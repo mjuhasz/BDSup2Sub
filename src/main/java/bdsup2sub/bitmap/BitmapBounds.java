@@ -15,9 +15,6 @@
  */
 package bdsup2sub.bitmap;
 
-/**
- * Storage class used by {@link Bitmap} to return image bounds.
- */
 public class BitmapBounds {
 
     /** X coordinate of first column that contains visible pixels. */

@@ -16,7 +16,9 @@
 package bdsup2sub;
 
 import bdsup2sub.core.*;
-import bdsup2sub.gui.MainFrame;
+import bdsup2sub.gui.MainFrameController;
+import bdsup2sub.gui.MainFrameModel;
+import bdsup2sub.gui.MainFrameView;
 import bdsup2sub.tools.Props;
 import bdsup2sub.utils.FilenameUtils;
 import bdsup2sub.utils.ToolBox;
@@ -768,18 +770,29 @@ class BDSup2Sub {
 
             if (!Core.getKeepFps() && !defineFPStrg) {
                 Core.setFPSTrg(Core.getDefaultFPS(r));
-                System.out.println("Target frame rate set to "+ToolBox.formatDouble(Core.getFPSTrg())+"fps");
+                System.out.println("Target frame rate set to " + ToolBox.formatDouble(Core.getFPSTrg())+"fps");
             }
 
             // Step 3
             // open GUI if trg file name is missing
             if (trg == null) {
                 setupGUI();
-                if (src != null) {
-                    new MainFrame(src);
-                } else {
-                    new MainFrame();
-                }
+                final String sourceFile = src;
+                javax.swing.SwingUtilities.invokeLater(new Runnable() {
+                    public void run() {
+                        // Schedule a job for the event-dispatching thread:
+                        // create and show GUI
+                        Core.init(this);
+                        MainFrameModel model = new MainFrameModel();
+                        if (sourceFile != null) {
+                            model.setLoadPath(sourceFile);
+                            model.setSourceFileSpecifiedOnCmdLine(true);
+                        }
+                        MainFrameView view = new MainFrameView(model);
+                        MainFrameController controller = new MainFrameController(model, view);
+                    }
+                });
+
                 return;
             }
 

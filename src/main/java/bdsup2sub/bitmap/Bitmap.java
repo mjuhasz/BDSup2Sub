@@ -30,18 +30,14 @@ import static bdsup2sub.bitmap.ColorSpaceUtils.RGB2YCbCr;
  */
 public class Bitmap {
 
-    /** Bitmap width in pixels */
     private final int width;
-    /** Bitmap height in pixels */
     private final int height;
-    /** Byte array containing image data */
     private final byte buffer[];
-
 
     public Bitmap(int width, int height) {
         this.width = width;
         this.height = height;
-        buffer = new byte[width * height];
+        this.buffer = new byte[width * height];
     }
 
     public Bitmap(int width, int height, byte fillerColorIndex) {
@@ -56,14 +52,15 @@ public class Bitmap {
     }
 
     public Bitmap(Bitmap bitmap) {
-        width = bitmap.width;
-        height = bitmap.height;
-        buffer = Arrays.copyOf(bitmap.buffer, bitmap.buffer.length);
+        this.width = bitmap.width;
+        this.height = bitmap.height;
+        this.buffer = Arrays.copyOf(bitmap.buffer, bitmap.buffer.length);
     }
 
     private void fillWithColorIndexValue(byte colorIndex) {
-        for (int i = 0; i < width * height; i++)
+        for (int i = 0; i < width * height; i++) {
             buffer[i] = colorIndex;
+        }
     }
 
     public void fillRectangularWithColorIndex(int rectX, int rectY, int rectWidth, int rectHeight, byte colorIndex) {

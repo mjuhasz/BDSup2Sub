@@ -20,9 +20,7 @@ package bdsup2sub.bitmap;
  */
 public class BitmapWithPalette {
 
-    /** Bitmap containing one byte per pixel */
     public final Bitmap bitmap;
-    /** Color palette */
     public final Palette palette;
 
     public BitmapWithPalette(Bitmap bitmap, Palette palette) {
