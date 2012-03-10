@@ -90,10 +90,6 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
     private JMenuItem jPopupMenuItemCopy;
     private JMenuItem jPopupMenuItemClear;
 
-
-    /** semaphore for synchronization of threads */
-    final Object threadSemaphore = new Object();
-
     private ActionListener recentFilesMenuActionListener;
     
     private MainFrameModel model;
@@ -108,17 +104,6 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
 
         updateRecentFilesMenu();
 
-        // fill comboboxes
-        jComboBoxSubNum.setEditor(new MyComboBoxEditor(jTextSubNum));
-        jComboBoxAlphaThreshold.setEditor(new MyComboBoxEditor(jTextAlphaThreshold));
-        jComboBoxHiMedThreshold.setEditor(new MyComboBoxEditor(jTextHiMedThreshold));
-        jComboBoxMedLowThreshold.setEditor(new MyComboBoxEditor(jTextMedLowThreshold));
-
-        for (int i=0; i < 256; i++) {
-            jComboBoxAlphaThreshold.addItem(i);
-            jComboBoxHiMedThreshold.addItem(i);
-            jComboBoxMedLowThreshold.addItem(i);
-        }
         jComboBoxAlphaThreshold.setSelectedIndex(Core.getAlphaThr());
         jComboBoxHiMedThreshold.setSelectedIndex(Core.getLumThr()[0]);
         jComboBoxMedLowThreshold.setSelectedIndex(Core.getLumThr()[1]);
@@ -810,57 +795,12 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
             jLayoutPane.setLayout(new GridBagLayout());
             jLayoutPane.setPreferredSize(new Dimension(180, 100));
             jLayoutPane.setMaximumSize(new Dimension(180,100));
-            jLayoutPane.addMouseListener( new MouseListener() {
-                @Override
-                public void mouseClicked(MouseEvent e) {
-                    if (e.getButton() == MouseEvent.BUTTON1) {
-                        if (Core.isReady()) {
-                            EditDialog ed = new EditDialog(MainFrameView.this);
-                            ed.setIndex(model.getSubIndex());
-                            ed.setVisible(true);
-                            model.setSubIndex(ed.getIndex());
-                            (new Thread() {
-                                @Override
-                                public void run() {
-                                    synchronized (threadSemaphore) {
-                                        try {
-                                            int subIndex = model.getSubIndex();
-                                            Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
-                                            refreshSrcFrame(subIndex);
-                                            refreshTrgFrame(subIndex);
-                                            jComboBoxSubNum.setSelectedIndex(subIndex);
-                                        } catch (CoreException ex) {
-                                            error(ex.getMessage());
-                                        } catch (Exception ex) {
-                                            ToolBox.showException(ex);
-                                            exit(4);
-                                        }
-
-                                    }
-                                }
-                            }).start();
-                        }
-                    }
-                }
-
-                @Override
-                public void mouseEntered(MouseEvent e) {
-                }
-
-                @Override
-                public void mouseExited(MouseEvent e) {
-                }
-
-                @Override
-                public void mousePressed(MouseEvent e) {
-                }
-
-                @Override
-                public void mouseReleased(MouseEvent e) {
-                }
-            });
         }
         return jLayoutPane;
+    }
+
+    void addLayoutPaneMouseListener(MouseListener mouseListener) {
+        jLayoutPane.addMouseListener(mouseListener);
     }
 
     void setLayoutPaneAspectRatio(double trgRatio) {
@@ -958,6 +898,7 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
             jComboBoxSubNum.setMinimumSize(new Dimension(80, 20));
             jComboBoxSubNum.setToolTipText("Set subtitle number");
             jComboBoxSubNum.setEditable(true);
+            jComboBoxSubNum.setEditor(new MyComboBoxEditor(jTextSubNum));
         }
         return jComboBoxSubNum;
     }
@@ -1002,6 +943,10 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
             jComboBoxAlphaThreshold.setToolTipText("Set alpha threshold");
             jComboBoxAlphaThreshold.setPreferredSize(new Dimension(100, 20));
             jComboBoxAlphaThreshold.setMinimumSize(new Dimension(80, 20));
+            for (int i=0; i < 256; i++) {
+                jComboBoxAlphaThreshold.addItem(i);
+            }
+            jComboBoxAlphaThreshold.setEditor(new MyComboBoxEditor(jTextAlphaThreshold));
         }
         return jComboBoxAlphaThreshold;
     }
@@ -1044,6 +989,10 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
             jComboBoxHiMedThreshold.setPreferredSize(new Dimension(100, 20));
             jComboBoxHiMedThreshold.setMinimumSize(new Dimension(80, 20));
             jComboBoxHiMedThreshold.setToolTipText("Set medium/high luminance threshold");
+            for (int i=0; i < 256; i++) {
+                jComboBoxHiMedThreshold.addItem(i);
+            }
+            jComboBoxHiMedThreshold.setEditor(new MyComboBoxEditor(jTextHiMedThreshold));
         }
         return jComboBoxHiMedThreshold;
     }
@@ -1080,6 +1029,10 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
             jComboBoxMedLowThreshold.setToolTipText("Set low/medium luminance threshold");
             jComboBoxMedLowThreshold.setPreferredSize(new Dimension(100, 20));
             jComboBoxMedLowThreshold.setMinimumSize(new Dimension(80, 20));
+            for (int i=0; i < 256; i++) {
+                jComboBoxMedLowThreshold.addItem(i);
+            }
+            jComboBoxMedLowThreshold.setEditor(new MyComboBoxEditor(jTextMedLowThreshold));
         }
         return jComboBoxMedLowThreshold;
     }

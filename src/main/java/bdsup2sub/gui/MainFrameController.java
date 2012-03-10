@@ -37,6 +37,8 @@ public class MainFrameController {
 
     private MainFrameView view;
     private MainFrameModel model;
+    private final Object threadSemaphore = new Object();
+
 
     public MainFrameController(MainFrameModel model, MainFrameView view) {
         this.view = view;
@@ -53,6 +55,8 @@ public class MainFrameController {
         addComboBoxDocumentListeners();
 
         addPopupMenuActionListeners();
+
+        view.addLayoutPaneMouseListener(new LayoutPaneMouseListener());
 
         view.addTransferHandler(new DragAndDropTransferHandler());
 
@@ -252,7 +256,7 @@ public class MainFrameController {
             if (!new File(fname).exists()) {
                 JOptionPane.showMessageDialog(view, "File '" + fname + "' does not exist", "File not found!", JOptionPane.WARNING_MESSAGE);
             } else {
-                synchronized (view.threadSemaphore) {
+                synchronized (threadSemaphore) {
                     boolean xml = FilenameUtils.getExtension(fname).equalsIgnoreCase("xml");
                     boolean idx = FilenameUtils.getExtension(fname).equalsIgnoreCase("idx");
                     boolean ifo = FilenameUtils.getExtension(fname).equalsIgnoreCase("ifo");
@@ -339,7 +343,7 @@ public class MainFrameController {
                 (new Thread() {
                     @Override
                     public void run() {
-                        synchronized (view.threadSemaphore) {
+                        synchronized (threadSemaphore) {
                             try {
                                 int subIndex = model.getSubIndex();
                                 Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
@@ -391,7 +395,7 @@ public class MainFrameController {
                 (new Thread() {
                     @Override
                     public void run() {
-                        synchronized (view.threadSemaphore) {
+                        synchronized (threadSemaphore) {
                             try {
                                 if (Core.isReady()) {
                                     int subIndex = model.getSubIndex();
@@ -443,7 +447,7 @@ public class MainFrameController {
                 (new Thread() {
                     @Override
                     public void run() {
-                        synchronized (view.threadSemaphore) {
+                        synchronized (threadSemaphore) {
                             try {
                                 if (Core.isReady()) {
                                     int subIndex = model.getSubIndex();
@@ -475,7 +479,7 @@ public class MainFrameController {
             (new Thread() {
                 @Override
                 public void run() {
-                    synchronized (view.threadSemaphore) {
+                    synchronized (threadSemaphore) {
                         try {
                             if (Core.isReady()) {
                                 int subIndex = model.getSubIndex();
@@ -518,7 +522,7 @@ public class MainFrameController {
                 (new Thread() {
                     @Override
                     public void run() {
-                        synchronized (view.threadSemaphore) {
+                        synchronized (threadSemaphore) {
                             try {
                                 int subIndex = model.getSubIndex();
                                 Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
@@ -573,7 +577,7 @@ public class MainFrameController {
                 (new Thread() {
                     @Override
                     public void run() {
-                        synchronized (view.threadSemaphore) {
+                        synchronized (threadSemaphore) {
                             try {
                                 if (Core.isReady()) {
                                     int subIndex = model.getSubIndex();
@@ -603,7 +607,7 @@ public class MainFrameController {
             (new Thread() {
                 @Override
                 public void run() {
-                    synchronized (view.threadSemaphore) {
+                    synchronized (threadSemaphore) {
                         try {
                             if (Core.isReady()) {
                                 int subIndex = model.getSubIndex();
@@ -674,7 +678,7 @@ public class MainFrameController {
                 (new Thread() {
                     @Override
                     public void run() {
-                        synchronized (view.threadSemaphore) {
+                        synchronized (threadSemaphore) {
                             try {
                                 int subIndex = model.getSubIndex();
                                 Core.convertSup(subIndex, subIndex +1, Core.getNumFrames());
@@ -720,7 +724,7 @@ public class MainFrameController {
                     (new Thread() {
                         @Override
                         public void run() {
-                            synchronized (view.threadSemaphore) {
+                            synchronized (threadSemaphore) {
                                 try {
                                     int subIndex = model.getSubIndex();
                                     Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
@@ -766,7 +770,7 @@ public class MainFrameController {
                 (new Thread() {
                     @Override
                     public void run() {
-                        synchronized (view.threadSemaphore) {
+                        synchronized (threadSemaphore) {
                             try {
                                 int subIndex = model.getSubIndex();
                                 Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
@@ -810,7 +814,7 @@ public class MainFrameController {
                     (new Thread() {
                         @Override
                         public void run() {
-                            synchronized (view.threadSemaphore) {
+                            synchronized (threadSemaphore) {
                                 try {
                                     int subIndex = model.getSubIndex();
                                     Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
@@ -862,7 +866,7 @@ public class MainFrameController {
                 (new Thread() {
                     @Override
                     public void run() {
-                        synchronized (view.threadSemaphore) {
+                        synchronized (threadSemaphore) {
                             try {
                                 int subIndex = model.getSubIndex();
                                 Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
@@ -909,7 +913,7 @@ public class MainFrameController {
                     (new Thread() {
                         @Override
                         public void run() {
-                            synchronized (view.threadSemaphore) {
+                            synchronized (threadSemaphore) {
                                 try {
                                     int subIndex = model.getSubIndex();
                                     Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
@@ -958,7 +962,7 @@ public class MainFrameController {
                 (new Thread() {
                     @Override
                     public void run() {
-                        synchronized (view.threadSemaphore) {
+                        synchronized (threadSemaphore) {
                             try {
                                 int subIndex = model.getSubIndex();
                                 Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
@@ -1005,7 +1009,7 @@ public class MainFrameController {
                     (new Thread() {
                         @Override
                         public void run() {
-                            synchronized (view.threadSemaphore) {
+                            synchronized (threadSemaphore) {
                                 try {
                                     int subIndex = model.getSubIndex();
                                     Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
@@ -1039,7 +1043,7 @@ public class MainFrameController {
                 (new Thread() {
                     @Override
                     public void run() {
-                        synchronized (view.threadSemaphore) {
+                        synchronized (threadSemaphore) {
                             try {
                                 int subIndex = model.getSubIndex();
                                 Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
@@ -1079,7 +1083,7 @@ public class MainFrameController {
                 (new Thread() {
                     @Override
                     public void run() {
-                        synchronized (view.threadSemaphore) {
+                        synchronized (threadSemaphore) {
                             try {
                                 int subIndex = model.getSubIndex();
                                 Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
@@ -1113,7 +1117,7 @@ public class MainFrameController {
                 (new Thread() {
                     @Override
                     public void run() {
-                        synchronized (view.threadSemaphore) {
+                        synchronized (threadSemaphore) {
                             try {
                                 int subIndex = model.getSubIndex();
                                 Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
@@ -1178,6 +1182,40 @@ public class MainFrameController {
         @Override
         public void windowClosing(WindowEvent e) {
             view.exit(0);
+        }
+    }
+
+    private class LayoutPaneMouseListener extends MouseAdapter {
+        @Override
+        public void mouseClicked(MouseEvent e) {
+            if (e.getButton() == MouseEvent.BUTTON1) {
+                if (Core.isReady()) {
+                    EditDialog ed = new EditDialog(view);
+                    ed.setIndex(model.getSubIndex());
+                    ed.setVisible(true);
+                    model.setSubIndex(ed.getIndex());
+                    (new Thread() {
+                        @Override
+                        public void run() {
+                            synchronized (threadSemaphore) {
+                                try {
+                                    int subIndex = model.getSubIndex();
+                                    Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
+                                    view.refreshSrcFrame(subIndex);
+                                    view.refreshTrgFrame(subIndex);
+                                    view.setSubNumComboBoxSelectedIndex(subIndex);
+                                } catch (CoreException ex) {
+                                    view.error(ex.getMessage());
+                                } catch (Exception ex) {
+                                    ToolBox.showException(ex);
+                                    view.exit(4);
+                                }
+
+                            }
+                        }
+                    }).start();
+                }
+            }
         }
     }
 }
