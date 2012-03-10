@@ -302,7 +302,7 @@ public class MainFrameController {
                                 }
                                 // tell the core that a stream was loaded via the GUI
                                 Core.loadedHook();
-                                Core.addToRecentFiles(loadPath);
+                                model.addToRecentFiles(loadPath);
                                 view.updateRecentFilesMenu();
                             } else {
                                 view.closeSub();

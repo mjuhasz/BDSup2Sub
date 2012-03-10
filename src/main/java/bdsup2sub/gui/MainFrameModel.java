@@ -4,9 +4,12 @@ import bdsup2sub.core.Core;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainFrameModel {
 
+    private static final int RECENT_FILE_COUNT = 5;
     static final Color ERROR_BACKGROUND = new Color(0xffe1acac);
     static final Color OK_BACKGROUND = UIManager.getColor("TextField.background");
 
@@ -15,12 +18,27 @@ public class MainFrameModel {
     private String savePath;
     private int subIndex;
     private boolean sourceFileSpecifiedOnCmdLine;
-
     private String colorProfilePath;
+    private Dimension mainWindowSize;
+    private Point mainWindowLocation;
+    private List<String> recentFiles;
 
     public MainFrameModel() {
         this.loadPath = Core.props.get("loadPath", "");
         this.colorProfilePath = Core.props.get("colorPath", "");
+        this.mainWindowSize = new Dimension(Core.props.get("frameWidth", 800), Core.props.get("frameHeight", 600));
+        this.mainWindowLocation = new Point(Core.props.get("framePosX", -1), Core.props.get("framePosY", -1));
+        loadRecentFiles();
+    }
+
+    private void loadRecentFiles() {
+        recentFiles = new ArrayList<String>();
+        int i = 0;
+        String filename;
+        while (i < RECENT_FILE_COUNT && (filename = Core.props.get("recent_" + i, "")).length() > 0) {
+            recentFiles.add(filename);
+            i++;
+        }
     }
 
     public String getLoadPath() {
@@ -70,6 +88,46 @@ public class MainFrameModel {
 
     public void setColorProfilePath(String colorProfilePath) {
         this.colorProfilePath = colorProfilePath;
-        Core.props.set("colorPath", colorProfilePath);  //FIXME: use listener
+        Core.props.set("colorPath", colorProfilePath);
+    }
+
+    public Dimension getMainWindowSize() {
+        return mainWindowSize;
+    }
+
+    public void setMainWindowSize(Dimension dimension) {
+        this.mainWindowSize = dimension;
+        Core.props.set("frameWidth", dimension.width);
+        Core.props.set("frameHeight", dimension.height);
+    }
+
+    public Point getMainWindowLocation() {
+        return mainWindowLocation;
+    }
+
+    public void setMainWindowLocation(Point location) {
+        this.mainWindowLocation = location;
+        Core.props.set("framePosX", location.x);
+        Core.props.set("framePosY", location.y);
+    }
+
+    public List<String> getRecentFiles() {
+        return recentFiles;
+    }
+
+    public void addToRecentFiles(String filename) {
+        int index = recentFiles.indexOf(filename);
+        if (index != -1) {
+            recentFiles.remove(index);
+            recentFiles.add(0, filename);
+        } else {
+            recentFiles.add(0, filename);
+            if (recentFiles.size() > RECENT_FILE_COUNT) {
+                recentFiles.remove(recentFiles.size() - 1);
+            }
+        }
+        for (int i=0; i < recentFiles.size(); i++) {
+            Core.props.set("recent_" + i, recentFiles.get(i));
+        }
     }
 }

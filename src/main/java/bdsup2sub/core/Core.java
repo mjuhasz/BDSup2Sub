@@ -75,8 +75,6 @@ public class Core  extends Thread {
         FULL
     }
 
-    private static final int RECENT_FILE_COUNT = 5;
-
     /** Current DVD palette (for create mode) - initialized as default */
     private static Palette currentDVDPalette = new Palette(
             DEFAULT_PALETTE_RED, DEFAULT_PALETTE_GREEN, DEFAULT_PALETTE_BLUE, DEFAULT_PALETTE_ALPHA, true
@@ -275,9 +273,6 @@ public class Core  extends Thread {
     /** Semaphore for synchronization */
     private static final Object semaphore = new Object();
 
-    /** Strings storing recently loaded files */
-    private static ArrayList<String> recentFiles = new ArrayList<String>();
-
     /** Thread used for threaded import/export. */
     @Override
     public void run() {
@@ -417,13 +412,6 @@ public class Core  extends Thread {
                 props.set("outputMode", outMode.toString());
             }
 
-            // load recent list
-            int i = 0;
-            while (i < RECENT_FILE_COUNT && (s = props.get("recent_"+i, "")).length() > 0) {
-                recentFiles.add(s);
-                i++;
-            }
-
             if (!convertResolutionSet) {
                 convertResolution = restoreConvertResolution();
             }
@@ -518,30 +506,6 @@ public class Core  extends Thread {
         if (props != null) {
             props.save(fnameProps);
         }
-    }
-
-    public static void addToRecentFiles(String filename) {
-        int index = recentFiles.indexOf(filename);
-        if (index != -1) {
-            recentFiles.remove(index);
-            recentFiles.add(0, filename);
-        } else {
-            recentFiles.add(0, filename);
-            if (recentFiles.size() > RECENT_FILE_COUNT) {
-                recentFiles.remove(recentFiles.size() - 1);
-            }
-        }
-        for (int i=0; i < recentFiles.size(); i++) {
-            props.set("recent_" + i, recentFiles.get(i));
-        }
-    }
-
-    /**
-     * Return list of recently loaded files
-     * @return list of recently loaded files
-     */
-    public static ArrayList<String> getRecentFiles() {
-        return recentFiles;
     }
 
     /**

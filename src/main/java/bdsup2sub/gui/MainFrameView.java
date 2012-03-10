@@ -25,11 +25,10 @@ import javax.swing.text.Document;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.ClipboardOwner;
-import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
-import java.util.ArrayList;
+import java.util.List;
 
 import static bdsup2sub.core.Constants.APP_NAME_AND_VERSION;
 import static bdsup2sub.core.Constants.AUTHOR_AND_DATE;
@@ -107,21 +106,6 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
 
         Core.setMainFrame(this);
 
-        // read properties, set window size and position
-        int w = Core.props.get("frameWidth", 800);
-        int h = Core.props.get("frameHeight", 600);
-        this.setSize(w,h);
-        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-        
-        Point p = ge.getCenterPoint();
-        p.x = Core.props.get("framePosX", -1);
-        p.y = Core.props.get("framePosY", -1);
-        if ((p.x != -1) && (p.y != -1)) {
-            setLocation(p);
-        } else {
-            setLocationRelativeTo(null);
-        }
-
         updateRecentFilesMenu();
 
         // fill comboboxes
@@ -164,12 +148,24 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
     }
 
     private void init() {
-        setSize(800, 600);
+        setSize(model.getMainWindowSize());
         setMinimumSize(new Dimension(700, 300));
         setJMenuBar(getjMenuBar());
         setContentPane(getJContentPane());
         getJPopupMenu();
+
         setIconImage(Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource("icon_32.png")));
+
+        setLocation();
+    }
+
+    private void setLocation() {
+        Point mainWindowLocation = model.getMainWindowLocation();
+        if ((mainWindowLocation.x != -1) && (mainWindowLocation.y != -1)) {
+            setLocation(mainWindowLocation);
+        } else {
+            setLocationRelativeTo(null);
+        }
     }
 
     private JMenuBar getjMenuBar() {
@@ -234,7 +230,7 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
 
     void updateRecentFilesMenu() {
         jMenuRecentFiles.setEnabled(false);
-        ArrayList<String> recentFiles = Core.getRecentFiles();
+        List<String> recentFiles = model.getRecentFiles();
         int size = recentFiles.size();
         if (size>0) {
             jMenuRecentFiles.removeAll();
@@ -1172,7 +1168,7 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
 
     void enableCoreComponents(boolean state) {
         jMenuItemLoad.setEnabled(state);
-        jMenuRecentFiles.setEnabled(state && Core.getRecentFiles().size() > 0);
+        jMenuRecentFiles.setEnabled(state && model.getRecentFiles().size() > 0);
         jMenuItemSave.setEnabled(state && Core.getNumFrames() > 0);
         jMenuItemClose.setEnabled(state);
         jMenuItemEditFrame.setEnabled(state);
@@ -1332,21 +1328,11 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
         });
     }
 
-    /**
-     * Common exit routine, stores properties and releases Core file handles
-     * @param code exit code
-     */
     void exit(int code) {
         if (code == 0) {
-            // store width and height
-            Dimension d = getSize();
             if (this.getExtendedState() != MainFrameView.MAXIMIZED_BOTH) {
-                Core.props.set("frameWidth", d.width);
-                Core.props.set("frameHeight", d.height);
-                // store frame pos
-                Point p = getLocation();
-                Core.props.set("framePosX", p.x);
-                Core.props.set("framePosY", p.y);
+                model.setMainWindowSize(getSize());
+                model.setMainWindowLocation(getLocation());
             }
         }
         Core.exit();
