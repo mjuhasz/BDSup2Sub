@@ -21,6 +21,8 @@ import bdsup2sub.utils.FilenameUtils;
 import bdsup2sub.utils.ToolBox;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
@@ -46,6 +48,10 @@ public class MainFrameController {
         addFileMenuActionListeners();
         addEditMenuActionListeners();
         addSettingsMenuActionListeners();
+        addHelpMenuActionListeners();
+
+        addComboBoxActionListeners();
+        addComboBoxDocumentListeners();
 
         view.addTransferHandler(new DragAndDropTransferHandler());
 
@@ -76,6 +82,27 @@ public class MainFrameController {
         view.addSwapCrCbMenuItemActionListener(new SwapCrCbMenuItemActionListener());
         view.addFixInvisibleFramesMenuItemActionListener(new FixInvisibleFramesMenuItemActionListener());
         view.addVerbatimOutputMenuItemActionListener(new VerbatimOutputMenuItemActionListener());
+    }
+
+    private void addHelpMenuActionListeners() {
+        view.addHelpMenuItemActionListener(new HelpMenuItemActionListener());
+    }
+
+    private void addComboBoxActionListeners() {
+        view.addSubNumComboBoxActionListener(new SubNumComboBoxActionListener());
+        view.addAlphaThresholdComboBoxActionListener(new AlphaThresholdComboBoxActionListener());
+        view.addHiMedThresholdComboBoxActionListener(new HiMedThresholdComboBoxActionListener());
+        view.addMedLowThresholdComboBoxActionListener(new MedLowThresholdComboBoxActionListener());
+        view.addOutputFormatComboBoxActionListener(new OutputFormatComboBoxActionListener());
+        view.addPaletteComboBoxActionListener(new PaletteComboBoxActionListener());
+        view.addFilterComboBoxActionListener(new FilterComboBoxActionListener());
+    }
+
+    private void addComboBoxDocumentListeners() {
+        view.addSubNumComboBoxDocumentListener(new SubNumComboBoxDocumentListener());
+        view.addAlphaThresholdComboBoxDocumentListener(new AlphaThresholdComboBoxDocumentListener());
+        view.addHiMedThresholdComboBoxDocumentListener(new HiMedThresholdComboBoxDocumentListener());
+        view.addMedLowThresholdComboBoxDocumentListener(new MedLowThresholdComboBoxDocumentListener());
     }
 
 
@@ -239,8 +266,8 @@ public class MainFrameController {
                             view.warningDialog();
                             int num = Core.getNumFrames();
                             Core.setReady(false);
-                            view.initComboBoxSubNum(num);
-                            view.initComboBoxThrSelectedIndices();
+                            view.initSubNumComboBox(num);
+                            view.initAlphaThresholdComboBoxSelectedIndices();
                             //
                             if (Core.getCropOfsY() > 0) {
                                 if (JOptionPane.showConfirmDialog(view, "Reset Crop Offset?",
@@ -312,7 +339,7 @@ public class MainFrameController {
                                 Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
                                 view.refreshSrcFrame(subIndex);
                                 view.refreshTrgFrame(subIndex);
-                                view.setComboBoxSubNumSelectedIndex(subIndex);
+                                view.setSubNumComboBoxSelectedIndex(subIndex);
                             } catch (CoreException ex) {
                                 view.error(ex.getMessage());
                             } catch (Exception ex) {
@@ -491,7 +518,7 @@ public class MainFrameController {
                                 Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
                                 view.refreshSrcFrame(subIndex);
                                 view.refreshTrgFrame(subIndex);
-                                view.setComboBoxSubNumSelectedIndex(subIndex);
+                                view.setSubNumComboBoxSelectedIndex(subIndex);
                             } catch (CoreException ex) {
                                 view.error(ex.getMessage());
                             } catch (Exception ex) {
@@ -604,6 +631,498 @@ public class MainFrameController {
         public void actionPerformed(ActionEvent e) {
             boolean selected = view.isVerbatimOutputSelected();
             Core.setVerbatim(selected);
+        }
+    }
+
+    private class HelpMenuItemActionListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            Help help = new Help();
+            help.setLocation(view.getX() + 30, view.getY() + 30);
+            help.setSize(800, 600);
+            help.setVisible(true);
+        }
+    }
+
+    private class SubNumComboBoxActionListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (Core.isReady()) {
+                int num = Core.getNumFrames();
+                int idx;
+                try {
+                    idx = Integer.parseInt(view.getSubNumComboBoxSelectedItem().toString()) - 1;
+                } catch (NumberFormatException ex) {
+                    idx = model.getSubIndex(); // invalid number -> keep old value
+                }
+
+                if (idx < 0) {
+                    idx = 0;
+                }
+                if (idx >= num) {
+                    idx = num-1;
+                }
+                model.setSubIndex(idx);
+                view.setSubNumComboBoxSelectedIndex(model.getSubIndex());
+
+                (new Thread() {
+                    @Override
+                    public void run() {
+                        synchronized (view.threadSemaphore) {
+                            try {
+                                int subIndex = model.getSubIndex();
+                                Core.convertSup(subIndex, subIndex +1, Core.getNumFrames());
+                                view.refreshSrcFrame(subIndex);
+                                view.refreshTrgFrame(subIndex);
+                            } catch (CoreException ex) {
+                                view.error(ex.getMessage());
+                            } catch (Exception ex) {
+                                ToolBox.showException(ex);
+                                view.exit(4);
+                            }
+
+                        }
+                    }
+                }).start();
+            }
+        }
+    }
+
+    private class SubNumComboBoxDocumentListener implements DocumentListener {
+        private void check() {
+            if (Core.isReady()) {
+                int idx = ToolBox.getInt(view.getSubNumComboBoxText()) - 1;
+                if (idx < 0 || idx >= Core.getNumFrames()) {
+                    view.setSubNumComboBoxBackground(MainFrameModel.ERROR_BACKGROUND);
+                } else {
+                    model.setSubIndex(idx);
+                    (new Thread() {
+                        @Override
+                        public void run() {
+                            synchronized (view.threadSemaphore) {
+                                try {
+                                    int subIndex = model.getSubIndex();
+                                    Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
+                                    view.refreshSrcFrame(subIndex);
+                                    view.refreshTrgFrame(subIndex);
+                                } catch (CoreException ex) {
+                                    view.error(ex.getMessage());
+                                } catch (Exception ex) {
+                                    ToolBox.showException(ex);
+                                    view.exit(4);
+                                }
+
+                            }
+                        }
+                    }).start();
+                    view.setSubNumComboBoxBackground(MainFrameModel.OK_BACKGROUND);
+                }
+            }
+        }
+
+        @Override
+        public void insertUpdate(DocumentEvent e) {
+            check();
+        }
+
+        @Override
+        public void changedUpdate(DocumentEvent e) {
+            check();
+        }
+
+        @Override
+        public void removeUpdate(DocumentEvent e) {
+            check();
+        }
+    }
+
+    private class AlphaThresholdComboBoxActionListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (Core.isReady()) {
+                int idx;
+                try {
+                    idx = Integer.parseInt(view.getAlphaThresholdComboBoxSelectedItem().toString());
+                } catch (NumberFormatException ex) {
+                    idx = Core.getAlphaThr(); // invalid number -> keep old value
+                }
+
+                if (idx < 0) {
+                    idx = 0;
+                }
+                if (idx > 255) {
+                    idx = 255;
+                }
+
+                Core.setAlphaThr(idx);
+                view.setAlphaThresholdComboBoxSelectedIndex(Core.getAlphaThr());
+
+                (new Thread() {
+                    @Override
+                    public void run() {
+                        synchronized (view.threadSemaphore) {
+                            try {
+                                int subIndex = model.getSubIndex();
+                                Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
+                                view.refreshTrgFrame(subIndex);
+                            } catch (CoreException ex) {
+                                view.error(ex.getMessage());
+                            } catch (Exception ex) {
+                                ToolBox.showException(ex);
+                                view.exit(4);
+                            }
+                        }
+                    }
+                }).start();
+            }
+        }
+    }
+
+    private class AlphaThresholdComboBoxDocumentListener implements DocumentListener {
+        private void check() {
+            if (Core.isReady()) {
+                int idx = ToolBox.getInt(view.getAlphaThresholdComboBoxText());
+                if (idx < 0 || idx > 255) {
+                    view.setAlphaThresholdComboBoxBackground(MainFrameModel.ERROR_BACKGROUND);
+                } else {
+                    Core.setAlphaThr(idx);
+                    (new Thread() {
+                        @Override
+                        public void run() {
+                            synchronized (view.threadSemaphore) {
+                                try {
+                                    int subIndex = model.getSubIndex();
+                                    Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
+                                    view.refreshTrgFrame(subIndex);
+                                } catch (CoreException ex) {
+                                    view.error(ex.getMessage());
+                                } catch (Exception ex) {
+                                    ToolBox.showException(ex);
+                                    view.exit(4);
+                                }
+                            }
+                        }
+                    }).start();
+                    view.setAlphaThresholdComboBoxBackground(MainFrameModel.OK_BACKGROUND);
+                }
+            }
+        }
+
+        @Override
+        public void insertUpdate(DocumentEvent e) {
+            check();
+        }
+
+        @Override
+        public void changedUpdate(DocumentEvent e) {
+            check();
+        }
+
+        @Override
+        public void removeUpdate(DocumentEvent e) {
+            check();
+        }
+    }
+
+    private class HiMedThresholdComboBoxActionListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (Core.isReady()) {
+                int lumThr[] = Core.getLumThr();
+                int idx;
+                try {
+                    idx = Integer.parseInt(view.getHiMedThresholdComboBoxSelectedItem().toString());
+                } catch (NumberFormatException ex) {
+                    idx = lumThr[0]; // invalid number -> keep old value
+                }
+
+                if (idx <= lumThr[1]) { // must be greater than med/low threshold
+                    idx = lumThr[1] + 1;
+                }
+
+                if (idx < 0) {
+                    idx = 0;
+                }
+                if (idx > 255) {
+                    idx = 255;
+                }
+
+                lumThr[0] = idx;
+                Core.setLumThr(lumThr);
+                view.setHiMedThresholdComboBoxSelectedIndex(Core.getLumThr()[0]);
+
+                (new Thread() {
+                    @Override
+                    public void run() {
+                        synchronized (view.threadSemaphore) {
+                            try {
+                                int subIndex = model.getSubIndex();
+                                Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
+                                view.refreshTrgFrame(subIndex);
+                            } catch (CoreException ex) {
+                                view.error(ex.getMessage());
+                            } catch (Exception ex) {
+                                ToolBox.showException(ex);
+                                view.exit(4);
+                            }
+
+                        }
+                    }
+                }).start();
+            }
+        }
+    }
+
+    private class HiMedThresholdComboBoxDocumentListener implements DocumentListener {
+        private void check() {
+            if (Core.isReady()) {
+                int lumThr[] = Core.getLumThr();
+                int idx = ToolBox.getInt(view.getHiMedThresholdComboBoxText());
+                if (idx < 0 || idx > 255 | idx <= lumThr[1]) {
+                    view.setHiMedThresholdComboBoxBackground(MainFrameModel.ERROR_BACKGROUND);
+                } else {
+                    lumThr[0] = idx;
+                    Core.setLumThr(lumThr);
+                    (new Thread() {
+                        @Override
+                        public void run() {
+                            synchronized (view.threadSemaphore) {
+                                try {
+                                    int subIndex = model.getSubIndex();
+                                    Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
+                                    view.refreshTrgFrame(subIndex);
+                                } catch (CoreException ex) {
+                                    view.error(ex.getMessage());
+                                } catch (Exception ex) {
+                                    ToolBox.showException(ex);
+                                    view.exit(4);
+                                }
+
+                            } } }).start();
+                    view.setHiMedThresholdComboBoxBackground(MainFrameModel.OK_BACKGROUND);
+                }
+            }
+        }
+
+        @Override
+        public void insertUpdate(DocumentEvent e) {
+            check();
+        }
+
+        @Override
+        public void changedUpdate(DocumentEvent e) {
+            check();
+        }
+
+        @Override
+        public void removeUpdate(DocumentEvent e) {
+            check();
+        }
+    }
+
+    private class MedLowThresholdComboBoxActionListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (Core.isReady()) {
+                int lumThr[] = Core.getLumThr();
+                int idx;
+                try {
+                    idx = Integer.parseInt(view.getMedLowThresholdComboBoxSelectedItem().toString());
+                } catch (NumberFormatException ex) {
+                    idx = lumThr[1]; // invalid number -> keep old value
+                }
+
+                if (idx >= lumThr[0]) { // must be smaller than med/high threshold
+                    idx = lumThr[0] - 1;
+                }
+
+                if (idx < 0) {
+                    idx = 0;
+                }
+                if (idx > 255) {
+                    idx = 255;
+                }
+
+                lumThr[1] = idx;
+                Core.setLumThr(lumThr);
+
+                final int index = idx;
+                view.setMedLowThresholdComboBoxSelectedIndex(index);
+
+                (new Thread() {
+                    @Override
+                    public void run() {
+                        synchronized (view.threadSemaphore) {
+                            try {
+                                int subIndex = model.getSubIndex();
+                                Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
+                                view.refreshTrgFrame(subIndex);
+                            } catch (CoreException ex) {
+                                view.error(ex.getMessage());
+                            } catch (Exception ex) {
+                                ToolBox.showException(ex);
+                                view.exit(4);
+                            }
+
+                        }
+                    }
+                }).start();
+            }
+        }
+    }
+
+    private class MedLowThresholdComboBoxDocumentListener implements  DocumentListener {
+        private void check() {
+            if (Core.isReady()) {
+                int lumThr[] = Core.getLumThr();
+                int idx = ToolBox.getInt(view.getMedLowThresholdComboBoxText());
+                if (idx < 0 || idx > 255 | idx >= lumThr[0])
+                    view.setMedLowThresholdComboBoxBackground(MainFrameModel.ERROR_BACKGROUND);
+                else {
+                    lumThr[1] = idx;
+                    Core.setLumThr(lumThr);
+                    (new Thread() {
+                        @Override
+                        public void run() {
+                            synchronized (view.threadSemaphore) {
+                                try {
+                                    int subIndex = model.getSubIndex();
+                                    Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
+                                    view.refreshTrgFrame(subIndex);
+                                } catch (CoreException ex) {
+                                    view.error(ex.getMessage());
+                                } catch (Exception ex) {
+                                    ToolBox.showException(ex);
+                                    view.exit(4);
+                                }
+
+                            } } }).start();
+                    view.setMedLowThresholdComboBoxBackground(MainFrameModel.OK_BACKGROUND);
+                }
+            }
+        }
+
+        @Override
+        public void insertUpdate(DocumentEvent e) {
+            check();
+        }
+
+        @Override
+        public void changedUpdate(DocumentEvent e) {
+            check();
+        }
+
+        @Override
+        public void removeUpdate(DocumentEvent e) {
+            check();
+        }
+    }
+
+    private class OutputFormatComboBoxActionListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (Core.isReady()) {
+                int idx = view.getOutputFormatComboBoxSelectedIndex();
+                for (OutputMode m : OutputMode.values()) {
+                    if (idx == m.ordinal()) {
+                        Core.setOutputMode(m);
+                        break;
+                    }
+                }
+
+                (new Thread() {
+                    @Override
+                    public void run() {
+                        synchronized (view.threadSemaphore) {
+                            try {
+                                int subIndex = model.getSubIndex();
+                                Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
+                                view.refreshTrgFrame(subIndex);
+                                if (Core.getOutputMode() == OutputMode.VOBSUB || Core.getOutputMode() == OutputMode.SUPIFO)
+                                    view.enableVobsubStuff(true);
+                                else
+                                    view.enableVobsubStuff(false);
+                            } catch (CoreException ex) {
+                                view.error(ex.getMessage());
+                            } catch (Exception ex) {
+                                ToolBox.showException(ex);
+                                view.exit(4);
+                            }
+
+                        }
+                    }
+                }).start();
+            }
+        }
+    }
+
+    private class PaletteComboBoxActionListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (Core.isReady()) {
+                int idx = view.getPaletteComboBoxSelectedIndex();
+                for (PaletteMode m : PaletteMode.values()) {
+                    if (idx == m.ordinal()) {
+                        Core.setPaletteMode(m);
+                        break;
+                    }
+                }
+
+                view.enableVobSubMenuCombo();
+
+                (new Thread() {
+                    @Override
+                    public void run() {
+                        synchronized (view.threadSemaphore) {
+                            try {
+                                int subIndex = model.getSubIndex();
+                                Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
+                                view.refreshTrgFrame(subIndex);
+                            } catch (CoreException ex) {
+                                view.error(ex.getMessage());
+                            } catch (Exception ex) {
+                                ToolBox.showException(ex);
+                                view.exit(4);
+                            }
+
+                        }
+                    }
+                }).start();
+            }
+        }
+    }
+
+    private class FilterComboBoxActionListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (Core.isReady()) {
+                int idx = view.getFilterComboBoxSelectedIndex();
+                for (ScalingFilter s : ScalingFilter.values()) {
+                    if (idx == s.ordinal()) {
+                        Core.setScalingFilter(s);
+                        break;
+                    }
+                }
+
+                (new Thread() {
+                    @Override
+                    public void run() {
+                        synchronized (view.threadSemaphore) {
+                            try {
+                                int subIndex = model.getSubIndex();
+                                Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
+                                view.refreshTrgFrame(subIndex);
+                            } catch (CoreException ex) {
+                                view.error(ex.getMessage());
+                            } catch (Exception ex) {
+                                ToolBox.showException(ex);
+                                view.exit(4);
+                            }
+
+                        }
+                    }
+                }).start();
+            }
         }
     }
 }

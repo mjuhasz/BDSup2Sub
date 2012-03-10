@@ -2,7 +2,13 @@ package bdsup2sub.gui;
 
 import bdsup2sub.core.Core;
 
+import javax.swing.*;
+import java.awt.*;
+
 public class MainFrameModel {
+
+    static final Color ERROR_BACKGROUND = new Color(0xffe1acac);
+    static final Color OK_BACKGROUND = UIManager.getColor("TextField.background");
 
     private String loadPath;
     private String saveFilename;

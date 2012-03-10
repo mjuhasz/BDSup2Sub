@@ -43,10 +43,10 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
     private GfxPane jPanelSrc;
     private GfxPane jPanelTrg;
     private JComboBox jComboBoxSubNum;
-    private JComboBox jComboBoxAlphaThr;
-    private JComboBox jComboBoxHiMedThr;
-    private JComboBox jComboBoxMedLowThr;
-    private JComboBox jComboBoxOutFormat;
+    private JComboBox jComboBoxAlphaThreshold;
+    private JComboBox jComboBoxHiMedThreshold;
+    private JComboBox jComboBoxMedLowThreshold;
+    private JComboBox jComboBoxOutputFormat;
     private JLabel jLabelInfoSrc;
     private JLabel jLabelInfoTrg;
     private JPanel jPanelUp2;
@@ -81,9 +81,9 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
     private JComboBox jComboBoxPalette;
     private JComboBox jComboBoxFilter;
     private JTextField jTextSubNum;
-    private JTextField jTextAlphaThr;
-    private JTextField jTextHiMedThr;
-    private JTextField jTextMedLowThr;
+    private JTextField jTextAlphaThreshold;
+    private JTextField jTextHiMedThreshold;
+    private JTextField jTextMedLowThreshold;
 
 
     /** semaphore for synchronization of threads */
@@ -93,10 +93,6 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
     /** font size for output console */
     private int fontSize = 12;
     //private static final int maxDocSize = 1000000; // to work around bad TextPane performance
-    /** background color for errors */
-    private Color errBgnd = new Color(0xffe1acac);
-    /** background color for ok */
-    private Color okBgnd = UIManager.getColor("TextField.background");
 
     private ActionListener recentFilesMenuActionListener;
     
@@ -107,9 +103,9 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
         this.model = model;
 
         jTextSubNum = new JTextField();
-        jTextAlphaThr = new JTextField();
-        jTextHiMedThr = new JTextField();
-        jTextMedLowThr = new JTextField();
+        jTextAlphaThreshold = new JTextField();
+        jTextHiMedThreshold = new JTextField();
+        jTextMedLowThreshold = new JTextField();
 
         initialize();
 
@@ -152,24 +148,24 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
 
         // fill comboboxes
         jComboBoxSubNum.setEditor(new MyComboBoxEditor(jTextSubNum));
-        jComboBoxAlphaThr.setEditor(new MyComboBoxEditor(jTextAlphaThr));
-        jComboBoxHiMedThr.setEditor(new MyComboBoxEditor(jTextHiMedThr));
-        jComboBoxMedLowThr.setEditor(new MyComboBoxEditor(jTextMedLowThr));
+        jComboBoxAlphaThreshold.setEditor(new MyComboBoxEditor(jTextAlphaThreshold));
+        jComboBoxHiMedThreshold.setEditor(new MyComboBoxEditor(jTextHiMedThreshold));
+        jComboBoxMedLowThreshold.setEditor(new MyComboBoxEditor(jTextMedLowThreshold));
 
         for (int i=0; i<256; i++) {
             String s = Integer.toString(i);
-            jComboBoxAlphaThr.addItem(s);
-            jComboBoxHiMedThr.addItem(s);
-            jComboBoxMedLowThr.addItem(s);
+            jComboBoxAlphaThreshold.addItem(s);
+            jComboBoxHiMedThreshold.addItem(s);
+            jComboBoxMedLowThreshold.addItem(s);
         }
-        jComboBoxAlphaThr.setSelectedIndex(Core.getAlphaThr());
-        jComboBoxHiMedThr.setSelectedIndex(Core.getLumThr()[0]);
-        jComboBoxMedLowThr.setSelectedIndex(Core.getLumThr()[1]);
+        jComboBoxAlphaThreshold.setSelectedIndex(Core.getAlphaThr());
+        jComboBoxHiMedThreshold.setSelectedIndex(Core.getLumThr()[0]);
+        jComboBoxMedLowThreshold.setSelectedIndex(Core.getLumThr()[1]);
 
         for (OutputMode m : OutputMode.values()) {
-            jComboBoxOutFormat.addItem(m.toString());
+            jComboBoxOutputFormat.addItem(m.toString());
         }
-        jComboBoxOutFormat.setSelectedIndex(Core.getOutputMode().ordinal());
+        jComboBoxOutputFormat.setSelectedIndex(Core.getOutputMode().ordinal());
 
         for (PaletteMode m : PaletteMode.values()) {
             jComboBoxPalette.addItem(m.toString());
@@ -569,13 +565,13 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
             jPanelUp.add(jLabelSubNum, gridBagLabelSubNum);
             jPanelUp.add(getJComboBoxSubNum(), gridBagComboBoxSubNum);
             jPanelUp.add(jLabelAlphaThr, gridBagLabelAlphaThr);
-            jPanelUp.add(getJComboBoxAlphaThr(), gridBagComboBoxAlphaThr);
+            jPanelUp.add(getJComboBoxAlphaThreshold(), gridBagComboBoxAlphaThr);
             jPanelUp.add(jLabelMedLowThr, gridBagLabelMedLowThr);
-            jPanelUp.add(getJComboBoxMedLowThr(), gridBagComboBoxMedLowThr);
+            jPanelUp.add(getJComboBoxMedLowThreshold(), gridBagComboBoxMedLowThr);
             jPanelUp.add(jLabelHiMedThr, gridBagLabelHiMedThr);
-            jPanelUp.add(getJComboBoxHiMedThr(), gridBagJComboBoxHiMedThr);
+            jPanelUp.add(getJComboBoxHiMedThreshold(), gridBagJComboBoxHiMedThr);
             jPanelUp.add(jLabelOutFormat, gridBagLabelOutFormat);
-            jPanelUp.add(getJComboBoxOutFormat(), gridBagComboBoxOutFormat);
+            jPanelUp.add(getJComboBoxOutputFormat(), gridBagComboBoxOutFormat);
             jPanelUp.add(getJComboBoxPalette(), gridBagComboPalette);
             jPanelUp.add(jLabelPalette, gridBagLabelPalette);
             jPanelUp.add(jLabelFilter, gridBagLabelFilter);
@@ -631,466 +627,172 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
             jComboBoxSubNum.setMinimumSize(new Dimension(80, 20));
             jComboBoxSubNum.setToolTipText("Set subtitle number");
             jComboBoxSubNum.setEditable(true);
-            jComboBoxSubNum.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    if (Core.isReady()) {
-                        int num = Core.getNumFrames();
-                        int idx;
-                        try {
-                            idx = Integer.parseInt(jComboBoxSubNum.getSelectedItem().toString())-1;
-                        } catch (NumberFormatException ex) {
-                            idx = model.getSubIndex(); // invalid number -> keep old value
-                        }
-
-                        if (idx < 0) {
-                            idx = 0;
-                        }
-                        if (idx >= num) {
-                            idx = num-1;
-                        }
-                        model.setSubIndex(idx);
-                        jComboBoxSubNum.setSelectedIndex(model.getSubIndex());
-
-                        (new Thread() {
-                            @Override
-                            public void run() {
-                                synchronized (threadSemaphore) {
-                                    try {
-                                        int subIndex = model.getSubIndex();
-                                        Core.convertSup(subIndex, subIndex +1, Core.getNumFrames());
-                                        refreshSrcFrame(subIndex);
-                                        refreshTrgFrame(subIndex);
-                                    } catch (CoreException ex) {
-                                        error(ex.getMessage());
-                                    } catch (Exception ex) {
-                                        ToolBox.showException(ex);
-                                        exit(4);
-                                    }
-
-                                } } }).start();
-                    }
-                }
-            });
-            jTextSubNum.getDocument().addDocumentListener(new DocumentListener() {
-                private void check() {
-                    if (Core.isReady()) {
-                        int idx = ToolBox.getInt(jTextSubNum.getText())-1;
-                        if (idx < 0 || idx >= Core.getNumFrames()) {
-                            jTextSubNum.setBackground(errBgnd);
-                        } else {
-                            model.setSubIndex(idx);
-                            (new Thread() {
-                                @Override
-                                public void run() {
-                                    synchronized (threadSemaphore) {
-                                        try {
-                                            int subIndex = model.getSubIndex();
-                                            Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
-                                            refreshSrcFrame(subIndex);
-                                            refreshTrgFrame(subIndex);
-                                        } catch (CoreException ex) {
-                                            error(ex.getMessage());
-                                        } catch (Exception ex) {
-                                            ToolBox.showException(ex);
-                                            exit(4);
-                                        }
-
-                                    } } }).start();
-                            jTextSubNum.setBackground(okBgnd);
-                        }
-                    }
-                }
-
-                @Override
-                public void insertUpdate(DocumentEvent e) {
-                    check();
-                }
-
-                @Override
-                public void changedUpdate(DocumentEvent e) {
-                    check();
-                }
-
-                @Override
-                public void removeUpdate(DocumentEvent e) {
-                    check();
-                }
-            });
         }
         return jComboBoxSubNum;
     }
 
-    void initComboBoxSubNum(int subCount) {
+    void addSubNumComboBoxActionListener(ActionListener actionListener) {
+        jComboBoxSubNum.addActionListener(actionListener);
+    }
+
+    void addSubNumComboBoxDocumentListener(DocumentListener documentListener) {
+        jTextSubNum.getDocument().addDocumentListener(documentListener);
+    }
+    
+    void setSubNumComboBoxBackground(Color color) {
+        jTextSubNum.setBackground(color);
+    }
+    
+    String getSubNumComboBoxText() {
+        return jTextSubNum.getText();
+    }
+
+    void initSubNumComboBox(int subCount) {
         jComboBoxSubNum.removeAllItems();
         for (int i=1; i <= subCount; i++) {
-            jComboBoxSubNum.addItem(String.valueOf(i));
+            jComboBoxSubNum.addItem(i);
         }
         jComboBoxSubNum.setSelectedIndex(0);
     }
 
-    void setComboBoxSubNumSelectedIndex(int index) {
+    Object getSubNumComboBoxSelectedItem() {
+        return jComboBoxSubNum.getSelectedItem();
+    }
+
+    void setSubNumComboBoxSelectedIndex(int index) {
         jComboBoxSubNum.setSelectedIndex(index);
     }
 
-    private JComboBox getJComboBoxAlphaThr() {
-        if (jComboBoxAlphaThr == null) {
-            jComboBoxAlphaThr = new JComboBox();
-            jComboBoxAlphaThr.setEnabled(false);
-            jComboBoxAlphaThr.setEditable(true);
-            jComboBoxAlphaThr.setToolTipText("Set alpha threshold");
-            jComboBoxAlphaThr.setPreferredSize(new Dimension(100, 20));
-            jComboBoxAlphaThr.setMinimumSize(new Dimension(80, 20));
-            jComboBoxAlphaThr.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    if (Core.isReady()) {
-                        int idx;
-                        try {
-                            idx = Integer.parseInt(jComboBoxAlphaThr.getSelectedItem().toString());
-                        } catch (NumberFormatException ex) {
-                            idx = Core.getAlphaThr(); // invalid number -> keep old value
-                        }
-
-                        if (idx < 0) {
-                            idx = 0;
-                        }
-                        if (idx > 255) {
-                            idx = 255;
-                        }
-
-                        Core.setAlphaThr(idx);
-                        jComboBoxAlphaThr.setSelectedIndex(Core.getAlphaThr());
-
-                        (new Thread() {
-                            @Override
-                            public void run() {
-                                synchronized (threadSemaphore) {
-                                    try {
-                                        int subIndex = model.getSubIndex();
-                                        Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
-                                        refreshTrgFrame(subIndex);
-                                    } catch (CoreException ex) {
-                                        error(ex.getMessage());
-                                    } catch (Exception ex) {
-                                        ToolBox.showException(ex);
-                                        exit(4);
-                                    }
-                                } } }).start();
-                    }
-                }
-            });
-            jTextAlphaThr.getDocument().addDocumentListener(new DocumentListener() {
-                private void check() {
-                    if (Core.isReady()) {
-                        int idx = ToolBox.getInt(jTextAlphaThr.getText());
-                        if (idx < 0 || idx > 255) {
-                            jTextAlphaThr.setBackground(errBgnd);
-                        } else {
-                            Core.setAlphaThr(idx);
-                            (new Thread() {
-                                @Override
-                                public void run() {
-                                    synchronized (threadSemaphore) {
-                                        try {
-                                            int subIndex = model.getSubIndex();
-                                            Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
-                                            refreshTrgFrame(subIndex);
-                                        } catch (CoreException ex) {
-                                            error(ex.getMessage());
-                                        } catch (Exception ex) {
-                                            ToolBox.showException(ex);
-                                            exit(4);
-                                        }
-                                    } } }).start();
-                            jTextAlphaThr.setBackground(okBgnd);
-                        }
-                    }
-                }
-
-                @Override
-                public void insertUpdate(DocumentEvent e) {
-                    check();
-                }
-
-                @Override
-                public void changedUpdate(DocumentEvent e) {
-                    check();
-                }
-
-                @Override
-                public void removeUpdate(DocumentEvent e) {
-                    check();
-                }
-            });
-
+    private JComboBox getJComboBoxAlphaThreshold() {
+        if (jComboBoxAlphaThreshold == null) {
+            jComboBoxAlphaThreshold = new JComboBox();
+            jComboBoxAlphaThreshold.setEnabled(false);
+            jComboBoxAlphaThreshold.setEditable(true);
+            jComboBoxAlphaThreshold.setToolTipText("Set alpha threshold");
+            jComboBoxAlphaThreshold.setPreferredSize(new Dimension(100, 20));
+            jComboBoxAlphaThreshold.setMinimumSize(new Dimension(80, 20));
         }
-        return jComboBoxAlphaThr;
+        return jComboBoxAlphaThreshold;
     }
 
-    void initComboBoxThrSelectedIndices() {
-        jComboBoxAlphaThr.setSelectedIndex(Core.getAlphaThr());
-        jComboBoxHiMedThr.setSelectedIndex(Core.getLumThr()[0]);
-        jComboBoxMedLowThr.setSelectedIndex(Core.getLumThr()[1]);
+    void addAlphaThresholdComboBoxActionListener(ActionListener actionListener) {
+        jComboBoxAlphaThreshold.addActionListener(actionListener);
     }
 
-    private JComboBox getJComboBoxHiMedThr() {
-        if (jComboBoxHiMedThr == null) {
-            jComboBoxHiMedThr = new JComboBox();
-            jComboBoxHiMedThr.setEditable(true);
-            jComboBoxHiMedThr.setEnabled(false);
-            jComboBoxHiMedThr.setPreferredSize(new Dimension(100, 20));
-            jComboBoxHiMedThr.setMinimumSize(new Dimension(80, 20));
-            jComboBoxHiMedThr.setToolTipText("Set medium/high luminance threshold");
-            jComboBoxHiMedThr.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    if (Core.isReady()) {
-                        int lumThr[] = Core.getLumThr();
-                        int idx;
-                        try {
-                            idx = Integer.parseInt(jComboBoxHiMedThr.getSelectedItem().toString());
-                        } catch (NumberFormatException ex) {
-                            idx = lumThr[0]; // invalid number -> keep old value
-                        }
-
-                        if (idx <= lumThr[1]) { // must be greater than med/low threshold
-                            idx = lumThr[1] + 1;
-                        }
-
-                        if (idx < 0) {
-                            idx = 0;
-                        }
-                        if (idx > 255) {
-                            idx = 255;
-                        }
-
-                        lumThr[0] = idx;
-                        Core.setLumThr(lumThr);
-                        jComboBoxHiMedThr.setSelectedIndex(Core.getLumThr()[0]);
-
-                        (new Thread() {
-                            @Override
-                            public void run() {
-                                synchronized (threadSemaphore) {
-                                    try {
-                                        int subIndex = model.getSubIndex();
-                                        Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
-                                        refreshTrgFrame(subIndex);
-                                    } catch (CoreException ex) {
-                                        error(ex.getMessage());
-                                    } catch (Exception ex) {
-                                        ToolBox.showException(ex);
-                                        exit(4);
-                                    }
-
-                                } } }).start();
-                    }
-                }
-            });
-            jTextHiMedThr.getDocument().addDocumentListener(new DocumentListener() {
-                private void check() {
-                    if (Core.isReady()) {
-                        int lumThr[] = Core.getLumThr();
-                        int idx = ToolBox.getInt(jTextHiMedThr.getText());
-                        if (idx < 0 || idx > 255 | idx <= lumThr[1]) {
-                            jTextHiMedThr.setBackground(errBgnd);
-                        } else {
-                            lumThr[0] = idx;
-                            Core.setLumThr(lumThr);
-                            (new Thread() {
-                                @Override
-                                public void run() {
-                                    synchronized (threadSemaphore) {
-                                        try {
-                                            int subIndex = model.getSubIndex();
-                                            Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
-                                            refreshTrgFrame(subIndex);
-                                        } catch (CoreException ex) {
-                                            error(ex.getMessage());
-                                        } catch (Exception ex) {
-                                            ToolBox.showException(ex);
-                                            exit(4);
-                                        }
-
-                                    } } }).start();
-                            jTextHiMedThr.setBackground(okBgnd);
-                        }
-                    }
-                }
-
-                @Override
-                public void insertUpdate(DocumentEvent e) {
-                    check();
-                }
-
-                @Override
-                public void changedUpdate(DocumentEvent e) {
-                    check();
-                }
-
-                @Override
-                public void removeUpdate(DocumentEvent e) {
-                    check();
-                }
-            });
-
-        }
-        return jComboBoxHiMedThr;
+    void addAlphaThresholdComboBoxDocumentListener(DocumentListener documentListener) {
+        jTextAlphaThreshold.getDocument().addDocumentListener(documentListener);
     }
 
-    private JComboBox getJComboBoxMedLowThr() {
-        if (jComboBoxMedLowThr == null) {
-            jComboBoxMedLowThr = new JComboBox();
-            jComboBoxMedLowThr.setEditable(true);
-            jComboBoxMedLowThr.setEnabled(false);
-            jComboBoxMedLowThr.setToolTipText("Set low/medium luminance threshold");
-            jComboBoxMedLowThr.setPreferredSize(new Dimension(100, 20));
-            jComboBoxMedLowThr.setMinimumSize(new Dimension(80, 20));
-            jComboBoxMedLowThr.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    if (Core.isReady()) {
-                        int lumThr[] = Core.getLumThr();
-                        int idx;
-                        try {
-                            idx = Integer.parseInt(jComboBoxMedLowThr.getSelectedItem().toString());
-                        } catch (NumberFormatException ex) {
-                            idx = lumThr[1]; // invalid number -> keep old value
-                        }
-
-                        if (idx >= lumThr[0]) { // must be smaller than med/high threshold
-                            idx = lumThr[0] - 1;
-                        }
-
-                        if (idx < 0) {
-                            idx = 0;
-                        }
-                        if (idx > 255) {
-                            idx = 255;
-                        }
-
-                        lumThr[1] = idx;
-                        Core.setLumThr(lumThr);
-
-                        final int index = idx;
-                        jComboBoxMedLowThr.setSelectedIndex(index);
-
-                        (new Thread() {
-                            @Override
-                            public void run() {
-                                synchronized (threadSemaphore) {
-                                    try {
-                                        int subIndex = model.getSubIndex();
-                                        Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
-                                        refreshTrgFrame(subIndex);
-                                    } catch (CoreException ex) {
-                                        error(ex.getMessage());
-                                    } catch (Exception ex) {
-                                        ToolBox.showException(ex);
-                                        exit(4);
-                                    }
-
-                                } } }).start();
-                    }
-                }
-            });
-            jTextMedLowThr.getDocument().addDocumentListener(new DocumentListener() {
-                private void check() {
-                    if (Core.isReady()) {
-                        int lumThr[] = Core.getLumThr();
-                        int idx = ToolBox.getInt(jTextMedLowThr.getText());
-                        if (idx < 0 || idx > 255 | idx >= lumThr[0])
-                            jTextMedLowThr.setBackground(errBgnd);
-                        else {
-                            lumThr[1] = idx;
-                            Core.setLumThr(lumThr);
-                            (new Thread() {
-                                @Override
-                                public void run() {
-                                    synchronized (threadSemaphore) {
-                                        try {
-                                            int subIndex = model.getSubIndex();
-                                            Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
-                                            refreshTrgFrame(subIndex);
-                                        } catch (CoreException ex) {
-                                            error(ex.getMessage());
-                                        } catch (Exception ex) {
-                                            ToolBox.showException(ex);
-                                            exit(4);
-                                        }
-
-                                    } } }).start();
-                            jTextMedLowThr.setBackground(okBgnd);
-                        }
-                    }
-                }
-
-                @Override
-                public void insertUpdate(DocumentEvent e) {
-                    check();
-                }
-
-                @Override
-                public void changedUpdate(DocumentEvent e) {
-                    check();
-                }
-
-                @Override
-                public void removeUpdate(DocumentEvent e) {
-                    check();
-                }
-            });
-
-        }
-        return jComboBoxMedLowThr;
+    void initAlphaThresholdComboBoxSelectedIndices() {
+        jComboBoxAlphaThreshold.setSelectedIndex(Core.getAlphaThr());
+        jComboBoxHiMedThreshold.setSelectedIndex(Core.getLumThr()[0]);
+        jComboBoxMedLowThreshold.setSelectedIndex(Core.getLumThr()[1]);
     }
 
-    private JComboBox getJComboBoxOutFormat() {
-        if (jComboBoxOutFormat == null) {
-            jComboBoxOutFormat = new JComboBox();
-            jComboBoxOutFormat.setEnabled(false);
-            jComboBoxOutFormat.setToolTipText("Select export format");
-            jComboBoxOutFormat.setPreferredSize(new Dimension(120, 20));
-            jComboBoxOutFormat.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    if (Core.isReady()) {
-                        int idx = jComboBoxOutFormat.getSelectedIndex();
-                        for (OutputMode m : OutputMode.values()) {
-                            if (idx == m.ordinal()) {
-                                Core.setOutputMode(m);
-                                break;
-                            }
-                        }
+    Object getAlphaThresholdComboBoxSelectedItem() {
+        return jComboBoxAlphaThreshold.getSelectedItem();
+    }
 
-                        (new Thread() {
-                            @Override
-                            public void run() {
-                                synchronized (threadSemaphore) {
-                                    try {
-                                        int subIndex = model.getSubIndex();
-                                        Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
-                                        refreshTrgFrame(subIndex);
-                                        if (Core.getOutputMode() == OutputMode.VOBSUB || Core.getOutputMode() == OutputMode.SUPIFO)
-                                            enableVobsubStuff(true);
-                                        else
-                                            enableVobsubStuff(false);
-                                    } catch (CoreException ex) {
-                                        error(ex.getMessage());
-                                    } catch (Exception ex) {
-                                        ToolBox.showException(ex);
-                                        exit(4);
-                                    }
+    String getAlphaThresholdComboBoxText() {
+        return jTextAlphaThreshold.getText();
+    }
 
-                                }
-                            }
-                        }).start();
-                    }
-                }
-            });
+    void setAlphaThresholdComboBoxSelectedIndex(int index) {
+        jComboBoxAlphaThreshold.setSelectedIndex(index);
+    }
+
+    void setAlphaThresholdComboBoxBackground(Color color) {
+        jTextAlphaThreshold.setBackground(color);
+    }
+
+    private JComboBox getJComboBoxHiMedThreshold() {
+        if (jComboBoxHiMedThreshold == null) {
+            jComboBoxHiMedThreshold = new JComboBox();
+            jComboBoxHiMedThreshold.setEditable(true);
+            jComboBoxHiMedThreshold.setEnabled(false);
+            jComboBoxHiMedThreshold.setPreferredSize(new Dimension(100, 20));
+            jComboBoxHiMedThreshold.setMinimumSize(new Dimension(80, 20));
+            jComboBoxHiMedThreshold.setToolTipText("Set medium/high luminance threshold");
         }
-        return jComboBoxOutFormat;
+        return jComboBoxHiMedThreshold;
+    }
+
+    void addHiMedThresholdComboBoxActionListener(ActionListener actionListener) {
+        jComboBoxHiMedThreshold.addActionListener(actionListener);
+    }
+
+    void addHiMedThresholdComboBoxDocumentListener(DocumentListener documentListener) {
+        jTextHiMedThreshold.getDocument().addDocumentListener(documentListener);
+    }
+
+    void setHiMedThresholdComboBoxBackground(Color color) {
+        jTextHiMedThreshold.setBackground(color);
+    }
+
+    String getHiMedThresholdComboBoxText() {
+        return jTextHiMedThreshold.getText();
+    }
+
+    Object getHiMedThresholdComboBoxSelectedItem() {
+        return jComboBoxHiMedThreshold.getSelectedItem();
+    }
+
+    void setHiMedThresholdComboBoxSelectedIndex(int index) {
+        jComboBoxHiMedThreshold.setSelectedIndex(index);
+    }
+
+    private JComboBox getJComboBoxMedLowThreshold() {
+        if (jComboBoxMedLowThreshold == null) {
+            jComboBoxMedLowThreshold = new JComboBox();
+            jComboBoxMedLowThreshold.setEditable(true);
+            jComboBoxMedLowThreshold.setEnabled(false);
+            jComboBoxMedLowThreshold.setToolTipText("Set low/medium luminance threshold");
+            jComboBoxMedLowThreshold.setPreferredSize(new Dimension(100, 20));
+            jComboBoxMedLowThreshold.setMinimumSize(new Dimension(80, 20));
+        }
+        return jComboBoxMedLowThreshold;
+    }
+
+    void addMedLowThresholdComboBoxActionListener(ActionListener actionListener) {
+        jComboBoxMedLowThreshold.addActionListener(actionListener);
+    }
+
+    void addMedLowThresholdComboBoxDocumentListener(DocumentListener documentListener) {
+        jTextMedLowThreshold.getDocument().addDocumentListener(documentListener);
+    }
+
+    void setMedLowThresholdComboBoxBackground(Color color) {
+        jTextMedLowThreshold.setBackground(color);
+    }
+
+    String getMedLowThresholdComboBoxText() {
+        return jTextMedLowThreshold.getText();
+    }
+
+    Object getMedLowThresholdComboBoxSelectedItem() {
+        return jComboBoxMedLowThreshold.getSelectedItem();
+    }
+
+    void setMedLowThresholdComboBoxSelectedIndex(int index) {
+        jComboBoxMedLowThreshold.setSelectedIndex(index);
+    }
+
+    private JComboBox getJComboBoxOutputFormat() {
+        if (jComboBoxOutputFormat == null) {
+            jComboBoxOutputFormat = new JComboBox();
+            jComboBoxOutputFormat.setEnabled(false);
+            jComboBoxOutputFormat.setToolTipText("Select export format");
+            jComboBoxOutputFormat.setPreferredSize(new Dimension(120, 20));
+        }
+        return jComboBoxOutputFormat;
+    }
+
+    void addOutputFormatComboBoxActionListener(ActionListener actionListener) {
+        jComboBoxOutputFormat.addActionListener(actionListener);
+    }
+    
+    int getOutputFormatComboBoxSelectedIndex() {
+        return jComboBoxOutputFormat.getSelectedIndex();
     }
 
     /**
@@ -1223,16 +925,12 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
             jMenuItemHelp = new JMenuItem();
             jMenuItemHelp.setText("Help");
             jMenuItemHelp.setMnemonic('h');
-            jMenuItemHelp.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    Help help = new Help();
-                    help.setLocation(getX() + 30, getY() + 30);
-                    help.setSize(800, 600);
-                    help.setVisible(true);
-                }
-            });
         }
         return jMenuItemHelp;
+    }
+
+    void addHelpMenuItemActionListener(ActionListener actionListener) {
+        jMenuItemHelp.addActionListener(actionListener);
     }
 
     private JMenuItem getJMenuItemEditFrame() {
@@ -1394,21 +1092,21 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
         jMenuItemEditFrame.setEnabled(state);
         jMenuItemMoveAll.setEnabled(state);
         jComboBoxSubNum.setEnabled(state);
-        jComboBoxOutFormat.setEnabled(state);
+        jComboBoxOutputFormat.setEnabled(state);
         jComboBoxFilter.setEnabled(state);
     }
 
     /**
      * Enable/disable components dependent only available for VobSubs
      */
-    private void enableVobSubMenuCombo() {
+    void enableVobSubMenuCombo() {
         boolean b = (Core.getOutputMode() == OutputMode.VOBSUB   || Core.getOutputMode() == OutputMode.SUPIFO)
                 && ( (Core.getInputMode()  != InputMode.VOBSUB   && Core.getInputMode() != InputMode.SUPIFO)
                         || Core.getPaletteMode() != PaletteMode.KEEP_EXISTING);
 
-        jComboBoxAlphaThr.setEnabled(b);
-        jComboBoxHiMedThr.setEnabled(b);
-        jComboBoxMedLowThr.setEnabled(b);
+        jComboBoxAlphaThreshold.setEnabled(b);
+        jComboBoxHiMedThreshold.setEnabled(b);
+        jComboBoxMedLowThreshold.setEnabled(b);
 
         b = (Core.getInputMode()  == InputMode.VOBSUB  || Core.getInputMode() == InputMode.SUPIFO);
         jMenuItemEditImportedDvdPalette.setEnabled(b);
@@ -1502,7 +1200,7 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
     }
 
     void setComboBoxOutFormatEnabled(boolean enable) {
-        jComboBoxOutFormat.setEnabled(enable);
+        jComboBoxOutputFormat.setEnabled(enable);
     }
 
     void setMenuItemExitEnabled(boolean enable) {
@@ -1564,9 +1262,9 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
         jMenuItemLoad.setEnabled(true);
         updateRecentFilesMenu();
         jComboBoxPalette.setEnabled(false);
-        jComboBoxAlphaThr.setEnabled(false);
-        jComboBoxHiMedThr.setEnabled(false);
-        jComboBoxMedLowThr.setEnabled(false);
+        jComboBoxAlphaThreshold.setEnabled(false);
+        jComboBoxHiMedThreshold.setEnabled(false);
+        jComboBoxMedLowThreshold.setEnabled(false);
         jMenuItemEditImportedDvdPalette.setEnabled(false);
         jMenuItemEditDvdFramePalette.setEnabled(false);
 
@@ -1769,43 +1467,16 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
             jComboBoxPalette.setEnabled(false);
             jComboBoxPalette.setToolTipText("Select palette mode");
             jComboBoxPalette.setPreferredSize(new Dimension(120, 20));
-            jComboBoxPalette.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    if (Core.isReady()) {
-                        int idx = jComboBoxPalette.getSelectedIndex();
-                        for (PaletteMode m : PaletteMode.values()) {
-                            if (idx == m.ordinal()) {
-                                Core.setPaletteMode(m);
-                                break;
-                            }
-                        }
-
-                        enableVobSubMenuCombo();
-
-                        (new Thread() {
-                            @Override
-                            public void run() {
-                                synchronized (threadSemaphore) {
-                                    try {
-                                        int subIndex = model.getSubIndex();
-                                        Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
-                                        refreshTrgFrame(subIndex);
-                                    } catch (CoreException ex) {
-                                        error(ex.getMessage());
-                                    } catch (Exception ex) {
-                                        ToolBox.showException(ex);
-                                        exit(4);
-                                    }
-
-                                }
-                            }
-                        }).start();
-                    }
-                }
-            });
         }
         return jComboBoxPalette;
+    }
+
+    void addPaletteComboBoxActionListener(ActionListener actionListener) {
+        jComboBoxPalette.addActionListener(actionListener);
+    }
+
+    int getPaletteComboBoxSelectedIndex() {
+        return jComboBoxPalette.getSelectedIndex();
     }
 
     private JComboBox getJComboBoxFilter() {
@@ -1814,41 +1485,15 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
             jComboBoxFilter.setEnabled(false);
             jComboBoxFilter.setToolTipText("Select filter for scaling");
             jComboBoxFilter.setPreferredSize(new Dimension(120, 20));
-            jComboBoxFilter.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    if (Core.isReady()) {
-                        int idx = jComboBoxFilter.getSelectedIndex();
-                        for (ScalingFilter s : ScalingFilter.values()) {
-                            if (idx == s.ordinal()) {
-                                Core.setScalingFilter(s);
-                                break;
-                            }
-                        }
-
-                        (new Thread() {
-                            @Override
-                            public void run() {
-                                synchronized (threadSemaphore) {
-                                    try {
-                                        int subIndex = model.getSubIndex();
-                                        Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
-                                        refreshTrgFrame(subIndex);
-                                    } catch (CoreException ex) {
-                                        error(ex.getMessage());
-                                    } catch (Exception ex) {
-                                        ToolBox.showException(ex);
-                                        exit(4);
-                                    }
-
-                                }
-                            }
-                        }).start();
-                    }
-                }
-            });
-
         }
         return jComboBoxFilter;
+    }
+
+    void addFilterComboBoxActionListener(ActionListener actionListener) {
+        jComboBoxFilter.addActionListener(actionListener);
+    }
+
+    int getFilterComboBoxSelectedIndex() {
+        return jComboBoxFilter.getSelectedIndex();
     }
 }
