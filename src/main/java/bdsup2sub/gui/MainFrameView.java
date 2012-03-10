@@ -19,38 +19,40 @@ import bdsup2sub.core.*;
 import bdsup2sub.utils.ToolBox;
 
 import javax.swing.*;
-import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import java.awt.*;
-import java.awt.datatransfer.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.ClipboardOwner;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
-import static bdsup2sub.core.Constants.*;
+import static bdsup2sub.core.Constants.APP_NAME_AND_VERSION;
+import static bdsup2sub.core.Constants.AUTHOR_AND_DATE;
 
 public class MainFrameView extends JFrame implements ClipboardOwner {
 
     private static final long serialVersionUID = 1L;
 
     private JPanel jContentPane;
-    private JScrollPane jScrollPaneSrc;
-    private JScrollPane jScrollPaneTrg;
-    private JPanel jPanelUp;
-    private JPanel jPanelDown;
-    private GfxPane jPanelSrc;
-    private GfxPane jPanelTrg;
-    private JComboBox jComboBoxSubNum;
-    private JComboBox jComboBoxAlphaThreshold;
-    private JComboBox jComboBoxHiMedThreshold;
-    private JComboBox jComboBoxMedLowThreshold;
-    private JComboBox jComboBoxOutputFormat;
-    private JLabel jLabelInfoSrc;
-    private JLabel jLabelInfoTrg;
-    private JPanel jPanelUp2;
-    private JPanel jPanelMid;
+    private JPanel jPanelTop;
+    private JPanel jPanelInfoSource;
+    private JLabel jLabelInfoSource;
+    private JScrollPane jScrollPaneSource;
+    private GfxPane jPanelSource;
+    private JPanel jPanelInfoTarget;
+    private JLabel jLabelInfoTarget;
+    private JScrollPane jScrollPaneTarget;
+    private GfxPane jPanelTarget;
+    private JPanel jPanelBottom;
+    private EditPane jLayoutPane;
+    private JScrollPane jScrollPaneConsole;
+    private JTextArea console;
+
     private JMenuBar jMenuBar;
     private JMenu jMenuFile;
     private JMenuItem jMenuItemLoad;
@@ -58,41 +60,40 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
     private JMenuItem jMenuItemSave;
     private JMenuItem jMenuItemClose;
     private JMenuItem jMenuItemQuit;
-    private JMenu jMenuHelp;
-    private JMenuItem jMenuItemHelp;
-    private JMenu jMenuPrefs;
+    private JMenu jMenuEdit;
+    private JMenuItem jMenuItemEditFrame;
     private JMenuItem jMenuItemEditDefaultDvdPalette;
     private JMenuItem jMenuItemEditImportedDvdPalette;
     private JMenuItem jMenuItemEditDvdFramePalette;
-    private JMenuItem jMenuItemConversionSettings;
-    private JCheckBoxMenuItem jMenuItemSwapCrCb;
-    private JCheckBoxMenuItem jMenuItemVerbatimOutput;
-    private JCheckBoxMenuItem jMenuItemFixInvisibleFrames;
-    private JMenu jMenuEdit;
-    private JMenuItem jMenuItemEditFrame;
     private JMenuItem jMenuItemMoveAll;
     private JMenuItem jMenuItemResetCropOffset;
+    private JMenu jMenuSettings;
+    private JMenuItem jMenuItemConversionSettings;
+    private JCheckBoxMenuItem jMenuItemSwapCrCb;
+    private JCheckBoxMenuItem jMenuItemFixInvisibleFrames;
+    private JCheckBoxMenuItem jMenuItemVerbatimOutput;
+    private JMenu jMenuHelp;
+    private JMenuItem jMenuItemHelp;
+
+    private JComboBox jComboBoxSubNum;
+    private JComboBox jComboBoxAlphaThreshold;
+    private JComboBox jComboBoxMedLowThreshold;
+    private JComboBox jComboBoxHiMedThreshold;
+    private JComboBox jComboBoxOutputFormat;
+    private JComboBox jComboBoxPalette;
+    private JComboBox jComboBoxFilter;
+    private JTextField jTextSubNum = new JTextField();
+    private JTextField jTextAlphaThreshold = new JTextField();
+    private JTextField jTextMedLowThreshold = new JTextField();
+    private JTextField jTextHiMedThreshold = new JTextField();
+
     private JPopupMenu jPopupMenu;
     private JMenuItem jPopupMenuItemCopy;
     private JMenuItem jPopupMenuItemClear;
-    private JScrollPane jScrollPaneConsole;
-    private JTextArea console;
-    private EditPane jLayoutPane;
-    private JComboBox jComboBoxPalette;
-    private JComboBox jComboBoxFilter;
-    private JTextField jTextSubNum;
-    private JTextField jTextAlphaThreshold;
-    private JTextField jTextHiMedThreshold;
-    private JTextField jTextMedLowThreshold;
 
 
     /** semaphore for synchronization of threads */
     final Object threadSemaphore = new Object();
-    /** reference to this frame (to allow access to "this" from inner classes */
-    private JFrame mainFrame;
-    /** font size for output console */
-    private int fontSize = 12;
-    //private static final int maxDocSize = 1000000; // to work around bad TextPane performance
 
     private ActionListener recentFilesMenuActionListener;
     
@@ -102,28 +103,7 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
         super(APP_NAME_AND_VERSION);
         this.model = model;
 
-        jTextSubNum = new JTextField();
-        jTextAlphaThreshold = new JTextField();
-        jTextHiMedThreshold = new JTextField();
-        jTextMedLowThreshold = new JTextField();
-
-        initialize();
-
-        this.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                exit(0);
-            }
-
-            @Override
-            public void windowClosed(WindowEvent e) {
-                exit(0);
-            }
-        });
-
-        ClassLoader loader = MainFrameView.class.getClassLoader();
-        Image img = Toolkit.getDefaultToolkit().getImage(loader.getResource("icon_32.png"));
-        setIconImage(img);
+        init();
 
         Core.setMainFrame(this);
 
@@ -142,8 +122,6 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
             setLocationRelativeTo(null);
         }
 
-        mainFrame = this;
-
         updateRecentFilesMenu();
 
         // fill comboboxes
@@ -152,11 +130,10 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
         jComboBoxHiMedThreshold.setEditor(new MyComboBoxEditor(jTextHiMedThreshold));
         jComboBoxMedLowThreshold.setEditor(new MyComboBoxEditor(jTextMedLowThreshold));
 
-        for (int i=0; i<256; i++) {
-            String s = Integer.toString(i);
-            jComboBoxAlphaThreshold.addItem(s);
-            jComboBoxHiMedThreshold.addItem(s);
-            jComboBoxMedLowThreshold.addItem(s);
+        for (int i=0; i < 256; i++) {
+            jComboBoxAlphaThreshold.addItem(i);
+            jComboBoxHiMedThreshold.addItem(i);
+            jComboBoxMedLowThreshold.addItem(i);
         }
         jComboBoxAlphaThreshold.setSelectedIndex(Core.getAlphaThr());
         jComboBoxHiMedThreshold.setSelectedIndex(Core.getLumThr()[0]);
@@ -180,266 +157,414 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
         jMenuItemVerbatimOutput.setSelected(Core.getVerbatim());
         jMenuItemFixInvisibleFrames.setSelected(Core.getFixZeroAlpha());
 
-        // console
-        Font f = new Font("Monospaced", Font.PLAIN, fontSize );
-        console.setFont(f);
-
-        // popup menu
-        getJPopupMenu();
-        MouseListener popupListener = new PopupListener();
-        console.addMouseListener(popupListener);
-        setVisible(true);
-
-        print(APP_NAME_AND_VERSION + " - a converter from Blu-Ray/HD-DVD SUP to DVD SUB/IDX and more\n");
-        print(AUTHOR_AND_DATE + "\n");
-        print("Official thread at Doom9: http://forum.doom9.org/showthread.php?t=145277\n\n");
-        flush();
+        printToConsole(APP_NAME_AND_VERSION + " - a converter from Blu-Ray/HD-DVD SUP to DVD SUB/IDX and more\n");
+        printToConsole(AUTHOR_AND_DATE + "\n");
+        printToConsole("Official thread at Doom9: http://forum.doom9.org/showthread.php?t=145277\n\n");
+        flushConsole();
     }
 
-    void addTransferHandler(TransferHandler transferHandler) {
-        setTransferHandler(transferHandler);
-    }
-
-    /**
-     * Print string to console window
-     * @param message String to print
-     */
-    public void print(String message) {
-        Document doc = console.getDocument();
-        int length = doc.getLength();
-        try {
-            doc.insertString(length, message, null);
-        } catch (BadLocationException ex) {
-            //
-        }
-    }
-
-    /**
-     * Force console to display last line
-     */
-    public void flush() {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                console.setCaretPosition(console.getDocument().getLength());
-            }
-        });
-    }
-
-    /**
-     * Print text to output pane
-     * @param message text to print
-     */
-    public void printOut(final String message) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                print(message);
-            }
-        });
-    }
-
-    /**
-     * Print text to error pane
-     * @param message text to print
-     */
-    public void printErr(final String message) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                print(message);
-            }
-        });
-    }
-
-    /**
-     * Print warning
-     * @param message text to print
-     */
-    public void printWarn(final String message) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                print(message);
-            }
-        });
-    }
-
-    /**
-     * Print error and show error dialog
-     * @param message error message to display
-     */
-    public void error (String message) {
-        Core.printErr(message);
-        JOptionPane.showMessageDialog(mainFrame, message, "Error!", JOptionPane.WARNING_MESSAGE);
-    }
-
-    void setConsoleText(String text) {
-        console.setText(text);
-    }
-
-    /**
-     * Update all components belonging to the target window
-     * @param index caption index
-     */
-    void refreshTrgFrame(final int index) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                jLayoutPane.setDim(Core.getTrgWidth(index), Core.getTrgHeight(index));
-                jLayoutPane.setOffsets(Core.getTrgOfsX(index), Core.getTrgOfsY(index));
-                jLayoutPane.setCropOfsY(Core.getCropOfsY());
-                jLayoutPane.setImage(Core.getTrgImage(), Core.getTrgImgWidth(index), Core.getTrgImgHeight(index));
-                jLayoutPane.setExcluded(Core.getTrgExcluded(index));
-                jPanelTrg.setImage(Core.getTrgImage());
-                printInfoTrg(index);
-                jLayoutPane.repaint();
-            }
-        });
-    }
-
-    /**
-     * Update all components belonging to the source window
-     * @param index caption index
-     */
-    void refreshSrcFrame(final int index) {
-        SwingUtilities.invokeLater( new Runnable() {
-            @Override
-            public void run() {
-                BufferedImage img = Core.getSrcImage();
-                jPanelSrc.setImage(img);
-                printInfoSrc(index);
-            }
-        });
-    }
-
-    /**
-     * Common exit routine, stores properties and releases Core file handles
-     * @param code exit code
-     */
-    void exit(int code) {
-        if (code == 0) {
-            // store width and height
-            Dimension d = getSize();
-            if (this.getExtendedState() != MainFrameView.MAXIMIZED_BOTH) {
-                Core.props.set("frameWidth", d.width);
-                Core.props.set("frameHeight", d.height);
-                // store frame pos
-                Point p = getLocation();
-                Core.props.set("framePosX", p.x);
-                Core.props.set("framePosY", p.y);
-            }
-        }
-        Core.exit();
-        System.exit(code);
-    }
-
-    /**
-     * Write a string to the system clipboard.
-     * @param str String to copy to the system clipboard
-     */
-    private void setClipboard(String str) {
-        // clear
-        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(""), (ClipboardOwner) mainFrame);
-        // set
-        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(str), (ClipboardOwner) mainFrame);
-    }
-
-    /**
-     * This method initializes this
-     */
-    private void initialize() {
+    private void init() {
         setSize(800, 600);
         setMinimumSize(new Dimension(700, 300));
         setJMenuBar(getjMenuBar());
         setContentPane(getJContentPane());
+        getJPopupMenu();
+        setIconImage(Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource("icon_32.png")));
+    }
+
+    private JMenuBar getjMenuBar() {
+        if (jMenuBar == null) {
+            jMenuBar = new JMenuBar();
+            jMenuBar.add(getJMenuFile());
+            jMenuBar.add(getJMenuEdit());
+            jMenuBar.add(getJMenuPrefs());
+            jMenuBar.add(getJMenuHelp());
+        }
+        return jMenuBar;
+    }
+
+    private JMenu getJMenuFile() {
+        if (jMenuFile == null) {
+            jMenuFile = new JMenu();
+            jMenuFile.setName("");
+            jMenuFile.setMnemonic('f');
+            jMenuFile.setText("File");
+            jMenuFile.add(getJMenuItemLoad());
+            jMenuFile.add(getJMenuItemRecentFiles());
+            jMenuFile.add(getJMenuItemSave());
+            jMenuFile.add(getJMenuItemClose());
+            jMenuFile.add(getJMenuItemQuit());
+        }
+        return jMenuFile;
+    }
+
+    private JMenuItem getJMenuItemLoad() {
+        if (jMenuItemLoad == null) {
+            jMenuItemLoad = new JMenuItem();
+            jMenuItemLoad.setText("Load");
+            jMenuItemLoad.setMnemonic('l');
+        }
+        return jMenuItemLoad;
+    }
+
+    void addLoadMenuItemActionListener(ActionListener actionListener) {
+        jMenuItemLoad.addActionListener(actionListener);
+    }
+
+    void setLoadMenuItemEnabled(boolean enable) {
+        jMenuItemLoad.setEnabled(enable);
+    }
+
+    private JMenu getJMenuItemRecentFiles() {
+        if (jMenuRecentFiles == null) {
+            jMenuRecentFiles = new JMenu();
+            jMenuRecentFiles.setText("Recent Files");
+            jMenuRecentFiles.setMnemonic('r');
+        }
+        return jMenuRecentFiles;
+    }
+
+
+    void addRecentFilesMenuItemActionListener(ActionListener actionListener) {
+        recentFilesMenuActionListener = actionListener;
+        for(int i=0; i < jMenuRecentFiles.getItemCount(); i++) {
+            jMenuRecentFiles.getItem(i).addActionListener(recentFilesMenuActionListener);
+        }
+    }
+
+    void updateRecentFilesMenu() {
+        jMenuRecentFiles.setEnabled(false);
+        ArrayList<String> recentFiles = Core.getRecentFiles();
+        int size = recentFiles.size();
+        if (size>0) {
+            jMenuRecentFiles.removeAll();
+            for (int i=0; i < size; i++) {
+                JMenuItem j = new JMenuItem();
+                String s = recentFiles.get(i);
+                j.setText(i + ": " + s);
+                j.setActionCommand(s);
+                j.setMnemonic(Character.forDigit(i, 10));
+                j.addActionListener(recentFilesMenuActionListener);
+                jMenuRecentFiles.add(j);
+            }
+            jMenuRecentFiles.setEnabled(true);
+        }
+    }
+
+    private JMenuItem getJMenuItemSave() {
+        if (jMenuItemSave == null) {
+            jMenuItemSave = new JMenuItem();
+            jMenuItemSave.setText("Save/Export");
+            jMenuItemSave.setMnemonic('s');
+            jMenuItemSave.setEnabled(false);
+        }
+        return jMenuItemSave;
+    }
+
+    void addSaveMenuItemActionListener(ActionListener actionListener) {
+        jMenuItemSave.addActionListener(actionListener);
+    }
+
+    private JMenuItem getJMenuItemClose() {
+        if (jMenuItemClose == null) {
+            jMenuItemClose = new JMenuItem();
+            jMenuItemClose.setText("Close");
+            jMenuItemClose.setEnabled(false);
+            jMenuItemClose.setMnemonic('c');
+        }
+        return jMenuItemClose;
+    }
+
+    void addCloseMenuItemActionListener(ActionListener actionListener) {
+        jMenuItemClose.addActionListener(actionListener);
+    }
+
+    private JMenuItem getJMenuItemQuit() {
+        if (jMenuItemQuit == null) {
+            jMenuItemQuit = new JMenuItem();
+            jMenuItemQuit.setText("Quit");
+            jMenuItemQuit.setMnemonic('q');
+        }
+        return jMenuItemQuit;
+    }
+
+    void addQuitMenuItemActionListener(ActionListener actionListener) {
+        jMenuItemQuit.addActionListener(actionListener);
+    }
+
+    void setQuitMenuItemEnabled(boolean enable) {
+        jMenuItemQuit.setEnabled(enable);
+    }
+
+    private JMenu getJMenuEdit() {
+        if (jMenuEdit == null) {
+            jMenuEdit = new JMenu();
+            jMenuEdit.setText("Edit");
+            jMenuEdit.setMnemonic('e');
+            jMenuEdit.add(getJMenuItemEditFrame());
+            jMenuEdit.add(getJMenuItemEditDefaultDvdPalette());
+            jMenuEdit.add(getJMenuItemEditImportedDvdPalette());
+            jMenuEdit.add(getJMenuItemEditDvdFramePalette());
+            jMenuEdit.add(getJMenuItemMoveAll());
+            jMenuEdit.add(getJMenuItemResetCropOffset());
+        }
+        return jMenuEdit;
+    }
+
+    private JMenuItem getJMenuItemEditFrame() {
+        if (jMenuItemEditFrame == null) {
+            jMenuItemEditFrame = new JMenuItem();
+            jMenuItemEditFrame.setText("Edit Frame");
+            jMenuItemEditFrame.setMnemonic('e');
+            jMenuItemEditFrame.setEnabled(false);
+        }
+        return jMenuItemEditFrame;
+    }
+
+    void addEditFrameMenuItemActionListener(ActionListener actionListener) {
+        jMenuItemEditFrame.addActionListener(actionListener);
+    }
+
+    private JMenuItem getJMenuItemEditDefaultDvdPalette() {
+        if (jMenuItemEditDefaultDvdPalette == null) {
+            jMenuItemEditDefaultDvdPalette = new JMenuItem();
+            jMenuItemEditDefaultDvdPalette.setText("Edit default DVD Palette");
+            jMenuItemEditDefaultDvdPalette.setMnemonic('d');
+            jMenuItemEditDefaultDvdPalette.setDisplayedMnemonicIndex(5);
+        }
+        return jMenuItemEditDefaultDvdPalette;
+    }
+
+    void addEditDefaultDvdPaletteMenuItemActionListener(ActionListener actionListener) {
+        jMenuItemEditDefaultDvdPalette.addActionListener(actionListener);
+    }
+
+    private JMenuItem getJMenuItemEditImportedDvdPalette() {
+        if (jMenuItemEditImportedDvdPalette == null) {
+            jMenuItemEditImportedDvdPalette = new JMenuItem();
+            jMenuItemEditImportedDvdPalette.setEnabled(false);
+            jMenuItemEditImportedDvdPalette.setText("Edit imported DVD Palette");
+            jMenuItemEditImportedDvdPalette.setMnemonic('i');
+            jMenuItemEditImportedDvdPalette.setDisplayedMnemonicIndex(5);
+        }
+        return jMenuItemEditImportedDvdPalette;
+    }
+
+    void addEditImportedDvdPaletteMenuItemActionListener(ActionListener actionListener) {
+        jMenuItemEditImportedDvdPalette.addActionListener(actionListener);
+    }
+
+    private JMenuItem getJMenuItemEditDvdFramePalette() {
+        if (jMenuItemEditDvdFramePalette == null) {
+            jMenuItemEditDvdFramePalette = new JMenuItem();
+            jMenuItemEditDvdFramePalette.setEnabled(false);
+            jMenuItemEditDvdFramePalette.setText("Edit DVD Frame Palette");
+            jMenuItemEditDvdFramePalette.setMnemonic('f');
+        }
+        return jMenuItemEditDvdFramePalette;
+    }
+
+    void addEditDvdFramePaletteMenuItemActionListener(ActionListener actionListener) {
+        jMenuItemEditDvdFramePalette.addActionListener(actionListener);
+    }
+
+    private JMenuItem getJMenuItemMoveAll() {
+        if (jMenuItemMoveAll == null) {
+            jMenuItemMoveAll = new JMenuItem();
+            jMenuItemMoveAll.setText("Move all captions");
+            jMenuItemMoveAll.setMnemonic('m');
+            jMenuItemMoveAll.setEnabled(false);
+        }
+        return jMenuItemMoveAll;
+    }
+
+    void addMoveAllMenuItemActionListener(ActionListener actionListener) {
+        jMenuItemMoveAll.addActionListener(actionListener);
+    }
+
+    private JMenuItem getJMenuItemResetCropOffset() {
+        if (jMenuItemResetCropOffset == null) {
+            jMenuItemResetCropOffset = new JMenuItem();
+            jMenuItemResetCropOffset.setMnemonic('r');
+            jMenuItemResetCropOffset.setText("Reset crop offset");
+        }
+        return jMenuItemResetCropOffset;
+    }
+
+    void addResetCropOffsetMenuItemActionListener(ActionListener actionListener) {
+        jMenuItemResetCropOffset.addActionListener(actionListener);
+    }
+
+    private JMenu getJMenuPrefs() {
+        if (jMenuSettings == null) {
+            jMenuSettings = new JMenu();
+            jMenuSettings.setText("Settings");
+            jMenuSettings.setMnemonic('s');
+            jMenuSettings.add(getJMenuItemConversionSettings());
+            jMenuSettings.add(getJMenuItemSwapCrCb());
+            jMenuSettings.add(getJMenuItemFixInvisibleFrames());
+            jMenuSettings.add(getJMenuItemVerbatimOutput());
+        }
+        return jMenuSettings;
+    }
+
+    private JMenuItem getJMenuItemConversionSettings() {
+        if (jMenuItemConversionSettings == null) {
+            jMenuItemConversionSettings = new JMenuItem();
+            jMenuItemConversionSettings.setText("Conversion Settings");
+            jMenuItemConversionSettings.setMnemonic('c');
+        }
+        return jMenuItemConversionSettings;
+    }
+
+    void addConversionSettingsMenuItemActionListener(ActionListener actionListener) {
+        jMenuItemConversionSettings.addActionListener(actionListener);
+    }
+
+    private JMenuItem getJMenuItemSwapCrCb() {
+        if (jMenuItemSwapCrCb == null) {
+            jMenuItemSwapCrCb = new JCheckBoxMenuItem();
+            jMenuItemSwapCrCb.setText("Swap Cr/Cb");
+            jMenuItemSwapCrCb.setMnemonic('s');
+            jMenuItemSwapCrCb.setSelected(false);
+        }
+        return jMenuItemSwapCrCb;
+    }
+
+    void addSwapCrCbMenuItemActionListener(ActionListener actionListener) {
+        jMenuItemSwapCrCb.addActionListener(actionListener);
+    }
+
+    boolean isSwapCrCbSelected() {
+        return jMenuItemSwapCrCb.isSelected();
+    }
+
+    private JMenuItem getJMenuItemFixInvisibleFrames() {
+        if (jMenuItemFixInvisibleFrames == null) {
+            jMenuItemFixInvisibleFrames = new JCheckBoxMenuItem();
+            jMenuItemFixInvisibleFrames.setText("Fix invisible frames");
+            jMenuItemFixInvisibleFrames.setMnemonic('f');
+            jMenuItemFixInvisibleFrames.setSelected(false);
+        }
+        return jMenuItemFixInvisibleFrames;
+    }
+
+    void addFixInvisibleFramesMenuItemActionListener(ActionListener actionListener) {
+        jMenuItemFixInvisibleFrames.addActionListener(actionListener);
+    }
+
+    boolean isFixInvisibleFramesSelected() {
+        return jMenuItemFixInvisibleFrames.isSelected();
+    }
+
+    private JMenuItem getJMenuItemVerbatimOutput() {
+        if (jMenuItemVerbatimOutput == null) {
+            jMenuItemVerbatimOutput = new JCheckBoxMenuItem();
+            jMenuItemVerbatimOutput.setText("Verbatim Output");
+            jMenuItemVerbatimOutput.setMnemonic('v');
+            jMenuItemVerbatimOutput.setSelected(false);
+        }
+        return jMenuItemVerbatimOutput;
+    }
+
+    void addVerbatimOutputMenuItemActionListener(ActionListener actionListener) {
+        jMenuItemVerbatimOutput.addActionListener(actionListener);
+    }
+
+    boolean isVerbatimOutputSelected() {
+        return jMenuItemVerbatimOutput.isSelected();
+    }
+
+    private JMenu getJMenuHelp() {
+        if (jMenuHelp == null) {
+            jMenuHelp = new JMenu();
+            jMenuHelp.setText("Help");
+            jMenuHelp.setMnemonic('h');
+            jMenuHelp.add(getJMenuItemHelp());
+        }
+        return jMenuHelp;
+    }
+
+    private JMenuItem getJMenuItemHelp() {
+        if (jMenuItemHelp == null) {
+            jMenuItemHelp = new JMenuItem();
+            jMenuItemHelp.setText("Help");
+            jMenuItemHelp.setMnemonic('h');
+        }
+        return jMenuItemHelp;
+    }
+
+    void addHelpMenuItemActionListener(ActionListener actionListener) {
+        jMenuItemHelp.addActionListener(actionListener);
     }
 
     private JPanel getJContentPane() {
         if (jContentPane == null) {
-            GridBagConstraints gridBagPanelUp = new GridBagConstraints();
-            gridBagPanelUp.gridx = 0;
-            gridBagPanelUp.gridy = 0;
-            gridBagPanelUp.anchor = GridBagConstraints.WEST;
-            gridBagPanelUp.fill = GridBagConstraints.HORIZONTAL;
-            gridBagPanelUp.insets = new Insets(0, 4, 0, 4);
-            gridBagPanelUp.weightx = 0.0;
-            gridBagPanelUp.ipadx = 0;
-            gridBagPanelUp.weighty = 0.0;
+            GridBagConstraints gridBagPanelTop = new GridBagConstraints();
+            gridBagPanelTop.gridx = 0;
+            gridBagPanelTop.gridy = 0;
+            gridBagPanelTop.anchor = GridBagConstraints.WEST;
+            gridBagPanelTop.fill = GridBagConstraints.HORIZONTAL;
+            gridBagPanelTop.insets = new Insets(0, 4, 0, 4);
+            gridBagPanelTop.weightx = 0.0;
+            gridBagPanelTop.ipadx = 0;
+            gridBagPanelTop.weighty = 0.0;
 
-            GridBagConstraints gridBagPanelUp2 = new GridBagConstraints();
-            gridBagPanelUp2.gridx = 0;
-            gridBagPanelUp2.gridy = 1;
-            gridBagPanelUp2.anchor = GridBagConstraints.NORTHWEST;
-            gridBagPanelUp2.fill = GridBagConstraints.HORIZONTAL;
-            gridBagPanelUp2.insets = new Insets(4, 0, 0, 0);
-            gridBagPanelUp2.weightx = 0.0;
-            gridBagPanelUp2.weighty = 0.0;
+            GridBagConstraints gridBagPanelInfoSource = new GridBagConstraints();
+            gridBagPanelInfoSource.gridx = 0;
+            gridBagPanelInfoSource.gridy = 1;
+            gridBagPanelInfoSource.anchor = GridBagConstraints.NORTHWEST;
+            gridBagPanelInfoSource.fill = GridBagConstraints.HORIZONTAL;
+            gridBagPanelInfoSource.insets = new Insets(4, 0, 0, 0);
+            gridBagPanelInfoSource.weightx = 0.0;
+            gridBagPanelInfoSource.weighty = 0.0;
 
-            GridBagConstraints gridBagScrollPaneSup = new GridBagConstraints();
-            gridBagScrollPaneSup.gridx = 0;
-            gridBagScrollPaneSup.gridy = 2;
-            gridBagScrollPaneSup.fill = GridBagConstraints.BOTH;
-            gridBagScrollPaneSup.anchor = GridBagConstraints.NORTHWEST;
-            gridBagScrollPaneSup.weightx = 1.0;
-            gridBagScrollPaneSup.weighty = 1.0;
+            GridBagConstraints gridBagScrollPaneSource = new GridBagConstraints();
+            gridBagScrollPaneSource.gridx = 0;
+            gridBagScrollPaneSource.gridy = 2;
+            gridBagScrollPaneSource.fill = GridBagConstraints.BOTH;
+            gridBagScrollPaneSource.anchor = GridBagConstraints.NORTHWEST;
+            gridBagScrollPaneSource.weightx = 1.0;
+            gridBagScrollPaneSource.weighty = 1.0;
 
-            GridBagConstraints gridBagPanelMid = new GridBagConstraints();
-            gridBagPanelMid.gridx = 0;
-            gridBagPanelMid.gridy = 3;
-            gridBagPanelMid.fill = GridBagConstraints.HORIZONTAL;
-            gridBagPanelMid.anchor = GridBagConstraints.WEST;
-            gridBagPanelMid.gridwidth = 1;
-            gridBagPanelMid.weighty = 0.0;
-            gridBagPanelMid.weightx = 0.0;
+            GridBagConstraints gridBagPanelInfoTarget = new GridBagConstraints();
+            gridBagPanelInfoTarget.gridx = 0;
+            gridBagPanelInfoTarget.gridy = 3;
+            gridBagPanelInfoTarget.fill = GridBagConstraints.HORIZONTAL;
+            gridBagPanelInfoTarget.anchor = GridBagConstraints.WEST;
+            gridBagPanelInfoTarget.gridwidth = 1;
+            gridBagPanelInfoTarget.weighty = 0.0;
+            gridBagPanelInfoTarget.weightx = 0.0;
 
-            GridBagConstraints gridBagScrollPaneSub = new GridBagConstraints();
-            gridBagScrollPaneSub.gridx = 0;
-            gridBagScrollPaneSub.gridy = 4;
-            gridBagScrollPaneSub.fill = GridBagConstraints.BOTH;
-            gridBagScrollPaneSub.anchor = GridBagConstraints.NORTHWEST;
-            gridBagScrollPaneSub.weightx = 1.0;
-            gridBagScrollPaneSub.weighty = 1.0;
+            GridBagConstraints gridBagScrollPaneTarget = new GridBagConstraints();
+            gridBagScrollPaneTarget.gridx = 0;
+            gridBagScrollPaneTarget.gridy = 4;
+            gridBagScrollPaneTarget.fill = GridBagConstraints.BOTH;
+            gridBagScrollPaneTarget.anchor = GridBagConstraints.NORTHWEST;
+            gridBagScrollPaneTarget.weightx = 1.0;
+            gridBagScrollPaneTarget.weighty = 1.0;
 
-            GridBagConstraints gridBagPanelDown = new GridBagConstraints();
-            gridBagPanelDown.gridx = 0;
-            gridBagPanelDown.gridy = 5;
-            gridBagPanelDown.anchor = GridBagConstraints.SOUTHWEST;
-            gridBagPanelDown.fill = GridBagConstraints.BOTH;
+            GridBagConstraints gridBagPanelBottom = new GridBagConstraints();
+            gridBagPanelBottom.gridx = 0;
+            gridBagPanelBottom.gridy = 5;
+            gridBagPanelBottom.anchor = GridBagConstraints.SOUTHWEST;
+            gridBagPanelBottom.fill = GridBagConstraints.BOTH;
 
             jContentPane = new JPanel();
             jContentPane.setLayout(new GridBagLayout());
             jContentPane.setPreferredSize(new Dimension(800, 600));
-            jContentPane.add(getJPanelUp(), gridBagPanelUp);
-            jContentPane.add(getJPanelUp2(), gridBagPanelUp2);
-            jContentPane.add(getJScrollPaneSup(), gridBagScrollPaneSup);
-            jContentPane.add(getJPanelMid(), gridBagPanelMid);
-            jContentPane.add(getJScrollPaneSub(), gridBagScrollPaneSub);
-            jContentPane.add(getJPanelDown(), gridBagPanelDown);
+            jContentPane.add(getJPanelTop(), gridBagPanelTop);
+            jContentPane.add(getJPanelInfoSource(), gridBagPanelInfoSource);
+            jContentPane.add(getJScrollPaneSource(), gridBagScrollPaneSource);
+            jContentPane.add(getJPanelInfoTarget(), gridBagPanelInfoTarget);
+            jContentPane.add(getJScrollPaneTarget(), gridBagScrollPaneTarget);
+            jContentPane.add(getJPanelBottom(), gridBagPanelBottom);
         }
         return jContentPane;
     }
 
-    private JScrollPane getJScrollPaneSup() {
-        if (jScrollPaneSrc == null) {
-            jScrollPaneSrc = new JScrollPane();
-            jScrollPaneSrc.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-            jScrollPaneSrc.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-            jScrollPaneSrc.setViewportView(getJPanelSup());
-        }
-        return jScrollPaneSrc;
-    }
-
-    private JScrollPane getJScrollPaneSub() {
-        if (jScrollPaneTrg == null) {
-            jScrollPaneTrg = new JScrollPane();
-            jScrollPaneTrg.setViewportView(getJPanelSub());
-        }
-        return jScrollPaneTrg;
-    }
-
-    private JPanel getJPanelUp() {
-        if (jPanelUp == null) {
+    private JPanel getJPanelTop() {
+        if (jPanelTop == null) {
             GridBagConstraints gridBagComboFilter = new GridBagConstraints();
             gridBagComboFilter.fill = GridBagConstraints.NONE;
             gridBagComboFilter.gridx = 7;
@@ -453,17 +578,11 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
             gridBagLabelFilter.anchor = GridBagConstraints.WEST;
             gridBagLabelFilter.insets = new Insets(0, 4, 0, 4);
             gridBagLabelFilter.gridy = 0;
-            JLabel jLabelFilter = new JLabel();
-            jLabelFilter.setPreferredSize(new Dimension(120, 20));
-            jLabelFilter.setText("Filter");
             GridBagConstraints gridBagLabelPalette = new GridBagConstraints();
             gridBagLabelPalette.insets = new Insets(0, 4, 0, 4);
             gridBagLabelPalette.anchor = GridBagConstraints.WEST;
             gridBagLabelPalette.gridx = 6;
             gridBagLabelPalette.gridy = 0;
-            JLabel jLabelPalette = new JLabel();
-            jLabelPalette.setPreferredSize(new Dimension(120, 20));
-            jLabelPalette.setText("Palette");
             GridBagConstraints gridBagComboPalette = new GridBagConstraints();
             gridBagComboPalette.fill = GridBagConstraints.NONE;
             gridBagComboPalette.gridx = 6;
@@ -543,45 +662,129 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
             JLabel jLabelSubNum = new JLabel();
             jLabelSubNum.setText("Subtitle");
             jLabelSubNum.setPreferredSize(new Dimension(100, 20));
-            JLabel jLabelOutFormat = new JLabel();
-            jLabelOutFormat.setText("Output Format");
-            jLabelOutFormat.setPreferredSize(new Dimension(120, 20));
+            JLabel jLabelAlphaThr = new JLabel();
+            jLabelAlphaThr.setText("Alpha Threshold");
+            jLabelAlphaThr.setPreferredSize(new Dimension(100, 20));
             JLabel jLabelMedLowThr = new JLabel();
             jLabelMedLowThr.setText("Med/Low Threshold");
             jLabelMedLowThr.setPreferredSize(new Dimension(100, 20));
             JLabel jLabelHiMedThr = new JLabel();
             jLabelHiMedThr.setText("Hi/Med Threshold");
             jLabelHiMedThr.setPreferredSize(new Dimension(100, 20));
-            JLabel jLabelAlphaThr = new JLabel();
-            jLabelAlphaThr.setText("Alpha Threshold");
-            jLabelAlphaThr.setPreferredSize(new Dimension(100, 20));
+            JLabel jLabelOutFormat = new JLabel();
+            jLabelOutFormat.setText("Output Format");
+            jLabelOutFormat.setPreferredSize(new Dimension(120, 20));
+            JLabel jLabelPalette = new JLabel();
+            jLabelPalette.setPreferredSize(new Dimension(120, 20));
+            jLabelPalette.setText("Palette");
+            JLabel jLabelFilter = new JLabel();
+            jLabelFilter.setPreferredSize(new Dimension(120, 20));
+            jLabelFilter.setText("Filter");
 
-            jPanelUp = new JPanel();
-            jPanelUp.setLayout(new GridBagLayout());
-            jPanelUp.setPreferredSize(new Dimension(600, 40));
-            jPanelUp.setMinimumSize(new Dimension(600, 40));
-            jPanelUp.setMaximumSize(new Dimension(600, 40));
-            jPanelUp.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
-            jPanelUp.add(jLabelSubNum, gridBagLabelSubNum);
-            jPanelUp.add(getJComboBoxSubNum(), gridBagComboBoxSubNum);
-            jPanelUp.add(jLabelAlphaThr, gridBagLabelAlphaThr);
-            jPanelUp.add(getJComboBoxAlphaThreshold(), gridBagComboBoxAlphaThr);
-            jPanelUp.add(jLabelMedLowThr, gridBagLabelMedLowThr);
-            jPanelUp.add(getJComboBoxMedLowThreshold(), gridBagComboBoxMedLowThr);
-            jPanelUp.add(jLabelHiMedThr, gridBagLabelHiMedThr);
-            jPanelUp.add(getJComboBoxHiMedThreshold(), gridBagJComboBoxHiMedThr);
-            jPanelUp.add(jLabelOutFormat, gridBagLabelOutFormat);
-            jPanelUp.add(getJComboBoxOutputFormat(), gridBagComboBoxOutFormat);
-            jPanelUp.add(getJComboBoxPalette(), gridBagComboPalette);
-            jPanelUp.add(jLabelPalette, gridBagLabelPalette);
-            jPanelUp.add(jLabelFilter, gridBagLabelFilter);
-            jPanelUp.add(getJComboBoxFilter(), gridBagComboFilter);
+            jPanelTop = new JPanel();
+            jPanelTop.setLayout(new GridBagLayout());
+            jPanelTop.setPreferredSize(new Dimension(600, 40));
+            jPanelTop.setMinimumSize(new Dimension(600, 40));
+            jPanelTop.setMaximumSize(new Dimension(600, 40));
+            jPanelTop.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
+            jPanelTop.add(jLabelSubNum, gridBagLabelSubNum);
+            jPanelTop.add(getJComboBoxSubNum(), gridBagComboBoxSubNum);
+            jPanelTop.add(jLabelAlphaThr, gridBagLabelAlphaThr);
+            jPanelTop.add(getJComboBoxAlphaThreshold(), gridBagComboBoxAlphaThr);
+            jPanelTop.add(jLabelMedLowThr, gridBagLabelMedLowThr);
+            jPanelTop.add(getJComboBoxMedLowThreshold(), gridBagComboBoxMedLowThr);
+            jPanelTop.add(jLabelHiMedThr, gridBagLabelHiMedThr);
+            jPanelTop.add(getJComboBoxHiMedThreshold(), gridBagJComboBoxHiMedThr);
+            jPanelTop.add(jLabelOutFormat, gridBagLabelOutFormat);
+            jPanelTop.add(getJComboBoxOutputFormat(), gridBagComboBoxOutFormat);
+            jPanelTop.add(getJComboBoxPalette(), gridBagComboPalette);
+            jPanelTop.add(jLabelPalette, gridBagLabelPalette);
+            jPanelTop.add(jLabelFilter, gridBagLabelFilter);
+            jPanelTop.add(getJComboBoxFilter(), gridBagComboFilter);
         }
-        return jPanelUp;
+        return jPanelTop;
     }
 
-    private JPanel getJPanelDown() {
-        if (jPanelDown == null) {
+    private JPanel getJPanelInfoSource() {
+        if (jPanelInfoSource == null) {
+            GridBagConstraints gridBagLabelInfoSup = new GridBagConstraints();
+            gridBagLabelInfoSup.anchor = GridBagConstraints.WEST;
+            gridBagLabelInfoSup.insets = new Insets(4, 8, 2, 8);
+            gridBagLabelInfoSup.gridwidth = 1;
+            gridBagLabelInfoSup.gridx = 0;
+            gridBagLabelInfoSup.gridy = 0;
+            gridBagLabelInfoSup.weightx = 1.0;
+            gridBagLabelInfoSup.fill = GridBagConstraints.HORIZONTAL;
+
+            jLabelInfoSource = new JLabel();
+            jLabelInfoSource.setHorizontalAlignment(SwingConstants.LEFT);
+            jLabelInfoSource.setHorizontalTextPosition(SwingConstants.LEFT);
+
+            jPanelInfoSource = new JPanel();
+            jPanelInfoSource.setLayout(new GridBagLayout());
+            jPanelInfoSource.setPreferredSize(new Dimension(600, 20));
+            jPanelInfoSource.setBorder(BorderFactory.createMatteBorder(2, 0, 0, 0, Color.lightGray));
+            jPanelInfoSource.add(jLabelInfoSource, gridBagLabelInfoSup);
+        }
+        return jPanelInfoSource;
+    }
+
+    private JScrollPane getJScrollPaneSource() {
+        if (jScrollPaneSource == null) {
+            jScrollPaneSource = new JScrollPane();
+            jScrollPaneSource.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+            jScrollPaneSource.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+            jScrollPaneSource.setViewportView(getJPanelSource());
+        }
+        return jScrollPaneSource;
+    }
+
+    private JPanel getJPanelSource() {
+        if (jPanelSource == null) {
+            jPanelSource = new GfxPane();
+        }
+        return jPanelSource;
+    }
+
+    private JPanel getJPanelInfoTarget() {
+        if (jPanelInfoTarget == null) {
+            GridBagConstraints gridBagLabelSubInfo = new GridBagConstraints();
+            gridBagLabelSubInfo.gridx = 0;
+            gridBagLabelSubInfo.weightx = 1.0;
+            gridBagLabelSubInfo.insets = new Insets(4, 8, 2, 8);
+            gridBagLabelSubInfo.fill = GridBagConstraints.HORIZONTAL;
+            gridBagLabelSubInfo.anchor = GridBagConstraints.WEST;
+            gridBagLabelSubInfo.gridy = 0;
+
+            jLabelInfoTarget = new JLabel();
+            jLabelInfoTarget.setHorizontalTextPosition(SwingConstants.LEFT);
+            jLabelInfoTarget.setHorizontalAlignment(SwingConstants.LEFT);
+            jPanelInfoTarget = new JPanel();
+            jPanelInfoTarget.setLayout(new GridBagLayout());
+            jPanelInfoTarget.setPreferredSize(new Dimension(300, 20));
+            jPanelInfoTarget.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
+            jPanelInfoTarget.add(jLabelInfoTarget, gridBagLabelSubInfo);
+        }
+        return jPanelInfoTarget;
+    }
+
+    private JScrollPane getJScrollPaneTarget() {
+        if (jScrollPaneTarget == null) {
+            jScrollPaneTarget = new JScrollPane();
+            jScrollPaneTarget.setViewportView(getJPanelTarget());
+        }
+        return jScrollPaneTarget;
+    }
+
+    private JPanel getJPanelTarget() {
+        if (jPanelTarget == null) {
+            jPanelTarget = new GfxPane();
+        }
+        return jPanelTarget;
+    }
+
+    private JPanel getJPanelBottom() {
+        if (jPanelBottom == null) {
             GridBagConstraints gridBagLayout = new GridBagConstraints();
             gridBagLayout.anchor = GridBagConstraints.NORTHEAST;
             gridBagLayout.gridx = 1;
@@ -595,28 +798,160 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
             gridBagConsole.weightx = 2.0;
             gridBagConsole.weighty = 2.0;
             gridBagConsole.gridx = 0;
-            jPanelDown = new JPanel();
-            jPanelDown.setLayout(new GridBagLayout());
-            jPanelDown.setPreferredSize(new Dimension(300, 150));
-            jPanelDown.setMinimumSize(new Dimension(300, 150));
-            jPanelDown.add(getJPanelLayout(), gridBagLayout);
-            jPanelDown.add(getJScrollPaneConsole(), gridBagConsole);
+            jPanelBottom = new JPanel();
+            jPanelBottom.setLayout(new GridBagLayout());
+            jPanelBottom.setPreferredSize(new Dimension(300, 150));
+            jPanelBottom.setMinimumSize(new Dimension(300, 150));
+            jPanelBottom.add(getJPanelLayout(), gridBagLayout);
+            jPanelBottom.add(getJScrollPaneConsole(), gridBagConsole);
         }
-        return jPanelDown;
+        return jPanelBottom;
     }
 
-    private JPanel getJPanelSup() {
-        if (jPanelSrc == null) {
-            jPanelSrc = new GfxPane();
+    private JPanel getJPanelLayout() {
+        if (jLayoutPane == null) {
+            jLayoutPane = new EditPane(true);
+            jLayoutPane.setLayout(new GridBagLayout());
+            jLayoutPane.setPreferredSize(new Dimension(180, 100));
+            jLayoutPane.setMaximumSize(new Dimension(180,100));
+            jLayoutPane.addMouseListener( new MouseListener() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    if (e.getButton() == MouseEvent.BUTTON1) {
+                        if (Core.isReady()) {
+                            EditDialog ed = new EditDialog(MainFrameView.this);
+                            ed.setIndex(model.getSubIndex());
+                            ed.setVisible(true);
+                            model.setSubIndex(ed.getIndex());
+                            (new Thread() {
+                                @Override
+                                public void run() {
+                                    synchronized (threadSemaphore) {
+                                        try {
+                                            int subIndex = model.getSubIndex();
+                                            Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
+                                            refreshSrcFrame(subIndex);
+                                            refreshTrgFrame(subIndex);
+                                            jComboBoxSubNum.setSelectedIndex(subIndex);
+                                        } catch (CoreException ex) {
+                                            error(ex.getMessage());
+                                        } catch (Exception ex) {
+                                            ToolBox.showException(ex);
+                                            exit(4);
+                                        }
+
+                                    }
+                                }
+                            }).start();
+                        }
+                    }
+                }
+
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                }
+
+                @Override
+                public void mouseExited(MouseEvent e) {
+                }
+
+                @Override
+                public void mousePressed(MouseEvent e) {
+                }
+
+                @Override
+                public void mouseReleased(MouseEvent e) {
+                }
+            });
         }
-        return jPanelSrc;
+        return jLayoutPane;
     }
 
-    private JPanel getJPanelSub() {
-        if (jPanelTrg == null) {
-            jPanelTrg = new GfxPane();
+    void setLayoutPaneAspectRatio(double trgRatio) {
+        jLayoutPane.setAspectRatio(trgRatio);
+    }
+
+    void setLayoutPaneCropOffsetY(int cropOfsY) {
+        jLayoutPane.setCropOfsY(cropOfsY);
+    }
+
+    void repaintLayoutPane() {
+        jLayoutPane.repaint();
+    }
+
+    private JScrollPane getJScrollPaneConsole() {
+        if (jScrollPaneConsole == null) {
+            jScrollPaneConsole = new JScrollPane();
+            jScrollPaneConsole.setViewportView(getConsole());
         }
-        return jPanelTrg;
+        return jScrollPaneConsole;
+    }
+
+    private JTextArea getConsole() {
+        if (console == null) {
+            console = new JTextArea();
+            console.setEditable(false);
+            console.setFont(new Font("Monospaced", Font.PLAIN, 12));
+        }
+        return console;
+    }
+
+    void addConsoleMouseListener(MouseListener mouseListener) {
+        console.addMouseListener(mouseListener);
+    }
+
+    private void printToConsole(String message) {
+        Document doc = console.getDocument();
+        int length = doc.getLength();
+        try {
+            doc.insertString(length, message, null);
+        } catch (BadLocationException ex) {
+            //
+        }
+    }
+
+    public void printOut(final String message) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                printToConsole(message);
+            }
+        });
+    }
+
+    public void printErr(final String message) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                printToConsole(message);
+            }
+        });
+    }
+
+    public void printWarn(final String message) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                printToConsole(message);
+            }
+        });
+    }
+
+    public void flushConsole() {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                console.setCaretPosition(console.getDocument().getLength());
+            }
+        });
+    }
+
+    String getConsoleSelectedText() {
+        return console.getSelectedText();
+    }
+
+    void setConsoleText(String text) {
+        console.setText(text);
     }
 
     private JComboBox getJComboBoxSubNum() {
@@ -795,670 +1130,8 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
         return jComboBoxOutputFormat.getSelectedIndex();
     }
 
-    /**
-     * Update info string for source window
-     * @param index caption index
-     */
-    private void printInfoSrc(int index) {
-        jLabelInfoSrc.setText(Core.getSrcInfoStr(index));
-    }
-
-    /**
-     * Update info string for target window
-     * @param index caption index
-     */
-    private void printInfoTrg(int index) {
-        jLabelInfoTrg.setText(Core.getTrgInfoStr(index));
-    }
-
-    private JPanel getJPanelUp2() {
-        if (jPanelUp2 == null) {
-            GridBagConstraints gridBagLabelInfoSup = new GridBagConstraints();
-            gridBagLabelInfoSup.anchor = GridBagConstraints.WEST;
-            gridBagLabelInfoSup.insets = new Insets(4, 8, 2, 8);
-            gridBagLabelInfoSup.gridwidth = 1;
-            gridBagLabelInfoSup.gridx = 0;
-            gridBagLabelInfoSup.gridy = 0;
-            gridBagLabelInfoSup.weightx = 1.0;
-            gridBagLabelInfoSup.fill = GridBagConstraints.HORIZONTAL;
-
-            jLabelInfoSrc = new JLabel();
-            jLabelInfoSrc.setHorizontalAlignment(SwingConstants.LEFT);
-            jLabelInfoSrc.setHorizontalTextPosition(SwingConstants.LEFT);
-
-            jPanelUp2 = new JPanel();
-            jPanelUp2.setLayout(new GridBagLayout());
-            jPanelUp2.setPreferredSize(new Dimension(600, 20));
-            jPanelUp2.setBorder(BorderFactory.createMatteBorder(2, 0, 0, 0, Color.lightGray));
-            jPanelUp2.add(jLabelInfoSrc, gridBagLabelInfoSup);
-        }
-        return jPanelUp2;
-    }
-
-    private JPanel getJPanelMid() {
-        if (jPanelMid == null) {
-            GridBagConstraints gridBagLabelSubInfo = new GridBagConstraints();
-            gridBagLabelSubInfo.gridx = 0;
-            gridBagLabelSubInfo.weightx = 1.0;
-            gridBagLabelSubInfo.insets = new Insets(4, 8, 2, 8);
-            gridBagLabelSubInfo.fill = GridBagConstraints.HORIZONTAL;
-            gridBagLabelSubInfo.anchor = GridBagConstraints.WEST;
-            gridBagLabelSubInfo.gridy = 0;
-            jLabelInfoTrg = new JLabel();
-            jLabelInfoTrg.setHorizontalTextPosition(SwingConstants.LEFT);
-            jLabelInfoTrg.setHorizontalAlignment(SwingConstants.LEFT);
-            jPanelMid = new JPanel();
-            jPanelMid.setLayout(new GridBagLayout());
-            jPanelMid.setPreferredSize(new Dimension(300, 20));
-            jPanelMid.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
-            jPanelMid.add(jLabelInfoTrg, gridBagLabelSubInfo);
-        }
-        return jPanelMid;
-    }
-
-    private JMenuBar getjMenuBar() {
-        if (jMenuBar == null) {
-            jMenuBar = new JMenuBar();
-            jMenuBar.add(getJMenuFile());
-            jMenuBar.add(getJMenuEdit());
-            jMenuBar.add(getJMenuPrefs());
-            jMenuBar.add(getJMenuHelp());
-        }
-        return jMenuBar;
-    }
-
-    private JMenu getJMenuFile() {
-        if (jMenuFile == null) {
-            jMenuFile = new JMenu();
-            jMenuFile.setName("");
-            jMenuFile.setMnemonic('f');
-            jMenuFile.setText("File");
-            jMenuFile.add(getJMenuItemLoad());
-            jMenuFile.add(getJMenuItemRecentFiles());
-            jMenuFile.add(getJMenuItemSave());
-            jMenuFile.add(getJMenuItemClose());
-            jMenuFile.add(getJMenuItemQuit());
-        }
-        return jMenuFile;
-    }
-
-    private JMenu getJMenuPrefs() {
-        if (jMenuPrefs == null) {
-            jMenuPrefs = new JMenu();
-            jMenuPrefs.setText("Settings");
-            jMenuPrefs.setMnemonic('s');
-            jMenuPrefs.add(getJMenuItemConversionSettings());
-            jMenuPrefs.add(getJMenuItemSwapCrCb());
-            jMenuPrefs.add(getJMenuItemFixInvisibleFrames());
-            jMenuPrefs.add(getJMenuItemVerbatimOutput());
-        }
-        return jMenuPrefs;
-    }
-
-    private JMenu getJMenuEdit() {
-        if (jMenuEdit == null) {
-            jMenuEdit = new JMenu();
-            jMenuEdit.setText("Edit");
-            jMenuEdit.setMnemonic('e');
-            jMenuEdit.add(getJMenuItemEditFrame());
-            jMenuEdit.add(getJMenuItemEditDefaultDvdPalette());
-            jMenuEdit.add(getJMenuItemEditImportedDvdPalette());
-            jMenuEdit.add(getJMenuItemEditDvdFramePalette());
-            jMenuEdit.add(getJMenuItemMoveAll());
-            jMenuEdit.add(getJMenuItemResetCropOffset());
-        }
-        return jMenuEdit;
-    }
-
-    private JMenu getJMenuHelp() {
-        if (jMenuHelp == null) {
-            jMenuHelp = new JMenu();
-            jMenuHelp.setText("Help");
-            jMenuHelp.setMnemonic('h');
-            jMenuHelp.add(getJMenuItemHelp());
-        }
-        return jMenuHelp;
-    }
-
-    private JMenuItem getJMenuItemHelp() {
-        if (jMenuItemHelp == null) {
-            jMenuItemHelp = new JMenuItem();
-            jMenuItemHelp.setText("Help");
-            jMenuItemHelp.setMnemonic('h');
-        }
-        return jMenuItemHelp;
-    }
-
-    void addHelpMenuItemActionListener(ActionListener actionListener) {
-        jMenuItemHelp.addActionListener(actionListener);
-    }
-
-    private JMenuItem getJMenuItemEditFrame() {
-        if (jMenuItemEditFrame == null) {
-            jMenuItemEditFrame = new JMenuItem();
-            jMenuItemEditFrame.setText("Edit Frame");
-            jMenuItemEditFrame.setMnemonic('e');
-            jMenuItemEditFrame.setEnabled(false);
-        }
-        return jMenuItemEditFrame;
-    }
-
-    void addEditFrameMenuItemActionListener(ActionListener actionListener) {
-        jMenuItemEditFrame.addActionListener(actionListener);
-    }
-
-    private JMenuItem getJMenuItemMoveAll() {
-        if (jMenuItemMoveAll == null) {
-            jMenuItemMoveAll = new JMenuItem();
-            jMenuItemMoveAll.setText("Move all captions");
-            jMenuItemMoveAll.setMnemonic('m');
-            jMenuItemMoveAll.setEnabled(false);
-        }
-        return jMenuItemMoveAll;
-    }
-
-    void addMoveAllMenuItemActionListener(ActionListener actionListener) {
-        jMenuItemMoveAll.addActionListener(actionListener);
-    }
-
-    private JMenuItem getJMenuItemResetCropOffset() {
-        if (jMenuItemResetCropOffset == null) {
-            jMenuItemResetCropOffset = new JMenuItem();
-            jMenuItemResetCropOffset.setMnemonic('r');
-            jMenuItemResetCropOffset.setText("Reset crop offset");
-        }
-        return jMenuItemResetCropOffset;
-    }
-
-    void addResetCropOffsetMenuItemActionListener(ActionListener actionListener) {
-        jMenuItemResetCropOffset.addActionListener(actionListener);
-    }
-
-    private JMenuItem getJMenuItemSwapCrCb() {
-        if (jMenuItemSwapCrCb == null) {
-            jMenuItemSwapCrCb = new JCheckBoxMenuItem();
-            jMenuItemSwapCrCb.setText("Swap Cr/Cb");
-            jMenuItemSwapCrCb.setMnemonic('s');
-            jMenuItemSwapCrCb.setSelected(false);
-        }
-        return jMenuItemSwapCrCb;
-    }
-
-    void addSwapCrCbMenuItemActionListener(ActionListener actionListener) {
-        jMenuItemSwapCrCb.addActionListener(actionListener);
-    }
-
-    boolean isSwapCrCbSelected() {
-        return jMenuItemSwapCrCb.isSelected();
-    }
-
-    private JMenuItem getJMenuItemVerbatimOutput() {
-        if (jMenuItemVerbatimOutput == null) {
-            jMenuItemVerbatimOutput = new JCheckBoxMenuItem();
-            jMenuItemVerbatimOutput.setText("Verbatim Output");
-            jMenuItemVerbatimOutput.setMnemonic('v');
-            jMenuItemVerbatimOutput.setSelected(false);
-        }
-        return jMenuItemVerbatimOutput;
-    }
-
-    void addVerbatimOutputMenuItemActionListener(ActionListener actionListener) {
-        jMenuItemVerbatimOutput.addActionListener(actionListener);
-    }
-
-    boolean isVerbatimOutputSelected() {
-        return jMenuItemVerbatimOutput.isSelected();
-    }
-
-    private JMenuItem getJMenuItemFixInvisibleFrames() {
-        if (jMenuItemFixInvisibleFrames == null) {
-            jMenuItemFixInvisibleFrames = new JCheckBoxMenuItem();
-            jMenuItemFixInvisibleFrames.setText("Fix invisible frames");
-            jMenuItemFixInvisibleFrames.setMnemonic('f');
-            jMenuItemFixInvisibleFrames.setSelected(false);
-        }
-        return jMenuItemFixInvisibleFrames;
-    }
-
-    void addFixInvisibleFramesMenuItemActionListener(ActionListener actionListener) {
-        jMenuItemFixInvisibleFrames.addActionListener(actionListener);
-    }
-
-    boolean isFixInvisibleFramesSelected() {
-        return jMenuItemFixInvisibleFrames.isSelected();
-    }
-
-    private JMenuItem getJMenuItemConversionSettings() {
-        if (jMenuItemConversionSettings == null) {
-            jMenuItemConversionSettings = new JMenuItem();
-            jMenuItemConversionSettings.setText("Conversion Settings");
-            jMenuItemConversionSettings.setMnemonic('c');
-        }
-        return jMenuItemConversionSettings;
-    }
-
-    void addConversionSettingsMenuItemActionListener(ActionListener actionListener) {
-        jMenuItemConversionSettings.addActionListener(actionListener);
-    }
-
-    private JMenuItem getJMenuItemEditDefaultDvdPalette() {
-        if (jMenuItemEditDefaultDvdPalette == null) {
-            jMenuItemEditDefaultDvdPalette = new JMenuItem();
-            jMenuItemEditDefaultDvdPalette.setText("Edit default DVD Palette");
-            jMenuItemEditDefaultDvdPalette.setMnemonic('d');
-            jMenuItemEditDefaultDvdPalette.setDisplayedMnemonicIndex(5);
-        }
-        return jMenuItemEditDefaultDvdPalette;
-    }
-
-    void addEditDefaultDvdPaletteMenuItemActionListener(ActionListener actionListener) {
-        jMenuItemEditDefaultDvdPalette.addActionListener(actionListener);
-    }
-
-    private JMenuItem getJMenuItemEditImportedDvdPalette() {
-        if (jMenuItemEditImportedDvdPalette == null) {
-            jMenuItemEditImportedDvdPalette = new JMenuItem();
-            jMenuItemEditImportedDvdPalette.setEnabled(false);
-            jMenuItemEditImportedDvdPalette.setText("Edit imported DVD Palette");
-            jMenuItemEditImportedDvdPalette.setMnemonic('i');
-            jMenuItemEditImportedDvdPalette.setDisplayedMnemonicIndex(5);
-        }
-        return jMenuItemEditImportedDvdPalette;
-    }
-
-    void addEditImportedDvdPaletteMenuItemActionListener(ActionListener actionListener) {
-        jMenuItemEditImportedDvdPalette.addActionListener(actionListener);
-    }
-
-    private JMenuItem getJMenuItemEditDvdFramePalette() {
-        if (jMenuItemEditDvdFramePalette == null) {
-            jMenuItemEditDvdFramePalette = new JMenuItem();
-            jMenuItemEditDvdFramePalette.setEnabled(false);
-            jMenuItemEditDvdFramePalette.setText("Edit DVD Frame Palette");
-            jMenuItemEditDvdFramePalette.setMnemonic('f');
-        }
-        return jMenuItemEditDvdFramePalette;
-    }
-
-    void addEditDvdFramePaletteMenuItemActionListener(ActionListener actionListener) {
-        jMenuItemEditDvdFramePalette.addActionListener(actionListener);
-    }
-
-    void enableCoreComponents(boolean state) {
-        jMenuItemLoad.setEnabled(state);
-        jMenuRecentFiles.setEnabled(state && Core.getRecentFiles().size() > 0);
-        jMenuItemSave.setEnabled(state && Core.getNumFrames() > 0);
-        jMenuItemClose.setEnabled(state);
-        jMenuItemEditFrame.setEnabled(state);
-        jMenuItemMoveAll.setEnabled(state);
-        jComboBoxSubNum.setEnabled(state);
-        jComboBoxOutputFormat.setEnabled(state);
-        jComboBoxFilter.setEnabled(state);
-    }
-
-    /**
-     * Enable/disable components dependent only available for VobSubs
-     */
-    void enableVobSubMenuCombo() {
-        boolean b = (Core.getOutputMode() == OutputMode.VOBSUB   || Core.getOutputMode() == OutputMode.SUPIFO)
-                && ( (Core.getInputMode()  != InputMode.VOBSUB   && Core.getInputMode() != InputMode.SUPIFO)
-                        || Core.getPaletteMode() != PaletteMode.KEEP_EXISTING);
-
-        jComboBoxAlphaThreshold.setEnabled(b);
-        jComboBoxHiMedThreshold.setEnabled(b);
-        jComboBoxMedLowThreshold.setEnabled(b);
-
-        b = (Core.getInputMode()  == InputMode.VOBSUB  || Core.getInputMode() == InputMode.SUPIFO);
-        jMenuItemEditImportedDvdPalette.setEnabled(b);
-        jMenuItemEditDvdFramePalette.setEnabled(b);
-    }
-
-    /**
-     * Enable/disable components dependent only available for VobSubs
-     * @param b true: enable
-     */
-    void enableVobsubStuff(boolean b) {
-        boolean ready = Core.isReady();
-        Core.setReady(false);
-        jComboBoxPalette.removeAllItems();
-        for (PaletteMode m : PaletteMode.values()) {
-            if (!b || m != PaletteMode.CREATE_DITHERED) {
-                jComboBoxPalette.addItem(m.toString());
-            }
-        }
-        if (!b || Core.getPaletteMode() != PaletteMode.CREATE_DITHERED) {
-            jComboBoxPalette.setSelectedIndex(Core.getPaletteMode().ordinal());
-        } else {
-            jComboBoxPalette.setSelectedIndex(PaletteMode.CREATE_NEW.ordinal());
-        }
-
-        if (!b || Core.getInputMode() == InputMode.VOBSUB || Core.getInputMode() == InputMode.SUPIFO) {
-            jComboBoxPalette.setEnabled(true);
-        } else {
-            jComboBoxPalette.setEnabled(false);
-        }
-
-        enableVobSubMenuCombo();
-        Core.setReady(ready);
-    }
-
-    /**
-     * Output a dialog with number of warnings and errors
-     */
-    void warningDialog() {
-        int w = Core.getWarnings();
-        Core.resetWarnings();
-        int e = Core.getErrors();
-        Core.resetErrors();
-        if (w+e > 0) {
-            String s = "";
-            if (w > 0) {
-                if (w==1) {
-                    s += w+" warning";
-                } else {
-                    s += w+" warnings";
-                }
-            }
-            if (w>0 && e>0) {
-                s += " and ";
-            }
-            if (e > 0) {
-                if (e==1) {
-                    s = e+" error";
-                } else {
-                    s = e+" errors";
-                }
-            }
-
-            if (w+e < 3) {
-                s = "There was "+s;
-            } else {
-                s = "There were "+s;
-            }
-
-            JOptionPane.showMessageDialog(mainFrame,
-                    s + "\nCheck the log for details",
-                    "Warning!", JOptionPane.WARNING_MESSAGE);
-        }
-    }
-
-    private JMenuItem getJMenuItemLoad() {
-        if (jMenuItemLoad == null) {
-            jMenuItemLoad = new JMenuItem();
-            jMenuItemLoad.setText("Load");
-            jMenuItemLoad.setMnemonic('l');
-        }
-        return jMenuItemLoad;
-    }
-
-    void addLoadMenuItemActionListener(ActionListener actionListener) {
-        jMenuItemLoad.addActionListener(actionListener);
-    }
-
-    void setLoadMenuItemEnabled(boolean enable) {
-        jMenuItemLoad.setEnabled(enable);
-    }
-
     void setComboBoxOutFormatEnabled(boolean enable) {
         jComboBoxOutputFormat.setEnabled(enable);
-    }
-
-    void setMenuItemExitEnabled(boolean enable) {
-        jMenuItemQuit.setEnabled(enable);
-    }
-
-    void updateRecentFilesMenu() {
-        jMenuRecentFiles.setEnabled(false);
-        ArrayList<String> recentFiles = Core.getRecentFiles();
-        int size = recentFiles.size();
-        if (size>0) {
-            jMenuRecentFiles.removeAll();
-            for (int i=0; i < size; i++) {
-                JMenuItem j = new JMenuItem();
-                String s = recentFiles.get(i);
-                j.setText(i + ": " + s);
-                j.setActionCommand(s);
-                j.setMnemonic(Character.forDigit(i, 10));
-                j.addActionListener(recentFilesMenuActionListener);
-                jMenuRecentFiles.add(j);
-            }
-            jMenuRecentFiles.setEnabled(true);
-        }
-    }
-
-    void addRecentFilesMenuItemActionListener(ActionListener actionListener) {
-        recentFilesMenuActionListener = actionListener;
-        for(int i=0; i < jMenuRecentFiles.getItemCount(); i++) {
-            jMenuRecentFiles.getItem(i).addActionListener(recentFilesMenuActionListener);
-        }
-    }
-
-    private JMenu getJMenuItemRecentFiles() {
-        if (jMenuRecentFiles == null) {
-            jMenuRecentFiles = new JMenu();
-            jMenuRecentFiles.setText("Recent Files");
-            jMenuRecentFiles.setMnemonic('r');
-        }
-        return jMenuRecentFiles;
-    }
-
-    private JMenuItem getJMenuItemSave() {
-        if (jMenuItemSave == null) {
-            jMenuItemSave = new JMenuItem();
-            jMenuItemSave.setText("Save/Export");
-            jMenuItemSave.setMnemonic('s');
-            jMenuItemSave.setEnabled(false);
-        }
-        return jMenuItemSave;
-    }
-
-    void addSaveMenuItemActionListener(ActionListener actionListener) {
-        jMenuItemSave.addActionListener(actionListener);
-    }
-
-    void closeSub() {
-        jComboBoxSubNum.removeAllItems();
-        enableCoreComponents(false);
-        jMenuItemLoad.setEnabled(true);
-        updateRecentFilesMenu();
-        jComboBoxPalette.setEnabled(false);
-        jComboBoxAlphaThreshold.setEnabled(false);
-        jComboBoxHiMedThreshold.setEnabled(false);
-        jComboBoxMedLowThreshold.setEnabled(false);
-        jMenuItemEditImportedDvdPalette.setEnabled(false);
-        jMenuItemEditDvdFramePalette.setEnabled(false);
-
-        jLayoutPane.setImage(null,1,1);
-        jLayoutPane.repaint();
-        jPanelTrg.setImage(null);
-        jPanelSrc.setImage(null);
-
-        jLabelInfoTrg.setText("");
-        jLabelInfoSrc.setText("");
-    }
-
-    private JMenuItem getJMenuItemClose() {
-        if (jMenuItemClose == null) {
-            jMenuItemClose = new JMenuItem();
-            jMenuItemClose.setText("Close");
-            jMenuItemClose.setEnabled(false);
-            jMenuItemClose.setMnemonic('c');
-        }
-        return jMenuItemClose;
-    }
-
-    void addCloseMenuItemActionListener(ActionListener actionListener) {
-        jMenuItemClose.addActionListener(actionListener);
-    }
-
-    private JMenuItem getJMenuItemQuit() {
-        if (jMenuItemQuit == null) {
-            jMenuItemQuit = new JMenuItem();
-            jMenuItemQuit.setText("Quit");
-            jMenuItemQuit.setMnemonic('q');
-        }
-        return jMenuItemQuit;
-    }
-
-    void addQuitMenuItemActionListener(ActionListener actionListener) {
-        jMenuItemQuit.addActionListener(actionListener);
-    }
-
-    private JScrollPane getJScrollPaneConsole() {
-        if (jScrollPaneConsole == null) {
-            jScrollPaneConsole = new JScrollPane();
-            jScrollPaneConsole.setViewportView(getConsole());
-        }
-        return jScrollPaneConsole;
-    }
-
-    private JPopupMenu getJPopupMenu() {
-        if (jPopupMenu == null) {
-            jPopupMenu = new JPopupMenu();
-            jPopupMenu.add(getJPopupMenuItemCopy());
-            jPopupMenu.add(getJPopupMenuItemClear());
-            //jPopupMenu.setVisible(false);
-        }
-        return jPopupMenu;
-    }
-
-    private JMenuItem getJPopupMenuItemCopy() {
-        if (jPopupMenuItemCopy == null) {
-            jPopupMenuItemCopy = new JMenuItem();
-            jPopupMenuItemCopy.setText("Copy");
-            jPopupMenuItemCopy.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    String s = console.getSelectedText();
-                    try {
-                        if ( s!= null) {
-                            setClipboard(s);
-                        }
-                    } catch (OutOfMemoryError ex) {
-                        JOptionPane.showMessageDialog(mainFrame,"Out of heap! Use -Xmx256m to increase heap! ","Error!", JOptionPane.WARNING_MESSAGE);
-                    }
-                }
-            });
-        }
-        return jPopupMenuItemCopy;
-    }
-
-    private JMenuItem getJPopupMenuItemClear() {
-        if (jPopupMenuItemClear == null) {
-            jPopupMenuItemClear = new JMenuItem();
-            jPopupMenuItemClear.setText("Clear");  // Generated
-            jPopupMenuItemClear.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    console.setText("");
-                }
-            });
-        }
-        return jPopupMenuItemClear;
-    }
-
-    private JTextArea getConsole() {
-        if (console == null) {
-            console = new JTextArea();
-            console.setEditable(false);
-        }
-        return console;
-    }
-
-    void setLayoutPaneAspectRatio(double trgRatio) {
-        jLayoutPane.setAspectRatio(trgRatio);
-    }
-
-    void setLayoutPaneCropOffsetY(int cropOfsY) {
-        jLayoutPane.setCropOfsY(cropOfsY);
-    }
-
-    void repaintLayoutPane() {
-        jLayoutPane.repaint();
-    }
-
-    class PopupListener extends MouseAdapter {
-        @Override
-        public void mousePressed(MouseEvent e) {
-            maybeShowPopup(e);
-        }
-
-        @Override
-        public void mouseReleased(MouseEvent e) {
-            maybeShowPopup(e);
-        }
-
-        private void maybeShowPopup(MouseEvent e) {
-            if (e.isPopupTrigger()) {
-                boolean canCopy = (console.getSelectedText() != null);
-                jPopupMenuItemCopy.setEnabled(canCopy);
-                jPopupMenu.show(console,e.getX(), e.getY());
-            }
-        }
-    }
-
-    private JPanel getJPanelLayout() {
-        if (jLayoutPane == null) {
-            jLayoutPane = new EditPane(true);
-            jLayoutPane.setLayout(new GridBagLayout());
-            jLayoutPane.setPreferredSize(new Dimension(180, 100));
-            jLayoutPane.setMaximumSize(new Dimension(180,100));
-            jLayoutPane.addMouseListener( new MouseListener() {
-                @Override
-                public void mouseClicked(MouseEvent e) {
-                    if (e.getButton() == MouseEvent.BUTTON1) {
-                        if (Core.isReady()) {
-                            EditDialog ed = new EditDialog(mainFrame);
-                            ed.setIndex(model.getSubIndex());
-                            ed.setVisible(true);
-                            model.setSubIndex(ed.getIndex());
-                            (new Thread() {
-                                @Override
-                                public void run() {
-                                    synchronized (threadSemaphore) {
-                                        try {
-                                            int subIndex = model.getSubIndex();
-                                            Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
-                                            refreshSrcFrame(subIndex);
-                                            refreshTrgFrame(subIndex);
-                                            jComboBoxSubNum.setSelectedIndex(subIndex);
-                                        } catch (CoreException ex) {
-                                            error(ex.getMessage());
-                                        } catch (Exception ex) {
-                                            ToolBox.showException(ex);
-                                            exit(4);
-                                        }
-
-                                    }
-                                }
-                            }).start();
-                        }
-                    }
-                }
-
-                @Override
-                public void mouseEntered(MouseEvent e) {
-                }
-
-                @Override
-                public void mouseExited(MouseEvent e) {
-                }
-
-                @Override
-                public void mousePressed(MouseEvent e) {
-                }
-
-                @Override
-                public void mouseReleased(MouseEvent e) {
-                }
-
-            });
-        }
-        return jLayoutPane;
-    }
-
-    @Override
-    public void lostOwnership(Clipboard clipboard, Transferable contents) {
     }
 
     private JComboBox getJComboBoxPalette() {
@@ -1495,5 +1168,231 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
 
     int getFilterComboBoxSelectedIndex() {
         return jComboBoxFilter.getSelectedIndex();
+    }
+
+    void enableCoreComponents(boolean state) {
+        jMenuItemLoad.setEnabled(state);
+        jMenuRecentFiles.setEnabled(state && Core.getRecentFiles().size() > 0);
+        jMenuItemSave.setEnabled(state && Core.getNumFrames() > 0);
+        jMenuItemClose.setEnabled(state);
+        jMenuItemEditFrame.setEnabled(state);
+        jMenuItemMoveAll.setEnabled(state);
+        jComboBoxSubNum.setEnabled(state);
+        jComboBoxOutputFormat.setEnabled(state);
+        jComboBoxFilter.setEnabled(state);
+    }
+
+    /**
+     * Enable/disable components dependent only available for VobSubs
+     */
+    void enableVobSubMenuCombo() {
+        boolean b = (Core.getOutputMode() == OutputMode.VOBSUB   || Core.getOutputMode() == OutputMode.SUPIFO)
+                && ( (Core.getInputMode()  != InputMode.VOBSUB   && Core.getInputMode() != InputMode.SUPIFO)
+                        || Core.getPaletteMode() != PaletteMode.KEEP_EXISTING);
+
+        jComboBoxAlphaThreshold.setEnabled(b);
+        jComboBoxHiMedThreshold.setEnabled(b);
+        jComboBoxMedLowThreshold.setEnabled(b);
+
+        b = (Core.getInputMode()  == InputMode.VOBSUB  || Core.getInputMode() == InputMode.SUPIFO);
+        jMenuItemEditImportedDvdPalette.setEnabled(b);
+        jMenuItemEditDvdFramePalette.setEnabled(b);
+    }
+
+    /**
+     * Enable/disable components dependent only available for VobSubs
+     * @param b true: enable
+     */
+    void enableVobsubBits(boolean b) {
+        boolean ready = Core.isReady();
+        Core.setReady(false);
+        jComboBoxPalette.removeAllItems();
+        for (PaletteMode m : PaletteMode.values()) {
+            if (!b || m != PaletteMode.CREATE_DITHERED) {
+                jComboBoxPalette.addItem(m.toString());
+            }
+        }
+        if (!b || Core.getPaletteMode() != PaletteMode.CREATE_DITHERED) {
+            jComboBoxPalette.setSelectedIndex(Core.getPaletteMode().ordinal());
+        } else {
+            jComboBoxPalette.setSelectedIndex(PaletteMode.CREATE_NEW.ordinal());
+        }
+
+        if (!b || Core.getInputMode() == InputMode.VOBSUB || Core.getInputMode() == InputMode.SUPIFO) {
+            jComboBoxPalette.setEnabled(true);
+        } else {
+            jComboBoxPalette.setEnabled(false);
+        }
+
+        enableVobSubMenuCombo();
+        Core.setReady(ready);
+    }
+
+    void closeSub() {
+        jComboBoxSubNum.removeAllItems();
+        enableCoreComponents(false);
+        jMenuItemLoad.setEnabled(true);
+        updateRecentFilesMenu();
+        jComboBoxPalette.setEnabled(false);
+        jComboBoxAlphaThreshold.setEnabled(false);
+        jComboBoxHiMedThreshold.setEnabled(false);
+        jComboBoxMedLowThreshold.setEnabled(false);
+        jMenuItemEditImportedDvdPalette.setEnabled(false);
+        jMenuItemEditDvdFramePalette.setEnabled(false);
+
+        jLayoutPane.setImage(null,1,1);
+        jLayoutPane.repaint();
+        jPanelTarget.setImage(null);
+        jPanelSource.setImage(null);
+
+        jLabelInfoTarget.setText("");
+        jLabelInfoSource.setText("");
+    }
+
+    private JPopupMenu getJPopupMenu() {
+        if (jPopupMenu == null) {
+            jPopupMenu = new JPopupMenu();
+            jPopupMenu.add(getJPopupMenuItemCopy());
+            jPopupMenu.add(getJPopupMenuItemClear());
+        }
+        return jPopupMenu;
+    }
+
+    void showPopupMenu(int x, int y) {
+        jPopupMenu.show(console, x, y);
+    }
+
+    private JMenuItem getJPopupMenuItemCopy() {
+        if (jPopupMenuItemCopy == null) {
+            jPopupMenuItemCopy = new JMenuItem();
+            jPopupMenuItemCopy.setText("Copy");
+        }
+        return jPopupMenuItemCopy;
+    }
+
+    void addCopyPopupMenuItemActionListener(ActionListener actionListener) {
+        jPopupMenuItemCopy.addActionListener(actionListener);
+    }
+
+    void setCopyPopupMenuItemEnabled(boolean enable) {
+        jPopupMenuItemCopy.setEnabled(enable);
+    }
+
+    private JMenuItem getJPopupMenuItemClear() {
+        if (jPopupMenuItemClear == null) {
+            jPopupMenuItemClear = new JMenuItem();
+            jPopupMenuItemClear.setText("Clear");
+        }
+        return jPopupMenuItemClear;
+    }
+
+    void addClearPopupMenuItemActionListener(ActionListener actionListener) {
+        jPopupMenuItemClear.addActionListener(actionListener);
+    }
+
+    void addTransferHandler(TransferHandler transferHandler) {
+        setTransferHandler(transferHandler);
+    }
+
+    @Override
+    public void lostOwnership(Clipboard clipboard, Transferable contents) {
+    }
+
+    /**
+     * Update all components belonging to the source window
+     * @param index caption index
+     */
+    void refreshSrcFrame(final int index) {
+        SwingUtilities.invokeLater( new Runnable() {
+            @Override
+            public void run() {
+                BufferedImage img = Core.getSrcImage();
+                jPanelSource.setImage(img);
+                jLabelInfoSource.setText(Core.getSrcInfoStr(index));
+            }
+        });
+    }
+    /**
+     * Update all components belonging to the target window
+     * @param index caption index
+     */
+    void refreshTrgFrame(final int index) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                jLayoutPane.setDim(Core.getTrgWidth(index), Core.getTrgHeight(index));
+                jLayoutPane.setOffsets(Core.getTrgOfsX(index), Core.getTrgOfsY(index));
+                jLayoutPane.setCropOfsY(Core.getCropOfsY());
+                jLayoutPane.setImage(Core.getTrgImage(), Core.getTrgImgWidth(index), Core.getTrgImgHeight(index));
+                jLayoutPane.setExcluded(Core.getTrgExcluded(index));
+                jPanelTarget.setImage(Core.getTrgImage());
+                jLabelInfoTarget.setText(Core.getTrgInfoStr(index));
+                jLayoutPane.repaint();
+            }
+        });
+    }
+
+    /**
+     * Common exit routine, stores properties and releases Core file handles
+     * @param code exit code
+     */
+    void exit(int code) {
+        if (code == 0) {
+            // store width and height
+            Dimension d = getSize();
+            if (this.getExtendedState() != MainFrameView.MAXIMIZED_BOTH) {
+                Core.props.set("frameWidth", d.width);
+                Core.props.set("frameHeight", d.height);
+                // store frame pos
+                Point p = getLocation();
+                Core.props.set("framePosX", p.x);
+                Core.props.set("framePosY", p.y);
+            }
+        }
+        Core.exit();
+        System.exit(code);
+    }
+
+    /**
+     * Output a dialog with number of warnings and errors
+     */
+    void warningDialog() {
+        int w = Core.getWarnings();
+        Core.resetWarnings();
+        int e = Core.getErrors();
+        Core.resetErrors();
+        if (w+e > 0) {
+            String s = "";
+            if (w > 0) {
+                if (w==1) {
+                    s += w+" warning";
+                } else {
+                    s += w+" warnings";
+                }
+            }
+            if (w>0 && e>0) {
+                s += " and ";
+            }
+            if (e > 0) {
+                if (e==1) {
+                    s = e+" error";
+                } else {
+                    s = e+" errors";
+                }
+            }
+
+            if (w+e < 3) {
+                s = "There was "+s;
+            } else {
+                s = "There were "+s;
+            }
+
+            JOptionPane.showMessageDialog(this, s + "\nCheck the log for details", "Warning!", JOptionPane.WARNING_MESSAGE);
+        }
+    }
+
+    public void error (String message) {
+        Core.printErr(message);
+        JOptionPane.showMessageDialog(this, message, "Error!", JOptionPane.WARNING_MESSAGE);
     }
 }

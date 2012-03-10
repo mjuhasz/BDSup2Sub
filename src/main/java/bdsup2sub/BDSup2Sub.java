@@ -790,6 +790,7 @@ class BDSup2Sub {
                         }
                         MainFrameView view = new MainFrameView(model);
                         MainFrameController controller = new MainFrameController(model, view);
+                        view.setVisible(true);
                     }
                 });
 
