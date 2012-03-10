@@ -520,30 +520,19 @@ public class Core  extends Thread {
         }
     }
 
-    /**
-     * Add a new entry to the list of recently loaded files
-     * @param s
-     */
-    public static void addRecent(String s) {
-        int size = recentFiles.size();
-        // search if entry already exists
-        boolean found = false;
-        for (int i=0; i<size;i++) {
-            if (s.equals(recentFiles.get(i))) {
-                found = true;
-                break;
+    public static void addToRecentFiles(String filename) {
+        int index = recentFiles.indexOf(filename);
+        if (index != -1) {
+            recentFiles.remove(index);
+            recentFiles.add(0, filename);
+        } else {
+            recentFiles.add(0, filename);
+            if (recentFiles.size() > RECENT_FILE_COUNT) {
+                recentFiles.remove(recentFiles.size() - 1);
             }
         }
-        if (!found) {
-            recentFiles.add(0, s);
-            // trim list
-            while ( (size=recentFiles.size()) > RECENT_FILE_COUNT)  {
-                recentFiles.remove(size-1);
-            }
-            // store list
-            for (int i=0; i<size; i++) {
-                props.set("recent_"+i, recentFiles.get(i));
-            }
+        for (int i=0; i < recentFiles.size(); i++) {
+            props.set("recent_" + i, recentFiles.get(i));
         }
     }
 

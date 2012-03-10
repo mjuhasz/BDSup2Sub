@@ -15,9 +15,7 @@
  */
 package bdsup2sub.gui;
 
-import bdsup2sub.bitmap.Palette;
 import bdsup2sub.core.*;
-import bdsup2sub.utils.FilenameUtils;
 import bdsup2sub.utils.ToolBox;
 
 import javax.swing.*;
@@ -29,10 +27,7 @@ import java.awt.*;
 import java.awt.datatransfer.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 
 import static bdsup2sub.core.Constants.*;
 
@@ -62,21 +57,21 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
     private JMenu jMenuRecentFiles;
     private JMenuItem jMenuItemSave;
     private JMenuItem jMenuItemClose;
-    private JMenuItem jMenuItemExit;
+    private JMenuItem jMenuItemQuit;
     private JMenu jMenuHelp;
     private JMenuItem jMenuItemHelp;
     private JMenu jMenuPrefs;
-    private JMenuItem jMenuItemEditColors;
-    private JMenuItem jMenuItemEditCurColors;
-    private JMenuItem jMenuItemEditFramePalAlpha;
+    private JMenuItem jMenuItemEditDefaultDvdPalette;
+    private JMenuItem jMenuItemEditImportedDvdPalette;
+    private JMenuItem jMenuItemEditDvdFramePalette;
     private JMenuItem jMenuItemConversionSettings;
     private JCheckBoxMenuItem jMenuItemSwapCrCb;
     private JCheckBoxMenuItem jMenuItemVerbatim;
     private JCheckBoxMenuItem jMenuItemFixAlpha;
     private JMenu jMenuEdit;
     private JMenuItem jMenuItemEditFrame;
-    private JMenuItem jMenuItemBatchMove;
-    private JMenuItem jMenuItemResetCrop;
+    private JMenuItem jMenuItemMoveAll;
+    private JMenuItem jMenuItemResetCropOffset;
     private JPopupMenu jPopupMenu;
     private JMenuItem jPopupMenuItemCopy;
     private JMenuItem jPopupMenuItemClear;
@@ -95,11 +90,6 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
     final Object threadSemaphore = new Object();
     /** reference to this frame (to allow access to "this" from inner classes */
     private JFrame mainFrame;
-    /** path to load color profiles from */
-    private String colorPath;
-    /** transfer handler for Drag'n'Drop support */
-//    private TransferHandler thandler;
-
     /** font size for output console */
     private int fontSize = 12;
     //private static final int maxDocSize = 1000000; // to work around bad TextPane performance
@@ -108,6 +98,8 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
     /** background color for ok */
     private Color okBgnd = UIManager.getColor("TextField.background");
 
+    private ActionListener recentFilesMenuActionListener;
+    
     private MainFrameModel model;
     
     public MainFrameView(MainFrameModel model) {
@@ -154,8 +146,6 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
             setLocationRelativeTo(null);
         }
 
-        //savePath = Core.props.get("savePath", "");
-        colorPath = Core.props.get("colorPath", "");
         mainFrame = this;
 
         updateRecentFilesMenu();
@@ -343,7 +333,6 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
                 Core.props.set("framePosX", p.x);
                 Core.props.set("framePosY", p.y);
             }
-            Core.props.set("colorPath", colorPath);
         }
         Core.exit();
         System.exit(code);
@@ -738,6 +727,10 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
             jComboBoxSubNum.addItem(String.valueOf(i));
         }
         jComboBoxSubNum.setSelectedIndex(0);
+    }
+
+    void setComboBoxSubNumSelectedIndex(int index) {
+        jComboBoxSubNum.setSelectedIndex(index);
     }
 
     private JComboBox getJComboBoxAlphaThr() {
@@ -1182,7 +1175,7 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
             jMenuFile.add(getJMenuItemRecentFiles());
             jMenuFile.add(getJMenuItemSave());
             jMenuFile.add(getJMenuItemClose());
-            jMenuFile.add(getJMenuItemExit());
+            jMenuFile.add(getJMenuItemQuit());
         }
         return jMenuFile;
     }
@@ -1206,11 +1199,11 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
             jMenuEdit.setText("Edit");
             jMenuEdit.setMnemonic('e');
             jMenuEdit.add(getJMenuItemEditFrame());
-            jMenuEdit.add(getJMenuItemEditColors());
-            jMenuEdit.add(getJMenuItemEditCurColors());
-            jMenuEdit.add(getJMenuItemEditFramePalAlpha());
-            jMenuEdit.add(getJMenuItemBatchMove());
-            jMenuEdit.add(getJMenuItemResetCrop());
+            jMenuEdit.add(getJMenuItemEditDefaultDvdPalette());
+            jMenuEdit.add(getJMenuItemEditImportedDvdPalette());
+            jMenuEdit.add(getJMenuItemEditDvdFramePalette());
+            jMenuEdit.add(getJMenuItemMoveAll());
+            jMenuEdit.add(getJMenuItemResetCropOffset());
         }
         return jMenuEdit;
     }
@@ -1248,102 +1241,39 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
             jMenuItemEditFrame.setText("Edit Frame");
             jMenuItemEditFrame.setMnemonic('e');
             jMenuItemEditFrame.setEnabled(false);
-            jMenuItemEditFrame.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    if (Core.isReady()) {
-                        EditDialog ed = new EditDialog(mainFrame);
-                        ed.setIndex(model.getSubIndex());
-                        ed.setVisible(true);
-                        model.setSubIndex(ed.getIndex());
-                        (new Thread() {
-                            @Override
-                            public void run() {
-                                synchronized (threadSemaphore) {
-                                    try {
-                                        int subIndex = model.getSubIndex();
-                                        Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
-                                        refreshSrcFrame(subIndex);
-                                        refreshTrgFrame(subIndex);
-                                        jComboBoxSubNum.setSelectedIndex(subIndex);
-                                    } catch (CoreException ex) {
-                                        error(ex.getMessage());
-                                    } catch (Exception ex) {
-                                        ToolBox.showException(ex);
-                                        exit(4);
-                                    }
-                                } } }).start();
-                    }
-                }
-            });
         }
         return jMenuItemEditFrame;
     }
 
-    private JMenuItem getJMenuItemBatchMove() {
-        if (jMenuItemBatchMove == null) {
-            jMenuItemBatchMove = new JMenuItem();
-            jMenuItemBatchMove.setText("Move all captions");
-            jMenuItemBatchMove.setMnemonic('m');
-            jMenuItemBatchMove.setEnabled(false);
-            jMenuItemBatchMove.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    if (Core.isReady()) {
-                        MoveDialog ed = new MoveDialog(mainFrame);
-                        ed.setCurrentSubtitleIndex(model.getSubIndex());
-                        ed.setVisible(true);
-                        if (Core.getMoveCaptions()) {
-                            try {
-                                Core.moveAllThreaded(mainFrame);
-                            } catch (CoreException ex) {
-                                error(ex.getMessage());
-                            } catch (Exception ex) {
-                                ToolBox.showException(ex);
-                                exit(4);
-                            }
-                        }
-                        model.setSubIndex(ed.getCurrentSubtitleIndex());
-                        jLayoutPane.setAspectRatio(ed.getTrgRatio());
-                        (new Thread() {
-                            @Override
-                            public void run() {
-                                synchronized (threadSemaphore) {
-                                    try {
-                                        int subIndex = model.getSubIndex();
-                                        Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
-                                        refreshSrcFrame(subIndex);
-                                        refreshTrgFrame(subIndex);
-                                        jComboBoxSubNum.setSelectedIndex(subIndex);
-                                    } catch (CoreException ex) {
-                                        error(ex.getMessage());
-                                    } catch (Exception ex) {
-                                        ToolBox.showException(ex);
-                                        exit(4);
-                                    }
-                                } } }).start();
-                    }
-                }
-            });
-        }
-        return jMenuItemBatchMove;
+    void addEditFrameMenuItemActionListener(ActionListener actionListener) {
+        jMenuItemEditFrame.addActionListener(actionListener);
     }
 
-    private JMenuItem getJMenuItemResetCrop() {
-        if (jMenuItemResetCrop == null) {
-            jMenuItemResetCrop = new JMenuItem();
-            jMenuItemResetCrop.setMnemonic('r');
-            jMenuItemResetCrop.setText("Reset crop offset");  // Generated
-            jMenuItemResetCrop.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    Core.setCropOfsY(0);
-                    jLayoutPane.setCropOfsY(Core.getCropOfsY());
-                    jLayoutPane.repaint();
-                }
-            });
+    private JMenuItem getJMenuItemMoveAll() {
+        if (jMenuItemMoveAll == null) {
+            jMenuItemMoveAll = new JMenuItem();
+            jMenuItemMoveAll.setText("Move all captions");
+            jMenuItemMoveAll.setMnemonic('m');
+            jMenuItemMoveAll.setEnabled(false);
         }
-        return jMenuItemResetCrop;
+        return jMenuItemMoveAll;
+    }
+
+    void addMoveAllMenuItemActionListener(ActionListener actionListener) {
+        jMenuItemMoveAll.addActionListener(actionListener);
+    }
+
+    private JMenuItem getJMenuItemResetCropOffset() {
+        if (jMenuItemResetCropOffset == null) {
+            jMenuItemResetCropOffset = new JMenuItem();
+            jMenuItemResetCropOffset.setMnemonic('r');
+            jMenuItemResetCropOffset.setText("Reset crop offset");
+        }
+        return jMenuItemResetCropOffset;
+    }
+
+    void addResetCropOffsetMenuItemActionListener(ActionListener actionListener) {
+        jMenuItemResetCropOffset.addActionListener(actionListener);
     }
 
     private JMenuItem getJMenuItemSwapCrCb() {
@@ -1470,170 +1400,47 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
         return jMenuItemConversionSettings;
     }
 
-    private JMenuItem getJMenuItemEditColors() {
-        if (jMenuItemEditColors == null) {
-            jMenuItemEditColors = new JMenuItem();
-            //jMenuItemEditColors.setEnabled(false);
-            jMenuItemEditColors.setText("Edit default DVD Palette");
-            jMenuItemEditColors.setMnemonic('d');
-            jMenuItemEditColors.setDisplayedMnemonicIndex(5);
-            jMenuItemEditColors.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    ColorDialog cDiag = new ColorDialog(mainFrame);
-                    final String cName[] = {
-                            "white","light gray","dark gray",
-                            "Color 1 light","Color 1 dark",
-                            "Color 2 light","Color 2 dark",
-                            "Color 3 light","Color 3 dark",
-                            "Color 4 light","Color 4 dark",
-                            "Color 5 light","Color 5 dark",
-                            "Color 6 light","Color 6 dark"
-                    };
-                    Color cColor[] = new Color[15];
-                    Color cColorDefault[] = new Color[15];
-                    for (int i=0; i < cColor.length; i++) {
-                        cColor[i] = Core.getCurrentDVDPalette().getColor(i+1);
-                        cColorDefault[i] = DEFAULT_DVD_PALETTE.getColor(i+1);
-                    }
-                    cDiag.setParameters(cName, cColor, cColorDefault);
-                    cDiag.setPath(colorPath);
-                    cDiag.setVisible(true);
-                    if (!cDiag.wasCanceled()) {
-                        cColor = cDiag.getColors();
-                        colorPath = cDiag.getPath();
-                        for (int i=0; i<cColor.length; i++) {
-                            Core.getCurrentDVDPalette().setColor(i+1, cColor[i]);
-                        }
-
-                        (new Thread() {
-                            @Override
-                            public void run() {
-                                synchronized (threadSemaphore) {
-                                    try {
-                                        if (Core.isReady()) {
-                                            int subIndex = model.getSubIndex();
-                                            Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
-                                            refreshTrgFrame(subIndex);
-                                        }
-                                    } catch (CoreException ex) {
-                                        error(ex.getMessage());
-                                    } catch (Exception ex) {
-                                        ToolBox.showException(ex);
-                                        exit(4);
-                                    }
-
-                                }
-                            }
-                        }).start();
-                    }
-                }
-            });
+    private JMenuItem getJMenuItemEditDefaultDvdPalette() {
+        if (jMenuItemEditDefaultDvdPalette == null) {
+            jMenuItemEditDefaultDvdPalette = new JMenuItem();
+            jMenuItemEditDefaultDvdPalette.setText("Edit default DVD Palette");
+            jMenuItemEditDefaultDvdPalette.setMnemonic('d');
+            jMenuItemEditDefaultDvdPalette.setDisplayedMnemonicIndex(5);
         }
-        return jMenuItemEditColors;
+        return jMenuItemEditDefaultDvdPalette;
     }
 
-    private JMenuItem getJMenuItemEditCurColors() {
-        if (jMenuItemEditCurColors == null) {
-            jMenuItemEditCurColors = new JMenuItem();
-            jMenuItemEditCurColors.setEnabled(false);
-            jMenuItemEditCurColors.setText("Edit imported DVD Palette");
-            jMenuItemEditCurColors.setMnemonic('i');
-            jMenuItemEditCurColors.setDisplayedMnemonicIndex(5);
-            jMenuItemEditCurColors.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    ColorDialog cDiag = new ColorDialog(mainFrame);
-                    final String cName[] = {
-                            "Color 0", "Color 1", "Color 2", "Color 3",
-                            "Color 4", "Color 5", "Color 6", "Color 7",
-                            "Color 8", "Color 9", "Color 10", "Color 11",
-                            "Color 12", "Color 13", "Color 14", "Color 15",
-                    };
-                    Color cColor[] = new Color[16];
-                    Color cColorDefault[] = new Color[16];
-                    for (int i=0; i < cColor.length; i++) {
-                        cColor[i] = Core.getCurSrcDVDPalette().getColor(i);
-                        cColorDefault[i] = Core.getDefSrcDVDPalette().getColor(i);
-                    }
-                    cDiag.setParameters(cName, cColor, cColorDefault);
-                    cDiag.setPath(colorPath);
-                    cDiag.setVisible(true);
-                    if (!cDiag.wasCanceled()) {
-                        cColor = cDiag.getColors();
-                        colorPath = cDiag.getPath();
-                        Palette p = new Palette(cColor.length, true);
-                        for (int i=0; i<cColor.length; i++) {
-                            p.setColor(i, cColor[i]);
-                        }
-                        Core.setCurSrcDVDPalette(p);
-
-                        (new Thread() {
-                            @Override
-                            public void run() {
-                                synchronized (threadSemaphore) {
-                                    try {
-                                        if (Core.isReady()) {
-                                            int subIndex = model.getSubIndex();
-                                            Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
-                                            refreshSrcFrame(subIndex);
-                                            refreshTrgFrame(subIndex);
-                                        }
-                                    } catch (CoreException ex) {
-                                        error(ex.getMessage());
-                                    } catch (Exception ex) {
-                                        ToolBox.showException(ex);
-                                        exit(4);
-                                    }
-
-                                }
-                            }
-                        }).start();
-                    }
-                }
-            });
-        }
-        return jMenuItemEditCurColors;
+    void addEditDefaultDvdPaletteMenuItemActionListener(ActionListener actionListener) {
+        jMenuItemEditDefaultDvdPalette.addActionListener(actionListener);
     }
 
-    private JMenuItem getJMenuItemEditFramePalAlpha() {
-        if (jMenuItemEditFramePalAlpha == null) {
-            jMenuItemEditFramePalAlpha = new JMenuItem();
-            jMenuItemEditFramePalAlpha.setEnabled(false);
-            jMenuItemEditFramePalAlpha.setText("Edit DVD Frame Palette");
-            jMenuItemEditFramePalAlpha.setMnemonic('f');
-            jMenuItemEditFramePalAlpha.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    FramePalDialog cDiag = new FramePalDialog(mainFrame);
-                    cDiag.setCurrentSubtitleIndex(model.getSubIndex());
-                    cDiag.setVisible(true);
-
-                    (new Thread() {
-                        @Override
-                        public void run() {
-                            synchronized (threadSemaphore) {
-                                try {
-                                    if (Core.isReady()) {
-                                        int subIndex = model.getSubIndex();
-                                        Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
-                                        refreshSrcFrame(subIndex);
-                                        refreshTrgFrame(subIndex);
-                                    }
-                                } catch (CoreException ex) {
-                                    error(ex.getMessage());
-                                } catch (Exception ex) {
-                                    ToolBox.showException(ex);
-                                    exit(4);
-                                }
-
-                            }
-                        }
-                    }).start();
-                }
-            });
+    private JMenuItem getJMenuItemEditImportedDvdPalette() {
+        if (jMenuItemEditImportedDvdPalette == null) {
+            jMenuItemEditImportedDvdPalette = new JMenuItem();
+            jMenuItemEditImportedDvdPalette.setEnabled(false);
+            jMenuItemEditImportedDvdPalette.setText("Edit imported DVD Palette");
+            jMenuItemEditImportedDvdPalette.setMnemonic('i');
+            jMenuItemEditImportedDvdPalette.setDisplayedMnemonicIndex(5);
         }
-        return jMenuItemEditFramePalAlpha;
+        return jMenuItemEditImportedDvdPalette;
+    }
+
+    void addEditImportedDvdPaletteMenuItemActionListener(ActionListener actionListener) {
+        jMenuItemEditImportedDvdPalette.addActionListener(actionListener);
+    }
+
+    private JMenuItem getJMenuItemEditDvdFramePalette() {
+        if (jMenuItemEditDvdFramePalette == null) {
+            jMenuItemEditDvdFramePalette = new JMenuItem();
+            jMenuItemEditDvdFramePalette.setEnabled(false);
+            jMenuItemEditDvdFramePalette.setText("Edit DVD Frame Palette");
+            jMenuItemEditDvdFramePalette.setMnemonic('f');
+        }
+        return jMenuItemEditDvdFramePalette;
+    }
+
+    void addEditDvdFramePaletteMenuItemActionListener(ActionListener actionListener) {
+        jMenuItemEditDvdFramePalette.addActionListener(actionListener);
     }
 
     void enableCoreComponents(boolean state) {
@@ -1642,7 +1449,7 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
         jMenuItemSave.setEnabled(state && Core.getNumFrames() > 0);
         jMenuItemClose.setEnabled(state);
         jMenuItemEditFrame.setEnabled(state);
-        jMenuItemBatchMove.setEnabled(state);
+        jMenuItemMoveAll.setEnabled(state);
         jComboBoxSubNum.setEnabled(state);
         jComboBoxOutFormat.setEnabled(state);
         jComboBoxFilter.setEnabled(state);
@@ -1661,8 +1468,8 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
         jComboBoxMedLowThr.setEnabled(b);
 
         b = (Core.getInputMode()  == InputMode.VOBSUB  || Core.getInputMode() == InputMode.SUPIFO);
-        jMenuItemEditCurColors.setEnabled(b);
-        jMenuItemEditFramePalAlpha.setEnabled(b);
+        jMenuItemEditImportedDvdPalette.setEnabled(b);
+        jMenuItemEditDvdFramePalette.setEnabled(b);
     }
 
     /**
@@ -1743,7 +1550,7 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
         return jMenuItemLoad;
     }
 
-    void addLoadMenuActionListener(ActionListener actionListener) {
+    void addLoadMenuItemActionListener(ActionListener actionListener) {
         jMenuItemLoad.addActionListener(actionListener);
     }
 
@@ -1756,7 +1563,7 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
     }
 
     void setMenuItemExitEnabled(boolean enable) {
-        jMenuItemExit.setEnabled(enable);
+        jMenuItemQuit.setEnabled(enable);
     }
 
     void updateRecentFilesMenu() {
@@ -1771,15 +1578,17 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
                 j.setText(i+": "+s);
                 j.setActionCommand(s);
                 j.setMnemonic((""+i).charAt(0));
+                j.addActionListener(recentFilesMenuActionListener);
                 jMenuRecentFiles.add(j);
             }
             jMenuRecentFiles.setEnabled(true);
         }
     }
 
-    void addRecentMenuActionListener(ActionListener actionListener) {
+    void addRecentFilesMenuItemActionListener(ActionListener actionListener) {
+        recentFilesMenuActionListener = actionListener;
         for(int i=0; i < jMenuRecentFiles.getItemCount(); i++) {
-            jMenuRecentFiles.getItem(i).addActionListener(actionListener);
+            jMenuRecentFiles.getItem(i).addActionListener(recentFilesMenuActionListener);
         }
     }
 
@@ -1798,73 +1607,12 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
             jMenuItemSave.setText("Save/Export");
             jMenuItemSave.setMnemonic('s');
             jMenuItemSave.setEnabled(false);
-            jMenuItemSave.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    boolean showException = true;
-                    String path;
-                    try {
-                        ExportDialog exp = new ExportDialog(mainFrame);
-                        path = model.getSavePath() + File.separatorChar + model.getSaveFilename() + "_exp.";
-                        if (Core.getOutputMode() == OutputMode.VOBSUB) {
-                            path += "idx";
-                        } else if (Core.getOutputMode() == OutputMode.SUPIFO) {
-                            path += "ifo";
-                        } else if (Core.getOutputMode() == OutputMode.BDSUP) {
-                            path += "sup";
-                        } else {
-                            path += "xml";
-                        }
-
-                        exp.setFileName(path);
-                        exp.setVisible(true);
-
-                        String fn = exp.getFileName();
-                        if (!exp.wasCanceled() && fn != null) {
-                            model.setSavePath(FilenameUtils.getParent(fn));
-                            model.setSaveFilename(FilenameUtils.removeExtension(FilenameUtils.getName(fn)).replaceAll("_exp$",""));
-                            //
-                            File fi,fs;
-                            if (Core.getOutputMode() == OutputMode.VOBSUB) {
-                                fi = new File(FilenameUtils.removeExtension(fn) + ".idx");
-                                fs = new File(FilenameUtils.removeExtension(fn) + ".sub");
-                            } else if (Core.getOutputMode() == OutputMode.SUPIFO) {
-                                fi = new File(FilenameUtils.removeExtension(fn) + ".ifo");
-                                fs = new File(FilenameUtils.removeExtension(fn) + ".sup");
-                            } else {
-                                fs = new File(FilenameUtils.removeExtension(fn) + ".sup");
-                                fi = fs; // we don't need the idx file
-                            }
-                            if (fi.exists() || fs.exists()) {
-                                showException = false;
-                                if ((fi.exists() && !fi.canWrite()) || (fs.exists() && !fs.canWrite())) {
-                                    throw new CoreException("Target is write protected.");
-                                }
-                                if (JOptionPane.showConfirmDialog(mainFrame, "Target exists! Overwrite?",
-                                        "", JOptionPane.YES_NO_OPTION) == 1) {
-                                    throw new CoreException("Target exists. Aborted by user.");
-                                }
-                                showException = true;
-                            }
-                            // start conversion
-                            Core.createSubThreaded(fn, mainFrame);
-                            warningDialog();
-                        }
-                    } catch (CoreException ex) {
-                        if (showException) {
-                            error(ex.getMessage());
-                        }
-                    } catch (Exception ex) {
-                        ToolBox.showException(ex);
-                        exit(4);
-                    } finally {
-                        flush();
-                    }
-                }
-            });
-
         }
         return jMenuItemSave;
+    }
+
+    void addSaveMenuItemActionListener(ActionListener actionListener) {
+        jMenuItemSave.addActionListener(actionListener);
     }
 
     void closeSub() {
@@ -1876,8 +1624,8 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
         jComboBoxAlphaThr.setEnabled(false);
         jComboBoxHiMedThr.setEnabled(false);
         jComboBoxMedLowThr.setEnabled(false);
-        jMenuItemEditCurColors.setEnabled(false);
-        jMenuItemEditFramePalAlpha.setEnabled(false);
+        jMenuItemEditImportedDvdPalette.setEnabled(false);
+        jMenuItemEditDvdFramePalette.setEnabled(false);
 
         jLayoutPane.setImage(null,1,1);
         jLayoutPane.repaint();
@@ -1894,30 +1642,25 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
             jMenuItemClose.setText("Close");
             jMenuItemClose.setEnabled(false);
             jMenuItemClose.setMnemonic('c');
-            jMenuItemClose.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    Core.close();
-                    closeSub();
-                }
-            });
         }
         return jMenuItemClose;
     }
 
-    private JMenuItem getJMenuItemExit() {
-        if (jMenuItemExit == null) {
-            jMenuItemExit = new JMenuItem();
-            jMenuItemExit.setText("Exit");
-            jMenuItemExit.setMnemonic('e');
-            jMenuItemExit.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    exit(0);
-                }
-            });
+    void addCloseMenuItemActionListener(ActionListener actionListener) {
+        jMenuItemClose.addActionListener(actionListener);
+    }
+
+    private JMenuItem getJMenuItemQuit() {
+        if (jMenuItemQuit == null) {
+            jMenuItemQuit = new JMenuItem();
+            jMenuItemQuit.setText("Quit");
+            jMenuItemQuit.setMnemonic('q');
         }
-        return jMenuItemExit;
+        return jMenuItemQuit;
+    }
+
+    void addQuitMenuItemActionListener(ActionListener actionListener) {
+        jMenuItemQuit.addActionListener(actionListener);
     }
 
     private JScrollPane getJScrollPaneConsole() {
@@ -1979,6 +1722,18 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
             console.setEditable(false);
         }
         return console;
+    }
+
+    void setLayoutPaneAspectRatio(double trgRatio) {
+        jLayoutPane.setAspectRatio(trgRatio);
+    }
+
+    void setLayoutPaneCropOffsetY(int cropOfsY) {
+        jLayoutPane.setCropOfsY(cropOfsY);
+    }
+
+    void repaintLayoutPane() {
+        jLayoutPane.repaint();
     }
 
     class PopupListener extends MouseAdapter {

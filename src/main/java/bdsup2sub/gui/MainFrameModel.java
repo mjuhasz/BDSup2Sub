@@ -3,15 +3,18 @@ package bdsup2sub.gui;
 import bdsup2sub.core.Core;
 
 public class MainFrameModel {
-    
+
     private String loadPath;
     private String saveFilename;
     private String savePath;
     private int subIndex;
     private boolean sourceFileSpecifiedOnCmdLine;
 
+    private String colorProfilePath;
+
     public MainFrameModel() {
         this.loadPath = Core.props.get("loadPath", "");
+        this.colorProfilePath = Core.props.get("colorPath", "");
     }
 
     public String getLoadPath() {
@@ -53,5 +56,14 @@ public class MainFrameModel {
 
     public void setSourceFileSpecifiedOnCmdLine(boolean sourceFileSpecified) {
         this.sourceFileSpecifiedOnCmdLine = sourceFileSpecified;
+    }
+
+    public String getColorProfilePath() {
+        return colorProfilePath;
+    }
+
+    public void setColorProfilePath(String colorProfilePath) {
+        this.colorProfilePath = colorProfilePath;
+        Core.props.set("colorPath", colorProfilePath);  //FIXME: use listener
     }
 }

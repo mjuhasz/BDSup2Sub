@@ -15,11 +15,13 @@
  */
 package bdsup2sub.gui;
 
+import bdsup2sub.bitmap.Palette;
 import bdsup2sub.core.*;
 import bdsup2sub.utils.FilenameUtils;
 import bdsup2sub.utils.ToolBox;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
@@ -30,6 +32,7 @@ import java.io.IOException;
 import java.util.List;
 
 import static bdsup2sub.core.Constants.APP_NAME_AND_VERSION;
+import static bdsup2sub.core.Constants.DEFAULT_DVD_PALETTE;
 
 public class MainFrameController {
 
@@ -40,7 +43,8 @@ public class MainFrameController {
         this.view = view;
         this.model = model;
 
-        addActionListeners();
+        addFileMenuActionListeners();
+        addEditMenuActionListeners();
         view.addTransferHandler(new DragAndDropTransferHandler());
 
         if (model.isSourceFileSpecifiedOnCmdLine()) {
@@ -48,19 +52,32 @@ public class MainFrameController {
         }
     }
 
-    private void addActionListeners() {
-        view.addLoadMenuActionListener(new LoadMenuActionListener());
-        view.addRecentMenuActionListener(new RecentMenuActionListener());
+    private void addFileMenuActionListeners() {
+        view.addLoadMenuItemActionListener(new LoadMenuItemActionListener());
+        view.addRecentFilesMenuItemActionListener(new RecentMenuItemActionListener());
+        view.addSaveMenuItemActionListener(new SaveMenuItemActionListener());
+        view.addCloseMenuItemActionListener(new CloseMenuItemActionListener());
+        view.addQuitMenuItemActionListener(new QuitMenuItemActionListener());
     }
 
-    private class LoadMenuActionListener implements ActionListener {
+    private void addEditMenuActionListeners() {
+        view.addEditFrameMenuItemActionListener(new EditFrameMenuItemActionListener());
+        view.addEditDefaultDvdPaletteMenuItemActionListener(new EditDefaultDvdPaletteMenuItemActionListener());
+        view.addEditImportedDvdPaletteMenuItemActionListener(new EditImportedDvdPaletteMenuItemActionListener());
+        view.addEditDvdFramePaletteMenuItemActionListener(new EditDvdFramePaletteMenuItemActionListener());
+        view.addMoveAllMenuItemActionListener(new MoveAllMenuItemActionListener());
+        view.addResetCropOffsetMenuItemActionListener(new ResetCropOffsetMenuItemActionListener());
+    }
+
+
+    private class LoadMenuItemActionListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent event) {
-            String[] ext = new String[] {"idx", "ifo", "sub", "sup", "xml"};
+            String[] extension = new String[] {"idx", "ifo", "sub", "sup", "xml"};
             view.setConsoleText("");
-            String p = FilenameUtils.getParent(model.getLoadPath());
-            String fn = FilenameUtils.getName(model.getLoadPath());
-            final String fname = ToolBox.getFileName(p, fn, ext, true, view);
+            String parent = FilenameUtils.getParent(model.getLoadPath());
+            String name = FilenameUtils.getName(model.getLoadPath());
+            final String fname = ToolBox.getFileName(parent, name, extension, true, view);
             (new Thread() {
                 @Override
                 public void run() {
@@ -69,24 +86,129 @@ public class MainFrameController {
         }
     }
 
-    private class RecentMenuActionListener implements ActionListener {
+    private class RecentMenuItemActionListener implements ActionListener {
         @Override
-        public void actionPerformed(ActionEvent e) {
+        public void actionPerformed(ActionEvent event) {
             view.setConsoleText("");
-            final String fname = e.getActionCommand();
+            final String fname = event.getActionCommand();
             (new Thread() {
                 @Override
                 public void run() {
                     load(fname);
                 } }).start();
+        }
+    }
+
+    private class SaveMenuItemActionListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent event) {
+            boolean showException = true;
+            String path;
+            try {
+                ExportDialog exp = new ExportDialog(view);
+                path = model.getSavePath() + File.separatorChar + model.getSaveFilename() + "_exp.";
+                if (Core.getOutputMode() == OutputMode.VOBSUB) {
+                    path += "idx";
+                } else if (Core.getOutputMode() == OutputMode.SUPIFO) {
+                    path += "ifo";
+                } else if (Core.getOutputMode() == OutputMode.BDSUP) {
+                    path += "sup";
+                } else {
+                    path += "xml";
+                }
+
+                exp.setFileName(path);
+                exp.setVisible(true);
+
+                String fn = exp.getFileName();
+                if (!exp.wasCanceled() && fn != null) {
+                    model.setSavePath(FilenameUtils.getParent(fn));
+                    model.setSaveFilename(FilenameUtils.removeExtension(FilenameUtils.getName(fn)).replaceAll("_exp$",""));
+                    //
+                    File fi,fs;
+                    if (Core.getOutputMode() == OutputMode.VOBSUB) {
+                        fi = new File(FilenameUtils.removeExtension(fn) + ".idx");
+                        fs = new File(FilenameUtils.removeExtension(fn) + ".sub");
+                    } else if (Core.getOutputMode() == OutputMode.SUPIFO) {
+                        fi = new File(FilenameUtils.removeExtension(fn) + ".ifo");
+                        fs = new File(FilenameUtils.removeExtension(fn) + ".sup");
+                    } else {
+                        fs = new File(FilenameUtils.removeExtension(fn) + ".sup");
+                        fi = fs; // we don't need the idx file
+                    }
+                    if (fi.exists() || fs.exists()) {
+                        showException = false;
+                        if ((fi.exists() && !fi.canWrite()) || (fs.exists() && !fs.canWrite())) {
+                            throw new CoreException("Target is write protected.");
+                        }
+                        if (JOptionPane.showConfirmDialog(view, "Target exists! Overwrite?", "", JOptionPane.YES_NO_OPTION) == 1) {
+                            throw new CoreException("Target exists. Aborted by user.");
+                        }
+                        showException = true;
+                    }
+                    // start conversion
+                    Core.createSubThreaded(fn, view);
+                    view.warningDialog();
+                }
+            } catch (CoreException ex) {
+                if (showException) {
+                    view.error(ex.getMessage());
+                }
+            } catch (Exception ex) {
+                ToolBox.showException(ex);
+                view.exit(4);
+            } finally {
+                view.flush();
+            }
+        }
+    }
+
+    private class CloseMenuItemActionListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent event) {
+            Core.close();
+            view.closeSub();
+        }
+    }
+    private class QuitMenuItemActionListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent event) {
+            view.exit(0);
+        }
+    }
+
+
+    private class DragAndDropTransferHandler extends TransferHandler {
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public boolean canImport(TransferSupport support) {
+            return support.isDataFlavorSupported(DataFlavor.javaFileListFlavor);
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public boolean importData(TransferSupport support) {
+            if (!canImport(support)) {
+                return false;
+            }
+            Transferable t = support.getTransferable();
+            try {
+                List<File> flist = (List<File>)t.getTransferData(DataFlavor.javaFileListFlavor);
+                load(flist.get(0).getAbsolutePath());
+            } catch (UnsupportedFlavorException e) {
+                return false;
+            } catch (IOException e) {
+                return false;
+            }
+            return true;
         }
     }
 
     private void load(String fname) {
         if (fname != null) {
             if (!new File(fname).exists()) {
-                JOptionPane.showMessageDialog(view, "File '" + fname + "' does not exist",
-                        "File not found!", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(view, "File '" + fname + "' does not exist", "File not found!", JOptionPane.WARNING_MESSAGE);
             } else {
                 synchronized (view.threadSemaphore) {
                     boolean xml = FilenameUtils.getExtension(fname).equalsIgnoreCase("xml");
@@ -138,7 +260,7 @@ public class MainFrameController {
                                 }
                                 // tell the core that a stream was loaded via the GUI
                                 Core.loadedHook();
-                                Core.addRecent(loadPath);
+                                Core.addToRecentFiles(loadPath);
                                 view.updateRecentFilesMenu();
                             } else {
                                 view.closeSub();
@@ -157,39 +279,225 @@ public class MainFrameController {
                             view.flush();
                         }
                     } else {
-                        JOptionPane.showMessageDialog(view, "This is not a supported SUP stream",
-                                "Wrong format!", JOptionPane.WARNING_MESSAGE);
+                        JOptionPane.showMessageDialog(view, "This is not a supported SUP stream", "Wrong format!", JOptionPane.WARNING_MESSAGE);
                     }
                 }
             }
         }
     }
 
-    private class DragAndDropTransferHandler extends TransferHandler {
-        private static final long serialVersionUID = 1L;
-
+    private class EditFrameMenuItemActionListener implements ActionListener {
         @Override
-        public boolean canImport(TransferHandler.TransferSupport support) {
-            return support.isDataFlavorSupported(DataFlavor.javaFileListFlavor);
-        }
-
-        @SuppressWarnings("unchecked")
-        @Override
-        public boolean importData(TransferHandler.TransferSupport support) {
-            if (!canImport(support))
-                return false;
-
-            Transferable t = support.getTransferable();
-
-            try {
-                List<File> flist = (List<File>)t.getTransferData(DataFlavor.javaFileListFlavor);
-                load(flist.get(0).getAbsolutePath());
-            } catch (UnsupportedFlavorException e) {
-                return false;
-            } catch (IOException e) {
-                return false;
+        public void actionPerformed(ActionEvent event) {
+            if (Core.isReady()) {
+                EditDialog ed = new EditDialog(view);
+                ed.setIndex(model.getSubIndex());
+                ed.setVisible(true);
+                model.setSubIndex(ed.getIndex());
+                (new Thread() {
+                    @Override
+                    public void run() {
+                        synchronized (view.threadSemaphore) {
+                            try {
+                                int subIndex = model.getSubIndex();
+                                Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
+                                view.refreshSrcFrame(subIndex);
+                                view.refreshTrgFrame(subIndex);
+                                view.setComboBoxSubNumSelectedIndex(subIndex);
+                            } catch (CoreException ex) {
+                                view.error(ex.getMessage());
+                            } catch (Exception ex) {
+                                ToolBox.showException(ex);
+                                view.exit(4);
+                            }
+                        } } }).start();
             }
-            return true;
         }
-    };
+    }
+
+    private class EditDefaultDvdPaletteMenuItemActionListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            ColorDialog cDiag = new ColorDialog(view);
+            final String cName[] = {
+                    "white","light gray","dark gray",
+                    "Color 1 light","Color 1 dark",
+                    "Color 2 light","Color 2 dark",
+                    "Color 3 light","Color 3 dark",
+                    "Color 4 light","Color 4 dark",
+                    "Color 5 light","Color 5 dark",
+                    "Color 6 light","Color 6 dark"
+            };
+            Color cColor[] = new Color[15];
+            Color cColorDefault[] = new Color[15];
+            for (int i=0; i < cColor.length; i++) {
+                cColor[i] = Core.getCurrentDVDPalette().getColor(i+1);
+                cColorDefault[i] = DEFAULT_DVD_PALETTE.getColor(i+1);
+            }
+            cDiag.setParameters(cName, cColor, cColorDefault);
+            cDiag.setPath(model.getColorProfilePath());
+            cDiag.setVisible(true);
+            if (!cDiag.wasCanceled()) {
+                cColor = cDiag.getColors();
+                model.setColorProfilePath(cDiag.getPath());
+                for (int i=0; i<cColor.length; i++) {
+                    Core.getCurrentDVDPalette().setColor(i+1, cColor[i]);
+                }
+
+                (new Thread() {
+                    @Override
+                    public void run() {
+                        synchronized (view.threadSemaphore) {
+                            try {
+                                if (Core.isReady()) {
+                                    int subIndex = model.getSubIndex();
+                                    Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
+                                    view.refreshTrgFrame(subIndex);
+                                }
+                            } catch (CoreException ex) {
+                                view.error(ex.getMessage());
+                            } catch (Exception ex) {
+                                ToolBox.showException(ex);
+                                view.exit(4);
+                            }
+
+                        }
+                    }
+                }).start();
+            }
+        }
+    }
+
+    private class EditImportedDvdPaletteMenuItemActionListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            ColorDialog cDiag = new ColorDialog(view);
+            final String cName[] = {
+                    "Color 0", "Color 1", "Color 2", "Color 3",
+                    "Color 4", "Color 5", "Color 6", "Color 7",
+                    "Color 8", "Color 9", "Color 10", "Color 11",
+                    "Color 12", "Color 13", "Color 14", "Color 15",
+            };
+            Color cColor[] = new Color[16];
+            Color cColorDefault[] = new Color[16];
+            for (int i=0; i < cColor.length; i++) {
+                cColor[i] = Core.getCurSrcDVDPalette().getColor(i);
+                cColorDefault[i] = Core.getDefSrcDVDPalette().getColor(i);
+            }
+            cDiag.setParameters(cName, cColor, cColorDefault);
+            cDiag.setPath(model.getColorProfilePath());
+            cDiag.setVisible(true);
+            if (!cDiag.wasCanceled()) {
+                cColor = cDiag.getColors();
+                model.setColorProfilePath(cDiag.getPath());
+                Palette p = new Palette(cColor.length, true);
+                for (int i=0; i<cColor.length; i++) {
+                    p.setColor(i, cColor[i]);
+                }
+                Core.setCurSrcDVDPalette(p);
+
+                (new Thread() {
+                    @Override
+                    public void run() {
+                        synchronized (view.threadSemaphore) {
+                            try {
+                                if (Core.isReady()) {
+                                    int subIndex = model.getSubIndex();
+                                    Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
+                                    view.refreshSrcFrame(subIndex);
+                                    view.refreshTrgFrame(subIndex);
+                                }
+                            } catch (CoreException ex) {
+                                view.error(ex.getMessage());
+                            } catch (Exception ex) {
+                                ToolBox.showException(ex);
+                                view.exit(4);
+                            }
+
+                        }
+                    }
+                }).start();
+            }
+        }
+    }
+
+    private class EditDvdFramePaletteMenuItemActionListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            FramePalDialog cDiag = new FramePalDialog(view);
+            cDiag.setCurrentSubtitleIndex(model.getSubIndex());
+            cDiag.setVisible(true);
+
+            (new Thread() {
+                @Override
+                public void run() {
+                    synchronized (view.threadSemaphore) {
+                        try {
+                            if (Core.isReady()) {
+                                int subIndex = model.getSubIndex();
+                                Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
+                                view.refreshSrcFrame(subIndex);
+                                view.refreshTrgFrame(subIndex);
+                            }
+                        } catch (CoreException ex) {
+                            view.error(ex.getMessage());
+                        } catch (Exception ex) {
+                            ToolBox.showException(ex);
+                            view.exit(4);
+                        }
+
+                    }
+                }
+            }).start();
+        }
+    }
+
+    private class MoveAllMenuItemActionListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (Core.isReady()) {
+                MoveDialog ed = new MoveDialog(view);
+                ed.setCurrentSubtitleIndex(model.getSubIndex());
+                ed.setVisible(true);
+                if (Core.getMoveCaptions()) {
+                    try {
+                        Core.moveAllThreaded(view);
+                    } catch (CoreException ex) {
+                        view.error(ex.getMessage());
+                    } catch (Exception ex) {
+                        ToolBox.showException(ex);
+                        view.exit(4);
+                    }
+                }
+                model.setSubIndex(ed.getCurrentSubtitleIndex());
+                view.setLayoutPaneAspectRatio(ed.getTrgRatio());
+                (new Thread() {
+                    @Override
+                    public void run() {
+                        synchronized (view.threadSemaphore) {
+                            try {
+                                int subIndex = model.getSubIndex();
+                                Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
+                                view.refreshSrcFrame(subIndex);
+                                view.refreshTrgFrame(subIndex);
+                                view.setComboBoxSubNumSelectedIndex(subIndex);
+                            } catch (CoreException ex) {
+                                view.error(ex.getMessage());
+                            } catch (Exception ex) {
+                                ToolBox.showException(ex);
+                                view.exit(4);
+                            }
+                        } } }).start();
+            }
+        }
+    }
+
+    private class ResetCropOffsetMenuItemActionListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            Core.setCropOfsY(0);
+            view.setLayoutPaneCropOffsetY(Core.getCropOfsY());
+            view.repaintLayoutPane();
+        }
+    }
 }
