@@ -27,7 +27,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 
 import static bdsup2sub.core.Constants.APP_NAME_AND_VERSION;
-import static bdsup2sub.gui.GuiUtils.centerRelativeToParent;
+import static bdsup2sub.gui.support.GuiUtils.centerRelativeToParent;
 
 public class ColorDialog extends JDialog {
     private static final long serialVersionUID = 0x000000001;

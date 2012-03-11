@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package bdsup2sub.gui;
+package bdsup2sub.gui.export;
 
-import bdsup2sub.core.Configuration;
 import bdsup2sub.core.Core;
 import bdsup2sub.core.OutputMode;
 import bdsup2sub.utils.FilenameUtils;
@@ -26,13 +25,11 @@ import java.awt.*;
 import java.awt.event.*;
 
 import static bdsup2sub.core.Constants.LANGUAGES;
-import static bdsup2sub.gui.GuiUtils.centerRelativeToParent;
+import static bdsup2sub.gui.support.GuiUtils.centerRelativeToParent;
 
-public class ExportDialog extends JDialog {
+public class ExportDialogView extends JDialog {
 
     private static final long serialVersionUID = 1L;
-
-    private final Configuration configuration = Configuration.getInstance();
 
     private JPanel jContentPane;
     private JTextField jTextFieldFileName;
@@ -44,41 +41,23 @@ public class ExportDialog extends JDialog {
     private JCheckBox jCheckBoxWritePGCPal;
 
 
-    /** reference to main window */
-    private JFrame  mainFrame;
-    /** file name used for export */
-    private String  fileName;
-    /** language index for VobSub export */
-    private int     languageIdx;
-    /** export only forced subtitles? */
-    private boolean exportForced;
-    /** export target palette in PGCEdit text format */
-    private boolean writePGCPal;
-    /** cancel state */
-    private boolean cancel;
     /** semaphore to disable actions while changing component properties */
     private volatile boolean isReady;
     /** file extension */
     private String extension;
 
+    private ExportDialogModel model;
 
-    public ExportDialog(Frame owner) {
+
+    public ExportDialogView(ExportDialogModel model, Frame owner) {
         super(owner, true);
+        this.model = model;
 
         initialize();
-        centerRelativeToParent(this, owner);
-        setResizable(false);
 
-        // init internal variables
-        mainFrame = (JFrame)owner;
-        fileName = "";
-        languageIdx = Core.getLanguageIdx();
-        exportForced = (Core.getNumForcedFrames() > 0) && Core.getExportForced();
-        writePGCPal = configuration.getWritePGCEditPal();
-        cancel = false;
 
         // init components
-        OutputMode outputMode = configuration.getOutputMode();
+        OutputMode outputMode = model.getOutputMode();
         for (String[] language : LANGUAGES) {
             int n;
             if (outputMode == OutputMode.XML) {
@@ -88,20 +67,13 @@ public class ExportDialog extends JDialog {
             }
             jComboBoxLanguage.addItem(language[0] + " (" + language[n] + ")");
         }
-        jComboBoxLanguage.setSelectedIndex(languageIdx);
+        jComboBoxLanguage.setSelectedIndex(model.getLanguageIdx());
         if (outputMode == OutputMode.BDSUP) {
             jComboBoxLanguage.setEnabled(false);
         }
 
-        if (outputMode == OutputMode.VOBSUB || outputMode == OutputMode.SUPIFO) {
-            jCheckBoxWritePGCPal.setEnabled(true);
-            jCheckBoxWritePGCPal.setSelected(writePGCPal);
-        } else {
-            jCheckBoxWritePGCPal.setEnabled(false);
-        }
-
         if (Core.getNumForcedFrames() > 0) {
-            setForced(true, exportForced);
+            setForced(true, model.getExportForced());
         } else {
             setForced(false, false);
         }
@@ -132,11 +104,13 @@ public class ExportDialog extends JDialog {
         setBounds(new Rectangle(0, 0, 350, 160));
         setMaximumSize(new Dimension(350, 160));
         setMinimumSize(new Dimension(350, 160));
+        setResizable(false);
         setContentPane(getJContentPane());
+        centerRelativeToParent(this, getOwner());
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                cancel = true;
+                model.setCanceled(true);
                 dispose();
             }
         });
@@ -218,13 +192,14 @@ public class ExportDialog extends JDialog {
             jTextFieldFileName.setPreferredSize(new Dimension(200, 20));
             jTextFieldFileName.setHorizontalAlignment(JTextField.LEADING);
             jTextFieldFileName.setToolTipText("Set file name for export");
+            jTextFieldFileName.setText(model.getFilename());
             jTextFieldFileName.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     if (isReady) {
                         String s = jTextFieldFileName.getText();
                         if (s != null) {
-                            fileName = FilenameUtils.removeExtension(s) + "." + extension;
+                            model.setFilename(FilenameUtils.removeExtension(s) + "." + extension);
                         }
                     }
                 }
@@ -245,12 +220,12 @@ public class ExportDialog extends JDialog {
                     if (isReady) {
                         String[] ext = new String[1];
                         ext[0] = extension;
-                        String p = FilenameUtils.getParent(fileName);
-                        String fn = FilenameUtils.getName(fileName);
-                        String fname = ToolBox.getFileName(p, fn, ext, false, mainFrame);
+                        String p = FilenameUtils.getParent(model.getFilename());
+                        String fn = FilenameUtils.getName(model.getFilename());
+                        String fname = ToolBox.getFileName(p, fn, ext, false, getOwner());
                         if (fname != null) {
-                            fileName = FilenameUtils.removeExtension(fname) + "." + extension;
-                            jTextFieldFileName.setText(fileName);
+                            model.setFilename(FilenameUtils.removeExtension(fname) + "." + extension);
+                            jTextFieldFileName.setText(model.getFilename());
                         }
                     }
                 }
@@ -269,7 +244,7 @@ public class ExportDialog extends JDialog {
                 @Override
                 public void itemStateChanged(ItemEvent e) {
                     if (isReady) {
-                        languageIdx = jComboBoxLanguage.getSelectedIndex();
+                        model.setLanguageIdx(jComboBoxLanguage.getSelectedIndex());
                     }
                 }
             });
@@ -286,7 +261,7 @@ public class ExportDialog extends JDialog {
             jButtonCancel.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    cancel = true;
+                    model.setCanceled(true);
                     dispose();
                 }
             });
@@ -308,15 +283,16 @@ public class ExportDialog extends JDialog {
                         String s;
                         // file name
                         s = jTextFieldFileName.getText();
-                        if (s != null)
-                            fileName = FilenameUtils.removeExtension(s) + "." + extension;
-                        // exit
-                        Core.setExportForced(exportForced);
-                        Core.setLanguageIdx(languageIdx);
-                        if (configuration.getOutputMode() == OutputMode.VOBSUB || configuration.getOutputMode() == OutputMode.SUPIFO) {
-                            configuration.setWritePGCEditPal(writePGCPal);
+                        if (s != null) {
+                            model.setFilename(FilenameUtils.removeExtension(s) + "." + extension);
                         }
-                        cancel = false;
+                        // exit
+                        model.storeExportForced();
+                        model.storeLanguageIdx();
+                        if (model.getOutputMode() == OutputMode.VOBSUB || model.getOutputMode() == OutputMode.SUPIFO) {
+                            model.storeWritePGCPal();
+                        }
+                        model.setCanceled(false);
                         dispose();
                     }
                 }
@@ -325,26 +301,10 @@ public class ExportDialog extends JDialog {
         return jButtonSave;
     }
 
-    public String getFileName() {
-        if (fileName.length() == 0) {
-            return null;
-        }
-        return fileName;
-    }
-
-    public void setFileName(String fn) {
-        fileName = fn;
-        jTextFieldFileName.setText(fileName);
-    }
-
     private void setForced(boolean enable, boolean state) {
-        exportForced = state;
+        model.setExportForced(state);
         jCheckBoxForced.setEnabled(enable);
         jCheckBoxForced.setSelected(state);
-    }
-
-    public boolean wasCanceled() {
-        return cancel;
     }
 
     private JCheckBox getJCheckBoxForced() {
@@ -357,7 +317,7 @@ public class ExportDialog extends JDialog {
                 @Override
                 public void itemStateChanged(ItemEvent e) {
                     if (isReady) {
-                        exportForced = jCheckBoxForced.isSelected();
+                        model.setExportForced(jCheckBoxForced.isSelected());
                     }
                 }
             });
@@ -372,11 +332,17 @@ public class ExportDialog extends JDialog {
             jCheckBoxWritePGCPal.setText("                 Export palette in PGCEdit text format");
             jCheckBoxWritePGCPal.setMnemonic('p');
             jCheckBoxWritePGCPal.setDisplayedMnemonicIndex(24);
+            if (model.getOutputMode() == OutputMode.VOBSUB || model.getOutputMode() == OutputMode.SUPIFO) {
+                jCheckBoxWritePGCPal.setEnabled(true);
+                jCheckBoxWritePGCPal.setSelected(model.getWritePGCPal());
+            } else {
+                jCheckBoxWritePGCPal.setEnabled(false);
+            }
             jCheckBoxWritePGCPal.addItemListener(new ItemListener() {
                 @Override
                 public void itemStateChanged(ItemEvent e) {
                     if (isReady) {
-                        writePGCPal = jCheckBoxWritePGCPal.isSelected();
+                        model.setWritePGCPal(jCheckBoxWritePGCPal.isSelected());
                     }
                 }
             });

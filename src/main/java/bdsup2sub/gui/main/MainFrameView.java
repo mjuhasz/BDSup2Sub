@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Volker Oth (0xdeadbeef) / Miklos Juhasz (mjuhasz)
+ * Copyright 2012 Miklos Juhasz (mjuhasz)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 package bdsup2sub.gui.main;
 
 import bdsup2sub.core.*;
-import bdsup2sub.gui.EditPane;
+import bdsup2sub.gui.edit.EditPane;
 import bdsup2sub.gui.MyComboBoxEditor;
 
 import javax.swing.*;
@@ -44,11 +44,11 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
     private JPanel jPanelInfoSource;
     private JLabel jLabelInfoSource;
     private JScrollPane jScrollPaneSource;
-    private GfxPane jPanelSource;
+    private ZoomableGraphicsPanel jPanelSource;
     private JPanel jPanelInfoTarget;
     private JLabel jLabelInfoTarget;
     private JScrollPane jScrollPaneTarget;
-    private GfxPane jPanelTarget;
+    private ZoomableGraphicsPanel jPanelTarget;
     private JPanel jPanelBottom;
     private EditPane jLayoutPane;
     private JScrollPane jScrollPaneConsole;
@@ -100,7 +100,7 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
         super(APP_NAME_AND_VERSION);
         this.model = model;
 
-        init();
+        initialize();
 
         Core.setMainFrame(this);
 
@@ -110,7 +110,7 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
         flushConsole();
     }
 
-    private void init() {
+    private void initialize() {
         setSize(model.getMainWindowSize());
         setMinimumSize(new Dimension(700, 300));
         setJMenuBar(getjMenuBar());
@@ -703,7 +703,7 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
 
     private JPanel getJPanelSource() {
         if (jPanelSource == null) {
-            jPanelSource = new GfxPane();
+            jPanelSource = new ZoomableGraphicsPanel();
         }
         return jPanelSource;
     }
@@ -740,7 +740,7 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
 
     private JPanel getJPanelTarget() {
         if (jPanelTarget == null) {
-            jPanelTarget = new GfxPane();
+            jPanelTarget = new ZoomableGraphicsPanel();
         }
         return jPanelTarget;
     }

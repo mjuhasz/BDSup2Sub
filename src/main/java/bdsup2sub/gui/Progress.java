@@ -28,7 +28,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import static bdsup2sub.gui.GuiUtils.centerRelativeToParent;
+import static bdsup2sub.gui.support.GuiUtils.centerRelativeToParent;
 
 public class Progress extends JDialog {
 
@@ -45,23 +45,7 @@ public class Progress extends JDialog {
     public Progress(Frame owner) {
         super(owner, true);
         initialize();
-
         centerRelativeToParent(this, owner);
-        setResizable(false);
-        jProgressBar.setMinimum(0);
-        jProgressBar.setMaximum(100);
-        jProgressBar.setValue(0);
-    }
-
-    @Override
-    public void setVisible(boolean b) {
-        timer = new Timer();
-        timer.schedule(new ProgressTimer(), 200, 200);
-        super.setVisible(b);
-    }
-
-    public void setText(String s) {
-        jLabelProgress.setText(s);
     }
 
     private void initialize() {
@@ -76,6 +60,17 @@ public class Progress extends JDialog {
                 Core.cancel();
             }
         });
+    }
+
+    @Override
+    public void setVisible(boolean b) {
+        timer = new Timer();
+        timer.schedule(new ProgressTimer(), 200, 200);
+        super.setVisible(b);
+    }
+
+    public void setText(String s) {
+        jLabelProgress.setText(s);
     }
 
     private JPanel getJContentPane() {
@@ -119,19 +114,12 @@ public class Progress extends JDialog {
         return jButtonCancel;
     }
 
-    /**
-     * This method initializes jProgressBar
-     *
-     * @return javax.swing.JProgressBar
-     */
     private JProgressBar getJProgressBar() {
         if (jProgressBar == null) {
             jProgressBar = new JProgressBar();
             jProgressBar.setPreferredSize(new Dimension(200, 20));
             jProgressBar.setMinimumSize(new Dimension(200, 20));
             jProgressBar.setStringPainted(true);
-            jProgressBar.setMinimum(0);
-            jProgressBar.setMaximum(100);
         }
         return jProgressBar;
     }
@@ -152,9 +140,6 @@ public class Progress extends JDialog {
         }
     }
 
-    /**
-     * Timer used to automatically dispose this dialog once the Core thread is no longer active
-     */
     private class ProgressTimer extends TimerTask {
         @Override
         public void run() {

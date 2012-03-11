@@ -19,7 +19,7 @@ import bdsup2sub.bitmap.Bitmap;
 import bdsup2sub.bitmap.BitmapWithPalette;
 import bdsup2sub.bitmap.ErasePatch;
 import bdsup2sub.bitmap.Palette;
-import bdsup2sub.gui.MainFrameView;
+import bdsup2sub.gui.main.MainFrameView;
 import bdsup2sub.gui.Progress;
 import bdsup2sub.supstream.*;
 import bdsup2sub.tools.EnhancedPngEncoder;
@@ -1889,7 +1889,7 @@ public class Core  extends Thread {
      */
     public static void setProgress(int p) {
         if (progress != null) {
-            int val = (int)(((long)p*100)/progressMax);
+            int val = (int)(((long)p * 100) / progressMax);
             if (val > progressLast) {
                 progressLast = val;
                 progress.setProgress(val);

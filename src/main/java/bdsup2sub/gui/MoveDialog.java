@@ -19,6 +19,7 @@ import bdsup2sub.core.CaptionMoveModeX;
 import bdsup2sub.core.CaptionMoveModeY;
 import bdsup2sub.core.Core;
 import bdsup2sub.core.CoreException;
+import bdsup2sub.gui.edit.EditPane;
 import bdsup2sub.supstream.SubPicture;
 import bdsup2sub.utils.ToolBox;
 
@@ -30,7 +31,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 
-import static bdsup2sub.gui.GuiUtils.centerRelativeToParent;
+import static bdsup2sub.gui.support.GuiUtils.centerRelativeToParent;
 
 public class MoveDialog extends JDialog {
 

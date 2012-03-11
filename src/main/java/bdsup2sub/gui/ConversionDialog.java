@@ -30,7 +30,7 @@ import java.awt.*;
 import java.awt.event.*;
 
 import static bdsup2sub.core.Configuration.*;
-import static bdsup2sub.gui.GuiUtils.centerRelativeToParent;
+import static bdsup2sub.gui.support.GuiUtils.centerRelativeToParent;
 
 public class ConversionDialog extends JDialog {
 

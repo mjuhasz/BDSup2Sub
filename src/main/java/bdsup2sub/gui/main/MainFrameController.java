@@ -18,6 +18,10 @@ package bdsup2sub.gui.main;
 import bdsup2sub.bitmap.Palette;
 import bdsup2sub.core.*;
 import bdsup2sub.gui.*;
+import bdsup2sub.gui.edit.EditDialog;
+import bdsup2sub.gui.export.ExportDialogController;
+import bdsup2sub.gui.export.ExportDialogModel;
+import bdsup2sub.gui.export.ExportDialogView;
 import bdsup2sub.utils.FilenameUtils;
 import bdsup2sub.utils.ToolBox;
 
@@ -153,7 +157,6 @@ public class MainFrameController {
             OutputMode outputMode = model.getOutputMode();
             String path;
             try {
-                ExportDialog exp = new ExportDialog(view);
                 path = model.getSavePath() + File.separatorChar + model.getSaveFilename() + "_exp.";
                 if (outputMode == OutputMode.VOBSUB) {
                     path += "idx";
@@ -165,11 +168,14 @@ public class MainFrameController {
                     path += "xml";
                 }
 
-                exp.setFileName(path);
-                exp.setVisible(true);
+                ExportDialogModel exportDialogModel = new ExportDialogModel();
+                exportDialogModel.setFilename(path);
+                ExportDialogView exportDialogView = new ExportDialogView(exportDialogModel, view);
+                ExportDialogController exportDialogController = new ExportDialogController(exportDialogModel, exportDialogView);
+                exportDialogView.setVisible(true);
 
-                String fn = exp.getFileName();
-                if (!exp.wasCanceled() && fn != null) {
+                String fn = exportDialogModel.getFilename();
+                if (!exportDialogModel.wasCanceled() && !fn.isEmpty()) {
                     model.setSavePath(FilenameUtils.getParent(fn));
                     model.setSaveFilename(FilenameUtils.removeExtension(FilenameUtils.getName(fn)).replaceAll("_exp$",""));
                     //

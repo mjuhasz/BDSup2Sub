@@ -24,7 +24,7 @@ import java.awt.*;
  * ComboBox Editor.
  * Implementation needed to be able to change the background color of editable ComboBoxes.
  */
-class MyComboBoxEditor extends BasicComboBoxEditor {
+public class MyComboBoxEditor extends BasicComboBoxEditor {
 
     public MyComboBoxEditor(JTextField editor) {
         this.editor = editor;

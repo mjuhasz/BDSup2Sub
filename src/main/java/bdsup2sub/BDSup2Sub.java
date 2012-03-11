@@ -16,9 +16,9 @@
 package bdsup2sub;
 
 import bdsup2sub.core.*;
-import bdsup2sub.gui.MainFrameController;
-import bdsup2sub.gui.MainFrameModel;
-import bdsup2sub.gui.MainFrameView;
+import bdsup2sub.gui.main.MainFrameController;
+import bdsup2sub.gui.main.MainFrameModel;
+import bdsup2sub.gui.main.MainFrameView;
 import bdsup2sub.tools.Props;
 import bdsup2sub.utils.FilenameUtils;
 import bdsup2sub.utils.SubtitleUtils;
