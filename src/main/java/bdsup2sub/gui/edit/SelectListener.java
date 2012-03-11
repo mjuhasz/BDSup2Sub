@@ -13,11 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package bdsup2sub.gui;
+package bdsup2sub.gui.edit;
 
-/**
- * Listener interface to inform parent that a selection was made in an EditPane.
- */
 public interface SelectListener {
     void selectionPerformed(boolean valid);
 }

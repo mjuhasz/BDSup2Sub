@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package bdsup2sub.gui;
+package bdsup2sub.gui.edit;
 
 import bdsup2sub.bitmap.ErasePatch;
 import bdsup2sub.core.Configuration;
@@ -35,7 +35,7 @@ import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
-import static bdsup2sub.gui.GuiUtils.centerRelativeToParent;
+import static bdsup2sub.gui.support.GuiUtils.centerRelativeToParent;
 import static bdsup2sub.utils.TimeUtils.ptsToTimeStr;
 import static bdsup2sub.utils.TimeUtils.timeStrToPTS;
 

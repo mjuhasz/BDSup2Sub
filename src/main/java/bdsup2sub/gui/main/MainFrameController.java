@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package bdsup2sub.gui;
+package bdsup2sub.gui.main;
 
 import bdsup2sub.bitmap.Palette;
 import bdsup2sub.core.*;
+import bdsup2sub.gui.*;
 import bdsup2sub.utils.FilenameUtils;
 import bdsup2sub.utils.ToolBox;
 
