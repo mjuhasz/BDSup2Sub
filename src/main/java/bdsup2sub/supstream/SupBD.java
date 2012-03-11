@@ -17,6 +17,7 @@ package bdsup2sub.supstream;
 
 import bdsup2sub.bitmap.Bitmap;
 import bdsup2sub.bitmap.Palette;
+import bdsup2sub.core.Configuration;
 import bdsup2sub.core.Core;
 import bdsup2sub.core.CoreException;
 import bdsup2sub.core.Framerate;
@@ -36,6 +37,8 @@ import static bdsup2sub.utils.TimeUtils.ptsToTimeStr;
  * Reading and writing of Blu-Ray captions demuxed from M2TS transport streams (BD-SUP).
  */
 public class SupBD implements Substream {
+
+    private static final Configuration configuration = Configuration.getInstance();
 
     private enum PGSCompositionState {
         /** normal: doesn't have to be complete */
@@ -408,7 +411,7 @@ public class SupBD implements Substream {
     private static boolean picMergable(SubPictureBD a, SubPictureBD b) {
         boolean eq = false;
         if (a != null && b != null) {
-            if (a.endTime == 0 || b.startTime - a.endTime < Core.getMergePTSdiff()) {
+            if (a.endTime == 0 || b.startTime - a.endTime < configuration.getMergePTSdiff()) {
             ImageObject ao = a.getImgObj();
             ImageObject bo = b.getImgObj();
             if (ao != null && bo != null)
@@ -606,7 +609,7 @@ public class SupBD implements Substream {
         byte buf[] = new byte[size];
         int index = 0;
 
-        int fpsId = getFpsId(Core.getFPSTrg());
+        int fpsId = getFpsId(configuration.getFPSTrg());
 
         /* time (in 90kHz resolution) needed to initialize (clear) the screen buffer
            based on the composition pixel rate of 256e6 bit/s - always rounded up */
@@ -1142,7 +1145,7 @@ public class SupBD implements Substream {
                     int alphaOld = palette.getAlpha(palIndex);
                     // avoid fading out
                     if (alpha >= alphaOld) {
-                        if (alpha < Core.getAlphaCrop()) {// to not mess with scaling algorithms, make transparent color black
+                        if (alpha < configuration.getAlphaCrop()) {// to not mess with scaling algorithms, make transparent color black
                             y = 16;
                             cr = 128;
                             cb = 128;

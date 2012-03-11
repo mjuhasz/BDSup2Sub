@@ -18,6 +18,7 @@ package bdsup2sub.supstream;
 import bdsup2sub.bitmap.Bitmap;
 import bdsup2sub.bitmap.BitmapBounds;
 import bdsup2sub.bitmap.Palette;
+import bdsup2sub.core.Configuration;
 import bdsup2sub.core.Core;
 import bdsup2sub.core.CoreException;
 import bdsup2sub.tools.FileBuffer;
@@ -39,6 +40,8 @@ import static bdsup2sub.utils.ToolBox.toHexLeftZeroPadded;
  * Handling of DVD SUP/IFO streams.
  */
 public class SupDVD implements Substream, SubstreamDVD {
+
+    private final Configuration configuration = Configuration.getInstance();
 
     /** ArrayList of captions contained in the current file  */
     private ArrayList<SubPictureDVD> subPictures = new ArrayList<SubPictureDVD>();
@@ -424,7 +427,7 @@ public class SupDVD implements Substream, SubstreamDVD {
                 }
 
                 if (alphaSum == 0) {
-                    if (Core.getFixZeroAlpha()) {
+                    if (configuration.getFixZeroAlpha()) {
                         System.arraycopy(lastAlpha, 0, pic.alpha, 0, 4);
                         Core.printWarn("Invisible caption due to zero alpha - used alpha info of last caption.\n");
                     } else {
@@ -636,7 +639,7 @@ public class SupDVD implements Substream, SubstreamDVD {
         bitmap  = SubDVD.decodeImage(pic, buffer, palette.getIndexOfMostTransparentPaletteEntry());
 
         // crop
-        BitmapBounds bounds = bitmap.getCroppingBounds(palette.getAlpha(), Core.getAlphaCrop());
+        BitmapBounds bounds = bitmap.getCroppingBounds(palette.getAlpha(), configuration.getAlphaCrop());
         if (bounds.yMin>0 || bounds.xMin > 0 || bounds.xMax<bitmap.getWidth()-1 || bounds.yMax<bitmap.getHeight()-1) {
             int w = bounds.xMax - bounds.xMin + 1;
             int h = bounds.yMax - bounds.yMin + 1;

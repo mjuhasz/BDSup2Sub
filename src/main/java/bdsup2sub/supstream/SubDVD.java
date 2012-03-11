@@ -18,6 +18,7 @@ package bdsup2sub.supstream;
 import bdsup2sub.bitmap.Bitmap;
 import bdsup2sub.bitmap.BitmapBounds;
 import bdsup2sub.bitmap.Palette;
+import bdsup2sub.core.Configuration;
 import bdsup2sub.core.Core;
 import bdsup2sub.core.CoreException;
 import bdsup2sub.tools.FileBuffer;
@@ -39,6 +40,8 @@ import static bdsup2sub.utils.TimeUtils.timeStrToPTS;
  * Handling of SUB/IDX (VobSub) streams.
  */
 public class SubDVD implements Substream, SubstreamDVD {
+
+    private static final Configuration configuration = Configuration.getInstance();
 
     private static final byte PACK_HEADER[] = {
         0x00, 0x00, 0x01, (byte)0xba,							// 0:  0x000001ba - packet ID
@@ -807,7 +810,7 @@ public class SubDVD implements Substream, SubstreamDVD {
         Palette miniPal = new Palette(4, true);
         for (int i=0; i < 4; i++) {
             int a = (pic.alpha[i] * 0xff) / 0xf;
-            if (a >= Core.getAlphaCrop()) {
+            if (a >= configuration.getAlphaCrop()) {
                 miniPal.setRGB(i, pal.getR()[pic.pal[i]]&0xff, pal.getG()[pic.pal[i]]&0xff, pal.getB()[pic.pal[i]]&0xff);
                 miniPal.setAlpha(i, a);
             } else {
@@ -1159,7 +1162,7 @@ public class SubDVD implements Substream, SubstreamDVD {
             }
 
             if (alphaSum == 0) {
-                if (Core.getFixZeroAlpha()) {
+                if (configuration.getFixZeroAlpha()) {
                     System.arraycopy(lastAlpha, 0, pic.alpha, 0, 4);
                     Core.printWarn("Invisible caption due to zero alpha - used alpha info of last caption.\n");
                 } else {
@@ -1268,7 +1271,7 @@ public class SubDVD implements Substream, SubstreamDVD {
         bitmap  = decodeImage(pic, buffer, palette.getIndexOfMostTransparentPaletteEntry());
 
         // crop
-        BitmapBounds bounds = bitmap.getCroppingBounds(palette.getAlpha(), Core.getAlphaCrop());
+        BitmapBounds bounds = bitmap.getCroppingBounds(palette.getAlpha(), configuration.getAlphaCrop());
         if (bounds.yMin>0 || bounds.xMin > 0 || bounds.xMax<bitmap.getWidth()-1 || bounds.yMax<bitmap.getHeight()-1) {
             int w = bounds.xMax - bounds.xMin + 1;
             int h = bounds.yMax - bounds.yMin + 1;

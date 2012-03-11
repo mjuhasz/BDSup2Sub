@@ -1,53 +1,44 @@
+/*
+ * Copyright 2012 Miklos Juhasz (mjuhasz)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package bdsup2sub.gui;
 
-import bdsup2sub.core.Core;
+import bdsup2sub.core.*;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.ArrayList;
 import java.util.List;
 
 public class MainFrameModel {
 
-    private static final int RECENT_FILE_COUNT = 5;
     static final Color ERROR_BACKGROUND = new Color(0xffe1acac);
     static final Color OK_BACKGROUND = UIManager.getColor("TextField.background");
 
-    private String loadPath;
+    private final Configuration configuration = Configuration.getInstance();
+
     private String saveFilename;
     private String savePath;
     private int subIndex;
     private boolean sourceFileSpecifiedOnCmdLine;
-    private String colorProfilePath;
-    private Dimension mainWindowSize;
-    private Point mainWindowLocation;
-    private List<String> recentFiles;
-
-    public MainFrameModel() {
-        this.loadPath = Core.props.get("loadPath", "");
-        this.colorProfilePath = Core.props.get("colorPath", "");
-        this.mainWindowSize = new Dimension(Core.props.get("frameWidth", 800), Core.props.get("frameHeight", 600));
-        this.mainWindowLocation = new Point(Core.props.get("framePosX", -1), Core.props.get("framePosY", -1));
-        loadRecentFiles();
-    }
-
-    private void loadRecentFiles() {
-        recentFiles = new ArrayList<String>();
-        int i = 0;
-        String filename;
-        while (i < RECENT_FILE_COUNT && (filename = Core.props.get("recent_" + i, "")).length() > 0) {
-            recentFiles.add(filename);
-            i++;
-        }
-    }
 
     public String getLoadPath() {
-        return loadPath;
+        return configuration.getLoadPath();
     }
 
     public void setLoadPath(String loadPath) {
-        this.loadPath = loadPath;
-        Core.props.set("loadPath", loadPath); //FIXME: use listener
+        configuration.setLoadPath(loadPath);
     }
 
     public String getSavePath() {
@@ -83,51 +74,102 @@ public class MainFrameModel {
     }
 
     public String getColorProfilePath() {
-        return colorProfilePath;
+        return configuration.getColorProfilePath();
     }
 
     public void setColorProfilePath(String colorProfilePath) {
-        this.colorProfilePath = colorProfilePath;
-        Core.props.set("colorPath", colorProfilePath);
+        configuration.setColorProfilePath(colorProfilePath);
     }
 
     public Dimension getMainWindowSize() {
-        return mainWindowSize;
+        return configuration.getMainWindowSize();
     }
 
     public void setMainWindowSize(Dimension dimension) {
-        this.mainWindowSize = dimension;
-        Core.props.set("frameWidth", dimension.width);
-        Core.props.set("frameHeight", dimension.height);
+        configuration.setMainWindowSize(dimension);
     }
 
     public Point getMainWindowLocation() {
-        return mainWindowLocation;
+        return configuration.getMainWindowLocation();
     }
 
     public void setMainWindowLocation(Point location) {
-        this.mainWindowLocation = location;
-        Core.props.set("framePosX", location.x);
-        Core.props.set("framePosY", location.y);
+        configuration.setMainWindowLocation(location);
     }
 
     public List<String> getRecentFiles() {
-        return recentFiles;
+        return configuration.getRecentFiles();
     }
 
     public void addToRecentFiles(String filename) {
-        int index = recentFiles.indexOf(filename);
-        if (index != -1) {
-            recentFiles.remove(index);
-            recentFiles.add(0, filename);
-        } else {
-            recentFiles.add(0, filename);
-            if (recentFiles.size() > RECENT_FILE_COUNT) {
-                recentFiles.remove(recentFiles.size() - 1);
-            }
-        }
-        for (int i=0; i < recentFiles.size(); i++) {
-            Core.props.set("recent_" + i, recentFiles.get(i));
-        }
+        configuration.addToRecentFiles(filename);
+    }
+
+    public boolean isVerbatim() {
+        return configuration.isVerbatim();
+    }
+
+    public void setVerbatim(boolean verbatim) {
+        configuration.setVerbatim(verbatim);
+    }
+
+    public ScalingFilter getScalingFilter() {
+        return configuration.getScalingFilter();
+    }
+
+    public void setScalingFilter(ScalingFilter scalingFilter) {
+        configuration.setScalingFilter(scalingFilter);
+    }
+
+    public boolean getFixZeroAlpha() {
+        return configuration.getFixZeroAlpha();
+    }
+
+    public void setFixZeroAlpha(boolean fixZeroAlpha) {
+        configuration.setFixZeroAlpha(fixZeroAlpha);
+    }
+
+    public PaletteMode getPaletteMode() {
+        return configuration.getPaletteMode();
+    }
+
+    public void setPaletteMode(PaletteMode paletteMode) {
+        configuration.setPaletteMode(paletteMode);
+    }
+
+    public OutputMode getOutputMode() {
+        return configuration.getOutputMode();
+    }
+
+    public void setOutputMode(OutputMode outputMode) {
+        configuration.setOutputMode(outputMode);
+    }
+
+    public boolean getConvertFPS() {
+        return configuration.getConvertFPS();
+    }
+
+    public int getDelayPTS() {
+        return configuration.getDelayPTS();
+    }
+
+    public boolean getApplyFreeScale() {
+        return configuration.getApplyFreeScale();
+    }
+
+    public double getFreeScaleX() {
+        return configuration.getFreeScaleFactorX();
+    }
+
+    public double getFreeScaleY() {
+        return configuration.getFreeScaleFactorY();
+    }
+
+    public double getFPSTrg() {
+        return configuration.getFPSTrg();
+    }
+
+    public Resolution getOutputResolution() {
+        return configuration.getOutputResolution();
     }
 }

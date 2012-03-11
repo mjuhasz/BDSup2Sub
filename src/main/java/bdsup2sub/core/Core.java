@@ -23,16 +23,14 @@ import bdsup2sub.gui.MainFrameView;
 import bdsup2sub.gui.Progress;
 import bdsup2sub.supstream.*;
 import bdsup2sub.tools.EnhancedPngEncoder;
-import bdsup2sub.tools.Props;
 import bdsup2sub.utils.FilenameUtils;
+import bdsup2sub.utils.SubtitleUtils;
 import bdsup2sub.utils.ToolBox;
 import com.mortennobel.imagescaling.ResampleFilter;
 
 import javax.swing.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.net.URL;
-import java.net.URLDecoder;
 import java.util.ArrayList;
 
 import static bdsup2sub.core.Constants.*;
@@ -45,7 +43,7 @@ import static com.mortennobel.imagescaling.ResampleFilters.*;
  */
 public class Core  extends Thread {
 
-    private static final String INI_FILE = "bdsup2sup.ini";
+    private static Configuration configuration = Configuration.getInstance();
 
     /** Enumeration of functionalities executed in the started thread */
     private enum RunType {
@@ -80,29 +78,7 @@ public class Core  extends Thread {
             DEFAULT_PALETTE_RED, DEFAULT_PALETTE_GREEN, DEFAULT_PALETTE_BLUE, DEFAULT_PALETTE_ALPHA, true
     );
 
-    private static final boolean CONVERT_RESOLUTION_BY_DEFAULT = false;
-    private static final Resolution DEFAULT_TARGET_RESOLUTION = Resolution.PAL;
-    private static final boolean CONVERTS_FRAMERATE_BY_DEFAULT = false;
-    private static final double  DEFAULT_SOURCE_FRAMERATE = Framerate.FPS_23_976.getValue();
-    private static final double  DEFAULT_TARGET_FRAMERATE = Framerate.PAL.getValue();
-    private static final int     DEFAULT_PTS_DELAY = 0;
-    private static final boolean FIX_SHORT_FRAMES_BY_DEFAULT = false;
-    private static final int     DEAFULT_MIN_DISPLAY_TIME_PTS = 90*500;
-    private static final boolean APPLY_FREE_SCALE_BY_DEFAULT = false;
     private static final int MIN_IMAGE_DIMENSION = 8;
-    private static final double  DEAFULT_FREE_SCALE_X = 1.0;
-    private static final double  DEFAULT_FREE_SCALE_Y = 1.0;
-    public static final double MIN_FREE_SCALE_FACTOR = 0.5;
-    public static final double MAX_FREE_SCALE_FACTOR = 2.0;
-
-    private static boolean convertResolutionSet;
-    private static boolean resolutionTrgSet;
-    private static boolean convertFpsSet;
-    private static boolean fpsTrgSet;
-    private static boolean delayPtsSet;
-    private static boolean fixShortFramesSet;
-    private static boolean minTimePtsSet;
-    private static boolean applyFreeScaleSet;
 
     /** Palette imported from SUB/IDX or SUP/IFO */
     private static Palette defaultSourceDVDPalette;
@@ -110,11 +86,6 @@ public class Core  extends Thread {
     private static Palette currentSourceDVDPalette;
     /** Default alpha map */
     private static final int DEFAULT_ALPHA[] = { 0, 0xf, 0xf, 0xf};
-
-    /** Class used to load/store properties persistently */
-    public static Props  props;
-    /** Full name of the INI file to load and store properties (including path) */
-    private static String fnameProps;
 
     /** Index of language to be used for SUB/IDX export (also used for XML export) */
     private static int languageIdx = 0;
@@ -148,79 +119,21 @@ public class Core  extends Thread {
     /** Alpha threshold for VobSub export */
     private static int alphaThr = 80;
 
-    /** Default output mode */
-    private static final OutputMode DEFAULT_OUTPUT_MODE = OutputMode.VOBSUB;
-    /** Output mode used for next export */
-    private static boolean outModeSet;
-    /** Output mode used for next export */
-    private static OutputMode outMode = DEFAULT_OUTPUT_MODE;
     /** Input mode used for last import */
     private static InputMode inMode = InputMode.VOBSUB;
-    /** Resolution used for export */
-    private static Resolution resolutionTrg = DEFAULT_TARGET_RESOLUTION;
 
-    /** Flag that defines whether to convert frame rates or nowt*/
-    private static boolean convertFPS = CONVERTS_FRAMERATE_BY_DEFAULT;
-    /** Flag that defines whether to convert resolution or not */
-    private static boolean convertResolution = CONVERT_RESOLUTION_BY_DEFAULT;
     /** Flag that defines whether to export only subpictures marked as "forced" */
     private static boolean exportForced;
     /** State that defined whether to set/clear the forced flag for all captions */
     private static ForcedFlagState forceAll = ForcedFlagState.KEEP;
     /** Flag that defines whether to swap Cr/Cb components when loading a SUP */
     private static boolean swapCrCb;
-    /** Flag that defines whether to fix subpictures with a display time shorter than minTimePTS */
-    private static boolean fixShortFrames = FIX_SHORT_FRAMES_BY_DEFAULT;
-    /** Source frame rate is certain */
-    private static boolean fpsSrcCertain;
-    /** Source frame rate */
-    private static double fpsSrc = DEFAULT_SOURCE_FRAMERATE;
-    /** Source frame rate set via command line */
-    private static boolean fpsSrcSet;
-    /** Target frame rate */
-    private static double fpsTrg = DEFAULT_TARGET_FRAMERATE;
-    /** Delay to apply to target in 90kHz resolution */
-    private static int delayPTS = DEFAULT_PTS_DELAY;
-    /** Minimum display time for subpictures in 90kHz resolution */
-    private static int minTimePTS = DEAFULT_MIN_DISPLAY_TIME_PTS;
     /** Y coordinate crop offset - when exporting, the Y position will be decreased by this value */
     private static int cropOfsY = 0;
     /** Use BT.601 color model instead of BT.709 */
     private static boolean useBT601;
-    /** paletteMode was set from command line */
-    private static boolean paletteModeSet;
-    /** Default palette creation mode */
-    private static final PaletteMode DEFAULT_PALETTE_MODE = PaletteMode.CREATE_NEW;
-    /** Palette creation mode */
-    private static PaletteMode paletteMode = DEFAULT_PALETTE_MODE;
-    /** Verbatim mode was set from command line */
-    private static boolean verbatimSet;
-    /** Verbatim output ? */
-    private static boolean verbatim;
     /** Use src fps for trg if possible */
     private static boolean keepFps;
-    /** Default Scaling Filter to use */
-    private static final ScalingFilter DEFAULT_SCALING_FILTER = ScalingFilter.BILINEAR;
-    /** Scaling Filter to use */
-    private static ScalingFilter scalingFilter = DEFAULT_SCALING_FILTER;
-    /** Scaling filter was set from command line */
-    private static boolean scalingFilterSet;
-    /** Two equal captions are merged of they are closer than 200ms (0.2*90000 = 18000) */
-    private static int mergePTSdiff = 18000;
-    /** mergePTSdiff was set from command line */
-    private static boolean mergePTSdiffSet;
-    /** Alpha threshold for cropping */
-    private static int alphaCrop = 14;
-    /** alphaCrop was set from command line */
-    private static boolean alphaCropSet;
-    /** Fix completely invisibly subtitles due to alpha=0 (SUB/IDX and SUP/IFO import only) */
-    private static boolean fixZeroAlpha;
-    /** fixZeroAlpha was set from command line */
-    private static boolean fixZeroAlphaSet;
-    /** WritePGCEditPal was set from command line */
-    private static boolean writePGCEditPalSet;
-    /** Write PGCEdit palette file on export */
-    private static boolean writePGCEditPal;
 
     /** Factor to calculate height of one cinemascope bar from screen height */
     private static double cineBarFactor = 5.0/42;
@@ -234,12 +147,6 @@ public class Core  extends Thread {
     private static CaptionMoveModeX moveModeX = CaptionMoveModeX.KEEP_POSITION;
     /** Flag: move subtitle */
     private static boolean moveCaptions;
-    /** flag: apply free scaling */
-    private static boolean applyFreeScale = APPLY_FREE_SCALE_BY_DEFAULT;
-    /** Free X scaling factor */
-    private static double freeScaleX = DEAFULT_FREE_SCALE_X;
-    /** Free Y scaling factor */
-    private static double freeScaleY = DEFAULT_FREE_SCALE_Y;
 
     /** Current input stream ID */
     private static StreamID currentStreamID = StreamID.UNKNOWN;
@@ -260,8 +167,6 @@ public class Core  extends Thread {
     /** Number of warnings */
     private static int warnings;
 
-    /** started from command line? */
-    private static boolean cliMode = true;
     /** Functionality executed in the started thread */
     private static RunType runType;
     /** Thread state */
@@ -307,155 +212,6 @@ public class Core  extends Thread {
     }
 
     /**
-     * Initialize the Core - call this before calling readSub or other Core functionality.
-     * @param c Main object - needed to determine name of jar and path of ini file
-     */
-    public static void init(Object c) {
-        // extract path of JAR from the class name
-        // needed to store ini file in the same folder as the JAR
-        // note: during development, the path is the path of the main class
-        if (c != null) {
-            // only executed in GUI part
-            cliMode = false;
-            String s = c.getClass().getName().replace('.','/') + ".class";
-            URL url = c.getClass().getClassLoader().getResource(s);
-            int pos;
-            try {
-                fnameProps = URLDecoder.decode(url.getPath(),"UTF-8");
-            } catch (UnsupportedEncodingException ex) {
-            }
-            if (((pos=fnameProps.toLowerCase().indexOf("file:")) != -1)) {
-                fnameProps = fnameProps.substring(pos+5);
-            }
-            if ((pos=fnameProps.toLowerCase().indexOf(s.toLowerCase())) != -1) {
-                fnameProps = fnameProps.substring(0,pos);
-            }
-            // special handling for JAR
-            s = FilenameUtils.separatorsToUnix(fnameProps.toLowerCase());
-            pos = s.lastIndexOf(".jar");
-            if (pos != -1) {
-                pos = s.substring(0,pos).lastIndexOf('/');
-                if (pos != -1) {
-                    fnameProps = fnameProps.substring(0,pos+1);
-                }
-            }
-            fnameProps += Core.INI_FILE;
-
-            // read properties from ini file
-            props = new Props();
-            props.setHeader(APP_NAME_AND_VERSION+" settings - don't modify manually");
-            props.load(fnameProps);
-
-            if (!verbatimSet) {
-                verbatim = Core.props.get("verbatim", "false").equals("true");
-            } else {
-                props.set("verbatim", verbatim?"true":"false");
-            }
-
-            if (!writePGCEditPalSet) {
-                writePGCEditPal = Core.props.get("writePGCEditPal", "false").equals("true");
-            } else {
-                props.set("writePGCEditPal", writePGCEditPal?"true":"false");
-            }
-
-            if (!mergePTSdiffSet) {
-                mergePTSdiff = Core.props.get("mergePTSdiff", 18000);
-            } else {
-                props.set("mergePTSdiff", mergePTSdiff);
-            }
-
-            if (!alphaCropSet) {
-                alphaCrop = Core.props.get("alphaCrop", 14);
-            } else {
-                props.set("alphaCrop", alphaCrop);
-            }
-
-            if (!fixZeroAlphaSet) {
-                fixZeroAlpha = Core.props.get("fixZeroAlpha", "false").equals("true");
-            } else {
-                props.set("fixZeroAlpha", fixZeroAlpha?"true":"false");
-            }
-
-            if (!scalingFilterSet) {
-                String filter = props.get("filter", DEFAULT_SCALING_FILTER.toString());
-                for (ScalingFilter sf : ScalingFilter.values()) {
-                    if (sf.toString().equalsIgnoreCase(filter)) {
-                        scalingFilter = sf;
-                        break;
-                    }
-                }
-            } else {
-                props.set("filter", scalingFilter.toString());
-            }
-
-            if (!paletteModeSet) {
-                String pMode = props.get("paletteMode", DEFAULT_PALETTE_MODE.toString());
-                for (PaletteMode pm : PaletteMode.values()) {
-                    if (pm.toString().equalsIgnoreCase(pMode)) {
-                        paletteMode = pm;
-                        break;
-                    }
-                }
-            } else {
-                props.set("paletteMode", paletteMode.toString());
-            }
-
-            if (!outModeSet) {
-                String oMode = props.get("outputMode", DEFAULT_OUTPUT_MODE.toString());
-                for (OutputMode om : OutputMode.values()) {
-                    if (om.toString().equalsIgnoreCase(oMode)) {
-                        outMode = om;
-                        break;
-                    }
-                }
-            } else {
-                props.set("outputMode", outMode.toString());
-            }
-
-            if (!convertResolutionSet) {
-                convertResolution = restoreConvertResolution();
-            }
-            if (convertResolution && !resolutionTrgSet) {
-                    resolutionTrg = restoreResolution();
-            }
-            if (!convertFpsSet) {
-                convertFPS = restoreConvertFPS();
-            }
-            if (convertFPS) {
-                if (!fpsSrcCertain && !fpsSrcSet) {
-                    fpsSrc = restoreFpsSrc();
-                }
-                if (!fpsTrgSet) {
-                    fpsTrg = restoreFpsTrg();
-                }
-            }
-            if (!delayPtsSet) {
-                delayPTS = Core.restoreDelayPTS();
-            }
-            if (!fixShortFramesSet) {
-                fixShortFrames = Core.restoreFixShortFrames();
-            }
-            if (!minTimePtsSet) {
-                minTimePTS = Core.restoreMinTimePTS();
-            }
-            if (!applyFreeScaleSet) {
-                applyFreeScale = Core.restoreApplyFreeScale();
-                if (applyFreeScale) {
-                    freeScaleX = Core.restoreFreeScaleX();
-                    freeScaleY = Core.restoreFreeScaleY();
-                }
-            }
-        }
-    }
-
-    /**
-     * Hook to be called when the first file was loaded via the GUI
-     */
-    public static void loadedHook() {
-        fpsSrcSet = false; // disable CLI override
-    }
-
-    /**
      * Reset the core, close all files
      */
     public static void close() {
@@ -481,7 +237,7 @@ public class Core  extends Thread {
      * Shut down the Core (write properties, close files etc.).
      */
     public static void exit() {
-        storeProps();
+        configuration.storeConfig();
         if (supBD != null) {
             supBD.close();
         }
@@ -496,15 +252,6 @@ public class Core  extends Thread {
         }
         if (supDVD != null) {
             supDVD.close();
-        }
-    }
-
-    /**
-     * Write properties
-     */
-    public static void storeProps() {
-        if (props != null) {
-            props.save(fnameProps);
         }
     }
 
@@ -533,32 +280,6 @@ public class Core  extends Thread {
         }
 
         return sid;
-    }
-
-    /**
-     * Synchronizes a time stamp in 90kHz resolution to the given frame rate.
-     * @param t 	Time stamp in 90kHz resolution
-     * @param fps	Frame rate
-     * @return		Synchronized time stamp in 90kHz resolution
-     */
-    public static long syncTimePTS(long t, double fps) {
-        long retval;
-        // correct time stamps to fit to frames
-        if (fps == Framerate.NTSC.getValue() || fps == Framerate.PAL.getValue() || fps == Framerate.FPS_24.getValue()) {
-            // NTSC: 90000/(30000/1001) = 3003
-            // PAL:  90000/25 = 3600
-            // 24Hz: 90000/24 = 3750
-            int tpfi = (int)((90000+(fps/2))/fps); // target time per frame in 90kHz
-            int tpfh = tpfi/2;
-            retval = ((t + tpfh)/tpfi)*tpfi;
-        } else if (fpsTrg == Framerate.FPS_23_976.getValue()) {
-            // 90000/(24000/1001) = 3753.75 = 15015/4
-            retval = ((((t + 1877)*4)/15015)*15015)/4;
-        } else {
-            double tpf = (90000/fpsTrg); // target time per frame in 90kHz
-            retval = (long)((long)(t/tpf)*tpf+0.5);
-        }
-        return retval;
     }
 
     /**
@@ -620,11 +341,12 @@ public class Core  extends Thread {
         progressLast = 0;
         progress = new Progress(parent);
         progress.setTitle("Exporting");
-        if (Core.outMode == OutputMode.VOBSUB) {
+        OutputMode outputMode = configuration.getOutputMode();
+        if (outputMode == OutputMode.VOBSUB) {
             progress.setText("Exporting SUB/IDX");
-        } else if (Core.outMode == OutputMode.BDSUP) {
+        } else if (outputMode == OutputMode.BDSUP) {
             progress.setText("Exporting SUP(BD)");
-        } else if (Core.outMode == OutputMode.XML) {
+        } else if (outputMode == OutputMode.XML) {
             progress.setText("Exporting XML/PNG");
         } else {
             progress.setText("Exporting SUP/IFO");
@@ -652,7 +374,7 @@ public class Core  extends Thread {
      * @index Index of caption
      */
     private static void determineFramePal(int index) {
-        if ((inMode != InputMode.VOBSUB && inMode != InputMode.SUPIFO) || paletteMode != PaletteMode.KEEP_EXISTING) {
+        if ((inMode != InputMode.VOBSUB && inMode != InputMode.SUPIFO) || configuration.getPaletteMode() != PaletteMode.KEEP_EXISTING) {
             // get the primary color from the source palette
             int rgbSrc[] = substream.getPalette().getRGB(substream.getPrimaryColorIndex());
 
@@ -716,7 +438,7 @@ public class Core  extends Thread {
 
             for (int i=0; i < 4; i++) {
                 int a = (alpha[i]*0xff)/0xf;
-                if (a >= alphaCrop) {
+                if (a >= configuration.getAlphaCrop()) {
                     miniPal.setARGB(i, currentSourceDVDPalette.getARGB(palFrame[i]));
                     miniPal.setAlpha(i, a);
                 } else {
@@ -784,19 +506,17 @@ public class Core  extends Thread {
         }
 
         // try to detect source frame rate
-        if (!fpsSrcSet) {      // CLI override
-            if (substream == supBD) {
-                fpsSrc = supBD.getFps(0);
-                fpsSrcCertain = true;
-                if (Core.keepFps) {
-                    setFPSTrg(fpsSrc);
-                }
-            } else {
-                // for HD-DVD we need to guess
-                useBT601 = false;
-                fpsSrcCertain = false;
-                fpsSrc = Framerate.FPS_23_976.getValue();
+        if (substream == supBD) {
+            configuration.setFPSSrc(supBD.getFps(0));
+            configuration.setFpsSrcCertain(true);
+            if (Core.keepFps) {
+                configuration.setFPSTrg(configuration.getFPSSrc());
             }
+        } else {
+            // for HD-DVD we need to guess
+            useBT601 = false;
+            configuration.setFpsSrcCertain(false);
+            configuration.setFPSSrc(Framerate.FPS_23_976.getValue());
         }
     }
 
@@ -845,12 +565,10 @@ public class Core  extends Thread {
         }
 
         // set frame rate
-        if (!fpsSrcSet) {      // CLI override
-            fpsSrc = supXml.getFps();
-            fpsSrcCertain = true;
-            if (Core.keepFps) {
-                setFPSTrg(fpsSrc);
-            }
+        configuration.setFPSSrc(supXml.getFps());
+        configuration.setFpsSrcCertain(true);
+        if (Core.keepFps) {
+            configuration.setFPSTrg(configuration.getFPSSrc());
         }
     }
 
@@ -945,24 +663,22 @@ public class Core  extends Thread {
         languageIdx = substreamDVD.getLanguageIdx();
 
         // set frame rate
-        if (!fpsSrcSet) {      // CLI override
-            int h = substream.getSubPicture(0).height; //substream.getBitmap().getHeight();
-            switch (h) {
-                case 480:
-                    fpsSrc = Framerate.NTSC.getValue();
-                    useBT601 = true;
-                    fpsSrcCertain = true;
-                    break;
-                case 576:
-                    fpsSrc = Framerate.PAL.getValue();
-                    useBT601 = true;
-                    fpsSrcCertain = true;
-                    break;
-                default:
-                    useBT601 = false;
-                    fpsSrc = Framerate.FPS_23_976.getValue();
-                    fpsSrcCertain = false;
-            }
+        int h = substream.getSubPicture(0).height; //substream.getBitmap().getHeight();
+        switch (h) {
+            case 480:
+                configuration.setFPSSrc(Framerate.NTSC.getValue());
+                useBT601 = true;
+                configuration.setFpsSrcCertain(true);
+                break;
+            case 576:
+                configuration.setFPSSrc(Framerate.PAL.getValue());
+                useBT601 = true;
+                configuration.setFpsSrcCertain(true);
+                break;
+            default:
+                useBT601 = false;
+                configuration.setFPSSrc(Framerate.FPS_23_976.getValue());
+                configuration.setFpsSrcCertain(false);
         }
     }
 
@@ -1028,23 +744,24 @@ public class Core  extends Thread {
             te = ts_next;
         }
 
+        int minTimePTS = configuration.getMinTimePTS();
         if (te - ts < minTimePTS) {
-            if (fixShortFrames) {
+            if (configuration.getFixShortFrames()) {
                 te = ts + minTimePTS;
                 if (te > ts_next) {
                     te = ts_next;
                 }
-                printWarn("duration of frame "+idx+" was shorter than "+(ToolBox.formatDouble(minTimePTS/90.0))+"ms -> fixed\n");
+                printWarn("duration of frame " + idx + " was shorter than " + (ToolBox.formatDouble(minTimePTS / 90.0)) + "ms -> fixed\n");
             } else {
-                printWarn("duration of frame "+idx+" is shorter than "+(ToolBox.formatDouble(minTimePTS/90.0))+"ms\n");
+                printWarn("duration of frame " + idx + " is shorter than " + (ToolBox.formatDouble(minTimePTS / 90.0)) + "ms\n");
             }
         }
 
         if (subPic.startTime != ts) {
-            subPic.startTime = syncTimePTS(ts, fpsTrg);
+            subPic.startTime = SubtitleUtils.syncTimePTS(ts, configuration.getFPSTrg(), configuration.getFPSTrg());
         }
         if (subPic.endTime != te) {
-            subPic.endTime = syncTimePTS(te, fpsTrg);
+            subPic.endTime = SubtitleUtils.syncTimePTS(te, configuration.getFPSTrg(), configuration.getFPSTrg());
         }
     }
 
@@ -1061,9 +778,9 @@ public class Core  extends Thread {
         double scaleY = (double)picTrg.height/picSrc.height;
         double fx;
         double fy;
-        if (applyFreeScale) {
-            fx = freeScaleX;
-            fy = freeScaleY;
+        if (configuration.getApplyFreeScale()) {
+            fx = configuration.getFreeScaleFactorX();
+            fy = configuration.getFreeScaleFactorY();
         } else {
             fx = 1.0;
             fy = 1.0;
@@ -1135,19 +852,20 @@ public class Core  extends Thread {
      * Sync frames to target fps.
      */
     public static void scanSubtitles() {
+        boolean convertFPS = configuration.getConvertFPS();
         subPictures = new SubPicture[substream.getNumFrames()];
-        double factTS = convertFPS ? fpsSrc / fpsTrg : 1.0;
+        double factTS = convertFPS ? configuration.getFPSSrc() / configuration.getFPSTrg() : 1.0;
 
         // change target resolution to source resolution if no conversion is needed
-        if (!convertResolution && getNumFrames() > 0) {
-            resolutionTrg = getResolution(getSubPictureSrc(0).width, getSubPictureSrc(0).height);
+        if (!configuration.getConvertResolution() && getNumFrames() > 0) {
+            configuration.setOutputResolution(getResolution(getSubPictureSrc(0).width, getSubPictureSrc(0).height));
         }
 
         double fx;
         double fy;
-        if (applyFreeScale) {
-            fx = freeScaleX;
-            fy = freeScaleY;
+        if (configuration.getApplyFreeScale()) {
+            fx = configuration.getFreeScaleFactorX();
+            fy = configuration.getFreeScaleFactorY();
         } else {
             fx = 1.0;
             fy = 1.0;
@@ -1161,16 +879,17 @@ public class Core  extends Thread {
             long ts = picSrc.startTime;
             long te = picSrc.endTime;
             // copy time stamps and apply speedup/speeddown
+            int delayPTS = configuration.getDelayPTS();
             if (!convertFPS) {
-                subPictures[i].startTime = ts+delayPTS;
-                subPictures[i].endTime = te+delayPTS;
+                subPictures[i].startTime = ts + delayPTS;
+                subPictures[i].endTime = te + delayPTS;
             } else {
-                subPictures[i].startTime= (long)(ts*factTS+0.5)+delayPTS;
-                subPictures[i].endTime = (long)(te*factTS+0.5)+delayPTS;
+                subPictures[i].startTime= (long)(ts * factTS + 0.5) + delayPTS;
+                subPictures[i].endTime = (long)(te * factTS + 0.5) + delayPTS;
             }
             // synchronize to target frame rate
-            subPictures[i].startTime = syncTimePTS(subPictures[i].startTime, fpsTrg);
-            subPictures[i].endTime = syncTimePTS(subPictures[i].endTime, fpsTrg);
+            subPictures[i].startTime = SubtitleUtils.syncTimePTS(subPictures[i].startTime, configuration.getFPSTrg(), configuration.getFPSTrg());
+            subPictures[i].endTime = SubtitleUtils.syncTimePTS(subPictures[i].endTime, configuration.getFPSTrg(), configuration.getFPSTrg());
 
             // set forced flag
             SubPicture picTrg = subPictures[i];
@@ -1185,11 +904,11 @@ public class Core  extends Thread {
 
             double scaleX;
             double scaleY;
-            if (convertResolution) {
+            if (configuration.getConvertResolution()) {
                 // adjust image sizes and offsets
                 // determine scaling factors
-                picTrg.width = getResolution(resolutionTrg)[0];
-                picTrg.height = getResolution(resolutionTrg)[1];
+                picTrg.width = getResolution(configuration.getOutputResolution())[0];
+                picTrg.height = getResolution(configuration.getOutputResolution())[1];
                 scaleX = (double)picTrg.width/picSrc.width;
                 scaleY = (double)picTrg.height/picSrc.height;
             } else {
@@ -1271,14 +990,17 @@ public class Core  extends Thread {
         double fsXNew;
         double fsYNew;
 
-        if (applyFreeScale) {
-            fsXNew = freeScaleX;
-            fsYNew = freeScaleY;
+        if (configuration.getApplyFreeScale()) {
+            fsXNew = configuration.getFreeScaleFactorX();
+            fsYNew = configuration.getFreeScaleFactorY();
         } else {
             fsXNew = 1.0;
             fsYNew = 1.0;
         }
 
+        boolean convertFPS = configuration.getConvertFPS();
+        double fpsTrg = configuration.getFPSTrg();
+        double fpsSrc = configuration.getFPSSrc();
         if (convertFPS && !convertFpsOld) {
             factTS = fpsSrc / fpsTrg;
         } else if (!convertFPS && convertFpsOld) {
@@ -1290,13 +1012,13 @@ public class Core  extends Thread {
         }
 
         // change target resolution to source resolution if no conversion is needed
-        if (!convertResolution && getNumFrames() > 0) {
-            resolutionTrg = getResolution(getSubPictureSrc(0).width, getSubPictureSrc(0).height);
+        if (!configuration.getConvertResolution() && getNumFrames() > 0) {
+            configuration.setOutputResolution(getResolution(getSubPictureSrc(0).width, getSubPictureSrc(0).height));
         }
 
-        if (resOld != resolutionTrg) {
+        if (resOld != configuration.getOutputResolution()) {
             int rOld[] = getResolution(resOld);
-            int rNew[] = getResolution(resolutionTrg);
+            int rNew[] = getResolution(configuration.getOutputResolution());
             factX = (double)rNew[0]/(double)rOld[0];
             factY = (double)rNew[1]/(double)rOld[1];
         } else {
@@ -1323,23 +1045,24 @@ public class Core  extends Thread {
             long ts = picOld.startTime;
             long te = picOld.endTime;
             // copy time stamps and apply speedup/speeddown
+            int delayPTS = configuration.getDelayPTS();
             if (factTS == 1.0) {
-                subPictures[i].startTime = ts-delayOld+delayPTS;
-                subPictures[i].endTime = te-delayOld+delayPTS;
+                subPictures[i].startTime = ts - delayOld + delayPTS;
+                subPictures[i].endTime = te - delayOld + delayPTS;
             } else {
-                subPictures[i].startTime= (long)(ts*factTS+0.5)-delayOld+delayPTS;
-                subPictures[i].endTime = (long)(te*factTS+0.5)-delayOld+delayPTS;
+                subPictures[i].startTime= (long)(ts * factTS + 0.5) - delayOld + delayPTS;
+                subPictures[i].endTime = (long)(te * factTS + 0.5) - delayOld + delayPTS;
             }
             // synchronize to target frame rate
-            subPictures[i].startTime = syncTimePTS(subPictures[i].startTime, fpsTrg);
-            subPictures[i].endTime = syncTimePTS(subPictures[i].endTime, fpsTrg);
+            subPictures[i].startTime = SubtitleUtils.syncTimePTS(subPictures[i].startTime, fpsTrg, fpsTrg);
+            subPictures[i].endTime = SubtitleUtils.syncTimePTS(subPictures[i].endTime, fpsTrg, fpsTrg);
             // adjust image sizes and offsets
             // determine scaling factors
             double scaleX;
             double scaleY;
-            if (convertResolution) {
-                subPictures[i].width = getResolution(resolutionTrg)[0];
-                subPictures[i].height = getResolution(resolutionTrg)[1];
+            if (configuration.getConvertResolution()) {
+                subPictures[i].width = getResolution(configuration.getOutputResolution())[0];
+                subPictures[i].height = getResolution(configuration.getOutputResolution())[1];
                 scaleX = (double)subPictures[i].width/picSrc.width;
                 scaleY = (double)subPictures[i].height/picSrc.height;
             } else {
@@ -1458,7 +1181,8 @@ public class Core  extends Thread {
             substream.decode(index);
             w = subPic.getImageWidth();
             h = subPic.getImageHeight();
-            if (outMode == OutputMode.VOBSUB || outMode == OutputMode.SUPIFO) {
+            OutputMode outputMode = configuration.getOutputMode();
+            if (outputMode == OutputMode.VOBSUB || outputMode == OutputMode.SUPIFO) {
                 determineFramePal(index);
             }
             updateTrgPic(index);
@@ -1476,7 +1200,7 @@ public class Core  extends Thread {
 
         if (!skipScaling) {
             ResampleFilter f;
-            switch (scalingFilter) {
+            switch (configuration.getScalingFilter()) {
                 case BELL:
                     f = getBellFilter();
                     break;
@@ -1505,7 +1229,9 @@ public class Core  extends Thread {
             Bitmap tBm;
             Palette tPal = trgPal;
             // create scaled bitmap
-            if (outMode == OutputMode.VOBSUB || outMode == OutputMode.SUPIFO) {
+            OutputMode outputMode = configuration.getOutputMode();
+            PaletteMode paletteMode = configuration.getPaletteMode();
+            if (outputMode == OutputMode.VOBSUB || outputMode == OutputMode.SUPIFO) {
                 // export 4 color palette
                 if (w==trgWidth && h==trgHeight) {
                     // don't scale at all
@@ -1574,7 +1300,7 @@ public class Core  extends Thread {
 
         }
 
-        if (cliMode) {
+        if (configuration.isCliMode()) {
             moveToBounds(picTrg, displayNum, cineBarFactor, moveOffsetX, moveOffsetY, moveModeX, moveModeY, cropOfsY);
         }
     }
@@ -1599,17 +1325,18 @@ public class Core  extends Thread {
             maxNum = countIncluded();
         }
 
+        OutputMode outputMode = configuration.getOutputMode();
         try {
             // handle file name extensions depending on mode
-            if (outMode == OutputMode.VOBSUB) {
+            if (outputMode == OutputMode.VOBSUB) {
                 fname = FilenameUtils.removeExtension(fname) + ".sub";
                 out = new BufferedOutputStream(new FileOutputStream(fname));
                 offsets = new ArrayList<Integer>();
                 timestamps = new ArrayList<Integer>();
-            } else if (outMode == OutputMode.SUPIFO) {
+            } else if (outputMode == OutputMode.SUPIFO) {
                 fname = FilenameUtils.removeExtension(fname) + ".sup";
                 out = new BufferedOutputStream(new FileOutputStream(fname));
-            } else if (outMode == OutputMode.BDSUP) {
+            } else if (outputMode == OutputMode.BDSUP) {
                 fname = FilenameUtils.removeExtension(fname) + ".sup";
                 out = new BufferedOutputStream(new FileOutputStream(fname));
             } else {
@@ -1631,7 +1358,7 @@ public class Core  extends Thread {
                 setProgress(i);
                 //
                 if (!subPictures[i].exclude && (!exportForced || subPictures[i].isforced )) {
-                    if (outMode == OutputMode.VOBSUB) {
+                    if (outputMode == OutputMode.VOBSUB) {
                         offsets.add(offset);
                         convertSup(i, frameNum/2+1, maxNum);
                         subVobTrg.copyInfo(subPictures[i]);
@@ -1639,12 +1366,12 @@ public class Core  extends Thread {
                         out.write(buf);
                         offset += buf.length;
                         timestamps.add((int)subPictures[i].startTime);
-                    } else if (outMode == OutputMode.SUPIFO) {
+                    } else if (outputMode == OutputMode.SUPIFO) {
                         convertSup(i, frameNum/2+1, maxNum);
                         subVobTrg.copyInfo(subPictures[i]);
                         byte buf[] = SupDVD.createSupFrame(subVobTrg, trgBitmap);
                         out.write(buf);
-                    } else if (outMode == OutputMode.BDSUP) {
+                    } else if (outputMode == OutputMode.BDSUP) {
                         subPictures[i].compNum = frameNum;
                         convertSup(i, frameNum/2+1, maxNum);
                         byte buf[] = SupBD.createSupFrame(subPictures[i], trgBitmap, trgPal);
@@ -1681,7 +1408,8 @@ public class Core  extends Thread {
         importedDVDPalette = (inMode == InputMode.VOBSUB) || (inMode == InputMode.SUPIFO);
 
         Palette trgPallete = null;
-        if (outMode == OutputMode.VOBSUB) {
+        PaletteMode paletteMode = configuration.getPaletteMode();
+        if (outputMode == OutputMode.VOBSUB) {
             // VobSub - write IDX
             /* return offets as array of ints */
             int ofs[] = new int[offsets.size()];
@@ -1700,11 +1428,11 @@ public class Core  extends Thread {
                 trgPallete = currentSourceDVDPalette;
             }
             SubDVD.writeIdx(fname, subPictures[0], ofs, ts, trgPallete);
-        } else if (outMode == OutputMode.XML) {
+        } else if (outputMode == OutputMode.XML) {
             // XML - write ML
             printX("\nWriting "+fname+"\n");
             SupXml.writeXml(fname, subPictures);
-        } else if (outMode == OutputMode.SUPIFO) {
+        } else if (outputMode == OutputMode.SUPIFO) {
             // SUP/IFO - write IFO
             if (!importedDVDPalette || paletteMode != PaletteMode.KEEP_EXISTING) {
                 trgPallete = currentDVDPalette;
@@ -1717,7 +1445,7 @@ public class Core  extends Thread {
         }
 
         // only possible for SUB/IDX and SUP/IFO (else there is no public palette)
-        if (trgPallete != null && writePGCEditPal) {
+        if (trgPallete != null && configuration.getWritePGCEditPal()) {
             String fnp = FilenameUtils.removeExtension(fname) + ".txt";
             printX("\nWriting "+fnp+"\n");
             writePGCEditPal(fnp, trgPallete);
@@ -1744,67 +1472,6 @@ public class Core  extends Thread {
                 fps = Framerate.FPS_23_976.getValue();
         }
         return fps;
-    }
-
-    /**
-     * Convert a string containing a frame rate to a double representation.
-     * @param s	String containing a frame
-     * @return	Double representation of the frame rate
-     */
-    public static double getFPS(String s) {
-        // first check the string
-        s = s.toLowerCase().trim();
-        if (s.equals("pal")  || s.equals("25p") || s.equals("25")) {
-            return Framerate.PAL.getValue();
-        }
-        if (s.equals("ntsc") || s.equals("30p") || s.equals("29.97") || s.equals("29.970")) {
-            return Framerate.NTSC.getValue();
-        }
-        if (s.equals("24p")  || s.equals("23.976")) {
-            return Framerate.FPS_23_976.getValue();
-        }
-        if (s.equals("23.975")) {
-            return Framerate.FPS_23_975.getValue();
-        }
-        if (s.equals("24")) {
-            return Framerate.FPS_24.getValue();
-        }
-        if (s.equals("50i")  || s.equals("50")) {
-            return Framerate.PAL_I.getValue();
-        }
-        if (s.equals("60i")  || s.equals("59.94")) {
-            return Framerate.NTSC_I.getValue();
-        }
-
-        // now check the number
-        double d;
-        try {
-            d = Double.parseDouble(s);
-        } catch (NumberFormatException ex) {
-            return -1.0;
-        }
-        if (Math.abs(d - Framerate.FPS_23_975.getValue()) < 0.001) {
-            return Framerate.FPS_23_975.getValue();
-        }
-        if (Math.abs(d - Framerate.FPS_23_976.getValue()) < 0.001) {
-            return Framerate.FPS_23_976.getValue();
-        }
-        if (Math.abs(d - Framerate.FPS_24.getValue()) < 0.001) {
-            return Framerate.FPS_24.getValue();
-        }
-        if (Math.abs(d - Framerate.PAL.getValue()) < 0.001) {
-            return Framerate.PAL.getValue();
-        }
-        if (Math.abs(d - Framerate.NTSC.getValue()) < 0.001) {
-            return Framerate.NTSC.getValue();
-        }
-        if (Math.abs(d - Framerate.NTSC_I.getValue()) < 0.001) {
-            return Framerate.NTSC_I.getValue();
-        }
-        if (Math.abs(d - Framerate.PAL_I.getValue()) < 0.001) {
-            return Framerate.PAL_I.getValue();
-        }
-        return d;
     }
 
     /**
@@ -1872,7 +1539,7 @@ public class Core  extends Thread {
             print(s+"to the "+sx+".\n");
         }
 
-        if (!cliMode) {
+        if (!configuration.isCliMode()) {
             // in CLI mode, moving is done during export
             for (int idx=0; idx<subPictures.length; idx++) {
                 setProgress(idx);
@@ -1974,7 +1641,7 @@ public class Core  extends Thread {
      * @param s String containing message to print
      */
     public static void print(String s) {
-        if (Core.verbatim) {
+        if (configuration.isVerbatim()) {
             if (mainFrame != null) {
                 mainFrame.printOut(s);
             } else {
@@ -2133,216 +1800,6 @@ public class Core  extends Thread {
     }
 
     /**
-     * Get output resolution.
-     * @return Current output resolution
-     */
-    public static Resolution getOutputResolution() {
-        return resolutionTrg;
-    }
-
-    /**
-     * Set output resolution.
-     * @param r output resolution
-     */
-    public static void setOutputResolution(Resolution r) {
-        resolutionTrg = r;
-        if (props == null) {
-            resolutionTrgSet = true;
-        }
-    }
-
-    /**
-     * Store output resolution.
-     * @param r output resolution
-     */
-    public static void storeOutputResolution(Resolution r) {
-        props.set("resolutionTrg", getResolutionName(r));
-    }
-
-    /**
-     * get default value for frame rate conversion
-     * @return default value for frame rate conversion
-     */
-    public static boolean getConvertFPSdefault() {
-        return CONVERTS_FRAMERATE_BY_DEFAULT;
-    }
-
-    /**
-     * get default value for resolution conversion
-     * @return default value for resolution conversion
-     */
-    public static boolean getConvertResolutionDefault() {
-        return CONVERT_RESOLUTION_BY_DEFAULT;
-    }
-
-    /**
-     * get default target resolution
-     * @return default target resolution
-     */
-    public static Resolution getResolutionDefault() {
-        return DEFAULT_TARGET_RESOLUTION;
-    }
-
-    /**
-     * get default value for source frame rate
-     * @return default value for source frame rate
-     */
-    public static double getFpsSrcDefault() {
-        return DEFAULT_SOURCE_FRAMERATE;
-    }
-
-    /**
-     * get default value for target frame rate
-     * @return default value for target frame rate
-     */
-    public static double getFpsTrgDefault() {
-        return DEFAULT_TARGET_FRAMERATE;
-    }
-
-    /**
-     * get default value for delay
-     * @return default value delay
-     */
-    public static int getDelayPTSdefault() {
-        return DEFAULT_PTS_DELAY;
-    }
-
-    /**
-     * get default value for fixing short frame
-     * @return default value for fixing short frame
-     */
-    public static boolean getFixShortFramesDefault() {
-        return FIX_SHORT_FRAMES_BY_DEFAULT;
-    }
-
-    /**
-     * get default value for minimum display time
-     * @return default value for minimum display time
-     */
-    public static int getMinTimePTSdefault() {
-        return DEAFULT_MIN_DISPLAY_TIME_PTS;
-    }
-
-    /**
-     * get default value for applying of free scaling
-     * @return default value for applying of free scaling
-     */
-    public static boolean getApplyFreeScaleDefault() {
-        return APPLY_FREE_SCALE_BY_DEFAULT;
-    }
-
-    /**
-     * get default value for free x scaling factor
-     * @return default value for free x scaling factor
-     */
-    public static double getFreeScaleXdefault() {
-        return DEAFULT_FREE_SCALE_X;
-    }
-
-    /**
-     * get default value for free y scaling factor
-     * @return default value for free y scaling factor
-     */
-    public static double getFreeScaleYdefault() {
-        return DEFAULT_FREE_SCALE_Y;
-    }
-
-    /**
-     * restore value for frame rate conversion
-     * @return restored value for frame rate conversion
-     */
-    public static boolean restoreConvertFPS() {
-        return props.get("convertFPS", convertFPS);
-    }
-
-    /**
-     * restore value for resolution conversion
-     * @return restored value for resolution conversion
-     */
-    public static boolean restoreConvertResolution() {
-        return props.get("convertResolution", convertResolution);
-    }
-
-    /**
-     * restore default target resolution
-     * @return restored target resolution
-     */
-    public static Resolution restoreResolution() {
-        String s = props.get("resolutionTrg", getResolutionName(resolutionTrg));
-        for (Resolution r : Resolution.values()) {
-            if (Core.getResolutionName(r).equalsIgnoreCase(s)) {
-                    return r;
-            }
-        }
-        return resolutionTrg;
-    }
-
-
-    /**
-     * restore value for source frame rate
-     * @return restored value for source frame rate
-     */
-    public static double restoreFpsSrc() {
-        return getFPS(props.get("fpsSrc", String.valueOf(fpsSrc)));
-    }
-
-    /**
-     * restore value for target frame rate
-     * @return restored value for target frame rate
-     */
-    public static double restoreFpsTrg() {
-        return getFPS(props.get("fpsTrg", String.valueOf(fpsTrg)));
-    }
-
-    /**
-     * restore value for delay
-     * @return restored value delay
-     */
-    public static int restoreDelayPTS() {
-        return props.get("delayPTS", delayPTS);
-    }
-
-    /**
-     * restore value for fixing short frame
-     * @return restored value for fixing short frame
-     */
-    public static boolean restoreFixShortFrames() {
-        return props.get("fixShortFrames", fixShortFrames);
-    }
-
-    /**
-     * restore value for minimum display time
-     * @return restored value for minimum display time
-     */
-    public static int restoreMinTimePTS() {
-        return props.get("minTimePTS", minTimePTS);
-    }
-
-    /**
-     * restore value for applying of free scaling
-     * @return restored value for applying of free scaling
-     */
-    public static boolean restoreApplyFreeScale() {
-        return props.get("applyFreeScale", applyFreeScale);
-    }
-
-    /**
-     * restore value for free x scaling factor
-     * @return restored value for free x scaling factor
-     */
-    public static double restoreFreeScaleX() {
-        return props.get("freeScaleX", freeScaleX);
-    }
-
-    /**
-     * restore value for free y scaling factor
-     * @return restored value for free y scaling factor
-     */
-    public static double restoreFreeScaleY() {
-        return props.get("freeScaleY", freeScaleY);
-    }
-
-    /**
      * Find the most fitting resolution for the given width and height
      * @param width screen width
      * @param height screen height
@@ -2386,60 +1843,6 @@ public class Core  extends Thread {
     }
 
     /**
-     * Get flag that tells whether or not to convert the frame rate.
-     * @return Flag that tells whether or not to convert the frame rate
-     */
-    public static boolean getConvertFPS() {
-        return convertFPS;
-    }
-
-    /**
-     * Set flag that tells whether or not to convert the frame rate.
-     * @param b True: convert frame rate
-     */
-    public static void setConvertFPS(boolean b) {
-        convertFPS = b;
-        if (props == null) {
-            convertFpsSet = true;
-        }
-    }
-
-    /**
-     * Store flag that tells whether or not to convert the frame rate.
-     * @param b True: convert frame rate
-     */
-    public static void storeConvertFPS(boolean b) {
-        props.set("convertFPS", b);
-    }
-
-    /**
-     * Get flag that tells whether or not to convert the resolution.
-     * @return Flag that tells whether or not to convert the resolution
-     */
-    public static boolean getConvertResolution() {
-        return convertResolution;
-    }
-
-    /**
-     * Set flag that tells whether or not to convert the resolution.
-     * @param b True: convert resolution
-     */
-    public static void setConvertResolution(boolean b) {
-        convertResolution = b;
-        if (props == null) {
-            convertResolutionSet = true;
-        }
-    }
-
-    /**
-     * Store flag that tells whether or not to convert the resolution.
-     * @param b True: convert resolution
-     */
-    public static void storeConvertResolution(boolean b) {
-        props.set("convertResolution", b);
-    }
-
-    /**
      * Get flag that tells whether or not to export only forced subtitles.
      * @return Flag that tells whether or not to export only forced subtitles
      */
@@ -2469,91 +1872,6 @@ public class Core  extends Thread {
      */
     public static void setForceAll(ForcedFlagState f) {
         forceAll = f;
-    }
-
-    /**
-     * Get source frame rate.
-     * @return Source frame rate
-     */
-    public static double getFPSSrc() {
-        return fpsSrc;
-    }
-
-    /**
-     * Set source frame rate.
-     * @param src Source frame rate
-     */
-    public static void setFPSSrc(double src) {
-        fpsSrc = src;
-        if (props == null) {
-            // avoid overwriting of command line value
-            fpsSrcSet = true;
-            fpsSrcCertain = true;
-        }
-    }
-
-    /**
-     * Store source frame rate.
-     * @param src Source frame rate
-     */
-    public static void storeFPSSrc(double src) {
-        props.set("fpsSrc", src);
-    }
-
-    /**
-     * Get target frame rate.
-     * @return Target frame rate
-     */
-    public static double getFPSTrg() {
-        return fpsTrg;
-    }
-
-    /**
-     * Set target frame rate.
-     * @param trg Target frame rate
-     */
-    public static void setFPSTrg(double trg) {
-        fpsTrg = trg;
-        delayPTS = (int)syncTimePTS(delayPTS, trg);
-        minTimePTS = (int)syncTimePTS(minTimePTS, trg);
-        if (props == null) {
-            fpsTrgSet = true;
-        }
-    }
-
-    /**
-     * Store target frame rate.
-     * @param trg Target frame rate
-     */
-    public static void storeFPSTrg(double trg) {
-        props.set("fpsTrg", trg);
-    }
-
-    /**
-     * Get delay to add to time stamps.
-     * @return Delay in 90kHz resolution
-     */
-    public static int getDelayPTS() {
-        return delayPTS;
-    }
-
-    /**
-     * Set delay to add to time stamps.
-     * @param delay Delay in 90kHz resolution
-     */
-    public static void setDelayPTS(int delay) {
-        delayPTS = delay;
-        if (props == null) {
-            delayPtsSet = true;
-        }
-    }
-
-    /**
-     * Store delay to add to time stamps.
-     * @param delay Delay in 90kHz resolution
-     */
-    public static void storeDelayPTS(int delay) {
-        props.set("delayPTS", delay);
     }
 
     /**
@@ -2614,27 +1932,6 @@ public class Core  extends Thread {
                 progress.setProgress(val);
             }
         }
-    }
-
-    /**
-     * Get output mode.
-     * @return Current output mode
-     */
-    public static OutputMode getOutputMode() {
-        return outMode;
-    }
-
-    /**
-     * Set output mode.
-     * @param m Output mode
-     */
-    public static void setOutputMode(OutputMode m) {
-        if (props != null) {
-            props.set("outputMode", m.toString());
-        } else {
-            outModeSet = true;
-        }
-        outMode = m;
     }
 
     /**
@@ -2835,15 +2132,6 @@ public class Core  extends Thread {
     }
 
     /**
-     * Get Idx string representation of resolution.
-     * @param r Resolution
-     * @return String representation of resolution
-     */
-    public static String getResolutionName(Resolution r) {
-        return r.toString();
-    }
-
-    /**
      * Get Xml string representation of resolution.
      * @param r Resolution
      * @return String representation of resolution
@@ -2883,60 +2171,6 @@ public class Core  extends Thread {
      */
     public static void setLanguageIdx(int idx) {
         languageIdx = idx;
-    }
-
-    /**
-     * Set flag that tells whether to fix frames shorter than minTimePTS.
-     * @return Flag that tells whether to fix frames shorter than minTimePTS
-     */
-    public static boolean getFixShortFrames() {
-        return fixShortFrames;
-    }
-
-    /**
-     * Set flag that tells whether to fix frames shorter than minTimePTS.
-     * @param b True: fix short frames
-     */
-    public static void setFixShortFrames(boolean b) {
-        fixShortFrames = b;
-        if (props == null) {
-            fixShortFramesSet = true;
-        }
-    }
-
-    /**
-     * Store flag that tells whether to fix frames shorter than minTimePTS.
-     * @param b True: fix short frames
-     */
-    public static void storeFixShortFrames(boolean b) {
-        props.set("fixShortFrames",  b);
-    }
-
-    /**
-     * Get minimum frame duration in 90kHz resolution.
-     * @return Minimum frame duration in 90kHz resolution
-     */
-    public static int getMinTimePTS() {
-        return minTimePTS;
-    }
-
-    /**
-     * Set minimum frame duration in 90kHz resolution.
-     * @param t Minimum frame duration in 90kHz resolution
-     */
-    public static void setMinTimePTS(int t) {
-        minTimePTS = t;
-        if (props == null) {
-            minTimePtsSet = true;
-        }
-    }
-
-    /**
-     * Store minimum frame duration in 90kHz resolution.
-     * @param t Minimum frame duration in 90kHz resolution
-     */
-    public static void storeMinTimePTS(int t) {
-        props.set("minTimePTS", t);
     }
 
     /**
@@ -3002,48 +2236,6 @@ public class Core  extends Thread {
     }
 
     /**
-     * Get palette creation mode.
-     * @return Current palette creation mode
-     */
-    public static PaletteMode getPaletteMode() {
-        return paletteMode;
-    }
-
-    /**
-     * Set palette creation mode.
-     * @param m Palette creation mode
-     */
-    public static void setPaletteMode(PaletteMode m) {
-        if (props != null) {
-            props.set("paletteMode", m.toString());
-        } else {
-            paletteModeSet = true;
-        }
-        paletteMode = m;
-    }
-
-    /**
-     * Get verbatim console output mode.
-     * @return True: verbatim console output mode
-     */
-    public static boolean getVerbatim() {
-        return verbatim;
-    }
-
-    /**
-     * Set verbatim console output mode.
-     * @param e True: verbatim console output mode
-     */
-    public static void setVerbatim(boolean e) {
-        verbatim = e;
-        if (props != null) {
-            props.set("verbatim", e ? "true" : "false");
-        } else {
-            verbatimSet = true;
-        }
-    }
-
-    /**
      * Set internal maximum for progress bar.
      * @param max Internal maximum for progress bar (e.g. number of subtitles)
      */
@@ -3065,168 +2257,6 @@ public class Core  extends Thread {
      */
     public static void setKeepFps(boolean e) {
         keepFps = e;
-    }
-
-    /**
-     * Get: source frame rate is certain
-     * @return true if source frame rate is certain
-     */
-    public static boolean getFpsSrcCertain() {
-        return fpsSrcCertain;
-    }
-
-    /**
-     * Set: source frame rate is certain
-     * @param c true if source frame rate is certain
-     */
-    public static void setFpsSrcCertain(boolean c) {
-        fpsSrcCertain = c;
-    }
-
-    /**
-     * Get current scaling filter.
-     * @return Current scaling filter
-     */
-    public static ScalingFilter getScalingFilter() {
-        return scalingFilter;
-    }
-
-    /**
-     * Set filter to be used for scaling.
-     * @param f Scaling Filter
-     */
-    public static void setScalingFilter(ScalingFilter f) {
-        if (props != null) {
-            props.set("filter", f.toString());
-        } else {
-            scalingFilterSet = true;
-        }
-        scalingFilter = f;
-    }
-
-    /**
-     * Get maximum time difference for merging captions.
-     * @return Maximum time difference for merging captions
-     */
-    public static int getMergePTSdiff() {
-        return mergePTSdiff;
-    }
-
-    /**
-     * Set maximum time difference for merging captions.
-     * @param d Maximum time difference for merging captions
-     */
-    public static void setMergePTSdiff(int d) {
-        mergePTSdiff = d;
-        if (props != null) {
-            props.set("mergePTSdiff", d);
-        } else {
-            mergePTSdiffSet = true;
-        }
-    }
-
-    /**
-     * Get alpha threshold for cropping.
-     * @return Alpha threshold for cropping
-     */
-    public static int getAlphaCrop() {
-        return alphaCrop;
-    }
-
-    /**
-     * Set alpha threshold for cropping.
-     * @param a Alpha threshold for cropping
-     */
-    public static void setAlphaCrop(int a) {
-        alphaCrop = a;
-        if (props != null) {
-            props.set("alphaCrop", a);
-        } else {
-            alphaCropSet = true;
-        }
-    }
-
-    /**
-     * Report whether free scaling is active or not.
-     * @return true if free scaling is applied
-     */
-    public static boolean getApplyFreeScale() {
-        return applyFreeScale;
-    }
-
-    /**
-     * Enable/disable free scaling
-     * @param f true: free scaling is applied
-     */
-    public static void setApplyFreeScale(boolean f) {
-        applyFreeScale = f;
-        if (props == null) {
-            applyFreeScaleSet = true;
-        }
-    }
-
-    /**
-     * Store: Enable/disable free scaling
-     * @param f true: free scaling is applied
-     */
-    public static void storeApplyFreeScale(boolean f) {
-        props.set("applyFreeScale", f);
-    }
-
-    /**
-     * Get free scaling factor.
-     * @return Free X scaling factor
-     */
-    public static double getFreeScaleX() {
-        return freeScaleX;
-    }
-
-    /**
-     * Get free scaling factor.
-     * @return Free Y scaling factor
-     */
-    public static double getFreeScaleY() {
-        return freeScaleY;
-    }
-
-    /**
-     * Set free scaling factor.
-     * @param x Free X scaling factor (limited to 0.5 .. 2.0)
-     * @param y Free Y scaling factor (limited to 0.5 .. 2.0)
-     */
-    public static void setFreeScale(double x, double y) {
-        if (x < MIN_FREE_SCALE_FACTOR) {
-            x = MIN_FREE_SCALE_FACTOR;
-        } else if (x > MAX_FREE_SCALE_FACTOR) {
-            x = MAX_FREE_SCALE_FACTOR;
-        }
-        freeScaleX = x;
-        if (y < MIN_FREE_SCALE_FACTOR) {
-            y = MIN_FREE_SCALE_FACTOR;
-        } else if (y > MAX_FREE_SCALE_FACTOR) {
-            y = MAX_FREE_SCALE_FACTOR;
-        }
-        freeScaleY = y;
-    }
-
-    /**
-     * Store free scaling factor.
-     * @param x Free X scaling factor (limited to 0.5 .. 2.0)
-     * @param y Free Y scaling factor (limited to 0.5 .. 2.0)
-     */
-    public static void storeFreeScale(double x, double y) {
-        if (x < MIN_FREE_SCALE_FACTOR) {
-            x = MIN_FREE_SCALE_FACTOR;
-        } else if (x > MAX_FREE_SCALE_FACTOR) {
-            x = MAX_FREE_SCALE_FACTOR;
-        }
-        props.set("freeScaleX", x);
-        if (y < MIN_FREE_SCALE_FACTOR) {
-            y = MIN_FREE_SCALE_FACTOR;
-        } else if (y > MAX_FREE_SCALE_FACTOR) {
-            y = MAX_FREE_SCALE_FACTOR;
-        }
-        props.set("freeScaleY", y);
     }
 
     /**
@@ -3333,48 +2363,6 @@ public class Core  extends Thread {
      */
     public static void setCurrentStreamID(StreamID sid) {
         currentStreamID = sid;
-    }
-
-    /**
-     * Get: write PGCEdit palette file on export.
-     * @return True: write
-     */
-    public static boolean getWritePGCEditPal() {
-        return writePGCEditPal;
-    }
-
-    /**
-     * Set: write PGCEdit palette file on export.
-     * @param e True: write
-     */
-    public static void setWritePGCEditPal(boolean e) {
-        writePGCEditPal = e;
-        if (props != null) {
-            props.set("writePGCEditPal", e ? "true" : "false");
-        } else {
-            writePGCEditPalSet = true;
-        }
-    }
-
-    /**
-     * Get: fix completely invisibly subtitles due to alpha=0 (SUB/IDX and SUP/IFO import only).
-     * @return True: verbatim text mode
-     */
-    public static boolean getFixZeroAlpha() {
-        return fixZeroAlpha;
-    }
-
-    /**
-     * Set: fix completely invisibly subtitles due to alpha=0 (SUB/IDX and SUP/IFO import only).
-     * @param e True: verbatim text mode
-     */
-    public static void setFixZeroAlpha(boolean e) {
-        fixZeroAlpha = e;
-        if (props != null) {
-            props.set("fixZeroAlpha", e ? "true" : "false");
-        } else {
-            fixZeroAlphaSet = true;
-        }
     }
 
     /**
@@ -3493,5 +2481,4 @@ public class Core  extends Thread {
             return null;
         }
     }
-
 }

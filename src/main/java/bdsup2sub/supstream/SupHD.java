@@ -17,6 +17,7 @@ package bdsup2sub.supstream;
 
 import bdsup2sub.bitmap.Bitmap;
 import bdsup2sub.bitmap.Palette;
+import bdsup2sub.core.Configuration;
 import bdsup2sub.core.Core;
 import bdsup2sub.core.CoreException;
 import bdsup2sub.tools.BitStream;
@@ -33,6 +34,8 @@ import static bdsup2sub.utils.TimeUtils.ptsToTimeStr;
  * Reading of HD-DVD captions demuxed from EVO transport streams (HD-DVD-SUP).
  */
 public class SupHD implements Substream {
+
+    private final Configuration configuration = Configuration.getInstance();
 
     /** ArrayList of captions contained in the current file  */
     private ArrayList<SubPictureHD> subPictures = new ArrayList<SubPictureHD>();
@@ -362,7 +365,7 @@ public class SupHD implements Substream {
                 }
                 // each alpha entry consists of 1 byte
                 int alpha = 0xff - buffer.getByte(alphaOfs++);
-                if (alpha < Core.getAlphaCrop()) { // to not mess with scaling algorithms, make transparent color black
+                if (alpha < configuration.getAlphaCrop()) { // to not mess with scaling algorithms, make transparent color black
                     palette.setRGB(i, 0, 0, 0);
                 } else {
                     palette.setYCbCr(i, y, cb, cr);

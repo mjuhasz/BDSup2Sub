@@ -15,9 +15,11 @@
  */
 package bdsup2sub.gui;
 
+import bdsup2sub.core.Configuration;
 import bdsup2sub.core.Core;
 import bdsup2sub.core.ForcedFlagState;
 import bdsup2sub.core.Resolution;
+import bdsup2sub.utils.SubtitleUtils;
 import bdsup2sub.utils.ToolBox;
 
 import javax.swing.*;
@@ -27,11 +29,14 @@ import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.*;
 
+import static bdsup2sub.core.Configuration.*;
 import static bdsup2sub.gui.GuiUtils.centerRelativeToParent;
 
 public class ConversionDialog extends JDialog {
 
     private static final long serialVersionUID = 1L;
+
+    private final Configuration configuration = getInstance();
 
     private JPanel jContentPane;
     private JPanel jPanelResolution;
@@ -116,34 +121,34 @@ public class ConversionDialog extends JDialog {
         centerRelativeToParent(this, owner);
         setResizable(false);
 
-        changeResolution = Core.getConvertResolution();
+        changeResolution = configuration.getConvertResolution();
         // fix output resolution in case that it should not be changed
         // change target resolution to source resolution if no conversion is needed
         if (!changeResolution && Core.getNumFrames() > 0) {
             resolution = Core.getResolution(Core.getSubPictureSrc(0).width, Core.getSubPictureSrc(0).height);
         } else {
-            resolution = Core.getOutputResolution();
+            resolution = configuration.getOutputResolution();
         }
 
         moveCaptions = Core.getMoveCaptions();
         jCheckBoxMove.setEnabled(false);
         jCheckBoxMove.setSelected(moveCaptions);
 
-        delayPTS = Core.getDelayPTS();
-        minTimePTS = (int)Core.syncTimePTS(Core.getMinTimePTS(), Core.getFPSTrg());
-        changeFPS = Core.getConvertFPS();
-        changeScale = Core.getApplyFreeScale();
-        fixShortFrames = Core.getFixShortFrames();
-        fpsSrc = Core.getFPSSrc();
-        fpsTrg = Core.getFPSTrg();
-        scaleX = Core.getFreeScaleX();
-        scaleY = Core.getFreeScaleY();
-        fpsSrcCertain = Core.getFpsSrcCertain();
+        delayPTS = configuration.getDelayPTS();
+        minTimePTS = (int) SubtitleUtils.syncTimePTS(configuration.getMinTimePTS(), configuration.getFPSTrg(), configuration.getFPSTrg());
+        changeFPS = configuration.getConvertFPS();
+        changeScale = configuration.getApplyFreeScale();
+        fixShortFrames = configuration.getFixShortFrames();
+        fpsSrc = configuration.getFPSSrc();
+        fpsTrg = configuration.getFPSTrg();
+        scaleX = configuration.getFreeScaleFactorX();
+        scaleY = configuration.getFreeScaleFactorY();
+        fpsSrcCertain = configuration.getFpsSrcCertain();
         cancel = false;
 
         // fill comboboxes and text fields
         for (Resolution r : Resolution.values()) {
-            jComboBoxResolution.addItem(Core.getResolutionName(r));
+            jComboBoxResolution.addItem(r.toString());
         }
 
         jComboBoxFPSSrc.addItem("23.975");
@@ -794,7 +799,7 @@ public class ConversionDialog extends JDialog {
                 public void actionPerformed(ActionEvent e) {
                     if (isReady) {
                         String s = (String)jComboBoxFPSSrc.getSelectedItem();
-                        double d = Core.getFPS(s);
+                        double d = SubtitleUtils.getFPS(s);
                         if (d > 0) {
                             fpsSrc = d;
                         }
@@ -808,7 +813,7 @@ public class ConversionDialog extends JDialog {
                 private void check() {
                     if (isReady) {
                         String s = fpsSrcEditor.getText();
-                        double d = Core.getFPS(s);
+                        double d = SubtitleUtils.getFPS(s);
                         Color c;
                         if (d>0) {
                             c = okBgnd;
@@ -855,17 +860,17 @@ public class ConversionDialog extends JDialog {
                 public void actionPerformed(ActionEvent e) {
                     if (isReady) {
                         String s = (String)jComboBoxFPSTrg.getSelectedItem();
-                        double d = Core.getFPS(s);
+                        double d = SubtitleUtils.getFPS(s);
                         if (d > 0) {
                             fpsTrg = d;
                         }
                         jComboBoxFPSTrg.setSelectedItem(ToolBox.formatDouble(fpsTrg));
                         jComboBoxFPSTrg.getEditor().getEditorComponent().setBackground(okBgnd);
                         //
-                        delayPTS = (int)Core.syncTimePTS(delayPTS,fpsTrg);
+                        delayPTS = (int)SubtitleUtils.syncTimePTS(delayPTS,fpsTrg,configuration.getFPSTrg());
                         jTextFieldDelay.setText(ToolBox.formatDouble(delayPTS/90.0));
                         //
-                        minTimePTS = (int)Core.syncTimePTS(minTimePTS,fpsTrg);
+                        minTimePTS = (int)SubtitleUtils.syncTimePTS(minTimePTS,fpsTrg,configuration.getFPSTrg());
                         jTextFieldMinTime.setText(ToolBox.formatDouble(minTimePTS/90.0));
                     }
                 }
@@ -874,10 +879,10 @@ public class ConversionDialog extends JDialog {
                 private void check() {
                     if (isReady) {
                         String s = fpsTrgEditor.getText();
-                        double d = Core.getFPS(s);
+                        double d = SubtitleUtils.getFPS(s);
                         Color c;
                         if (d>0) {
-                            if ((int)Core.syncTimePTS(delayPTS,fpsTrg) != delayPTS || minTimePTS != (int)Core.syncTimePTS(minTimePTS,fpsTrg)) {
+                            if ((int)SubtitleUtils.syncTimePTS(delayPTS,fpsTrg,configuration.getFPSTrg()) != delayPTS || minTimePTS != (int)SubtitleUtils.syncTimePTS(minTimePTS,fpsTrg,configuration.getFPSTrg())) {
                                 c = warnBgnd;
                             } else {
                                 c = okBgnd;
@@ -923,7 +928,7 @@ public class ConversionDialog extends JDialog {
                         String s = jTextFieldDelay.getText();
                         try {
                             // don't use getDouble as the value can be negative
-                            delayPTS = (int)Core.syncTimePTS((long)(Double.parseDouble(s)*90),fpsTrg);
+                            delayPTS = (int)SubtitleUtils.syncTimePTS((long)(Double.parseDouble(s)*90),fpsTrg, configuration.getFPSTrg());
                         } catch (NumberFormatException ex) {
                         }
                         jTextFieldDelay.setBackground(okBgnd);
@@ -937,7 +942,7 @@ public class ConversionDialog extends JDialog {
                         String s = jTextFieldDelay.getText();
                         try {
                             // don't use getDouble as the value can be negative
-                            delayPTS = (int)Core.syncTimePTS((long)(Double.parseDouble(s)*90),fpsTrg);
+                            delayPTS = (int)SubtitleUtils.syncTimePTS((long)(Double.parseDouble(s)*90),fpsTrg, configuration.getFPSTrg());
                             if (!s.equalsIgnoreCase(ToolBox.formatDouble(delayPTS/90.0))) {
                                 jTextFieldDelay.setBackground(warnBgnd);
                             } else {
@@ -1006,50 +1011,50 @@ public class ConversionDialog extends JDialog {
                         String s;
                         double d;
                         // fps source
-                        Core.storeConvertFPS(changeFPS);
+                        configuration.storeConvertFPS(changeFPS);
                         if (changeFPS) {
                             s = (String)jComboBoxFPSSrc.getSelectedItem();
-                            d = Core.getFPS(s);
+                            d = SubtitleUtils.getFPS(s);
                             if (d > 0) {
                                 fpsSrc = d;
-                                Core.storeFPSSrc(fpsSrc);
+                                configuration.storeFPSSrc(fpsSrc);
                             }
                         }
                         // fps target
                         s = (String)jComboBoxFPSTrg.getSelectedItem();
-                        d = Core.getFPS(s);
+                        d = SubtitleUtils.getFPS(s);
                         if (d > 0) {
                             fpsTrg = d;
-                            Core.storeFPSTrg(fpsTrg);
+                            configuration.storeFPSTrg(fpsTrg);
                         }
                         // delay
                         s = jTextFieldDelay.getText();
                         try {
-                            delayPTS = (int)Core.syncTimePTS((long)(Double.parseDouble(s)*90),fpsTrg);
-                            Core.storeDelayPTS(delayPTS);
+                            delayPTS = (int)SubtitleUtils.syncTimePTS((long)(Double.parseDouble(s)*90),fpsTrg, configuration.getFPSTrg());
+                            configuration.storeDelayPTS(delayPTS);
                         } catch (NumberFormatException ex) {
                         }
                         // min time
-                        Core.storeFixShortFrames(fixShortFrames);
+                        configuration.storeFixShortFrames(fixShortFrames);
                         s = jTextFieldMinTime.getText();
                         try {
-                            minTimePTS = (int)Core.syncTimePTS((long)(Double.parseDouble(s)*90),fpsTrg);
-                            Core.storeMinTimePTS(minTimePTS);
+                            minTimePTS = (int)SubtitleUtils.syncTimePTS((long)(Double.parseDouble(s)*90),fpsTrg, configuration.getFPSTrg());
+                            configuration.storeMinTimePTS(minTimePTS);
                         } catch (NumberFormatException ex) {
                         }
                         // exit
-                        Core.storeConvertResolution(changeResolution);
+                        configuration.storeConvertResolution(changeResolution);
                         if (changeResolution) {
-                            Core.storeOutputResolution(resolution);
+                            configuration.storeOutputResolution(resolution);
                         }
                         // scaleX
                         s = jTextFieldScaleX.getText();
                         d = ToolBox.getDouble(s);
                         if (d >0) {
-                            if (d > Core.MAX_FREE_SCALE_FACTOR) {
-                                d = Core.MAX_FREE_SCALE_FACTOR;
-                            } else if (d < Core.MIN_FREE_SCALE_FACTOR) {
-                                d = Core.MIN_FREE_SCALE_FACTOR;
+                            if (d > MAX_FREE_SCALE_FACTOR) {
+                                d = MAX_FREE_SCALE_FACTOR;
+                            } else if (d < MIN_FREE_SCALE_FACTOR) {
+                                d = MIN_FREE_SCALE_FACTOR;
                             }
                             scaleX = d;
                         }
@@ -1057,20 +1062,20 @@ public class ConversionDialog extends JDialog {
                         s = jTextFieldScaleY.getText();
                         d = ToolBox.getDouble(s);
                         if (d >0) {
-                            if (d > Core.MAX_FREE_SCALE_FACTOR) {
-                                d = Core.MAX_FREE_SCALE_FACTOR;
-                            } else if (d < Core.MIN_FREE_SCALE_FACTOR) {
-                                d = Core.MIN_FREE_SCALE_FACTOR;
+                            if (d > MAX_FREE_SCALE_FACTOR) {
+                                d = MAX_FREE_SCALE_FACTOR;
+                            } else if (d < MIN_FREE_SCALE_FACTOR) {
+                                d = MIN_FREE_SCALE_FACTOR;
                             }
                             scaleY = d;
                         }
                         // set scale X/Y
-                        Core.storeApplyFreeScale(changeScale);
+                        configuration.storeApplyFreeScale(changeScale);
                         if (changeScale) {
-                            Core.storeFreeScale(scaleX, scaleY);
+                            configuration.storeFreeScaleFactor(scaleX, scaleY);
                         }
                         // forceAll is not stored
-                        Core.storeProps();
+                        configuration.storeConfig();
                     }
                 }
             });
@@ -1090,22 +1095,22 @@ public class ConversionDialog extends JDialog {
             jButtonRestore.setMnemonic('e');
             jButtonRestore.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
-                    changeResolution = Core.restoreConvertResolution();
+                    changeResolution = configuration.loadConvertResolution();
                     if (changeResolution) {
-                        resolution = Core.restoreResolution();
+                        resolution = configuration.loadResolution();
                     }
-                    changeFPS = Core.restoreConvertFPS();
+                    changeFPS = configuration.loadConvertFPS();
                     if (changeFPS && !fpsSrcCertain) {
-                        fpsSrc = Core.restoreFpsSrc();
+                        fpsSrc = configuration.loadFpsSrc();
                     }
-                    fpsTrg = Core.restoreFpsTrg();
-                    delayPTS = Core.restoreDelayPTS();
-                    fixShortFrames = Core.restoreFixShortFrames();
-                    minTimePTS = Core.restoreMinTimePTS();
-                    changeScale = Core.restoreApplyFreeScale();
+                    fpsTrg = configuration.loadFpsTrg();
+                    delayPTS = configuration.loadDelayPTS();
+                    fixShortFrames = configuration.loadFixShortFrames();
+                    minTimePTS = configuration.loadMinTimePTS();
+                    changeScale = configuration.loadApplyFreeScale();
                     if (changeScale) {
-                        scaleX = Core.restoreFreeScaleX();
-                        scaleY = Core.restoreFreeScaleY();
+                        scaleX = configuration.loadFreeScaleFactorX();
+                        scaleY = configuration.loadFreeScaleFactorY();
                     }
                     forcedState = Core.getForceAll();
                     fillDialog();
@@ -1128,26 +1133,26 @@ public class ConversionDialog extends JDialog {
             jButtonReset.setMnemonic('t');
             jButtonReset.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
-                    changeResolution = Core.getConvertResolutionDefault();
+                    changeResolution = CONVERT_RESOLUTION_BY_DEFAULT;
                     if (changeResolution) {
-                        resolution = Core.getResolutionDefault();
+                        resolution = DEFAULT_TARGET_RESOLUTION;
                     }
-                    changeFPS = Core.getConvertFPSdefault();
+                    changeFPS = CONVERT_FRAMERATE_BY_DEFAULT;
                     if (changeFPS) {
                         if (!fpsSrcCertain) {
-                            fpsSrc = Core.getFpsSrcDefault();
+                            fpsSrc = DEFAULT_SOURCE_FRAMERATE;
                         }
-                        fpsTrg = Core.getFpsTrgDefault();
+                        fpsTrg = DEFAULT_TARGET_FRAMERATE;
                     } else {
                         fpsTrg = fpsSrc;
                     }
-                    delayPTS = Core.getDelayPTSdefault();
-                    fixShortFrames = Core.getFixShortFramesDefault();
-                    minTimePTS = Core.getMinTimePTSdefault();
-                    changeScale = Core.getApplyFreeScaleDefault();
+                    delayPTS = DEFAULT_PTS_DELAY;
+                    fixShortFrames = FIX_SHORT_FRAMES_BY_DEFAULT;
+                    minTimePTS = DEFAULT_MIN_DISPLAY_TIME_PTS;
+                    changeScale = APPLY_FREE_SCALE_BY_DEFAULT;
                     if (changeScale) {
-                        scaleX = Core.getFreeScaleXdefault();
-                        scaleY = Core.getFreeScaleYdefault();
+                        scaleX = DEFAULT_FREE_SCALE_FACTOR_X;
+                        scaleY = DEFAULT_FREE_SCALE_FACTOR_Y;
                     }
                     forcedState = ForcedFlagState.KEEP;
                     fillDialog();
@@ -1232,7 +1237,7 @@ public class ConversionDialog extends JDialog {
                     if (isReady) {
                         String s = jTextFieldMinTime.getText();
                         try {
-                            minTimePTS = (int)Core.syncTimePTS((long)(Double.parseDouble(s)*90),fpsTrg);
+                            minTimePTS = (int)SubtitleUtils.syncTimePTS((long)(Double.parseDouble(s)*90),fpsTrg,configuration.getFPSTrg());
                         } catch (NumberFormatException ex) {
                         }
                         jTextFieldMinTime.setBackground(okBgnd);
@@ -1245,7 +1250,7 @@ public class ConversionDialog extends JDialog {
                     if (isReady) {
                         String s = jTextFieldMinTime.getText();
                         try {
-                            minTimePTS = (int)Core.syncTimePTS((long)(Double.parseDouble(s)*90),fpsTrg);
+                            minTimePTS = (int)SubtitleUtils.syncTimePTS((long)(Double.parseDouble(s)*90),fpsTrg,configuration.getFPSTrg());
                             if (!s.equalsIgnoreCase(ToolBox.formatDouble(minTimePTS/90.0))) {
                                 jTextFieldMinTime.setBackground(warnBgnd);
                             } else {
@@ -1292,50 +1297,50 @@ public class ConversionDialog extends JDialog {
                         String s;
                         double d;
                         // fps source
-                        Core.setConvertFPS(changeFPS);
+                        configuration.setConvertFPS(changeFPS);
                         if (changeFPS) {
                             s = (String)jComboBoxFPSSrc.getSelectedItem();
-                            d = Core.getFPS(s);
+                            d = SubtitleUtils.getFPS(s);
                             if (d > 0) {
                                 fpsSrc = d;
-                                Core.setFPSSrc(fpsSrc);
+                                configuration.setFPSSrc(fpsSrc);
                             }
                         }
                         // fps target
                         s = (String)jComboBoxFPSTrg.getSelectedItem();
-                        d = Core.getFPS(s);
+                        d = SubtitleUtils.getFPS(s);
                         if (d > 0) {
                             fpsTrg = d;
-                            Core.setFPSTrg(fpsTrg);
+                            configuration.setFPSTrg(fpsTrg);
                         }
                         // delay
                         s = jTextFieldDelay.getText();
                         try {
-                            delayPTS = (int)Core.syncTimePTS((long)(Double.parseDouble(s)*90),fpsTrg);
-                            Core.setDelayPTS(delayPTS);
+                            delayPTS = (int)SubtitleUtils.syncTimePTS((long)(Double.parseDouble(s)*90),fpsTrg, configuration.getFPSTrg());
+                            configuration.setDelayPTS(delayPTS);
                         } catch (NumberFormatException ex) {
                         }
                         // min time
-                        Core.setFixShortFrames(fixShortFrames);
+                        configuration.setFixShortFrames(fixShortFrames);
                         s = jTextFieldMinTime.getText();
                         try {
-                            minTimePTS = (int)Core.syncTimePTS((long)(Double.parseDouble(s)*90),fpsTrg);
-                            Core.setMinTimePTS(minTimePTS);
+                            minTimePTS = (int)SubtitleUtils.syncTimePTS((long)(Double.parseDouble(s)*90),fpsTrg, configuration.getFPSTrg());
+                            configuration.setMinTimePTS(minTimePTS);
                         } catch (NumberFormatException ex) {
                         }
                         // exit
-                        Core.setConvertResolution(changeResolution);
+                        configuration.setConvertResolution(changeResolution);
                         if (changeResolution) {
-                            Core.setOutputResolution(resolution);
+                            configuration.setOutputResolution(resolution);
                         }
                         // scaleX
                         s = jTextFieldScaleX.getText();
                         d = ToolBox.getDouble(s);
                         if (d >0) {
-                            if (d > Core.MAX_FREE_SCALE_FACTOR) {
-                                d = Core.MAX_FREE_SCALE_FACTOR;
-                            } else if (d < Core.MIN_FREE_SCALE_FACTOR) {
-                                d = Core.MIN_FREE_SCALE_FACTOR;
+                            if (d > MAX_FREE_SCALE_FACTOR) {
+                                d = MAX_FREE_SCALE_FACTOR;
+                            } else if (d < MIN_FREE_SCALE_FACTOR) {
+                                d = MIN_FREE_SCALE_FACTOR;
                             }
                             scaleX = d;
                         }
@@ -1343,17 +1348,17 @@ public class ConversionDialog extends JDialog {
                         s = jTextFieldScaleY.getText();
                         d = ToolBox.getDouble(s);
                         if (d >0) {
-                            if (d > Core.MAX_FREE_SCALE_FACTOR) {
-                                d = Core.MAX_FREE_SCALE_FACTOR;
-                            } else if (d < Core.MIN_FREE_SCALE_FACTOR) {
-                                d = Core.MIN_FREE_SCALE_FACTOR;
+                            if (d > MAX_FREE_SCALE_FACTOR) {
+                                d = MAX_FREE_SCALE_FACTOR;
+                            } else if (d < MIN_FREE_SCALE_FACTOR) {
+                                d = MIN_FREE_SCALE_FACTOR;
                             }
                             scaleY = d;
                         }
                         // set scale X/Y
-                        Core.setApplyFreeScale(changeScale);
+                        configuration.setApplyFreeScale(changeScale);
                         if (changeScale) {
-                            Core.setFreeScale(scaleX, scaleY);
+                            configuration.setFreeScaleFactor(scaleX, scaleY);
                         }
                         cancel = false;
                         // forced state
@@ -1387,10 +1392,10 @@ public class ConversionDialog extends JDialog {
                         String s = jTextFieldScaleX.getText();
                         double d = ToolBox.getDouble(s);
                         if (d >0) {
-                            if (d > Core.MAX_FREE_SCALE_FACTOR) {
-                                d = Core.MAX_FREE_SCALE_FACTOR;
-                            } else if (d < Core.MIN_FREE_SCALE_FACTOR) {
-                                d = Core.MIN_FREE_SCALE_FACTOR;
+                            if (d > MAX_FREE_SCALE_FACTOR) {
+                                d = MAX_FREE_SCALE_FACTOR;
+                            } else if (d < MIN_FREE_SCALE_FACTOR) {
+                                d = MIN_FREE_SCALE_FACTOR;
                             }
                             scaleX = d;
                         }
@@ -1404,7 +1409,7 @@ public class ConversionDialog extends JDialog {
                     if (isReady) {
                         String s = jTextFieldScaleX.getText();
                         double d = ToolBox.getDouble(s);
-                        if (d >= Core.MIN_FREE_SCALE_FACTOR && d <= Core.MAX_FREE_SCALE_FACTOR) {
+                        if (d >= MIN_FREE_SCALE_FACTOR && d <= MAX_FREE_SCALE_FACTOR) {
                             scaleX = d;
                             jTextFieldScaleX.setBackground(okBgnd);
                         } else {
@@ -1447,10 +1452,10 @@ public class ConversionDialog extends JDialog {
                         String s = jTextFieldScaleY.getText();
                         double d = ToolBox.getDouble(s);
                         if (d >0) {
-                            if (d > Core.MAX_FREE_SCALE_FACTOR) {
-                                d = Core.MAX_FREE_SCALE_FACTOR;
-                            } else if (d < Core.MIN_FREE_SCALE_FACTOR) {
-                                d = Core.MIN_FREE_SCALE_FACTOR;
+                            if (d > MAX_FREE_SCALE_FACTOR) {
+                                d = MAX_FREE_SCALE_FACTOR;
+                            } else if (d < MIN_FREE_SCALE_FACTOR) {
+                                d = MIN_FREE_SCALE_FACTOR;
                             }
                             scaleY = d;
                         }
@@ -1463,7 +1468,7 @@ public class ConversionDialog extends JDialog {
                     if (isReady) {
                         String s = jTextFieldScaleY.getText();
                         double d = ToolBox.getDouble(s);
-                        if (d >= Core.MIN_FREE_SCALE_FACTOR && d <= Core.MAX_FREE_SCALE_FACTOR) {
+                        if (d >= MIN_FREE_SCALE_FACTOR && d <= MAX_FREE_SCALE_FACTOR) {
                             scaleY = d;
                             jTextFieldScaleY.setBackground(okBgnd);
                         } else {

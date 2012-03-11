@@ -18,12 +18,10 @@ package bdsup2sub.supstream;
 import bdsup2sub.bitmap.Bitmap;
 import bdsup2sub.bitmap.BitmapBounds;
 import bdsup2sub.bitmap.Palette;
-import bdsup2sub.core.Core;
-import bdsup2sub.core.CoreException;
-import bdsup2sub.core.Framerate;
-import bdsup2sub.core.Resolution;
+import bdsup2sub.core.*;
 import bdsup2sub.tools.QuantizeFilter;
 import bdsup2sub.utils.FilenameUtils;
+import bdsup2sub.utils.SubtitleUtils;
 import bdsup2sub.utils.ToolBox;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
@@ -52,6 +50,8 @@ import static bdsup2sub.utils.TimeUtils.timeStrXmlToPTS;
  * Reading and writing of Blu-Ray captions in Xml/Png format.
  */
 public class SupXml implements Substream {
+
+    private static final Configuration configuration = Configuration.getInstance();
 
     /** ArrayList of captions contained in the current file */
     private List<SubPictureXml> subPictures = new ArrayList<SubPictureXml>();
@@ -155,7 +155,7 @@ public class SupXml implements Substream {
                     palette = new Palette(256);
                     for (int i=0; i < icm.getMapSize(); i++) {
                         int alpha = (icm.getRGB(i) >> 24) & 0xff;
-                        if (alpha >= Core.getAlphaCrop()) {
+                        if (alpha >= configuration.getAlphaCrop()) {
                             palette.setARGB(i, icm.getRGB(i));
                         } else {
                             palette.setARGB(i, 0);
@@ -185,7 +185,7 @@ public class SupXml implements Substream {
                 palette = new Palette(256);
                 for (int i=0; i < size; i++) {
                     int alpha = (ct[i] >> 24) & 0xff;
-                    if (alpha >= Core.getAlphaCrop()) {
+                    if (alpha >= configuration.getAlphaCrop()) {
                         palette.setARGB(i, ct[i]);
                     } else {
                         palette.setARGB(i, 0);
@@ -194,7 +194,7 @@ public class SupXml implements Substream {
             }
             primaryColorIndex = bitmap.getPrimaryColorIndex(palette.getAlpha(), Core.getAlphaThr(), palette.getY());
             // crop
-            BitmapBounds bounds = bitmap.getCroppingBounds(palette.getAlpha(), Core.getAlphaCrop());
+            BitmapBounds bounds = bitmap.getCroppingBounds(palette.getAlpha(), configuration.getAlphaCrop());
             if (bounds.yMin>0 || bounds.xMin > 0 || bounds.xMax<bitmap.getWidth()-1 || bounds.yMax<bitmap.getHeight()-1) {
                 w = bounds.xMax - bounds.xMin + 1;
                 h = bounds.yMax - bounds.yMin + 1;
@@ -227,7 +227,7 @@ public class SupXml implements Substream {
      * @throws CoreException
      */
     public static void writeXml(final String fname, final SubPicture pics[]) throws CoreException {
-        double fps = Core.getFPSTrg();
+        double fps = configuration.getFPSTrg();
         double fpsXml = XmlFps(fps);
         long t;
         BufferedWriter out = null;
@@ -244,7 +244,7 @@ public class SupXml implements Substream {
             out.newLine();
             out.write("    <Language Code=\"" + LANGUAGES[Core.getLanguageIdx()][2] + "\"/>");
             out.newLine();
-            String res = Core.getResolutionNameXml(Core.getOutputResolution());
+            String res = Core.getResolutionNameXml(configuration.getOutputResolution());
             out.write("    <Format VideoFormat=\"" + res + "\" FrameRate=\"" + ToolBox.formatDouble(fps) + "\" DropFrame=\"False\"/>");
             out.newLine();
             t = pics[0].startTime;
@@ -472,7 +472,7 @@ public class SupXml implements Substream {
                 case FORMAT:
                     at = atts.getValue("FrameRate");
                     if (at != null) {
-                        fps = Core.getFPS(at);
+                        fps = SubtitleUtils.getFPS(at);
                         fpsXml = XmlFps(fps);
                         Core.print("fps: " + ToolBox.formatDouble(fps) + "\n");
                     }

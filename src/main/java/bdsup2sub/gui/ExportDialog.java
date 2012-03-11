@@ -15,6 +15,7 @@
  */
 package bdsup2sub.gui;
 
+import bdsup2sub.core.Configuration;
 import bdsup2sub.core.Core;
 import bdsup2sub.core.OutputMode;
 import bdsup2sub.utils.FilenameUtils;
@@ -30,6 +31,8 @@ import static bdsup2sub.gui.GuiUtils.centerRelativeToParent;
 public class ExportDialog extends JDialog {
 
     private static final long serialVersionUID = 1L;
+
+    private final Configuration configuration = Configuration.getInstance();
 
     private JPanel jContentPane;
     private JTextField jTextFieldFileName;
@@ -71,13 +74,14 @@ public class ExportDialog extends JDialog {
         fileName = "";
         languageIdx = Core.getLanguageIdx();
         exportForced = (Core.getNumForcedFrames() > 0) && Core.getExportForced();
-        writePGCPal = Core.getWritePGCEditPal();
+        writePGCPal = configuration.getWritePGCEditPal();
         cancel = false;
 
         // init components
+        OutputMode outputMode = configuration.getOutputMode();
         for (String[] language : LANGUAGES) {
             int n;
-            if (Core.getOutputMode() == OutputMode.XML) {
+            if (outputMode == OutputMode.XML) {
                 n = 2;
             } else {
                 n = 1;
@@ -85,11 +89,11 @@ public class ExportDialog extends JDialog {
             jComboBoxLanguage.addItem(language[0] + " (" + language[n] + ")");
         }
         jComboBoxLanguage.setSelectedIndex(languageIdx);
-        if (Core.getOutputMode() == OutputMode.BDSUP) {
+        if (outputMode == OutputMode.BDSUP) {
             jComboBoxLanguage.setEnabled(false);
         }
 
-        if (Core.getOutputMode() == OutputMode.VOBSUB || Core.getOutputMode() == OutputMode.SUPIFO) {
+        if (outputMode == OutputMode.VOBSUB || outputMode == OutputMode.SUPIFO) {
             jCheckBoxWritePGCPal.setEnabled(true);
             jCheckBoxWritePGCPal.setSelected(writePGCPal);
         } else {
@@ -104,13 +108,13 @@ public class ExportDialog extends JDialog {
 
         String sTitle;
 
-        if (Core.getOutputMode() == OutputMode.VOBSUB) {
+        if (outputMode == OutputMode.VOBSUB) {
             extension = "idx";
             sTitle = "SUB/IDX (VobSub)";
-        } else if (Core.getOutputMode() == OutputMode.SUPIFO) {
+        } else if (outputMode == OutputMode.SUPIFO) {
             extension = "ifo";
             sTitle = "SUP/IFO (SUP DVD)";
-        } else if (Core.getOutputMode() == OutputMode.BDSUP) {
+        } else if (outputMode == OutputMode.BDSUP) {
             extension = "sup";
             sTitle = "BD SUP";
         } else {
@@ -309,8 +313,8 @@ public class ExportDialog extends JDialog {
                         // exit
                         Core.setExportForced(exportForced);
                         Core.setLanguageIdx(languageIdx);
-                        if (Core.getOutputMode() == OutputMode.VOBSUB || Core.getOutputMode() == OutputMode.SUPIFO) {
-                            Core.setWritePGCEditPal(writePGCPal);
+                        if (configuration.getOutputMode() == OutputMode.VOBSUB || configuration.getOutputMode() == OutputMode.SUPIFO) {
+                            configuration.setWritePGCEditPal(writePGCPal);
                         }
                         cancel = false;
                         dispose();

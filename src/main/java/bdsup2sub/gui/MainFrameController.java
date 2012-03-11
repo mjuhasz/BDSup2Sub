@@ -149,15 +149,16 @@ public class MainFrameController {
         @Override
         public void actionPerformed(ActionEvent event) {
             boolean showException = true;
+            OutputMode outputMode = model.getOutputMode();
             String path;
             try {
                 ExportDialog exp = new ExportDialog(view);
                 path = model.getSavePath() + File.separatorChar + model.getSaveFilename() + "_exp.";
-                if (Core.getOutputMode() == OutputMode.VOBSUB) {
+                if (outputMode == OutputMode.VOBSUB) {
                     path += "idx";
-                } else if (Core.getOutputMode() == OutputMode.SUPIFO) {
+                } else if (outputMode == OutputMode.SUPIFO) {
                     path += "ifo";
-                } else if (Core.getOutputMode() == OutputMode.BDSUP) {
+                } else if (outputMode == OutputMode.BDSUP) {
                     path += "sup";
                 } else {
                     path += "xml";
@@ -172,10 +173,10 @@ public class MainFrameController {
                     model.setSaveFilename(FilenameUtils.removeExtension(FilenameUtils.getName(fn)).replaceAll("_exp$",""));
                     //
                     File fi,fs;
-                    if (Core.getOutputMode() == OutputMode.VOBSUB) {
+                    if (outputMode == OutputMode.VOBSUB) {
                         fi = new File(FilenameUtils.removeExtension(fn) + ".idx");
                         fs = new File(FilenameUtils.removeExtension(fn) + ".sub");
-                    } else if (Core.getOutputMode() == OutputMode.SUPIFO) {
+                    } else if (outputMode == OutputMode.SUPIFO) {
                         fi = new File(FilenameUtils.removeExtension(fn) + ".ifo");
                         fs = new File(FilenameUtils.removeExtension(fn) + ".sup");
                     } else {
@@ -301,11 +302,9 @@ public class MainFrameController {
                                 view.refreshSrcFrame(subIndex);
                                 view.refreshTrgFrame(subIndex);
                                 view.enableCoreComponents(true);
-                                if (Core.getOutputMode() == OutputMode.VOBSUB || Core.getInputMode() == InputMode.SUPIFO) {
+                                if (model.getOutputMode() == OutputMode.VOBSUB || Core.getInputMode() == InputMode.SUPIFO) {
                                     view.enableVobsubBits(true);
                                 }
-                                // tell the core that a stream was loaded via the GUI
-                                Core.loadedHook();
                                 model.addToRecentFiles(loadPath);
                                 view.updateRecentFilesMenu();
                             } else {
@@ -554,15 +553,15 @@ public class MainFrameController {
     private class ConversionSettingsMenuItemActionListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent event) {
-            final Resolution rOld = Core.getOutputResolution();
-            final double fpsTrgOld = Core.getFPSTrg();
-            final boolean changeFpsOld = Core.getConvertFPS();
-            final int delayOld = Core.getDelayPTS();
+            final Resolution rOld = model.getOutputResolution();
+            final double fpsTrgOld = model.getFPSTrg();
+            final boolean changeFpsOld = model.getConvertFPS();
+            final int delayOld = model.getDelayPTS();
             final double fsXOld;
             final double fsYOld;
-            if (Core.getApplyFreeScale()) {
-                fsXOld = Core.getFreeScaleX();
-                fsYOld = Core.getFreeScaleY();
+            if (model.getApplyFreeScale()) {
+                fsXOld = model.getFreeScaleX();
+                fsYOld = model.getFreeScaleY();
             } else {
                 fsXOld = 1.0;
                 fsYOld = 1.0;
@@ -581,7 +580,7 @@ public class MainFrameController {
                             try {
                                 if (Core.isReady()) {
                                     int subIndex = model.getSubIndex();
-                                    Core.reScanSubtitles(rOld, fpsTrgOld, delayOld, changeFpsOld,fsXOld,fsYOld);
+                                    Core.reScanSubtitles(rOld, fpsTrgOld, delayOld, changeFpsOld, fsXOld, fsYOld);
                                     Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
                                     view.refreshTrgFrame(subIndex);
                                 }
@@ -632,7 +631,7 @@ public class MainFrameController {
         @Override
         public void actionPerformed(ActionEvent event) {
             boolean selected = view.isFixInvisibleFramesSelected();
-            Core.setFixZeroAlpha(selected);
+            model.setFixZeroAlpha(selected);
         }
     }
 
@@ -640,7 +639,7 @@ public class MainFrameController {
         @Override
         public void actionPerformed(ActionEvent event) {
             boolean selected = view.isVerbatimOutputSelected();
-            Core.setVerbatim(selected);
+            model.setVerbatim(selected);
         }
     }
 
@@ -1035,7 +1034,7 @@ public class MainFrameController {
                 int idx = view.getOutputFormatComboBoxSelectedIndex();
                 for (OutputMode m : OutputMode.values()) {
                     if (idx == m.ordinal()) {
-                        Core.setOutputMode(m);
+                        model.setOutputMode(m);
                         break;
                     }
                 }
@@ -1048,10 +1047,11 @@ public class MainFrameController {
                                 int subIndex = model.getSubIndex();
                                 Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
                                 view.refreshTrgFrame(subIndex);
-                                if (Core.getOutputMode() == OutputMode.VOBSUB || Core.getOutputMode() == OutputMode.SUPIFO)
+                                if (model.getOutputMode() == OutputMode.VOBSUB || model.getOutputMode() == OutputMode.SUPIFO) {
                                     view.enableVobsubBits(true);
-                                else
+                                } else {
                                     view.enableVobsubBits(false);
+                                }
                             } catch (CoreException ex) {
                                 view.error(ex.getMessage());
                             } catch (Exception ex) {
@@ -1073,7 +1073,7 @@ public class MainFrameController {
                 int idx = view.getPaletteComboBoxSelectedIndex();
                 for (PaletteMode m : PaletteMode.values()) {
                     if (idx == m.ordinal()) {
-                        Core.setPaletteMode(m);
+                        model.setPaletteMode(m);
                         break;
                     }
                 }
@@ -1109,7 +1109,7 @@ public class MainFrameController {
                 int idx = view.getFilterComboBoxSelectedIndex();
                 for (ScalingFilter s : ScalingFilter.values()) {
                     if (idx == s.ordinal()) {
-                        Core.setScalingFilter(s);
+                        model.setScalingFilter(s);
                         break;
                     }
                 }

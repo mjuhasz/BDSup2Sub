@@ -21,6 +21,7 @@ import bdsup2sub.gui.MainFrameModel;
 import bdsup2sub.gui.MainFrameView;
 import bdsup2sub.tools.Props;
 import bdsup2sub.utils.FilenameUtils;
+import bdsup2sub.utils.SubtitleUtils;
 import bdsup2sub.utils.ToolBox;
 
 import javax.swing.*;
@@ -35,9 +36,12 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
+import static bdsup2sub.core.Configuration.*;
 import static bdsup2sub.core.Constants.*;
 
-class BDSup2Sub {
+public class BDSup2Sub {
+
+    private static final Configuration configuration = getInstance();
 
     /** Contains the parameter strings in lower case - order must be as in the enumeration {@link Parameters}. */
     private static final String PARAMS[] = {
@@ -366,7 +370,7 @@ class BDSup2Sub {
                         } else {
                             fatalError("Unknown extension of target " + trg);
                         }
-                        Core.setOutputMode(mode);
+                        configuration.setOutputMode(mode);
                         continue;
                     }
                 }
@@ -435,39 +439,39 @@ class BDSup2Sub {
                     case RESOLUTION:
                         // resolution for export
                         if (val.toLowerCase().equals("keep")) {
-                            Core.setConvertResolution(false);
+                            configuration.setConvertResolution(false);
                         } else {
-                            Core.setConvertResolution(true);
+                            configuration.setConvertResolution(true);
                             if (val.toLowerCase().equals("pal") || ival == 576) {
                                 r = Resolution.PAL;
                                 if (!defineFPStrg) {
-                                    Core.setFPSTrg(Framerate.PAL.getValue());
+                                    configuration.setFPSTrg(Framerate.PAL.getValue());
                                 }
                             } else if (val.toLowerCase().equals("ntsc") || ival == 480) {
                                 r = Resolution.NTSC;
                                 if (!defineFPStrg) {
-                                    Core.setFPSTrg(Framerate.NTSC.getValue());
+                                    configuration.setFPSTrg(Framerate.NTSC.getValue());
                                 }
                             } else if (val.toLowerCase().equals("720p") || ival == 720) {
                                 r = Resolution.HD_720;
                                 if (!defineFPStrg) {
-                                    Core.setFPSTrg(Framerate.FPS_23_976.getValue());
+                                    configuration.setFPSTrg(Framerate.FPS_23_976.getValue());
                                 }
                             } else if (val.toLowerCase().equals("1440x1080")) {
                                 r = Resolution.HD_1440x1080;
                                 if (!defineFPStrg) {
-                                    Core.setFPSTrg(Framerate.FPS_23_976.getValue());
+                                    configuration.setFPSTrg(Framerate.FPS_23_976.getValue());
                                 }
                             } else if (val.toLowerCase().equals("1080p") || ival == 1080) {
                                 r = Resolution.HD_1080;
                                 if (!defineFPStrg) {
-                                    Core.setFPSTrg(Framerate.FPS_23_976.getValue());
+                                    configuration.setFPSTrg(Framerate.FPS_23_976.getValue());
                                 }
                             } else {
                                 fatalError("Illegal resolution: " + val);
                             }
                         }
-                        System.out.println("OPTION: set resolution to " + Core.getResolutionName(r));
+                        System.out.println("OPTION: set resolution to " + r);
                         break;
                     case LANGUAGE:
                         // language used for SUB/IDX export
@@ -537,20 +541,20 @@ class BDSup2Sub {
                                 fpsSrc = 0; // stub to avoid undefined warning
                             } else {
                                 autoFPS = false;
-                                fpsSrc = Core.getFPS(srcStr);
+                                fpsSrc = SubtitleUtils.getFPS(srcStr);
                                 if (fpsSrc <= 0) {
                                     fatalError("invalid source framerate: " + srcStr);
                                 }
-                                Core.setFPSSrc(fpsSrc);
+                                configuration.setFPSSrc(fpsSrc);
                             }
-                            fpsTrg = Core.getFPS(val.substring(pos + 1));
+                            fpsTrg = SubtitleUtils.getFPS(val.substring(pos + 1));
                             if (fpsTrg <= 0) {
                                 fatalError("invalid target value: " + val.substring(pos + 1));
                             }
                             if (!autoFPS) {
-                                Core.setFPSTrg(fpsTrg);
+                                configuration.setFPSTrg(fpsTrg);
                             }
-                            Core.setConvertFPS(true);
+                            configuration.setConvertFPS(true);
                             System.out.println("OPTION: convert framerate from "
                                     + (autoFPS ? "<auto>" : ToolBox.formatDouble(fpsSrc))
                                     + "fps to " + ToolBox.formatDouble(fpsTrg) + "fps");
@@ -561,11 +565,11 @@ class BDSup2Sub {
                                 Core.setKeepFps(true);
                                 System.out.println("OPTION: use source fps as target fps");
                             } else {
-                                fpsTrg = Core.getFPS(val);
+                                fpsTrg = SubtitleUtils.getFPS(val);
                                 if (fpsTrg <= 0) {
                                     fatalError("invalid target framerate: " + val);
                                 }
-                                Core.setFPSTrg(fpsTrg);
+                                configuration.setFPSTrg(fpsTrg);
                                 System.out.println("OPTION: synchronize target framerate to " + ToolBox.formatDouble(fpsTrg) + "fps");
                                 defineFPStrg = true;
                             }
@@ -580,8 +584,8 @@ class BDSup2Sub {
                         } catch (NumberFormatException ex) {
                             fatalError("Illegal delay value: " + val);
                         }
-                        int delayPTS = (int) Core.syncTimePTS((long) delay, Core.getFPSTrg());
-                        Core.setDelayPTS(delayPTS);
+                        int delayPTS = (int) SubtitleUtils.syncTimePTS((long) delay, configuration.getFPSTrg(), configuration.getFPSTrg());
+                        configuration.setDelayPTS(delayPTS);
                         System.out.println("OPTION: set delay to " + ToolBox.formatDouble(delayPTS / 90.0));
                         break;
                     case MIN_TIME:
@@ -592,9 +596,9 @@ class BDSup2Sub {
                         } catch (NumberFormatException ex) {
                             fatalError("Illegal value for minimum display time: " + val);
                         }
-                        int tMin = (int) Core.syncTimePTS((long) t, Core.getFPSTrg());
-                        Core.setMinTimePTS(tMin);
-                        Core.setFixShortFrames(true);
+                        int tMin = (int) SubtitleUtils.syncTimePTS((long) t, configuration.getFPSTrg(), configuration.getFPSTrg());
+                        configuration.setMinTimePTS(tMin);
+                        configuration.setFixShortFrames(true);
                         System.out.println("OPTION: set delay to " + ToolBox.formatDouble(tMin / 90.0));
                         break;
                     case MOVE_INSIDE:
@@ -674,11 +678,11 @@ class BDSup2Sub {
                     case PALETTE_MODE:
                         // select palette mode
                         if (val.toLowerCase().equals("keep")) {
-                            Core.setPaletteMode(PaletteMode.KEEP_EXISTING);
+                            configuration.setPaletteMode(PaletteMode.KEEP_EXISTING);
                         } else if (val.toLowerCase().equals("create")) {
-                            Core.setPaletteMode(PaletteMode.CREATE_NEW);
+                            configuration.setPaletteMode(PaletteMode.CREATE_NEW);
                         } else if (val.toLowerCase().equals("dither")) {
-                            Core.setPaletteMode(PaletteMode.CREATE_DITHERED);
+                            configuration.setPaletteMode(PaletteMode.CREATE_DITHERED);
                         } else {
                             fatalError("invalid palette mode: " + val);
                         }
@@ -686,7 +690,7 @@ class BDSup2Sub {
                         break;
                     case VERBATIM:
                         // select verbatim console output
-                        Core.setVerbatim(switchOn);
+                        configuration.setVerbatim(switchOn);
                         System.out.println("OPTION: enabled verbatim output mode: " + strSwitchOn);
                         break;
                     case FILTER:
@@ -698,7 +702,7 @@ class BDSup2Sub {
                                 break;
                             }
                         if (sfs != null) {
-                            Core.setScalingFilter(sfs);
+                            configuration.setScalingFilter(sfs);
                             System.out.println("OPTION: set scaling filter to: " + sfs.toString());
                         } else {
                             fatalError("invalid scaling filter: " + val);
@@ -713,7 +717,7 @@ class BDSup2Sub {
                             fatalError("Illegal value for maximum merge time: " + val);
                         }
                         int ti = (int) (t + 0.5);
-                        Core.setMergePTSdiff(ti);
+                        configuration.setMergePTSdiff(ti);
                         System.out.println("OPTION: set maximum merge time to " + ToolBox.formatDouble(ti / 90.0));
                         break;
                     case SCALE:
@@ -721,14 +725,14 @@ class BDSup2Sub {
                         pos = val.indexOf(',');
                         if (pos > 0) {
                             double scaleX = ToolBox.getDouble(val.substring(0, pos));
-                            if (scaleX < Core.MIN_FREE_SCALE_FACTOR || scaleX > Core.MAX_FREE_SCALE_FACTOR) {
+                            if (scaleX < MIN_FREE_SCALE_FACTOR || scaleX > MAX_FREE_SCALE_FACTOR) {
                                 fatalError("invalid x scaling factor: " + val.substring(0, pos));
                             }
                             double scaleY = ToolBox.getDouble(val.substring(pos + 1));
-                            if (scaleY < Core.MIN_FREE_SCALE_FACTOR || scaleY > Core.MAX_FREE_SCALE_FACTOR) {
+                            if (scaleY < MIN_FREE_SCALE_FACTOR || scaleY > MAX_FREE_SCALE_FACTOR) {
                                 fatalError("invalid y scaling factor: " + val.substring(pos + 1));
                             }
-                            Core.setFreeScale(scaleX, scaleY);
+                            configuration.setFreeScaleFactor(scaleX, scaleY);
                             System.out.println("OPTION: set free scaling factors to "
                                     + ToolBox.formatDouble(scaleX) + ", "
                                     + ToolBox.formatDouble(scaleY));
@@ -742,18 +746,18 @@ class BDSup2Sub {
                         if (ival < 0 || ival > 255) {
                             fatalError("Illegal number range for alpha cropping threshold: " + val);
                         } else {
-                            Core.setAlphaCrop(ival);
+                            configuration.setAlphaCrop(ival);
                         }
                         System.out.println("OPTION: set alpha cropping threshold to " + ival);
                         break;
                     case EXPORT_PAL:
                         // export target palette in PGCEdit text format
-                        Core.setWritePGCEditPal(switchOn);
+                        configuration.setWritePGCEditPal(switchOn);
                         System.out.println("OPTION: export target palette in PGCEDit text format: " + strSwitchOn);
                         break;
                     case FIX_ZERO_ALPHA:
                         // fix zero alpha frame palette for SUB/IDX and SUP/IFO
-                        Core.setFixZeroAlpha(switchOn);
+                        configuration.setFixZeroAlpha(switchOn);
                         System.out.println("OPTION: fix zero alpha frame palette for SUB/IDX and SUP/IFO: " + strSwitchOn);
                         break; // useless
                     case FORCE_ALL:
@@ -766,11 +770,11 @@ class BDSup2Sub {
                 }
             }
 
-            Core.setOutputResolution(r);
+            configuration.setOutputResolution(r);
 
             if (!Core.getKeepFps() && !defineFPStrg) {
-                Core.setFPSTrg(Core.getDefaultFPS(r));
-                System.out.println("Target frame rate set to " + ToolBox.formatDouble(Core.getFPSTrg())+"fps");
+                configuration.setFPSTrg(Core.getDefaultFPS(r));
+                System.out.println("Target frame rate set to " + ToolBox.formatDouble(configuration.getFPSTrg())+"fps");
             }
 
             // Step 3
@@ -782,7 +786,7 @@ class BDSup2Sub {
                     public void run() {
                         // Schedule a job for the event-dispatching thread:
                         // create and show GUI
-                        Core.init(this);
+                        configuration.setCliMode(false);
                         MainFrameModel model = new MainFrameModel();
                         if (sourceFile != null) {
                             model.setLoadPath(sourceFile);
@@ -841,7 +845,6 @@ class BDSup2Sub {
                 src = srcFileNames[fnum];
                 trg = trgFileNames[fnum];
                 // ok, let's start
-                Core.init(null);
                 try {
                     System.out.println("\nConverting " + mode + "\n");
                     // check input file
@@ -859,7 +862,7 @@ class BDSup2Sub {
                     Core.setCurrentStreamID(sid);
                     // check output file(s)
                     File fi,fs;
-                    if (Core.getOutputMode() == OutputMode.VOBSUB) {
+                    if (configuration.getOutputMode() == OutputMode.VOBSUB) {
                         fi = new File(FilenameUtils.removeExtension(trg) + ".idx");
                         fs = new File(FilenameUtils.removeExtension(trg) + ".sub");
                     } else {

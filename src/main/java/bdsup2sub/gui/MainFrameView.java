@@ -111,20 +111,20 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
         for (OutputMode m : OutputMode.values()) {
             jComboBoxOutputFormat.addItem(m.toString());
         }
-        jComboBoxOutputFormat.setSelectedIndex(Core.getOutputMode().ordinal());
+        jComboBoxOutputFormat.setSelectedIndex(model.getOutputMode().ordinal());
 
         for (PaletteMode m : PaletteMode.values()) {
             jComboBoxPalette.addItem(m.toString());
         }
-        jComboBoxPalette.setSelectedIndex(Core.getPaletteMode().ordinal());
+        jComboBoxPalette.setSelectedIndex(model.getPaletteMode().ordinal());
 
         for (ScalingFilter s : ScalingFilter.values()) {
             jComboBoxFilter.addItem(s.toString());
         }
-        jComboBoxFilter.setSelectedIndex(Core.getScalingFilter().ordinal());
+        jComboBoxFilter.setSelectedIndex(model.getScalingFilter().ordinal());
 
-        jMenuItemVerbatimOutput.setSelected(Core.getVerbatim());
-        jMenuItemFixInvisibleFrames.setSelected(Core.getFixZeroAlpha());
+        jMenuItemVerbatimOutput.setSelected(model.isVerbatim());
+        jMenuItemFixInvisibleFrames.setSelected(model.getFixZeroAlpha());
 
         printToConsole(APP_NAME_AND_VERSION + " - a converter from Blu-Ray/HD-DVD SUP to DVD SUB/IDX and more\n");
         printToConsole(AUTHOR_AND_DATE + "\n");
@@ -1135,9 +1135,9 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
      * Enable/disable components dependent only available for VobSubs
      */
     void enableVobSubMenuCombo() {
-        boolean b = (Core.getOutputMode() == OutputMode.VOBSUB   || Core.getOutputMode() == OutputMode.SUPIFO)
-                && ( (Core.getInputMode()  != InputMode.VOBSUB   && Core.getInputMode() != InputMode.SUPIFO)
-                        || Core.getPaletteMode() != PaletteMode.KEEP_EXISTING);
+        boolean b = (model.getOutputMode() == OutputMode.VOBSUB || model.getOutputMode() == OutputMode.SUPIFO)
+                && ( (Core.getInputMode() != InputMode.VOBSUB && Core.getInputMode() != InputMode.SUPIFO)
+                || model.getPaletteMode() != PaletteMode.KEEP_EXISTING);
 
         jComboBoxAlphaThreshold.setEnabled(b);
         jComboBoxHiMedThreshold.setEnabled(b);
@@ -1161,8 +1161,8 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
                 jComboBoxPalette.addItem(m.toString());
             }
         }
-        if (!b || Core.getPaletteMode() != PaletteMode.CREATE_DITHERED) {
-            jComboBoxPalette.setSelectedIndex(Core.getPaletteMode().ordinal());
+        if (!b || model.getPaletteMode() != PaletteMode.CREATE_DITHERED) {
+            jComboBoxPalette.setSelectedIndex(model.getPaletteMode().ordinal());
         } else {
             jComboBoxPalette.setSelectedIndex(PaletteMode.CREATE_NEW.ordinal());
         }
