@@ -16,6 +16,7 @@
 package bdsup2sub;
 
 import bdsup2sub.core.*;
+import bdsup2sub.gui.main.MainFrame;
 import bdsup2sub.gui.main.MainFrameController;
 import bdsup2sub.gui.main.MainFrameModel;
 import bdsup2sub.gui.main.MainFrameView;
@@ -787,14 +788,7 @@ public class BDSup2Sub {
                         // Schedule a job for the event-dispatching thread:
                         // create and show GUI
                         configuration.setCliMode(false);
-                        MainFrameModel model = new MainFrameModel();
-                        if (sourceFile != null) {
-                            model.setLoadPath(sourceFile);
-                            model.setSourceFileSpecifiedOnCmdLine(true);
-                        }
-                        MainFrameView view = new MainFrameView(model);
-                        MainFrameController controller = new MainFrameController(model, view);
-                        view.setVisible(true);
+                        new MainFrame(sourceFile).setVisible(true);
                     }
                 });
 

@@ -19,6 +19,7 @@ import bdsup2sub.bitmap.Palette;
 import bdsup2sub.core.*;
 import bdsup2sub.gui.*;
 import bdsup2sub.gui.edit.EditDialog;
+import bdsup2sub.gui.export.ExportDialog;
 import bdsup2sub.gui.export.ExportDialogController;
 import bdsup2sub.gui.export.ExportDialogModel;
 import bdsup2sub.gui.export.ExportDialogView;
@@ -168,14 +169,11 @@ public class MainFrameController {
                     path += "xml";
                 }
 
-                ExportDialogModel exportDialogModel = new ExportDialogModel();
-                exportDialogModel.setFilename(path);
-                ExportDialogView exportDialogView = new ExportDialogView(exportDialogModel, view);
-                ExportDialogController exportDialogController = new ExportDialogController(exportDialogModel, exportDialogView);
-                exportDialogView.setVisible(true);
+                ExportDialog exportDialog = new ExportDialog(path, view);
+                exportDialog.setVisible(true);
 
-                String fn = exportDialogModel.getFilename();
-                if (!exportDialogModel.wasCanceled() && !fn.isEmpty()) {
+                String fn = exportDialog.getFilename();
+                if (!exportDialog.wasCanceled() && !fn.isEmpty()) {
                     model.setSavePath(FilenameUtils.getParent(fn));
                     model.setSaveFilename(FilenameUtils.removeExtension(FilenameUtils.getName(fn)).replaceAll("_exp$",""));
                     //
