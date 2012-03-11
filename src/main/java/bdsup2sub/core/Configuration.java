@@ -60,6 +60,8 @@ public final class Configuration {
     private static final Configuration INSTANCE = new Configuration();
     private final String configFilePath;
     private List<String> recentFiles;
+    private int[] luminanceThreshold = {210, 160};
+    private int alphaThreshold = 80;
     private Props props;
 
     private Configuration() {
@@ -506,5 +508,24 @@ public final class Configuration {
 
     public void storeOutputResolution(Resolution resolutionTrg) {
         props.set("resolutionTrg", resolutionTrg.name());
+    }
+
+    public int getAlphaThreshold() {
+        return alphaThreshold;
+    }
+
+    public void setAlphaThreshold(int alphaThreshold) {
+        this.alphaThreshold = alphaThreshold;
+    }
+
+    /**
+     * Array of luminance thresholds ( 0: med/high, 1: low/med )
+     */
+    public int[] getLuminanceThreshold() {
+        return luminanceThreshold;
+    }
+
+    public void setLuminanceThreshold(int[] luminanceThreshold) {
+        this.luminanceThreshold = luminanceThreshold;
     }
 }

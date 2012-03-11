@@ -114,11 +114,6 @@ public class Core  extends Thread {
     /** Array of subpictures used for editing and export */
     private static SubPicture subPictures[];
 
-    /** Luminance thresholds for VobSub export */
-    private static int lumThr[] = {210, 160};
-    /** Alpha threshold for VobSub export */
-    private static int alphaThr = 80;
-
     /** Input mode used for last import */
     private static InputMode inMode = InputMode.VOBSUB;
 
@@ -496,13 +491,14 @@ public class Core  extends Thread {
 
         // automatically set luminance thresholds for VobSub conversion
         int maxLum = substream.getPalette().getY()[substream.getPrimaryColorIndex()] & 0xff;
-        lumThr = new int[2];
+        int[] luminanceThreshold = new int[2];
+        configuration.setLuminanceThreshold(luminanceThreshold);
         if (maxLum > 30) {
-            lumThr[0] = maxLum*2/3;
-            lumThr[1] = maxLum/3;
+            luminanceThreshold[0] = maxLum*2/3;
+            luminanceThreshold[1] = maxLum/3;
         } else {
-            lumThr[0] = 210;
-            lumThr[1] = 160;
+            luminanceThreshold[0] = 210;
+            luminanceThreshold[1] = 160;
         }
 
         // try to detect source frame rate
@@ -547,13 +543,14 @@ public class Core  extends Thread {
 
         // automatically set luminance thresholds for VobSub conversion
         int maxLum = substream.getPalette().getY()[substream.getPrimaryColorIndex()] & 0xff;
-        lumThr = new int[2];
+        int[] luminanceThreshold = new int[2];
+        configuration.setLuminanceThreshold(luminanceThreshold);
         if (maxLum > 30) {
-            lumThr[0] = maxLum*2/3;
-            lumThr[1] = maxLum/3;
+            luminanceThreshold[0] = maxLum*2/3;
+            luminanceThreshold[1] = maxLum/3;
         } else {
-            lumThr[0] = 210;
-            lumThr[1] = 160;
+            luminanceThreshold[0] = 210;
+            luminanceThreshold[1] = 160;
         }
 
         // find language idx
@@ -642,22 +639,23 @@ public class Core  extends Thread {
         // automatically set luminance thresholds for VobSub conversion
         int primColIdx = substream.getPrimaryColorIndex();
         int yMax = substream.getPalette().getY()[primColIdx] & 0xff;
-        lumThr = new int[2];
+        int[] luminanceThreshold = new int[2];
+        configuration.setLuminanceThreshold(luminanceThreshold);
         if (yMax > 10) {
             // find darkest opaque color
             int yMin = yMax;
             for (int i=0; i < 4; i++) {
                 int y = substream.getPalette().getY()[i] & 0xff;
                 int a = substream.getPalette().getAlpha(i);
-                if (y < yMin && a > alphaThr) {
+                if (y < yMin && a > configuration.getAlphaThreshold()) {
                     yMin = y;
                 }
             }
-            lumThr[0] = yMin + (yMax-yMin)*9/10;
-            lumThr[1] = yMin + (yMax-yMin)*3/10;
+            luminanceThreshold[0] = yMin + (yMax-yMin)*9/10;
+            luminanceThreshold[1] = yMin + (yMax-yMin)*3/10;
         } else {
-            lumThr[0] = 210;
-            lumThr[1] = 160;
+            luminanceThreshold[0] = 210;
+            luminanceThreshold[1] = 160;
         }
 
         languageIdx = substreamDVD.getLanguageIdx();
@@ -1238,7 +1236,7 @@ public class Core  extends Thread {
                     if ( (inMode == InputMode.VOBSUB || inMode == InputMode.SUPIFO) && paletteMode == PaletteMode.KEEP_EXISTING) {
                         tBm = substream.getBitmap(); // no conversion
                     } else {
-                        tBm = substream.getBitmap().getBitmapWithNormalizedPalette(substream.getPalette().getAlpha(), alphaThr, substream.getPalette().getY(), lumThr); // reduce palette
+                        tBm = substream.getBitmap().getBitmapWithNormalizedPalette(substream.getPalette().getAlpha(), configuration.getAlphaThreshold(), substream.getPalette().getY(), configuration.getLuminanceThreshold()); // reduce palette
                     }
                 } else {
                     // scale up/down
@@ -1252,9 +1250,9 @@ public class Core  extends Thread {
                     } else {
                         // reduce palette
                         if (f != null) {
-                            tBm = substream.getBitmap().scaleFilterLm(trgWidth, trgHeight, substream.getPalette(), alphaThr, lumThr, f);
+                            tBm = substream.getBitmap().scaleFilterLm(trgWidth, trgHeight, substream.getPalette(), configuration.getAlphaThreshold(), configuration.getLuminanceThreshold(), f);
                         } else {
-                            tBm = substream.getBitmap().scaleBilinearLm(trgWidth, trgHeight, substream.getPalette(), alphaThr, lumThr);
+                            tBm = substream.getBitmap().scaleBilinearLm(trgWidth, trgHeight, substream.getPalette(), configuration.getAlphaThreshold(), configuration.getLuminanceThreshold());
                         }
                     }
                 }
@@ -1746,41 +1744,6 @@ public class Core  extends Thread {
             }
         }
         return n;
-    }
-
-
-    /* Setters / Getters */
-
-    /**
-     * Get luminance thresholds.
-     * @return Array of thresholds ( 0: med/high, 1: low/med )
-     */
-    public static int[] getLumThr() {
-        return lumThr;
-    }
-
-    /**
-     * Set luminance thresholds.
-     * @param lt Array of luminance thresholds ( 0: med/high, 1: low/med )
-     */
-    public static void setLumThr(int[] lt) {
-        lumThr = lt;
-    }
-
-    /**
-     * Get alpha threshold.
-     * @return Current alpha threshold
-     */
-    public static int getAlphaThr() {
-        return alphaThr;
-    }
-
-    /**
-     * Set alpha threshold.
-     * @param at Alpha threshold
-     */
-    public static void setAlphaThr(int at) {
-        alphaThr = at;
     }
 
     /**

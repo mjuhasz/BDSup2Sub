@@ -657,7 +657,7 @@ public class SupDVD implements Substream, SubstreamDVD {
             pic.setOfsY(pic.originalY + bounds.yMin);
         }
 
-        primaryColorIndex = bitmap.getPrimaryColorIndex(palette.getAlpha(), Core.getAlphaThr(), palette.getY());
+        primaryColorIndex = bitmap.getPrimaryColorIndex(palette.getAlpha(), configuration.getAlphaThreshold(), palette.getY());
     }
 
     /* (non-Javadoc)

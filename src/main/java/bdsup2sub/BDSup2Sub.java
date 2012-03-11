@@ -337,7 +337,7 @@ public class BDSup2Sub {
             // parse parameters
             String src = null;
             String trg = null;
-            int alphaThr = Core.getAlphaThr();
+            int alphaThr = configuration.getAlphaThreshold();
             int lumThr1 = -1;
             int lumThr2 = -1;
             int langIdx = -1;
@@ -896,15 +896,15 @@ public class BDSup2Sub {
                     if (Core.getExportForced() && Core.getNumForcedFrames() == 0) {
                         throw new CoreException("No forced subtitles found.");
                     }
-                    int lt[] = Core.getLumThr();
+                    int lt[] = configuration.getLuminanceThreshold();
                     if (lumThr1 > 0) {
                         lt[1] = lumThr1;
                     }
                     if (lumThr2 > 0) {
                         lt[0] = lumThr2;
                     }
-                    Core.setLumThr(lt);
-                    Core.setAlphaThr(alphaThr);
+                    configuration.setLuminanceThreshold(lt);
+                    configuration.setAlphaThreshold(alphaThr);
                     if (langIdx != -1) {
                         Core.setLanguageIdx(langIdx);
                     }

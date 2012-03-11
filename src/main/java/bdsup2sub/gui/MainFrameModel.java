@@ -172,4 +172,20 @@ public class MainFrameModel {
     public Resolution getOutputResolution() {
         return configuration.getOutputResolution();
     }
+
+    public int getAlphaThreshold() {
+        return configuration.getAlphaThreshold();
+    }
+
+    public void setAlphaThreshold(int alphaThreshold) {
+        configuration.setAlphaThreshold(alphaThreshold);
+    }
+
+    public int[] getLuminanceThreshold() {
+        return configuration.getLuminanceThreshold();
+    }
+
+    public void setLuminanceThreshold(int[] luminanceThreshold) {
+        configuration.setLuminanceThreshold(luminanceThreshold);
+    }
 }

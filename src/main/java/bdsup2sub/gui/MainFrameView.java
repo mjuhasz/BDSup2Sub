@@ -16,7 +16,6 @@
 package bdsup2sub.gui;
 
 import bdsup2sub.core.*;
-import bdsup2sub.utils.ToolBox;
 
 import javax.swing.*;
 import javax.swing.event.DocumentListener;
@@ -26,7 +25,8 @@ import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.ClipboardOwner;
 import java.awt.datatransfer.Transferable;
-import java.awt.event.*;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
 import java.util.List;
 
@@ -102,30 +102,6 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
 
         Core.setMainFrame(this);
 
-        updateRecentFilesMenu();
-
-        jComboBoxAlphaThreshold.setSelectedIndex(Core.getAlphaThr());
-        jComboBoxHiMedThreshold.setSelectedIndex(Core.getLumThr()[0]);
-        jComboBoxMedLowThreshold.setSelectedIndex(Core.getLumThr()[1]);
-
-        for (OutputMode m : OutputMode.values()) {
-            jComboBoxOutputFormat.addItem(m.toString());
-        }
-        jComboBoxOutputFormat.setSelectedIndex(model.getOutputMode().ordinal());
-
-        for (PaletteMode m : PaletteMode.values()) {
-            jComboBoxPalette.addItem(m.toString());
-        }
-        jComboBoxPalette.setSelectedIndex(model.getPaletteMode().ordinal());
-
-        for (ScalingFilter s : ScalingFilter.values()) {
-            jComboBoxFilter.addItem(s.toString());
-        }
-        jComboBoxFilter.setSelectedIndex(model.getScalingFilter().ordinal());
-
-        jMenuItemVerbatimOutput.setSelected(model.isVerbatim());
-        jMenuItemFixInvisibleFrames.setSelected(model.getFixZeroAlpha());
-
         printToConsole(APP_NAME_AND_VERSION + " - a converter from Blu-Ray/HD-DVD SUP to DVD SUB/IDX and more\n");
         printToConsole(AUTHOR_AND_DATE + "\n");
         printToConsole("Official thread at Doom9: http://forum.doom9.org/showthread.php?t=145277\n\n");
@@ -138,6 +114,9 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
         setJMenuBar(getjMenuBar());
         setContentPane(getJContentPane());
         getJPopupMenu();
+
+        initAlphaThresholdComboBoxSelectedIndices();
+        updateRecentFilesMenu();
 
         setIconImage(Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource("icon_32.png")));
 
@@ -425,7 +404,7 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
             jMenuItemFixInvisibleFrames = new JCheckBoxMenuItem();
             jMenuItemFixInvisibleFrames.setText("Fix invisible frames");
             jMenuItemFixInvisibleFrames.setMnemonic('f');
-            jMenuItemFixInvisibleFrames.setSelected(false);
+            jMenuItemFixInvisibleFrames.setSelected(model.getFixZeroAlpha());
         }
         return jMenuItemFixInvisibleFrames;
     }
@@ -443,7 +422,7 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
             jMenuItemVerbatimOutput = new JCheckBoxMenuItem();
             jMenuItemVerbatimOutput.setText("Verbatim Output");
             jMenuItemVerbatimOutput.setMnemonic('v');
-            jMenuItemVerbatimOutput.setSelected(false);
+            jMenuItemVerbatimOutput.setSelected(model.isVerbatim());
         }
         return jMenuItemVerbatimOutput;
     }
@@ -960,9 +939,9 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
     }
 
     void initAlphaThresholdComboBoxSelectedIndices() {
-        jComboBoxAlphaThreshold.setSelectedIndex(Core.getAlphaThr());
-        jComboBoxHiMedThreshold.setSelectedIndex(Core.getLumThr()[0]);
-        jComboBoxMedLowThreshold.setSelectedIndex(Core.getLumThr()[1]);
+        jComboBoxAlphaThreshold.setSelectedIndex(model.getAlphaThreshold());
+        jComboBoxHiMedThreshold.setSelectedIndex(model.getLuminanceThreshold()[0]);
+        jComboBoxMedLowThreshold.setSelectedIndex(model.getLuminanceThreshold()[1]);
     }
 
     Object getAlphaThresholdComboBoxSelectedItem() {
@@ -1067,6 +1046,10 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
             jComboBoxOutputFormat.setEnabled(false);
             jComboBoxOutputFormat.setToolTipText("Select export format");
             jComboBoxOutputFormat.setPreferredSize(new Dimension(120, 20));
+            for (OutputMode mode : OutputMode.values()) {
+                jComboBoxOutputFormat.addItem(mode.toString());
+            }
+            jComboBoxOutputFormat.setSelectedIndex(model.getOutputMode().ordinal());
         }
         return jComboBoxOutputFormat;
     }
@@ -1089,6 +1072,10 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
             jComboBoxPalette.setEnabled(false);
             jComboBoxPalette.setToolTipText("Select palette mode");
             jComboBoxPalette.setPreferredSize(new Dimension(120, 20));
+            for (PaletteMode mode : PaletteMode.values()) {
+                jComboBoxPalette.addItem(mode.toString());
+            }
+            jComboBoxPalette.setSelectedIndex(model.getPaletteMode().ordinal());
         }
         return jComboBoxPalette;
     }
@@ -1107,6 +1094,10 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
             jComboBoxFilter.setEnabled(false);
             jComboBoxFilter.setToolTipText("Select filter for scaling");
             jComboBoxFilter.setPreferredSize(new Dimension(120, 20));
+            for (ScalingFilter filter : ScalingFilter.values()) {
+                jComboBoxFilter.addItem(filter.toString());
+            }
+            jComboBoxFilter.setSelectedIndex(model.getScalingFilter().ordinal());
         }
         return jComboBoxFilter;
     }

@@ -1218,7 +1218,7 @@ public class SupBD implements Substream {
     private void decode(SubPictureBD pic)  throws CoreException {
         palette = decodePalette(pic);
         bitmap  = decodeImage(pic, palette.getIndexOfMostTransparentPaletteEntry());
-        primaryColorIndex = bitmap.getPrimaryColorIndex(palette.getAlpha(), Core.getAlphaThr(), palette.getY());
+        primaryColorIndex = bitmap.getPrimaryColorIndex(palette.getAlpha(), configuration.getAlphaThreshold(), palette.getY());
     }
 
     /* (non-Javadoc)

@@ -753,7 +753,7 @@ public class MainFrameController {
                 try {
                     idx = Integer.parseInt(view.getAlphaThresholdComboBoxSelectedItem().toString());
                 } catch (NumberFormatException ex) {
-                    idx = Core.getAlphaThr(); // invalid number -> keep old value
+                    idx = model.getAlphaThreshold(); // invalid number -> keep old value
                 }
 
                 if (idx < 0) {
@@ -763,8 +763,8 @@ public class MainFrameController {
                     idx = 255;
                 }
 
-                Core.setAlphaThr(idx);
-                view.setAlphaThresholdComboBoxSelectedIndex(Core.getAlphaThr());
+                model.setAlphaThreshold(idx);
+                view.setAlphaThresholdComboBoxSelectedIndex(model.getAlphaThreshold());
 
                 (new Thread() {
                     @Override
@@ -809,7 +809,7 @@ public class MainFrameController {
                 if (idx < 0 || idx > 255) {
                     view.setAlphaThresholdComboBoxBackground(MainFrameModel.ERROR_BACKGROUND);
                 } else {
-                    Core.setAlphaThr(idx);
+                    model.setAlphaThreshold(idx);
                     (new Thread() {
                         @Override
                         public void run() {
@@ -837,7 +837,7 @@ public class MainFrameController {
         @Override
         public void actionPerformed(ActionEvent event) {
             if (Core.isReady()) {
-                int lumThr[] = Core.getLumThr();
+                int lumThr[] = model.getLuminanceThreshold();
                 int idx;
                 try {
                     idx = Integer.parseInt(view.getMedLowThresholdComboBoxSelectedItem().toString());
@@ -857,7 +857,7 @@ public class MainFrameController {
                 }
 
                 lumThr[1] = idx;
-                Core.setLumThr(lumThr);
+                model.setLuminanceThreshold(lumThr);
 
                 final int index = idx;
                 view.setMedLowThresholdComboBoxSelectedIndex(index);
@@ -902,13 +902,13 @@ public class MainFrameController {
 
         private void check() {
             if (Core.isReady()) {
-                int lumThr[] = Core.getLumThr();
+                int lumThr[] = model.getLuminanceThreshold();
                 int idx = ToolBox.getInt(view.getMedLowThresholdComboBoxText());
                 if (idx < 0 || idx > 255 | idx >= lumThr[0])
                     view.setMedLowThresholdComboBoxBackground(MainFrameModel.ERROR_BACKGROUND);
                 else {
                     lumThr[1] = idx;
-                    Core.setLumThr(lumThr);
+                    model.setLuminanceThreshold(lumThr);
                     (new Thread() {
                         @Override
                         public void run() {
@@ -935,7 +935,7 @@ public class MainFrameController {
         @Override
         public void actionPerformed(ActionEvent event) {
             if (Core.isReady()) {
-                int lumThr[] = Core.getLumThr();
+                int lumThr[] = model.getLuminanceThreshold();
                 int idx;
                 try {
                     idx = Integer.parseInt(view.getHiMedThresholdComboBoxSelectedItem().toString());
@@ -955,8 +955,8 @@ public class MainFrameController {
                 }
 
                 lumThr[0] = idx;
-                Core.setLumThr(lumThr);
-                view.setHiMedThresholdComboBoxSelectedIndex(Core.getLumThr()[0]);
+                model.setLuminanceThreshold(lumThr);
+                view.setHiMedThresholdComboBoxSelectedIndex(model.getLuminanceThreshold()[0]);
 
                 (new Thread() {
                     @Override
@@ -998,13 +998,13 @@ public class MainFrameController {
 
         private void check() {
             if (Core.isReady()) {
-                int lumThr[] = Core.getLumThr();
+                int lumThr[] = model.getLuminanceThreshold();
                 int idx = ToolBox.getInt(view.getHiMedThresholdComboBoxText());
                 if (idx < 0 || idx > 255 | idx <= lumThr[1]) {
                     view.setHiMedThresholdComboBoxBackground(MainFrameModel.ERROR_BACKGROUND);
                 } else {
                     lumThr[0] = idx;
-                    Core.setLumThr(lumThr);
+                    model.setLuminanceThreshold(lumThr);
                     (new Thread() {
                         @Override
                         public void run() {
