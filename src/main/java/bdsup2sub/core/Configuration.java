@@ -156,12 +156,12 @@ public final class Configuration {
     /**
      * Write PGCEdit palette file on export.
      */
-    public boolean getWritePGCEditPal() {
+    public boolean getWritePGCEditPalette() {
         return props.get("writePGCEditPal", false);
     }
 
-    public void setWritePGCEditPal(boolean writePGCEditPal) {
-        props.set("writePGCEditPal", writePGCEditPal);
+    public void setWritePGCEditPalette(boolean writePGCEditPalette) {
+        props.set("writePGCEditPal", writePGCEditPalette);
     }
 
     /**

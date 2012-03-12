@@ -17,9 +17,6 @@ package bdsup2sub;
 
 import bdsup2sub.core.*;
 import bdsup2sub.gui.main.MainFrame;
-import bdsup2sub.gui.main.MainFrameController;
-import bdsup2sub.gui.main.MainFrameModel;
-import bdsup2sub.gui.main.MainFrameView;
 import bdsup2sub.tools.Props;
 import bdsup2sub.utils.FilenameUtils;
 import bdsup2sub.utils.SubtitleUtils;
@@ -753,7 +750,7 @@ public class BDSup2Sub {
                         break;
                     case EXPORT_PAL:
                         // export target palette in PGCEdit text format
-                        configuration.setWritePGCEditPal(switchOn);
+                        configuration.setWritePGCEditPalette(switchOn);
                         System.out.println("OPTION: export target palette in PGCEDit text format: " + strSwitchOn);
                         break;
                     case FIX_ZERO_ALPHA:

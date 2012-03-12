@@ -16,7 +16,6 @@
 package bdsup2sub.gui.export;
 
 import bdsup2sub.core.Configuration;
-import bdsup2sub.core.Core;
 import bdsup2sub.core.OutputMode;
 
 public class ExportDialogModel {
@@ -29,12 +28,12 @@ public class ExportDialogModel {
     private boolean canceled;
     private int languageIdx;
     private boolean exportForced;
-    private boolean writePGCPal;
+    private boolean writePGCPalette;
 
     public ExportDialogModel() {
         languageIdx = configuration.getLanguageIdx();
         exportForced = configuration.isExportForced();
-        writePGCPal = configuration.getWritePGCEditPal();
+        writePGCPalette = configuration.getWritePGCEditPalette();
 
         determineExtensionAndDialogTitle();
     }
@@ -97,16 +96,16 @@ public class ExportDialogModel {
         configuration.setExportForced(exportForced);
     }
 
-    public boolean getWritePGCPal() {
-        return writePGCPal;
+    public boolean getWritePGCPalette() {
+        return writePGCPalette;
     }
 
-    public void setWritePGCPal(boolean writePGCPal) {
-        this.writePGCPal = writePGCPal;
+    public void setWritePGCPalette(boolean writePGCPalette) {
+        this.writePGCPalette = writePGCPalette;
     }
 
     public void storeWritePGCPal() {
-        configuration.setWritePGCEditPal(writePGCPal);
+        configuration.setWritePGCEditPalette(writePGCPalette);
     }
 
     public OutputMode getOutputMode() {

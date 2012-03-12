@@ -1439,7 +1439,7 @@ public class Core  extends Thread {
         }
 
         // only possible for SUB/IDX and SUP/IFO (else there is no public palette)
-        if (trgPallete != null && configuration.getWritePGCEditPal()) {
+        if (trgPallete != null && configuration.getWritePGCEditPalette()) {
             String fnp = FilenameUtils.removeExtension(fname) + ".txt";
             printX("\nWriting "+fnp+"\n");
             writePGCEditPal(fnp, trgPallete);

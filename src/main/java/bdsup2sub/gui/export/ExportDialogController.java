@@ -15,6 +15,15 @@
  */
 package bdsup2sub.gui.export;
 
+import bdsup2sub.core.OutputMode;
+import bdsup2sub.utils.FilenameUtils;
+import bdsup2sub.utils.ToolBox;
+
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+
 public class ExportDialogController {
 
     private ExportDialogModel model;
@@ -23,5 +32,83 @@ public class ExportDialogController {
     public ExportDialogController(ExportDialogModel model, ExportDialogView view) {
         this.model = model;
         this.view = view;
+
+        view.addFilenameTextFieldActionListener(new FilenameTextFieldActionListener());
+        view.addFilenameButtonActionListener(new FilenameButtonActionListener());
+        view.addLanguageComboBoxItemListener(new LanguageComboBoxItemListener());
+        view.addCancelButtonActionListener(new CancelButtonActionListener());
+        view.addSaveButtonActionListener(new SaveButtonActionListener());
+        view.addForcedCheckBoxItemListener(new ForcedCheckBoxItemListener());
+        view.addWritePGCPaletteCheckBoxItemListener(new WritePGCPalCheckBoxItemListener());
+    }
+
+
+    private class FilenameTextFieldActionListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            String filename = view.getFilenameTextFieldText();
+            if (filename != null) {
+                model.setFilename(FilenameUtils.removeExtension(filename) + "." + model.getExtension());
+            }
+        }
+    }
+
+    private class FilenameButtonActionListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            String parent = FilenameUtils.getParent(model.getFilename());
+            String defaultFilename = FilenameUtils.getName(model.getFilename());
+            String filename = ToolBox.getFilename(parent, defaultFilename, new String[]{model.getExtension()}, false, view.getOwner());
+            if (filename != null) {
+                model.setFilename(FilenameUtils.removeExtension(filename) + "." + model.getExtension());
+                view.setFilenameTextFieldText(model.getFilename());
+            }
+        }
+    }
+
+    private class LanguageComboBoxItemListener implements ItemListener {
+        @Override
+        public void itemStateChanged(ItemEvent e) {
+            model.setLanguageIdx(view.getLanguageComboBoxSelectedItem());
+        }
+    }
+
+    private class CancelButtonActionListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            model.setCanceled(true);
+            view.dispose();
+        }
+    }
+
+    private class SaveButtonActionListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            String filename = view.getFilenameTextFieldText();
+            if (filename != null) {
+                model.setFilename(FilenameUtils.removeExtension(filename) + "." + model.getExtension());
+            }
+            model.storeExportForced();
+            model.storeLanguageIdx();
+            if (model.getOutputMode() == OutputMode.VOBSUB || model.getOutputMode() == OutputMode.SUPIFO) {
+                model.storeWritePGCPal();
+            }
+            model.setCanceled(false);
+            view.dispose();
+        }
+    }
+
+    private class ForcedCheckBoxItemListener implements ItemListener {
+        @Override
+        public void itemStateChanged(ItemEvent e) {
+            model.setExportForced(view.isForcedCheckBoxSelected());
+        }
+    }
+
+    private class WritePGCPalCheckBoxItemListener implements ItemListener {
+        @Override
+        public void itemStateChanged(ItemEvent e) {
+            model.setWritePGCPalette(view.isWritePGCPalCheckBoxSelected());
+        }
     }
 }

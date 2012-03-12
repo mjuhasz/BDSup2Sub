@@ -17,8 +17,6 @@ package bdsup2sub.gui.export;
 
 import bdsup2sub.core.Core;
 import bdsup2sub.core.OutputMode;
-import bdsup2sub.utils.FilenameUtils;
-import bdsup2sub.utils.ToolBox;
 
 import javax.swing.*;
 import java.awt.*;
@@ -32,11 +30,11 @@ public class ExportDialogView extends JDialog {
     private static final long serialVersionUID = 1L;
 
     private JPanel jContentPane;
-    private JTextField jTextFieldFileName;
+    private JTextField jTextFieldFilename;
     private JButton jButtonFileName;
     private JComboBox jComboBoxLanguage;
     private JCheckBox jCheckBoxForced;
-    private JCheckBox jCheckBoxWritePGCPal;
+    private JCheckBox jCheckBoxWritePGCPalette;
     private JButton jButtonCancel;
     private JButton jButtonSave;
 
@@ -124,58 +122,53 @@ public class ExportDialogView extends JDialog {
             jContentPane = new JPanel();
             jContentPane.setLayout(new GridBagLayout());
             jContentPane.add(jLabelFilename, gridBagLabelFilename);
-            jContentPane.add(getJTextFieldFileName(), gridBagTextFileName);
-            jContentPane.add(getJButtonFileName(), gridBagButtonFileName);
+            jContentPane.add(getJTextFieldFilename(), gridBagTextFileName);
+            jContentPane.add(getJButtonFilename(), gridBagButtonFileName);
             jContentPane.add(jLabelLanguage, gridBagLabelLanguage);
             jContentPane.add(getJComboBoxLanguage(), gridBagComboLanguage);
             jContentPane.add(getJButtonCancel(), gridBagButtonCancel);
             jContentPane.add(getJButtonSave(), gridBagButtonSave);
             jContentPane.add(getJCheckBoxForced(), gridBagCheckBoxForced);
-            jContentPane.add(getJCheckBoxWritePGCPal(), gridBagConstraints);
+            jContentPane.add(getJCheckBoxWritePGCPalette(), gridBagConstraints);
         }
         return jContentPane;
     }
 
-    private JTextField getJTextFieldFileName() {
-        if (jTextFieldFileName == null) {
-            jTextFieldFileName = new JTextField();
-            jTextFieldFileName.setPreferredSize(new Dimension(200, 20));
-            jTextFieldFileName.setHorizontalAlignment(JTextField.LEADING);
-            jTextFieldFileName.setToolTipText("Set file name for export");
-            jTextFieldFileName.setText(model.getFilename());
-            jTextFieldFileName.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    String s = jTextFieldFileName.getText();
-                    if (s != null) {
-                        model.setFilename(FilenameUtils.removeExtension(s) + "." + model.getExtension());
-                    }
-                }
-            });
+    private JTextField getJTextFieldFilename() {
+        if (jTextFieldFilename == null) {
+            jTextFieldFilename = new JTextField();
+            jTextFieldFilename.setPreferredSize(new Dimension(200, 20));
+            jTextFieldFilename.setHorizontalAlignment(JTextField.LEADING);
+            jTextFieldFilename.setToolTipText("Set file name for export");
+            jTextFieldFilename.setText(model.getFilename());
         }
-        return jTextFieldFileName;
+        return jTextFieldFilename;
     }
 
-    private JButton getJButtonFileName() {
+    void addFilenameTextFieldActionListener(ActionListener actionListener) {
+        jTextFieldFilename.addActionListener(actionListener);
+    }
+    
+    String getFilenameTextFieldText() {
+        return jTextFieldFilename.getText();
+    }
+
+    void setFilenameTextFieldText(String text) {
+        jTextFieldFilename.setText(text);
+    }
+
+    private JButton getJButtonFilename() {
         if (jButtonFileName == null) {
             jButtonFileName = new JButton();
             jButtonFileName.setText("Browse");
             jButtonFileName.setMnemonic('b');
             jButtonFileName.setToolTipText("Open file dialog to select file name for export");
-            jButtonFileName.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    String parent = FilenameUtils.getParent(model.getFilename());
-                    String defaultFilename = FilenameUtils.getName(model.getFilename());
-                    String filename = ToolBox.getFilename(parent, defaultFilename, new String[]{model.getExtension()}, false, getOwner());
-                    if (filename != null) {
-                        model.setFilename(FilenameUtils.removeExtension(filename) + "." + model.getExtension());
-                        jTextFieldFileName.setText(model.getFilename());
-                    }
-                }
-            });
         }
         return jButtonFileName;
+    }
+
+    void addFilenameButtonActionListener(ActionListener actionListener) {
+        jButtonFileName.addActionListener(actionListener);
     }
 
     private JComboBox getJComboBoxLanguage() {
@@ -191,15 +184,16 @@ public class ExportDialogView extends JDialog {
                 jComboBoxLanguage.addItem(language[0] + " (" + language[n] + ")");
             }
             jComboBoxLanguage.setSelectedIndex(model.getLanguageIdx());
-
-            jComboBoxLanguage.addItemListener(new ItemListener() {
-                @Override
-                public void itemStateChanged(ItemEvent e) {
-                    model.setLanguageIdx(jComboBoxLanguage.getSelectedIndex());
-                }
-            });
         }
         return jComboBoxLanguage;
+    }
+
+    void addLanguageComboBoxItemListener(ItemListener itemListener) {
+        jComboBoxLanguage.addItemListener(itemListener);
+    }
+    
+    int getLanguageComboBoxSelectedItem() {
+        return jComboBoxLanguage.getSelectedIndex();
     }
 
     private JButton getJButtonCancel() {
@@ -208,15 +202,12 @@ public class ExportDialogView extends JDialog {
             jButtonCancel.setText("Cancel");
             jButtonCancel.setToolTipText("Cancel export and return");
             jButtonCancel.setMnemonic('c');
-            jButtonCancel.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    model.setCanceled(true);
-                    dispose();
-                }
-            });
         }
         return jButtonCancel;
+    }
+
+    void addCancelButtonActionListener(ActionListener actionListener) {
+        jButtonCancel.addActionListener(actionListener);
     }
 
     private JButton getJButtonSave() {
@@ -225,30 +216,13 @@ public class ExportDialogView extends JDialog {
             jButtonSave.setText("Save");
             jButtonSave.setToolTipText("Start creation of export stream");
             jButtonSave.setMnemonic('s');
-            jButtonSave.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    // read values of editable boxes
-                    String s;
-                    // file name
-                    s = jTextFieldFileName.getText();
-                    if (s != null) {
-                        model.setFilename(FilenameUtils.removeExtension(s) + "." + model.getExtension());
-                    }
-                    // exit
-                    model.storeExportForced();
-                    model.storeLanguageIdx();
-                    if (model.getOutputMode() == OutputMode.VOBSUB || model.getOutputMode() == OutputMode.SUPIFO) {
-                        model.storeWritePGCPal();
-                    }
-                    model.setCanceled(false);
-                    dispose();
-                }
-            });
         }
         return jButtonSave;
     }
 
+    void addSaveButtonActionListener(ActionListener actionListener) {
+        jButtonSave.addActionListener(actionListener);
+    }
 
     private JCheckBox getJCheckBoxForced() {
         if (jCheckBoxForced == null) {
@@ -261,37 +235,40 @@ public class ExportDialogView extends JDialog {
                 model.setExportForced(false);
             }
             jCheckBoxForced.setSelected(model.getExportForced());
-
-            jCheckBoxForced.addItemListener(new ItemListener() {
-                @Override
-                public void itemStateChanged(ItemEvent e) {
-                    model.setExportForced(jCheckBoxForced.isSelected());
-                }
-            });
         }
         return jCheckBoxForced;
     }
 
-    private JCheckBox getJCheckBoxWritePGCPal() {
-        if (jCheckBoxWritePGCPal == null) {
-            jCheckBoxWritePGCPal = new JCheckBox();
-            jCheckBoxWritePGCPal.setToolTipText("Export palette in PGCEdit text format (RGB, 0..255)");
-            jCheckBoxWritePGCPal.setText("Export palette in PGCEdit text format");
-            jCheckBoxWritePGCPal.setMnemonic('p');
-            jCheckBoxWritePGCPal.setDisplayedMnemonicIndex(24);
+    void addForcedCheckBoxItemListener(ItemListener itemListener) {
+        jCheckBoxForced.addItemListener(itemListener);
+    }
+
+    boolean isForcedCheckBoxSelected() {
+        return jCheckBoxForced.isSelected();
+    }
+
+    private JCheckBox getJCheckBoxWritePGCPalette() {
+        if (jCheckBoxWritePGCPalette == null) {
+            jCheckBoxWritePGCPalette = new JCheckBox();
+            jCheckBoxWritePGCPalette.setToolTipText("Export palette in PGCEdit text format (RGB, 0..255)");
+            jCheckBoxWritePGCPalette.setText("Export palette in PGCEdit text format");
+            jCheckBoxWritePGCPalette.setMnemonic('p');
+            jCheckBoxWritePGCPalette.setDisplayedMnemonicIndex(24);
             if (model.getOutputMode() == OutputMode.VOBSUB || model.getOutputMode() == OutputMode.SUPIFO) {
-                jCheckBoxWritePGCPal.setEnabled(true);
-                jCheckBoxWritePGCPal.setSelected(model.getWritePGCPal());
+                jCheckBoxWritePGCPalette.setEnabled(true);
+                jCheckBoxWritePGCPalette.setSelected(model.getWritePGCPalette());
             } else {
-                jCheckBoxWritePGCPal.setEnabled(false);
+                jCheckBoxWritePGCPalette.setEnabled(false);
             }
-            jCheckBoxWritePGCPal.addItemListener(new ItemListener() {
-                @Override
-                public void itemStateChanged(ItemEvent e) {
-                    model.setWritePGCPal(jCheckBoxWritePGCPal.isSelected());
-                }
-            });
         }
-        return jCheckBoxWritePGCPal;
+        return jCheckBoxWritePGCPalette;
+    }
+
+    void addWritePGCPaletteCheckBoxItemListener(ItemListener itemListener) {
+        jCheckBoxWritePGCPalette.addItemListener(itemListener);
+    }
+
+    public boolean isWritePGCPalCheckBoxSelected() {
+        return jCheckBoxWritePGCPalette.isSelected();
     }
 }
