@@ -30,7 +30,7 @@ import java.awt.*;
 import java.awt.event.*;
 
 import static bdsup2sub.core.Configuration.*;
-import static bdsup2sub.gui.support.GuiUtils.centerRelativeToParent;
+import static bdsup2sub.gui.support.GuiUtils.centerRelativeToOwner;
 
 public class ConversionDialog extends JDialog {
 
@@ -118,7 +118,7 @@ public class ConversionDialog extends JDialog {
         fpsSrcEditor = new JTextField();
 
         initialize();
-        centerRelativeToParent(this, owner);
+        centerRelativeToOwner(this);
         setResizable(false);
 
         changeResolution = configuration.getConvertResolution();
@@ -1097,7 +1097,7 @@ public class ConversionDialog extends JDialog {
                 public void actionPerformed(ActionEvent e) {
                     changeResolution = configuration.loadConvertResolution();
                     if (changeResolution) {
-                        resolution = configuration.loadResolution();
+                        resolution = configuration.loadOutputResolution();
                     }
                     changeFPS = configuration.loadConvertFPS();
                     if (changeFPS && !fpsSrcCertain) {

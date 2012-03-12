@@ -23,7 +23,7 @@ import java.awt.*;
 import java.awt.event.*;
 
 import static bdsup2sub.core.Constants.LANGUAGES;
-import static bdsup2sub.gui.support.GuiUtils.centerRelativeToParent;
+import static bdsup2sub.gui.support.GuiUtils.centerRelativeToOwner;
 
 public class ExportDialogView extends JDialog {
 
@@ -53,15 +53,8 @@ public class ExportDialogView extends JDialog {
         setMinimumSize(new Dimension(350, 180));
         setResizable(false);
         setContentPane(getJContentPane());
-        centerRelativeToParent(this, getOwner());
+        centerRelativeToOwner(this);
         setTitle(model.getDialogTitle());
-        addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                model.setCanceled(true);
-                dispose();
-            }
-        });
     }
 
     private JPanel getJContentPane() {

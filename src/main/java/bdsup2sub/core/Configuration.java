@@ -53,7 +53,7 @@ public final class Configuration {
     private double fpsSrc = DEFAULT_SOURCE_FRAMERATE;
     private double fpsTrg = DEFAULT_TARGET_FRAMERATE;
     private boolean fpsSrcCertain;
-    private Resolution resolutionTrg = DEFAULT_TARGET_RESOLUTION;
+    private Resolution outputResolution = DEFAULT_TARGET_RESOLUTION;
     private int languageIdx;
     private boolean exportForced;
 
@@ -82,7 +82,7 @@ public final class Configuration {
         loadRecentFiles();
 
         convertResolution = loadConvertResolution();
-        resolutionTrg = loadResolution();
+        outputResolution = loadOutputResolution();
         convertFPS = loadConvertFPS();
         fpsSrc = loadFpsSrc();
         fpsTrg = loadFpsTrg();
@@ -493,23 +493,23 @@ public final class Configuration {
     }
 
     public Resolution getOutputResolution() {
-        return resolutionTrg;
+        return outputResolution;
     }
 
-    public void setOutputResolution(Resolution resolutionTrg) {
-        this.resolutionTrg = resolutionTrg;
+    public void setOutputResolution(Resolution outputResolution) {
+        this.outputResolution = outputResolution;
     }
 
-    public Resolution loadResolution() {
+    public Resolution loadOutputResolution() {
         try {
-            return Resolution.valueOf(props.get("resolutionTrg", resolutionTrg.name()));
+            return Resolution.valueOf(props.get("resolutionTrg", outputResolution.name()));
         } catch (IllegalArgumentException e) {
             return DEFAULT_TARGET_RESOLUTION;
         }
     }
 
-    public void storeOutputResolution(Resolution resolutionTrg) {
-        props.set("resolutionTrg", resolutionTrg.name());
+    public void storeOutputResolution(Resolution outputResolution) {
+        props.set("resolutionTrg", outputResolution.name());
     }
 
     public int getAlphaThreshold() {

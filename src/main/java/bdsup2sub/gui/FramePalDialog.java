@@ -25,7 +25,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 
-import static bdsup2sub.gui.support.GuiUtils.centerRelativeToParent;
+import static bdsup2sub.gui.support.GuiUtils.centerRelativeToOwner;
 
 public class FramePalDialog extends JDialog {
 
@@ -64,7 +64,7 @@ public class FramePalDialog extends JDialog {
 
         setSize(294, 209);
         setContentPane(getJContentPane());
-        centerRelativeToParent(this, frame);
+        centerRelativeToOwner(this);
         setResizable(false);
 
         Palette palette = Core.getCurSrcDVDPalette();

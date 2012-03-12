@@ -28,7 +28,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import static bdsup2sub.gui.support.GuiUtils.centerRelativeToParent;
+import static bdsup2sub.gui.support.GuiUtils.centerRelativeToOwner;
 
 public class Progress extends JDialog {
 
@@ -45,7 +45,7 @@ public class Progress extends JDialog {
     public Progress(Frame owner) {
         super(owner, true);
         initialize();
-        centerRelativeToParent(this, owner);
+        centerRelativeToOwner(this);
     }
 
     private void initialize() {

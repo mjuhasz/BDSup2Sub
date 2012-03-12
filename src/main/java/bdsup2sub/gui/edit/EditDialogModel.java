@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Volker Oth (0xdeadbeef) / Miklos Juhasz (mjuhasz)
+ * Copyright 2012 Miklos Juhasz (mjuhasz)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,18 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package bdsup2sub.gui.support;
+package bdsup2sub.gui.edit;
 
-import java.awt.*;
+import bdsup2sub.core.Configuration;
+import bdsup2sub.core.Resolution;
 
-public final class GuiUtils {
+public class EditDialogModel {
 
-    private GuiUtils() {
+    private final Configuration configuration = Configuration.getInstance();
+
+    public Resolution getOutputResolution() {
+        return configuration.getOutputResolution();
     }
 
-    public static void centerRelativeToOwner(Window window) {
-        Window owner = window.getOwner();
-        Point p = owner.getLocation();
-        window.setLocation(p.x + owner.getWidth() / 2 - window.getWidth() / 2, p.y + owner.getHeight() / 2 - window.getHeight() / 2);
+    public double getFPSTrg() {
+        return configuration.getFPSTrg();
+    }
+
+    public long getMinTimePTS() {
+        return configuration.getMinTimePTS();
     }
 }

@@ -19,10 +19,7 @@ import bdsup2sub.core.OutputMode;
 import bdsup2sub.utils.FilenameUtils;
 import bdsup2sub.utils.ToolBox;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
+import java.awt.event.*;
 
 public class ExportDialogController {
 
@@ -33,6 +30,8 @@ public class ExportDialogController {
         this.model = model;
         this.view = view;
 
+        view.addWindowListener(new ExportDialogListener());
+        
         view.addFilenameTextFieldActionListener(new FilenameTextFieldActionListener());
         view.addFilenameButtonActionListener(new FilenameButtonActionListener());
         view.addLanguageComboBoxItemListener(new LanguageComboBoxItemListener());
@@ -109,6 +108,14 @@ public class ExportDialogController {
         @Override
         public void itemStateChanged(ItemEvent e) {
             model.setWritePGCPalette(view.isWritePGCPalCheckBoxSelected());
+        }
+    }
+    
+    private class ExportDialogListener extends WindowAdapter {
+        @Override
+        public void windowClosing(WindowEvent event) {
+            model.setCanceled(true);
+            view.dispose();
         }
     }
 }

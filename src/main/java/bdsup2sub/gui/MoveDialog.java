@@ -31,7 +31,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 
-import static bdsup2sub.gui.support.GuiUtils.centerRelativeToParent;
+import static bdsup2sub.gui.support.GuiUtils.centerRelativeToOwner;
 
 public class MoveDialog extends JDialog {
 
@@ -119,7 +119,7 @@ public class MoveDialog extends JDialog {
         super(owner, "Move all captions", true);
 
         initialize();
-        centerRelativeToParent(this, owner);
+        centerRelativeToOwner(this);
         setResizable(false);
 
         offsetX = Core.getMoveOffsetX();
