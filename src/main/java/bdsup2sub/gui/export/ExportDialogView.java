@@ -35,14 +35,14 @@ public class ExportDialogView extends JDialog {
     private JTextField jTextFieldFileName;
     private JButton jButtonFileName;
     private JComboBox jComboBoxLanguage;
-    private JButton jButtonCancel;
-    private JButton jButtonSave;
     private JCheckBox jCheckBoxForced;
     private JCheckBox jCheckBoxWritePGCPal;
+    private JButton jButtonCancel;
+    private JButton jButtonSave;
 
 
     /** semaphore to disable actions while changing component properties */
-    private volatile boolean isReady;
+//    private volatile boolean isReady;
     /** file extension */
     private String extension;
 
@@ -95,15 +95,13 @@ public class ExportDialogView extends JDialog {
         }
 
         setTitle("Export " + sTitle);
-
-        isReady = true;
     }
 
     private void initialize() {
-        setPreferredSize(new Dimension(350, 160));
-        setBounds(new Rectangle(0, 0, 350, 160));
-        setMaximumSize(new Dimension(350, 160));
-        setMinimumSize(new Dimension(350, 160));
+        setPreferredSize(new Dimension(350, 180));
+        setBounds(new Rectangle(0, 0, 350, 180));
+        setMaximumSize(new Dimension(350, 180));
+        setMinimumSize(new Dimension(350, 180));
         setResizable(false);
         setContentPane(getJContentPane());
         centerRelativeToParent(this, getOwner());
@@ -196,11 +194,9 @@ public class ExportDialogView extends JDialog {
             jTextFieldFileName.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    if (isReady) {
-                        String s = jTextFieldFileName.getText();
-                        if (s != null) {
-                            model.setFilename(FilenameUtils.removeExtension(s) + "." + extension);
-                        }
+                    String s = jTextFieldFileName.getText();
+                    if (s != null) {
+                        model.setFilename(FilenameUtils.removeExtension(s) + "." + extension);
                     }
                 }
             });
@@ -217,16 +213,14 @@ public class ExportDialogView extends JDialog {
             jButtonFileName.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    if (isReady) {
-                        String[] ext = new String[1];
-                        ext[0] = extension;
-                        String p = FilenameUtils.getParent(model.getFilename());
-                        String fn = FilenameUtils.getName(model.getFilename());
-                        String fname = ToolBox.getFileName(p, fn, ext, false, getOwner());
-                        if (fname != null) {
-                            model.setFilename(FilenameUtils.removeExtension(fname) + "." + extension);
-                            jTextFieldFileName.setText(model.getFilename());
-                        }
+                    String[] ext = new String[1];
+                    ext[0] = extension;
+                    String p = FilenameUtils.getParent(model.getFilename());
+                    String fn = FilenameUtils.getName(model.getFilename());
+                    String fname = ToolBox.getFileName(p, fn, ext, false, getOwner());
+                    if (fname != null) {
+                        model.setFilename(FilenameUtils.removeExtension(fname) + "." + extension);
+                        jTextFieldFileName.setText(model.getFilename());
                     }
                 }
             });
@@ -243,9 +237,7 @@ public class ExportDialogView extends JDialog {
             jComboBoxLanguage.addItemListener(new ItemListener() {
                 @Override
                 public void itemStateChanged(ItemEvent e) {
-                    if (isReady) {
-                        model.setLanguageIdx(jComboBoxLanguage.getSelectedIndex());
-                    }
+                    model.setLanguageIdx(jComboBoxLanguage.getSelectedIndex());
                 }
             });
         }
@@ -278,23 +270,21 @@ public class ExportDialogView extends JDialog {
             jButtonSave.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    if (isReady) {
-                        // read values of editable boxes
-                        String s;
-                        // file name
-                        s = jTextFieldFileName.getText();
-                        if (s != null) {
-                            model.setFilename(FilenameUtils.removeExtension(s) + "." + extension);
-                        }
-                        // exit
-                        model.storeExportForced();
-                        model.storeLanguageIdx();
-                        if (model.getOutputMode() == OutputMode.VOBSUB || model.getOutputMode() == OutputMode.SUPIFO) {
-                            model.storeWritePGCPal();
-                        }
-                        model.setCanceled(false);
-                        dispose();
+                    // read values of editable boxes
+                    String s;
+                    // file name
+                    s = jTextFieldFileName.getText();
+                    if (s != null) {
+                        model.setFilename(FilenameUtils.removeExtension(s) + "." + extension);
                     }
+                    // exit
+                    model.storeExportForced();
+                    model.storeLanguageIdx();
+                    if (model.getOutputMode() == OutputMode.VOBSUB || model.getOutputMode() == OutputMode.SUPIFO) {
+                        model.storeWritePGCPal();
+                    }
+                    model.setCanceled(false);
+                    dispose();
                 }
             });
         }
@@ -316,9 +306,7 @@ public class ExportDialogView extends JDialog {
             jCheckBoxForced.addItemListener(new ItemListener() {
                 @Override
                 public void itemStateChanged(ItemEvent e) {
-                    if (isReady) {
-                        model.setExportForced(jCheckBoxForced.isSelected());
-                    }
+                    model.setExportForced(jCheckBoxForced.isSelected());
                 }
             });
         }
@@ -341,9 +329,7 @@ public class ExportDialogView extends JDialog {
             jCheckBoxWritePGCPal.addItemListener(new ItemListener() {
                 @Override
                 public void itemStateChanged(ItemEvent e) {
-                    if (isReady) {
-                        model.setWritePGCPal(jCheckBoxWritePGCPal.isSelected());
-                    }
+                    model.setWritePGCPal(jCheckBoxWritePGCPal.isSelected());
                 }
             });
         }
