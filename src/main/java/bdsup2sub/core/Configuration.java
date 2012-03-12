@@ -53,7 +53,9 @@ public final class Configuration {
     private double fpsSrc = DEFAULT_SOURCE_FRAMERATE;
     private double fpsTrg = DEFAULT_TARGET_FRAMERATE;
     private boolean fpsSrcCertain;
-    private static Resolution resolutionTrg = DEFAULT_TARGET_RESOLUTION;
+    private Resolution resolutionTrg = DEFAULT_TARGET_RESOLUTION;
+    private int languageIdx;
+    private boolean exportForced;
 
     private static final int RECENT_FILE_COUNT = 5;
     private static final String CONFIG_FILE = "bdsup2sup.ini";
@@ -482,7 +484,7 @@ public final class Configuration {
         props.set("fpsTrg", fpsTrg);
     }
 
-    public boolean getFpsSrcCertain() {
+    public boolean isFpsSrcCertain() {
         return fpsSrcCertain;
     }
 
@@ -527,5 +529,27 @@ public final class Configuration {
 
     public void setLuminanceThreshold(int[] luminanceThreshold) {
         this.luminanceThreshold = luminanceThreshold;
+    }
+
+    /**
+     * Index of language to be used for SUB/IDX export (also used for XML export)
+     */
+    public int getLanguageIdx() {
+        return languageIdx;
+    }
+
+    public void setLanguageIdx(int languageIdx) {
+        this.languageIdx = languageIdx;
+    }
+
+    /**
+     * Flag that defines whether to export only subpictures marked as "forced"
+     */
+    public boolean isExportForced() {
+        return exportForced;
+    }
+
+    public void setExportForced(boolean exportForced) {
+        this.exportForced = exportForced;
     }
 }

@@ -1239,10 +1239,10 @@ public class SubDVD implements Substream, SubstreamDVD {
             out.write("# Language index in use"); out.newLine();
             out.write("langidx: 0"); out.newLine();
             out.newLine();
-            out.write("# " + LANGUAGES[Core.getLanguageIdx()][0]); out.newLine();
-            out.write("id: " + LANGUAGES[Core.getLanguageIdx()][1] + ", index: 0"); out.newLine();
+            out.write("# " + LANGUAGES[configuration.getLanguageIdx()][0]); out.newLine();
+            out.write("id: " + LANGUAGES[configuration.getLanguageIdx()][1] + ", index: 0"); out.newLine();
             out.write("# Decomment next line to activate alternative name in DirectVobSub / Windows Media Player 6.x"); out.newLine();
-            out.write("# alt: " + LANGUAGES[Core.getLanguageIdx()][0]); out.newLine();
+            out.write("# alt: " + LANGUAGES[configuration.getLanguageIdx()][0]); out.newLine();
             out.write("# Vob/Cell ID: 1, 1 (PTS: 0)"); out.newLine();
             for (int i=0; i<timestamps.length; i++) {
                 out.write("timestamp: "+ptsToTimeStrIdx(timestamps[i]));

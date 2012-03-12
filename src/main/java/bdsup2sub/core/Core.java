@@ -87,8 +87,6 @@ public class Core  extends Thread {
     /** Default alpha map */
     private static final int DEFAULT_ALPHA[] = { 0, 0xf, 0xf, 0xf};
 
-    /** Index of language to be used for SUB/IDX export (also used for XML export) */
-    private static int languageIdx = 0;
     /** Converted unpatched target bitmap of current subpicture - just for display */
     private static Bitmap trgBitmapUnpatched;
     /** Converted target bitmap of current subpicture - just for display */
@@ -117,8 +115,6 @@ public class Core  extends Thread {
     /** Input mode used for last import */
     private static InputMode inMode = InputMode.VOBSUB;
 
-    /** Flag that defines whether to export only subpictures marked as "forced" */
-    private static boolean exportForced;
     /** State that defined whether to set/clear the forced flag for all captions */
     private static ForcedFlagState forceAll = ForcedFlagState.KEEP;
     /** Flag that defines whether to swap Cr/Cb components when loading a SUP */
@@ -460,7 +456,7 @@ public class Core  extends Thread {
         String fnl = FilenameUtils.getName(fname.toLowerCase());
         for (int i=0; i < LANGUAGES.length; i++) {
             if (fnl.contains(LANGUAGES[i][0].toLowerCase())) {
-                languageIdx = i;
+                configuration.setLanguageIdx(i);
                 printX("Selected language '"+LANGUAGES[i][0]+" ("+LANGUAGES[i][1]+")' by filename\n");
                 break;
             }
@@ -556,7 +552,7 @@ public class Core  extends Thread {
         // find language idx
         for (int i=0; i < LANGUAGES.length; i++) {
             if (LANGUAGES[i][2].equalsIgnoreCase(supXml.getLanguage())) {
-                languageIdx = i;
+                configuration.setLanguageIdx(i);
                 break;
             }
         }
@@ -658,7 +654,7 @@ public class Core  extends Thread {
             luminanceThreshold[1] = 160;
         }
 
-        languageIdx = substreamDVD.getLanguageIdx();
+        configuration.setLanguageIdx(substreamDVD.getLanguageIdx());
 
         // set frame rate
         int h = substream.getSubPicture(0).height; //substream.getBitmap().getHeight();
@@ -1317,7 +1313,7 @@ public class Core  extends Thread {
         String fn = "";
 
         // handling of forced subtitles
-        if (exportForced) {
+        if (configuration.isExportForced()) {
             maxNum = countForcedIncluded();
         } else {
             maxNum = countIncluded();
@@ -1355,7 +1351,7 @@ public class Core  extends Thread {
                 // for threaded version (progress bar);
                 setProgress(i);
                 //
-                if (!subPictures[i].exclude && (!exportForced || subPictures[i].isforced )) {
+                if (!subPictures[i].exclude && (!configuration.isExportForced() || subPictures[i].isforced )) {
                     if (outputMode == OutputMode.VOBSUB) {
                         offsets.add(offset);
                         convertSup(i, frameNum/2+1, maxNum);
@@ -1806,22 +1802,6 @@ public class Core  extends Thread {
     }
 
     /**
-     * Get flag that tells whether or not to export only forced subtitles.
-     * @return Flag that tells whether or not to export only forced subtitles
-     */
-    public static boolean getExportForced () {
-        return exportForced;
-    }
-
-    /**
-     * Set flag that tells whether or not to export only forced subtitles.
-     * @param b True: export only forced subtitles
-     */
-    public static void setExportForced(boolean b) {
-        exportForced = b;
-    }
-
-    /**
      * Request setting of forced flag for all captions
      * @return current state
      */
@@ -2118,22 +2098,6 @@ public class Core  extends Thread {
      */
     public static void setCurrentDVDPalette(Palette pal) {
         currentDVDPalette = pal;
-    }
-
-    /**
-     * Get language index for VobSub (and XML) export.
-     * @return Language index for VobSub (and XML) export
-     */
-    public static int getLanguageIdx() {
-        return languageIdx;
-    }
-
-    /**
-     * Set language index for VobSub (and XML) export.
-     * @param idx Language index for VobSub (and XML) export
-     */
-    public static void setLanguageIdx(int idx) {
-        languageIdx = idx;
     }
 
     /**

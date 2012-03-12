@@ -520,7 +520,7 @@ public class BDSup2Sub {
                         break;
                     case FORCED:
                         // export only forced subtitles (when converting from BD-SUP)
-                        Core.setExportForced(switchOn);
+                        configuration.setExportForced(switchOn);
                         System.out.println("OPTION: export only forced subtitles: " + strSwitchOn);
                         break;
                     case SWAP_CR_CB:
@@ -887,7 +887,7 @@ public class BDSup2Sub {
                         Core.moveAllToBounds();
                     }
                     // set some values
-                    if (Core.getExportForced() && Core.getNumForcedFrames() == 0) {
+                    if (configuration.isExportForced() && Core.getNumForcedFrames() == 0) {
                         throw new CoreException("No forced subtitles found.");
                     }
                     int lt[] = configuration.getLuminanceThreshold();
@@ -900,7 +900,7 @@ public class BDSup2Sub {
                     configuration.setLuminanceThreshold(lt);
                     configuration.setAlphaThreshold(alphaThr);
                     if (langIdx != -1) {
-                        Core.setLanguageIdx(langIdx);
+                        configuration.setLanguageIdx(langIdx);
                     }
                     // write output
                     Core.writeSub(trg);

@@ -41,7 +41,7 @@ import static bdsup2sub.utils.ToolBox.toHexLeftZeroPadded;
  */
 public class SupDVD implements Substream, SubstreamDVD {
 
-    private final Configuration configuration = Configuration.getInstance();
+    private static final Configuration configuration = Configuration.getInstance();
 
     /** ArrayList of captions contained in the current file  */
     private ArrayList<SubPictureDVD> subPictures = new ArrayList<SubPictureDVD>();
@@ -476,7 +476,7 @@ public class SupDVD implements Substream, SubstreamDVD {
         setWord(buf,  index+0x100, vidAttr);	// video attributes
         setWord(buf,  index+0x200, vidAttr);	// video attributes
 
-        String l = LANGUAGES[Core.getLanguageIdx()][1];
+        String l = LANGUAGES[configuration.getLanguageIdx()][1];
         setWord(buf,  index+0x254, 1);			// number of subtitle streams
         setByte(buf,  index+0x256, 1);			// subtitle attributes
         setByte(buf,  index+0x258, (byte)l.charAt(0));

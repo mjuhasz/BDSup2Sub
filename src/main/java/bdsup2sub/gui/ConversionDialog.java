@@ -143,7 +143,7 @@ public class ConversionDialog extends JDialog {
         fpsTrg = configuration.getFPSTrg();
         scaleX = configuration.getFreeScaleFactorX();
         scaleY = configuration.getFreeScaleFactorY();
-        fpsSrcCertain = configuration.getFpsSrcCertain();
+        fpsSrcCertain = configuration.isFpsSrcCertain();
         cancel = false;
 
         // fill comboboxes and text fields

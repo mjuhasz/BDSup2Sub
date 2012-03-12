@@ -20,9 +20,6 @@ import bdsup2sub.core.*;
 import bdsup2sub.gui.*;
 import bdsup2sub.gui.edit.EditDialog;
 import bdsup2sub.gui.export.ExportDialog;
-import bdsup2sub.gui.export.ExportDialogController;
-import bdsup2sub.gui.export.ExportDialogModel;
-import bdsup2sub.gui.export.ExportDialogView;
 import bdsup2sub.utils.FilenameUtils;
 import bdsup2sub.utils.ToolBox;
 
@@ -129,7 +126,7 @@ public class MainFrameController {
             view.setConsoleText("");
             String parent = FilenameUtils.getParent(model.getLoadPath());
             String name = FilenameUtils.getName(model.getLoadPath());
-            final String fname = ToolBox.getFileName(parent, name, extension, true, view);
+            final String fname = ToolBox.getFilename(parent, name, extension, true, view);
             (new Thread() {
                 @Override
                 public void run() {

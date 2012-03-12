@@ -83,7 +83,7 @@ public final class ToolBox {
      * @param parent Parent component (Frame, Window)
      * @return       Selected filename or null if canceled
      */
-    public static String getFileName(String path, String fn, String ext[], boolean load, Component parent) {
+    public static String getFilename(String path, String fn, String ext[], boolean load, Component parent) {
         String p = path;
         File f;
         if (p == null || p.isEmpty()) {

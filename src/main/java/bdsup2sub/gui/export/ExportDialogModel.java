@@ -24,15 +24,37 @@ public class ExportDialogModel {
     private final Configuration configuration = Configuration.getInstance();
 
     private String filename = "";
+    private String extension;
+    private String dialogTitle;
     private boolean canceled;
     private int languageIdx;
     private boolean exportForced;
     private boolean writePGCPal;
 
     public ExportDialogModel() {
-        languageIdx = Core.getLanguageIdx();
-        exportForced = (Core.getNumForcedFrames() > 0) && Core.getExportForced();
+        languageIdx = configuration.getLanguageIdx();
+        exportForced = configuration.isExportForced();
         writePGCPal = configuration.getWritePGCEditPal();
+
+        determineExtensionAndDialogTitle();
+    }
+
+    private void determineExtensionAndDialogTitle() {
+        OutputMode outputMode = getOutputMode();
+        dialogTitle = "Export ";
+        if (outputMode == OutputMode.VOBSUB) {
+            extension = "idx";
+            dialogTitle += "SUB/IDX (VobSub)";
+        } else if (outputMode == OutputMode.SUPIFO) {
+            extension = "ifo";
+            dialogTitle += "SUP/IFO (SUP DVD)";
+        } else if (outputMode == OutputMode.BDSUP) {
+            extension = "sup";
+            dialogTitle += "BD SUP";
+        } else {
+            extension = "xml";
+            dialogTitle += "XML (SONY BDN)";
+        }
     }
 
     public String getFilename() {
@@ -60,7 +82,7 @@ public class ExportDialogModel {
     }
 
     public void storeLanguageIdx() {
-        Core.setLanguageIdx(languageIdx);
+        configuration.setLanguageIdx(languageIdx);
     }
 
     public boolean getExportForced() {
@@ -72,7 +94,7 @@ public class ExportDialogModel {
     }
 
     public void storeExportForced() {
-        Core.setExportForced(exportForced);
+        configuration.setExportForced(exportForced);
     }
 
     public boolean getWritePGCPal() {
@@ -89,5 +111,17 @@ public class ExportDialogModel {
 
     public OutputMode getOutputMode() {
         return configuration.getOutputMode();
+    }
+
+    public String getExtension() {
+        return extension;
+    }
+
+    public void setExtension(String extension) {
+        this.extension = extension;
+    }
+
+    public String getDialogTitle() {
+        return dialogTitle;
     }
 }

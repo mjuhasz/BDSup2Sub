@@ -330,7 +330,7 @@ public class ColorDialog extends JDialog {
                     ext[0] = "ini";
                     String p = FilenameUtils.getParent(colorPath);
                     String fn = FilenameUtils.getName(colorPath);
-                    String fname = ToolBox.getFileName(p, fn, ext, false, thisFrame);
+                    String fname = ToolBox.getFilename(p, fn, ext, false, thisFrame);
                     if (fname != null) {
                         fname = FilenameUtils.removeExtension(fname) + ".ini";
                         File f = new File(fname);
@@ -382,7 +382,7 @@ public class ColorDialog extends JDialog {
                     ext[0] = "ini";
                     String p = FilenameUtils.getParent(colorPath);
                     String fn = FilenameUtils.getName(colorPath);
-                    String fname = ToolBox.getFileName(p, fn, ext, true, thisFrame);
+                    String fname = ToolBox.getFilename(p, fn, ext, true, thisFrame);
                     if (fname != null) {
                         File f = new File(fname);
                         try {

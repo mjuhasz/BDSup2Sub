@@ -242,7 +242,7 @@ public class SupXml implements Substream {
             out.newLine();
             out.write("    <Name Title=\"" + name + "\" Content=\"\"/>");
             out.newLine();
-            out.write("    <Language Code=\"" + LANGUAGES[Core.getLanguageIdx()][2] + "\"/>");
+            out.write("    <Language Code=\"" + LANGUAGES[configuration.getLanguageIdx()][2] + "\"/>");
             out.newLine();
             String res = Core.getResolutionNameXml(configuration.getOutputResolution());
             out.write("    <Format VideoFormat=\"" + res + "\" FrameRate=\"" + ToolBox.formatDouble(fps) + "\" DropFrame=\"False\"/>");
