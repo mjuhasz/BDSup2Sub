@@ -35,7 +35,7 @@ public class EditDialog {
 
     //FIXME: remove this method created while making the mvc transition
     public int getIndex() {
-        return view.getIndex();
+        return model.getIndex();
     }
 
     //FIXME: remove this method created while making the mvc transition

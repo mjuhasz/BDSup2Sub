@@ -23,9 +23,6 @@ import java.util.List;
 
 public class MainFrameModel {
 
-    static final Color ERROR_BACKGROUND = new Color(0xffe1acac);
-    static final Color OK_BACKGROUND = UIManager.getColor("TextField.background");
-
     private final Configuration configuration = Configuration.getInstance();
 
     private String saveFilename;

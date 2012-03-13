@@ -26,6 +26,10 @@ import java.awt.*;
  */
 public class MyComboBoxEditor extends BasicComboBoxEditor {
 
+    public static final Color ERROR_BACKGROUND = new Color(0xffe1acac);
+    public static final Color WARN_BACKGROUND = new Color(0xffffffc0);
+    public static final Color OK_BACKGROUND = UIManager.getColor("TextField.background");
+
     public MyComboBoxEditor(JTextField editor) {
         this.editor = editor;
         editor.setBorder(new EmptyBorder(new Insets(1,2,1,2)));

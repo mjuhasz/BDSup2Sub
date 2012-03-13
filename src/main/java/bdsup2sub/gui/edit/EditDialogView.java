@@ -15,29 +15,24 @@
  */
 package bdsup2sub.gui.edit;
 
-import bdsup2sub.bitmap.ErasePatch;
 import bdsup2sub.core.Core;
 import bdsup2sub.core.CoreException;
 import bdsup2sub.supstream.SubPicture;
-import bdsup2sub.utils.SubtitleUtils;
 import bdsup2sub.utils.ToolBox;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
-import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
-import java.util.ArrayList;
 
 import static bdsup2sub.gui.support.GuiUtils.centerRelativeToOwner;
 import static bdsup2sub.utils.TimeUtils.ptsToTimeStr;
-import static bdsup2sub.utils.TimeUtils.timeStrToPTS;
 
-public class EditDialogView extends JDialog implements SelectListener {
+public class EditDialogView extends JDialog {
 
     private static final long serialVersionUID = 1L;
 
@@ -76,64 +71,18 @@ public class EditDialogView extends JDialog implements SelectListener {
     private JButton jButtonUndoPatch;
     private JButton jButtonUndoAllPatches;
 
-    /** width of preview pane */
-    private static int minWidth = 768;
-    /** height of preview pane */
-    private static int minHeight = 432;
-
-    /** background color for errors */
-    private Color errBgnd = new Color(0xffe1acac);
-    /** background color for warnings */
-    private Color warnBgnd = new Color(0xffffffc0);
-    /** background color for ok */
-    private Color okBgnd = UIManager.getColor("TextField.background");
-
-    /** image of subpicture to display in preview pane */
-    private BufferedImage image;
-    /** semaphore to disable slider events when setting the slider values */
-    private boolean enableSliders;
-    /** current subtitle index */
-    private int index;
-    /** current subpicture */
-    private SubPicture subPic;
-    /** next subpicture (or null if none) */
-    private SubPicture subPicNext;
-    /** previous subpicture (or null if none) */
-    private SubPicture subPicPrev;
-    /** time of one (target) frame in 90kHz resolution */
-    private int frameTime;
-    /** dirty flag that tells if any value might have been changed */
-    private volatile boolean edited;
-    /** semaphore to disable actions while changing component properties */
-    private volatile boolean isReady;
-
     private EditDialogModel model;
 
 
-    /**
-     * Constructor
-     * @param owner parent frame
-     *
-     */
     public EditDialogView(EditDialogModel model, Frame owner) {
         super(owner, true);
         this.model = model;
-
         initialize();
-
-        // determine frame time
-        frameTime = (int)(90000/model.getFPSTrg());
-        // allow selection
-        jPanelPreview.setAllowSelection(true);
-        jPanelPreview.addSelectListener(this);
     }
 
-    /**
-     * This method initializes this dialog
-     */
     private void initialize() {
         setMinimumDimension();
-        setSize(minWidth + 36, minHeight + 280);
+        setSize(model.getMinWidth() + 36, model.getMinHeight() + 280);
         setContentPane(getJContentPane());
         centerRelativeToOwner(this);
         setResizable(false);
@@ -143,26 +92,17 @@ public class EditDialogView extends JDialog implements SelectListener {
         switch (model.getOutputResolution()) {
             case PAL:
             case NTSC:
-                minWidth = 720;
-                minHeight = 405;
+                model.setMinWidth(720);
+                model.setMinHeight(405);
                 break;
             case HD_1080:
             case HD_1440x1080:
             case HD_720:
             default:
-                minWidth = 640;
-                minHeight = 320;
+                model.setMinWidth(640);
+                model.setMinHeight(320);
                 break;
         }
-    }
-
-    /**
-     * sets dirty flag and enables/disables the store button accordingly
-     * @param e true: was edited
-     */
-    private void setEdited(boolean e) {
-        edited = e;
-        jButtonStore.setEnabled(e);
     }
 
     /**
@@ -245,11 +185,6 @@ public class EditDialogView extends JDialog implements SelectListener {
         return jContentPane;
     }
 
-    /**
-     * This method initializes jPanelUp
-     *
-     * @return javax.swing.JPanel
-     */
     private JPanel getJPanelUp() {
         if (jPanelUp == null) {
             GridBagConstraints gridBagButtonStorePrev = new GridBagConstraints();
@@ -293,11 +228,6 @@ public class EditDialogView extends JDialog implements SelectListener {
         return jPanelUp;
     }
 
-    /**
-     * This method initializes jPanelLayout
-     *
-     * @return javax.swing.JPanel
-     */
     private JPanel getJPanelLayout() {
         if (jPanelLayout == null) {
             GridBagConstraints gridBagSliderHorizontal = new GridBagConstraints();
@@ -326,11 +256,6 @@ public class EditDialogView extends JDialog implements SelectListener {
         return jPanelLayout;
     }
 
-    /**
-     * This method initializes jPanelOffsets
-     *
-     * @return javax.swing.JPanel
-     */
     private JPanel getJPanelOffsets() {
         if (jPanelOffsets == null) {
             GridBagConstraints gridBagButtonBottom = new GridBagConstraints();
@@ -405,11 +330,6 @@ public class EditDialogView extends JDialog implements SelectListener {
         return jPanelOffsets;
     }
 
-    /**
-     * This method initializes jPanelTimes
-     *
-     * @return javax.swing.JPanel
-     */
     private JPanel getJPanelTimes() {
         if (jPanelTimes == null) {
             GridBagConstraints gridBagButtonMax = new GridBagConstraints();
@@ -491,11 +411,6 @@ public class EditDialogView extends JDialog implements SelectListener {
         return jPanelTimes;
     }
 
-    /**
-     * This method initializes jPanelCheck
-     *
-     * @return javax.swing.JPanel
-     */
     private JPanel getJPanelCheck() {
         if (jPanelCheck == null) {
             GridBagConstraints gridBagCheckExclude = new GridBagConstraints();
@@ -522,11 +437,6 @@ public class EditDialogView extends JDialog implements SelectListener {
         return jPanelCheck;
     }
 
-    /**
-     * This method initializes jPanelButtons
-     *
-     * @return javax.swing.JPanel
-     */
     private JPanel getJPanelButtons() {
         if (jPanelButtons == null) {
             GridBagConstraints gridBagButtonStore = new GridBagConstraints();
@@ -552,799 +462,371 @@ public class EditDialogView extends JDialog implements SelectListener {
         return jPanelButtons;
     }
 
-    /**
-     * This method initializes jButtonPrev
-     *
-     * @return javax.swing.JButton
-     */
     private JButton getJButtonPrev() {
         if (jButtonPrev == null) {
             jButtonPrev = new JButton();
             jButtonPrev.setText("  <  ");
             jButtonPrev.setMnemonic(KeyEvent.VK_LEFT);
             jButtonPrev.setToolTipText("Lose changes and skip to previous frame");
-            jButtonPrev.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    if (index > 0) {
-                        setIndex(index-1);
-                        setEdited(false);
-                    }
-                }
-            });
         }
         return jButtonPrev;
     }
 
-    /**
-     * This method initializes jButtonNext
-     *
-     * @return javax.swing.JButton
-     */
+    void addPrevButtonActionListener(ActionListener actionListener) {
+        jButtonPrev.addActionListener(actionListener);
+    }
+
     private JButton getJButtonNext() {
         if (jButtonNext == null) {
             jButtonNext = new JButton();
             jButtonNext.setText("  >  ");
             jButtonNext.setMnemonic(KeyEvent.VK_RIGHT);
             jButtonNext.setToolTipText("Lose changes and skip to next frame");
-            jButtonNext.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    if (index < Core.getNumFrames()-1) {
-                        setIndex(index+1);
-                        setEdited(false);
-                    }
-                }
-            });
         }
         return jButtonNext;
     }
 
-    /**
-     * This method initializes jPanelPreview
-     *
-     * @return javax.swing.JPanel
-     */
+    void addNextButtonActionListener(ActionListener actionListener) {
+        jButtonNext.addActionListener(actionListener);
+    }
+
     private EditPane getJPanelPreview() {
         if (jPanelPreview == null) {
             jPanelPreview = new EditPane();
             jPanelPreview.setLayout(new GridBagLayout());
-            Dimension dim = new Dimension(minWidth, minHeight);
+            Dimension dim = new Dimension(model.getMinWidth(), model.getMinHeight());
             jPanelPreview.setPreferredSize(dim);
             jPanelPreview.setSize(dim);
             jPanelPreview.setMinimumSize(dim);
             jPanelPreview.setMaximumSize(dim);
+            jPanelPreview.setAllowSelection(true);
         }
         return jPanelPreview;
     }
 
-    /**
-     * This method initializes jSliderVertical
-     *
-     * @return javax.swing.JSlider
-     */
+    void addPreviewPanelSelectListener(SelectListener selectListener) {
+        jPanelPreview.addSelectListener(selectListener);
+    }
+
+    void setPreviewPanelAspectRatio(double aspectRatio) {
+        jPanelPreview.setAspectRatio(aspectRatio);
+    }
+
+    void setPreviewPanelOffsets(int x, int y) {
+        jPanelPreview.setOffsets(x, y);
+    }
+
+    void setPreviewPanelExcluded(boolean excluded) {
+        jPanelPreview.setExcluded(excluded);
+    }
+
+    void repaintPreviewPanel() {
+        jPanelPreview.repaint();
+    }
+
+    int[] getPreviewPanelSelection() {
+        return jPanelPreview.getSelection();
+    }
+
+    void removePreviewPanelSelection() {
+        jPanelPreview.removeSelection();
+    }
+
+    void setPreviewPanelImage(BufferedImage image, int width, int height) {
+        jPanelPreview.setImage(image, width, height);
+    }
+
     private JSlider getJSliderVertical() {
         if (jSliderVertical == null) {
             jSliderVertical = new JSlider();
             jSliderVertical.setOrientation(JSlider.VERTICAL);
             jSliderVertical.setToolTipText("Move subtitle vertically");
-            jSliderVertical.addChangeListener(new ChangeListener() {
-                public void stateChanged(ChangeEvent e) {
-                    if (enableSliders) {
-                        int y = subPic.height-jSliderVertical.getValue();
-
-                        if (y < Core.getCropOfsY()) {
-                            y = Core.getCropOfsY();
-                        } else if (y > subPic.height - subPic.getImageHeight() - Core.getCropOfsY()) {
-                            y = subPic.height - subPic.getImageHeight() - Core.getCropOfsY();
-                        }
-
-                        if (y != subPic.getOfsY()) {
-                            subPic.setOfsY(y);
-                            jTextFieldY.setText(""+subPic.getOfsY());
-                            jPanelPreview.setOffsets(subPic.getOfsX(), subPic.getOfsY());
-                            jPanelPreview.setAspectRatio(21.0/9);
-                            jPanelPreview.repaint();
-                            setEdited(true);
-                        }
-                    }
-                }
-            });
         }
         return jSliderVertical;
     }
 
-    /**
-     * This method initializes jSliderHorizontal
-     *
-     * @return javax.swing.JSlider
-     */
+    void addVerticalSliderChangeListener(ChangeListener changeListener) {
+        jSliderVertical.addChangeListener(changeListener);
+    }
+
+    int getVerticalSliderValue() {
+        return jSliderVertical.getValue();
+    }
+
+    void setVerticalSliderValue(int value) {
+        jSliderVertical.setValue(value);
+    }
+
     private JSlider getJSliderHorizontal() {
         if (jSliderHorizontal == null) {
             jSliderHorizontal = new JSlider();
             jSliderHorizontal.setToolTipText("Move subtitle horizontally");
-            jSliderHorizontal.addChangeListener(new ChangeListener() {
-                public void stateChanged(ChangeEvent e) {
-                    if (enableSliders) {
-                        int x = jSliderHorizontal.getValue();
-
-                        if (x < 0) {
-                            x = 0;
-                        } else if (x > subPic.width - subPic.getImageWidth()) {
-                            x = subPic.width - subPic.getImageWidth();
-                        }
-
-                        if (x != subPic.getOfsX()) {
-                            subPic.setOfsX(x);
-                            jTextFieldX.setText(""+subPic.getOfsX());
-                            jPanelPreview.setOffsets(subPic.getOfsX(), subPic.getOfsY());
-                            jPanelPreview.repaint();
-                            setEdited(true);
-                        }
-                    }
-                }
-            });
         }
         return jSliderHorizontal;
     }
 
-    /**
-     * This method initializes jButtonCancel
-     *
-     * @return javax.swing.JButton
-     */
+    void addHorizontalSliderChangeListener(ChangeListener changeListener) {
+        jSliderHorizontal.addChangeListener(changeListener);
+    }
+
+    int getHorizontalSliderValue() {
+        return jSliderHorizontal.getValue();
+    }
+
+    void setHorizontalSliderValue(int value) {
+        jSliderHorizontal.setValue(value);
+    }
+
     private JButton getJButtonCancel() {
         if (jButtonCancel == null) {
             jButtonCancel = new JButton();
             jButtonCancel.setText("Cancel");
             jButtonCancel.setMnemonic('c');
             jButtonCancel.setToolTipText("Lose changes and return");
-            jButtonCancel.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    dispose();
-                }
-            });
         }
         return jButtonCancel;
     }
 
-    /**
-     * This method initializes jButtonOk
-     *
-     * @return javax.swing.JButton
-     */
+    void addCancelButtonActionListener(ActionListener actionListener) {
+        jButtonCancel.addActionListener(actionListener);
+    }
+
     private JButton getJButtonOk() {
         if (jButtonOk == null) {
             jButtonOk = new JButton();
             jButtonOk.setText("  Ok  ");
             jButtonOk.setMnemonic('o');
             jButtonOk.setToolTipText("Save changes and return");
-            jButtonOk.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    if (edited) {
-                        store();
-                    }
-                    dispose();
-                }
-            });
         }
         return jButtonOk;
     }
 
-    /**
-     * This method initializes jTextFieldX
-     *
-     * @return javax.swing.JTextField
-     */
+    void addOkButtonActionListener(ActionListener actionListener) {
+        jButtonOk.addActionListener(actionListener);
+    }
+
     private JTextField getJTextFieldX() {
         if (jTextFieldX == null) {
             jTextFieldX = new JTextField();
             jTextFieldX.setPreferredSize(new Dimension(80, 20));
             jTextFieldX.setMinimumSize(new Dimension(80, 20));
             jTextFieldX.setToolTipText("Set X coordinate of upper left corner of subtitle");
-            jTextFieldX.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    if (isReady) {
-                        int x = ToolBox.getInt(jTextFieldX.getText());
-                        if (x == -1) {
-                            x = subPic.getOfsX(); // invalid value -> keep old one
-                        } else if (x < 0) {
-                            x = 0;
-                        } else if (x > subPic.width - subPic.getImageWidth()) {
-                            x = subPic.width - subPic.getImageWidth();
-                        }
-
-                        if (x != subPic.getOfsX() ) {
-                            enableSliders = false;
-                            subPic.setOfsX(x);
-                            jSliderHorizontal.setValue(subPic.getOfsX());
-                            jPanelPreview.setOffsets(subPic.getOfsX(), subPic.getOfsY());
-                            jPanelPreview.repaint();
-                            setEdited(true);
-                            enableSliders = true;
-                        }
-                        jTextFieldX.setText(""+subPic.getOfsX());
-                        jTextFieldX.setBackground(okBgnd);
-                    }
-                }
-            });
-            jTextFieldX.getDocument().addDocumentListener(new DocumentListener() {
-                private void check() {
-                    if (isReady) {
-                        int x = ToolBox.getInt(jTextFieldX.getText());
-                        if (x < 0 || x > subPic.width - subPic.getImageWidth()) {
-                            jTextFieldX.setBackground(errBgnd);
-                        } else {
-                            if (x != subPic.getOfsX() ) {
-                                enableSliders = false;
-                                subPic.setOfsX(x);
-                                jSliderHorizontal.setValue(subPic.getOfsX());
-                                jPanelPreview.setOffsets(subPic.getOfsX(), subPic.getOfsY());
-                                jPanelPreview.repaint();
-                                setEdited(true);
-                                enableSliders = true;
-                            }
-                            jTextFieldX.setBackground(okBgnd);
-                        }
-                    }
-                }
-
-                public void insertUpdate(DocumentEvent e) {
-                    check();
-                }
-
-                @Override
-                public void changedUpdate(DocumentEvent e) {
-                    check();
-                }
-
-                @Override
-                public void removeUpdate(DocumentEvent e) {
-                    check();
-                }
-            });
         }
         return jTextFieldX;
     }
 
-    /**
-     * This method initializes jTextFieldY
-     *
-     * @return javax.swing.JTextField
-     */
+    void addXTextFieldActionListener(ActionListener actionListener) {
+        jTextFieldX.addActionListener(actionListener);
+    }
+
+    void addXTextFieldDocumentListener(DocumentListener documentListener) {
+        jTextFieldX.getDocument().addDocumentListener(documentListener);
+    }
+
+    String getXTextFieldText() {
+        return jTextFieldX.getText();
+    }
+
+    void setXTextFieldText(String text) {
+        jTextFieldX.setText(text);
+    }
+
+    void setXTextFieldBackground(Color color) {
+        jTextFieldX.setBackground(color);
+    }
+
     private JTextField getJTextFieldY() {
         if (jTextFieldY == null) {
             jTextFieldY = new JTextField();
             jTextFieldY.setPreferredSize(new Dimension(80, 20));
             jTextFieldY.setMinimumSize(new Dimension(80, 20));
             jTextFieldY.setToolTipText("Set Y coordinate of upper left corner of subtitle");
-            jTextFieldY.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    int y = ToolBox.getInt(jTextFieldY.getText());
-                    if (y == -1) {
-                        y = subPic.getOfsY(); // invalid value -> keep old one
-                    } else if (y < Core.getCropOfsY()) {
-                        y = Core.getCropOfsY();
-                    } else if (y > subPic.height - subPic.getImageHeight() - Core.getCropOfsY()) {
-                        y = subPic.height - subPic.getImageHeight() - Core.getCropOfsY();
-                    }
-                    if (y != subPic.getOfsY()) {
-                        enableSliders = false;
-                        subPic.setOfsY(y);
-                        jSliderVertical.setValue(subPic.height-subPic.getOfsY());
-                        jPanelPreview.setOffsets(subPic.getOfsX(), subPic.getOfsY());
-                        jPanelPreview.repaint();
-                        setEdited(true);
-                        enableSliders = true;
-                    }
-                    jTextFieldY.setText(""+subPic.getOfsY());
-                    jTextFieldY.setBackground(okBgnd);
-                }
-            });
-            jTextFieldY.getDocument().addDocumentListener(new DocumentListener() {
-                private void check() {
-                    if (isReady) {
-                        int y = ToolBox.getInt(jTextFieldY.getText());
-                        if (y < Core.getCropOfsY() || y > subPic.height - subPic.getImageHeight() - Core.getCropOfsY()) {
-                            jTextFieldY.setBackground(errBgnd);
-                        } else {
-                            if (y != subPic.getOfsY()) {
-                                enableSliders = false;
-                                subPic.setOfsY(y);
-                                jSliderVertical.setValue(subPic.height-subPic.getOfsY());
-                                jPanelPreview.setOffsets(subPic.getOfsX(), subPic.getOfsY());
-                                jPanelPreview.repaint();
-                                setEdited(true);
-                                enableSliders = true;
-                            }
-                            jTextFieldY.setBackground(okBgnd);
-                        }
-                    }
-                }
-
-                public void insertUpdate(DocumentEvent e) {
-                    check();
-                }
-
-                @Override
-                public void changedUpdate(DocumentEvent e) {
-                    check();
-                }
-
-                @Override
-                public void removeUpdate(DocumentEvent e) {
-                    check();
-                }
-            });
         }
         return jTextFieldY;
     }
 
-    /**
-     * This method initializes jButtonCenter
-     *
-     * @return javax.swing.JButton
-     */
+    void addYTextFieldActionListener(ActionListener actionListener) {
+        jTextFieldY.addActionListener(actionListener);
+    }
+
+    void addYTextFieldDocumentListener(DocumentListener documentListener) {
+        jTextFieldY.getDocument().addDocumentListener(documentListener);
+    }
+
+    String getYTextFieldText() {
+        return jTextFieldY.getText();
+    }
+
+    void setYTextFieldText(String text) {
+        jTextFieldY.setText(text);
+    }
+
+    void setYTextFieldBackground(Color color) {
+        jTextFieldY.setBackground(color);
+    }
+
     private JButton getJButtonCenter() {
         if (jButtonCenter == null) {
             jButtonCenter = new JButton();
             jButtonCenter.setText("Center");
             jButtonCenter.setMnemonic('c');
             jButtonCenter.setToolTipText("Center subpicture horizontally");
-            jButtonCenter.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    subPic.setOfsX((subPic.width-subPic.getImageWidth())/2);
-                    enableSliders = false;
-                    jSliderHorizontal.setValue(subPic.getOfsX());
-                    jPanelPreview.setOffsets(subPic.getOfsX(), subPic.getOfsY());
-                    jPanelPreview.repaint();
-                    jTextFieldX.setText(""+subPic.getOfsX());
-                    setEdited(true);
-                    enableSliders = true;
-                }
-            });
         }
         return jButtonCenter;
     }
 
-    /**
-     * This method initializes jTextFieldStart
-     *
-     * @return javax.swing.JTextField
-     */
+    void addCenterButtonActionListener(ActionListener actionListener) {
+        jButtonCenter.addActionListener(actionListener);
+    }
+
     private JTextField getJTextFieldStart() {
         if (jTextFieldStart == null) {
             jTextFieldStart = new JTextField();
             jTextFieldStart.setPreferredSize(new Dimension(80, 20));
             jTextFieldStart.setMinimumSize(new Dimension(80, 20));
             jTextFieldStart.setToolTipText("Set start time of subtitle");
-            jTextFieldStart.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    if (isReady) {
-                        isReady = false;
-                        long t = SubtitleUtils.syncTimePTS(timeStrToPTS(jTextFieldStart.getText()), model.getFPSTrg(), model.getFPSTrg());
-                        if (t >= subPic.endTime) {
-                            t = subPic.endTime-frameTime;
-                        }
-                        if (subPicPrev != null && subPicPrev.endTime > t) {
-                            t = subPicPrev.endTime+frameTime;
-                        }
-                        if (t >= 0) {
-                            subPic.startTime = SubtitleUtils.syncTimePTS(t, model.getFPSTrg(), model.getFPSTrg());
-                            jTextFieldDuration.setText(ToolBox.formatDouble((subPic.endTime-subPic.startTime)/90.0));
-                            setEdited(true);
-                        }
-                        jTextFieldStart.setText(ptsToTimeStr(subPic.startTime));
-                        jTextFieldStart.setBackground(okBgnd);
-                        isReady = true;
-                    }
-                }
-            });
-            jTextFieldStart.getDocument().addDocumentListener(new DocumentListener() {
-                private void check() {
-                    if (isReady) {
-                        isReady = false;
-                        long t = SubtitleUtils.syncTimePTS(timeStrToPTS(jTextFieldStart.getText()), model.getFPSTrg(), model.getFPSTrg());
-                        if (t < 0 || t >= subPic.endTime || subPicPrev != null && subPicPrev.endTime > t) {
-                            jTextFieldStart.setBackground(errBgnd);
-                        } else {
-                            subPic.startTime = t;
-                            jTextFieldDuration.setText(ToolBox.formatDouble((subPic.endTime-subPic.startTime)/90.0));
-                            if (!jTextFieldStart.getText().equalsIgnoreCase(ptsToTimeStr(subPic.startTime))) {
-                                jTextFieldStart.setBackground(warnBgnd);
-                            } else {
-                                jTextFieldStart.setBackground(okBgnd);
-                            }
-                            setEdited(true);
-                        }
-                        isReady = true;
-                    }
-                }
-                public void insertUpdate(DocumentEvent e) {
-                    check();
-                }
-
-                @Override
-                public void changedUpdate(DocumentEvent e) {
-                    check();
-                }
-
-                @Override
-                public void removeUpdate(DocumentEvent e) {
-                    check();
-                }
-            });
         }
         return jTextFieldStart;
     }
 
-    /**
-     * This method initializes jTextFieldEnd
-     *
-     * @return javax.swing.JTextField
-     */
+    void addStartTextFieldActionListener(ActionListener actionListener) {
+        jTextFieldStart.addActionListener(actionListener);
+    }
+
+    void addStartTextFieldDocumentListener(DocumentListener documentListener) {
+        jTextFieldStart.getDocument().addDocumentListener(documentListener);
+    }
+
+    String getStartTextFieldText() {
+        return jTextFieldStart.getText();
+    }
+
+    void setStartTextFieldText(String text) {
+        jTextFieldStart.setText(text);
+    }
+
+    void setStartTextFieldBackground(Color color) {
+        jTextFieldStart.setBackground(color);
+    }
+
     private JTextField getJTextFieldEnd() {
         if (jTextFieldEnd == null) {
             jTextFieldEnd = new JTextField();
             jTextFieldEnd.setPreferredSize(new Dimension(80, 20));
             jTextFieldEnd.setMinimumSize(new Dimension(80, 20));
             jTextFieldEnd.setToolTipText("Set end time of subtitle");
-            jTextFieldEnd.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    if (isReady) {
-                        isReady = false;
-                        long t = SubtitleUtils.syncTimePTS(timeStrToPTS(jTextFieldEnd.getText()), model.getFPSTrg(), model.getFPSTrg());
-                        if (t <= subPic.startTime) {
-                            t = subPic.startTime + frameTime;
-                        }
-
-                        if (subPicNext != null && subPicNext.startTime < t) {
-                            t = subPicNext.startTime;
-                        }
-                        if (t >= 0) {
-                            subPic.endTime = SubtitleUtils.syncTimePTS(t, model.getFPSTrg(), model.getFPSTrg());
-                            jTextFieldDuration.setText(ToolBox.formatDouble((subPic.endTime-subPic.startTime)/90.0));
-                            setEdited(true);
-                        }
-                        jTextFieldEnd.setText(ptsToTimeStr(subPic.endTime));
-                        jTextFieldEnd.setBackground(okBgnd);
-                        isReady = true;
-                    }
-                }
-            });
-            jTextFieldEnd.getDocument().addDocumentListener(new DocumentListener() {
-                private void check() {
-                    if (isReady) {
-                        isReady = false;
-                        long t = SubtitleUtils.syncTimePTS(timeStrToPTS(jTextFieldEnd.getText()), model.getFPSTrg(), model.getFPSTrg());
-                        if (t < 0 || t <= subPic.startTime || subPicNext != null && subPicNext.startTime < t) {
-                            jTextFieldEnd.setBackground(errBgnd);
-                        } else {
-                            subPic.endTime = t;
-                            jTextFieldDuration.setText(ToolBox.formatDouble((subPic.endTime-subPic.startTime)/90.0));
-                            if (!jTextFieldEnd.getText().equalsIgnoreCase(ptsToTimeStr(subPic.endTime))) {
-                                jTextFieldEnd.setBackground(warnBgnd);
-                            } else {
-                                jTextFieldEnd.setBackground(okBgnd);
-                            }
-                            setEdited(true);
-                        }
-                        isReady = true;
-                    }
-                }
-                public void insertUpdate(DocumentEvent e) {
-                    check();
-                }
-
-                @Override
-                public void changedUpdate(DocumentEvent e) {
-                    check();
-                }
-
-                @Override
-                public void removeUpdate(DocumentEvent e) {
-                    check();
-                }
-            });
         }
         return jTextFieldEnd;
     }
 
-    /**
-     * This method initializes jTextFieldDuration
-     *
-     * @return javax.swing.JTextField
-     */
+    void addEndTextFieldActionListener(ActionListener actionListener) {
+        jTextFieldEnd.addActionListener(actionListener);
+    }
+
+    void addEndTextFieldDocumentListener(DocumentListener documentListener) {
+        jTextFieldEnd.getDocument().addDocumentListener(documentListener);
+    }
+
+    String getEndTextFieldText() {
+        return jTextFieldEnd.getText();
+    }
+
+    void setEndTextFieldText(String text) {
+        jTextFieldEnd.setText(text);
+    }
+
+    void setEndTextFieldBackground(Color color) {
+        jTextFieldEnd.setBackground(color);
+    }
+
     private JTextField getJTextFieldDuration() {
         if (jTextFieldDuration == null) {
             jTextFieldDuration = new JTextField();
             jTextFieldDuration.setPreferredSize(new Dimension(80, 20));
             jTextFieldDuration.setMinimumSize(new Dimension(80, 20));
             jTextFieldDuration.setToolTipText("Set display duration of subtitle in milliseconds");
-            jTextFieldDuration.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    if (isReady) {
-                        isReady = false;
-                        long t = (long)(ToolBox.getDouble(jTextFieldDuration.getText())*90);
-                        if (t >= 0 && t < frameTime) {
-                            t = frameTime;
-                        }
-                        if (t > 0) {
-                            t += subPic.startTime;
-                            if (subPicNext != null && subPicNext.startTime < t) {
-                                t = subPicNext.startTime;
-                            }
-                            subPic.endTime = SubtitleUtils.syncTimePTS(t, model.getFPSTrg(), model.getFPSTrg());
-                            jTextFieldEnd.setText(ptsToTimeStr(subPic.endTime));
-                            setEdited(true);
-                        }
-                        jTextFieldDuration.setText(ToolBox.formatDouble((subPic.endTime-subPic.startTime)/90.0));
-                        jTextFieldDuration.setBackground(okBgnd);
-                        isReady = true;
-                    }
-                }
-            });
-            jTextFieldDuration.getDocument().addDocumentListener(new DocumentListener() {
-                private void check() {
-                    if (isReady) {
-                        isReady = false;
-                        long t = (long)(ToolBox.getDouble(jTextFieldDuration.getText())*90);
-                        if (t < frameTime) {
-                            jTextFieldDuration.setBackground(errBgnd);
-                        } else {
-                            t += subPic.startTime;
-                            if (subPicNext != null && subPicNext.startTime < t) {
-                                t = subPicNext.startTime;
-                            }
-                            subPic.endTime = SubtitleUtils.syncTimePTS(t, model.getFPSTrg(), model.getFPSTrg());
-                            jTextFieldEnd.setText(ptsToTimeStr(subPic.endTime));
-                            setEdited(true);
-                            if (!jTextFieldDuration.getText().equalsIgnoreCase(ToolBox.formatDouble((subPic.endTime-subPic.startTime)/90.0))) {
-                                jTextFieldDuration.setBackground(warnBgnd);
-                            } else {
-                                jTextFieldDuration.setBackground(okBgnd);
-                            }
-                            setEdited(true);
-                        }
-                        isReady = true;
-                    }
-                }
-                public void insertUpdate(DocumentEvent e) {
-                    check();
-                }
-
-                @Override
-                public void changedUpdate(DocumentEvent e) {
-                    check();
-                }
-
-                @Override
-                public void removeUpdate(DocumentEvent e) {
-                    check();
-                }
-            });
         }
         return jTextFieldDuration;
     }
 
-    /**
-     * This method initializes jButtonMin
-     *
-     * @return javax.swing.JButton
-     */
+    void addDurationTextFieldActionListener(ActionListener actionListener) {
+        jTextFieldDuration.addActionListener(actionListener);
+    }
+
+    void addDurationTextFieldDocumentListener(DocumentListener documentListener) {
+        jTextFieldDuration.getDocument().addDocumentListener(documentListener);
+    }
+
+    String getDurationTextFieldText() {
+        return jTextFieldDuration.getText();
+    }
+
+    void setDurationTextFieldText(String text) {
+        jTextFieldDuration.setText(text);
+    }
+
+    void setDurationTextFieldBackground(Color color) {
+        jTextFieldDuration.setBackground(color);
+    }
+
     private JButton getJButtonMin() {
         if (jButtonMin == null) {
             jButtonMin = new JButton();
             jButtonMin.setText("   Min   ");
             jButtonMin.setMnemonic('n');
             jButtonMin.setToolTipText("Set minimum duration");
-            jButtonMin.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    long t = model.getMinTimePTS();
-                    if (t >= 0) {
-                        t += subPic.startTime;
-                        if (subPicNext != null && subPicNext.startTime < t) {
-                            t = subPicNext.startTime;
-                        }
-                        subPic.endTime = SubtitleUtils.syncTimePTS(t, model.getFPSTrg(), model.getFPSTrg());
-                        jTextFieldEnd.setText(ptsToTimeStr(subPic.endTime));
-                        setEdited(true);
-                    }
-                    jTextFieldDuration.setText(ToolBox.formatDouble((subPic.endTime-subPic.startTime)/90.0));
-                }
-            });
         }
         return jButtonMin;
     }
 
-    /**
-     * This method initializes jButtonMax
-     *
-     * @return javax.swing.JButton
-     */
+    void addMinButtonActionListener(ActionListener actionListener) {
+        jButtonMin.addActionListener(actionListener);
+    }
+
     private JButton getJButtonMax() {
         if (jButtonMax == null) {
             jButtonMax = new JButton();
             jButtonMax.setText("   Max  ");
             jButtonMax.setMnemonic('m');
             jButtonMax.setToolTipText("Set maximum duration");
-            jButtonMax.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    long t;
-                    if (subPicNext != null) {
-                        t = subPicNext.startTime;
-                    } else {
-                        t = subPic.endTime + 10000*90; // 10 seconds
-                    }
-                    subPic.endTime = SubtitleUtils.syncTimePTS(t, model.getFPSTrg(), model.getFPSTrg());
-                    jTextFieldEnd.setText(ptsToTimeStr(subPic.endTime));
-                    jTextFieldDuration.setText(ToolBox.formatDouble((subPic.endTime-subPic.startTime)/90.0));
-                    setEdited(true);
-                }
-            });
         }
         return jButtonMax;
     }
 
-    /**
-     * This method initializes jButtonTop
-     *
-     * @return javax.swing.JButton
-     */
+    void addMaxButtonActionListener(ActionListener actionListener) {
+        jButtonMax.addActionListener(actionListener);
+    }
+
     private JButton getJButtonTop() {
         if (jButtonTop == null) {
             jButtonTop = new JButton();
             jButtonTop.setText("   Top  ");
             jButtonTop.setMnemonic('t');
             jButtonTop.setToolTipText("Move to upper cinemascope bar");
-            jButtonTop.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    int cineH = subPic.height*5/42;
-                    int y = cineH-subPic.getImageHeight();
-                    if (y < 10) {
-                        y = 10;
-                    }
-                    if (y < Core.getCropOfsY()) {
-                        y = Core.getCropOfsY();
-                    }
-                    enableSliders = false;
-                    subPic.setOfsY(y);
-                    jSliderVertical.setValue(subPic.height-subPic.getOfsY());
-                    jPanelPreview.setOffsets(subPic.getOfsX(), subPic.getOfsY());
-                    jPanelPreview.repaint();
-                    jTextFieldY.setText(""+subPic.getOfsY());
-                    setEdited(true);
-                    enableSliders = true;
-                }
-            });
         }
         return jButtonTop;
     }
 
-    /**
-     * This method initializes jButtonBottom
-     *
-     * @return javax.swing.JButton
-     */
+    void addTopButtonActionListener(ActionListener actionListener) {
+        jButtonTop.addActionListener(actionListener);
+    }
+
     private JButton getJButtonBottom() {
         if (jButtonBottom == null) {
             jButtonBottom = new JButton();
             jButtonBottom.setText("Bottom");
             jButtonBottom.setMnemonic('b');
             jButtonBottom.setToolTipText("Move to lower cinemascope bar");
-            jButtonBottom.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    int cineH = subPic.height*5/42;
-                    int y = subPic.height-cineH;
-                    if (y+subPic.getImageHeight() > subPic.height - Core.getCropOfsY()) {
-                        y = subPic.height - subPic.getImageHeight() - 10;
-                    }
-                    enableSliders = false;
-                    subPic.setOfsY(y);
-                    jSliderVertical.setValue(subPic.height-subPic.getOfsY());
-                    jPanelPreview.setOffsets(subPic.getOfsX(), subPic.getOfsY());
-                    jPanelPreview.repaint();
-                    jTextFieldY.setText(""+subPic.getOfsY());
-                    setEdited(true);
-                    enableSliders = true;
-                }
-            });
         }
         return jButtonBottom;
     }
 
-    /**
-     * error handler
-     * @param s error string to display
-     */
-    public void error (String s) {
-        Core.printErr(s);
-        JOptionPane.showMessageDialog(this,s,"Error!", JOptionPane.WARNING_MESSAGE);
+    void addBottomButtonActionListener(ActionListener actionListener) {
+        jButtonBottom.addActionListener(actionListener);
     }
 
-    /**
-     * get current subtitle index
-     * @return current subtitle index
-     */
-    public int getIndex() {
-        return index;
-    }
+    ///////////////////////////////////
 
-    /** stores the local edits in the real subpicture */
-    private void store() {
-        SubPicture s = Core.getSubPictureTrg(index);
-        s.endTime = subPic.endTime;
-        s.startTime = subPic.startTime;
-        s.setOfsX(subPic.getOfsX());
-        s.setOfsY(subPic.getOfsY());
-        s.isforced = subPic.isforced;
-        s.exclude = subPic.exclude;
-        s.erasePatch = subPic.erasePatch;
-    }
-
-    /**
-     * set current subtitle index, update all components
-     * @param idx subtitle index
-     */
-    public void setIndex(int idx) {
-        isReady = false;
-        index = idx;
-        // get prev and next
-        if (idx > 0) {
-            subPicPrev = Core.getSubPictureTrg(idx-1);
-        } else {
-            subPicPrev = null;
-        }
-        if (idx < Core.getNumFrames()-1) {
-            subPicNext = Core.getSubPictureTrg(idx+1);
-        } else {
-            subPicNext = null;
-        }
-
-        // update components
-        try {
-            Core.convertSup(idx, idx+1, Core.getNumFrames());
-            subPic = Core.getSubPictureTrg(idx).copy();
-            image = Core.getTrgImagePatched(subPic);
-
-            if (subPic.erasePatch != null && subPic.erasePatch.size()>0) {
-                jButtonUndoPatch.setEnabled(true);
-                jButtonUndoAllPatches.setEnabled(true);
-            }
-
-            enableSliders = false;
-            jSliderHorizontal.setMaximum(subPic.width);
-            jSliderHorizontal.setValue(subPic.getOfsX());
-            jSliderVertical.setMaximum(subPic.height);
-            jSliderVertical.setValue(subPic.height-subPic.getOfsY());
-            enableSliders = true;
-
-            jLabelInfo.setText("Frame "+(idx+1)+" of "+Core.getNumFrames());
-            jTextFieldStart.setText(ptsToTimeStr(subPic.startTime));
-            jTextFieldEnd.setText(ptsToTimeStr(subPic.endTime));
-            jTextFieldDuration.setText(ToolBox.formatDouble((subPic.endTime-subPic.startTime)/90.0));
-
-            jTextFieldX.setText(""+subPic.getOfsX());
-            jTextFieldY.setText(""+subPic.getOfsY());
-
-            jPanelPreview.setOffsets(subPic.getOfsX(), subPic.getOfsY());
-            jPanelPreview.setDim(subPic.width, subPic.height);
-            jPanelPreview.setCropOfsY(Core.getCropOfsY());
-            jPanelPreview.setImage(image, subPic.getImageWidth(), subPic.getImageHeight());
-            jPanelPreview.repaint();
-            jPanelPreview.setExcluded(subPic.exclude);
-
-            jCheckBoxExclude.setSelected(subPic.exclude);
-            jCheckBoxForced.setSelected(subPic.isforced);
-
-            isReady = true;
-
-        } catch (CoreException ex) {
-            error(ex.getMessage());
-        } catch (Exception ex) {
-            ToolBox.showException(ex);
-            Core.exit();
-            System.exit(4);
-        }
-    }
 
     /**
      * This method initializes jButtonStore
@@ -1358,70 +840,54 @@ public class EditDialogView extends JDialog implements SelectListener {
             jButtonStore.setMnemonic('s');
             jButtonStore.setEnabled(false);
             jButtonStore.setToolTipText("Save changes and continue editing");
-            jButtonStore.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    store();
-                    setEdited(false);
-                }
-            });
         }
         return jButtonStore;
     }
 
-    /**
-     * This method initializes jCheckBoxForced
-     *
-     * @return javax.swing.JCheckBox
-     */
+    void addStoreButtonActionListener(ActionListener actionListener) {
+        jButtonStore.addActionListener(actionListener);
+    }
+
+    void enableStoreButton(boolean enabled) {
+        jButtonStore.setEnabled(enabled);
+    }
+
     private JCheckBox getJCheckBoxForced() {
         if (jCheckBoxForced == null) {
             jCheckBoxForced = new JCheckBox();
             jCheckBoxForced.setText("Forced Caption");
             jCheckBoxForced.setMnemonic('f');
             jCheckBoxForced.setToolTipText("Force display of this subtitle");
-            jCheckBoxForced.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    subPic.isforced = jCheckBoxForced.isSelected();
-                    setEdited(true);
-                }
-            });
         }
         return jCheckBoxForced;
     }
 
-    /**
-     * This method initializes jCheckBoxExclude
-     *
-     * @return javax.swing.JCheckBox
-     */
+    void addForcedCheckBoxActionListener(ActionListener actionListener) {
+        jCheckBoxForced.addActionListener(actionListener);
+    }
+
+    boolean isForcedCheckBoxSelected() {
+        return jCheckBoxForced.isSelected();
+    }
+
     private JCheckBox getJCheckBoxExclude() {
         if (jCheckBoxExclude == null) {
             jCheckBoxExclude = new JCheckBox();
             jCheckBoxExclude.setText("Exclude from export");
             jCheckBoxExclude.setMnemonic('x');
             jCheckBoxExclude.setToolTipText("Exclude this subtitle from export");
-            jCheckBoxExclude.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    subPic.exclude = jCheckBoxExclude.isSelected();
-                    jPanelPreview.setExcluded(subPic.exclude);
-                    jPanelPreview.repaint();
-                    setEdited(true);
-                }
-            });
         }
         return jCheckBoxExclude;
     }
 
-    @Override
-    public void selectionPerformed(final boolean valid) {
-        jButtonAddPatch.setEnabled(valid);
+    void addExcludeCheckBoxActionListener(ActionListener actionListener) {
+        jCheckBoxExclude.addActionListener(actionListener);
     }
 
-    /**
-     * This method initializes jPanelPatches
-     *
-     * @return javax.swing.JPanel
-     */
+    boolean isExcludeCheckBoxSelected() {
+        return jCheckBoxExclude.isSelected();
+    }
+
     private JPanel getJPanelPatches() {
         if (jPanelPatches == null) {
             GridBagConstraints gridBagConstraints2 = new GridBagConstraints();
@@ -1446,11 +912,6 @@ public class EditDialogView extends JDialog implements SelectListener {
         return jPanelPatches;
     }
 
-    /**
-     * This method initializes jButtonAddPatch
-     *
-     * @return javax.swing.JButton
-     */
     private JButton getJButtonAddPatch() {
         if (jButtonAddPatch == null) {
             jButtonAddPatch = new JButton();
@@ -1458,38 +919,18 @@ public class EditDialogView extends JDialog implements SelectListener {
             jButtonAddPatch.setMnemonic('e');
             jButtonAddPatch.setToolTipText("Add erase patch to make the selected area transparent");
             jButtonAddPatch.setEnabled(false);
-            jButtonAddPatch.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    int sel[] = jPanelPreview.getSelection();
-                    if (sel != null) {
-                        if (subPic.erasePatch == null) {
-                            subPic.erasePatch = new ArrayList<ErasePatch>();
-                        }
-                        ErasePatch ep = new ErasePatch(sel[0], sel[1], sel[2]-sel[0]+1, sel[3]-sel[1]+1);
-                        subPic.erasePatch.add(ep);
-
-                        jButtonUndoPatch.setEnabled(true);
-                        jButtonUndoAllPatches.setEnabled(true);
-
-                        image = Core.getTrgImagePatched(subPic);
-                        jPanelPreview.setImage(image, subPic.getImageWidth(), subPic.getImageHeight());
-
-                        setEdited(true);
-                    }
-                    jButtonAddPatch.setEnabled(false);
-                    jPanelPreview.removeSelection();
-                    jPanelPreview.repaint();
-                }
-            });
         }
         return jButtonAddPatch;
     }
 
-    /**
-     * This method initializes jButtonUndoPatch
-     *
-     * @return javax.swing.JButton
-     */
+    void addAddPatchButtonActionListener(ActionListener actionListener) {
+        jButtonAddPatch.addActionListener(actionListener);
+    }
+
+    void setAddPatchButtonEnabled(boolean enabled) {
+        jButtonAddPatch.setEnabled(enabled);
+    }
+
     private JButton getJButtonUndoPatch() {
         if (jButtonUndoPatch == null) {
             jButtonUndoPatch = new JButton();
@@ -1497,31 +938,18 @@ public class EditDialogView extends JDialog implements SelectListener {
             jButtonUndoPatch.setMnemonic('u');
             jButtonUndoPatch.setToolTipText("Remove one erase patch from the stack (undo one delete step)");
             jButtonUndoPatch.setEnabled(false);
-            jButtonUndoPatch.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    if (subPic.erasePatch != null && subPic.erasePatch.size() > 0) {
-                        subPic.erasePatch.remove(subPic.erasePatch.size()-1);
-                        if (subPic.erasePatch.size() == 0) {
-                            subPic.erasePatch = null;
-                            jButtonUndoPatch.setEnabled(false);
-                            jButtonUndoAllPatches.setEnabled(false);
-                        }
-                        image = Core.getTrgImagePatched(subPic);
-                        jPanelPreview.setImage(image, subPic.getImageWidth(), subPic.getImageHeight());
-                        jPanelPreview.repaint();
-                        setEdited(true);
-                    }
-                }
-            });
         }
         return jButtonUndoPatch;
     }
 
-    /**
-     * This method initializes jButtonUndoAllPatches
-     *
-     * @return javax.swing.JButton
-     */
+    void addUndoPatchButtonActionListener(ActionListener actionListener) {
+        jButtonUndoPatch.addActionListener(actionListener);
+    }
+
+    void setUndoPatchButtonEnabled(boolean enabled) {
+        jButtonUndoPatch.setEnabled(enabled);
+    }
+
     private JButton getJButtonUndoAllPatches() {
         if (jButtonUndoAllPatches == null) {
             jButtonUndoAllPatches = new JButton();
@@ -1529,72 +957,101 @@ public class EditDialogView extends JDialog implements SelectListener {
             jButtonUndoAllPatches.setMnemonic('a');
             jButtonUndoAllPatches.setEnabled(false);
             jButtonUndoAllPatches.setToolTipText("Remove all erase patches from the stack (undo all delete steps)");
-            jButtonUndoAllPatches.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    if (subPic.erasePatch != null) {
-                        subPic.erasePatch.clear();
-                        subPic.erasePatch = null;
-                        image = Core.getTrgImagePatched(subPic);
-                        jPanelPreview.setImage(image, subPic.getImageWidth(), subPic.getImageHeight());
-                        jPanelPreview.repaint();
-                        setEdited(true);
-                    }
-                    jButtonUndoPatch.setEnabled(false);
-                    jButtonUndoAllPatches.setEnabled(false);
-                }
-            });
         }
         return jButtonUndoAllPatches;
     }
 
-    /**
-     * This method initializes jButtonStoreNext
-     *
-     * @return javax.swing.JButton
-     */
+    void addUndoAllPatchesButtonActionListener(ActionListener actionListener) {
+        jButtonUndoAllPatches.addActionListener(actionListener);
+    }
+
+    void setUndoAllPatchesButtonEnabled(boolean enabled) {
+        jButtonUndoAllPatches.setEnabled(enabled);
+    }
+
     private JButton getJButtonStoreNext() {
         if (jButtonStoreNext == null) {
             jButtonStoreNext = new JButton();
             jButtonStoreNext.setText("<html><font color=\"red\"><b>&nbsp;&gt;&nbsp;</b></font></html>");
             jButtonStoreNext.setToolTipText("Store changes and skip to next frame");
-            jButtonStoreNext.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    if (edited) {
-                        store();
-                    }
-                    if (index < Core.getNumFrames()-1) {
-                        setIndex(index+1);
-                        setEdited(false);
-                    }
-                }
-            });
-
         }
         return jButtonStoreNext;
     }
 
-    /**
-     * This method initializes jButtonStorePrev
-     *
-     * @return javax.swing.JButton
-     */
+    void addStoreNextButtonActionListener(ActionListener actionListener) {
+        jButtonStoreNext.addActionListener(actionListener);
+    }
+
     private JButton getJButtonStorePrev() {
         if (jButtonStorePrev == null) {
             jButtonStorePrev = new JButton();
             jButtonStorePrev.setText("<html><font color=\"red\"><b>&nbsp;&lt;&nbsp;</b></font></html>");
             jButtonStorePrev.setToolTipText("Store changes and skip to previous frame");
-            jButtonStorePrev.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    if (edited) {
-                        store();
-                    }
-                    if (index > 0) {
-                        setIndex(index-1);
-                        setEdited(false);
-                    }
-                }
-            });
         }
         return jButtonStorePrev;
+    }
+
+    void addStorePrevButtonActionListener(ActionListener actionListener) {
+        jButtonStorePrev.addActionListener(actionListener);
+    }
+
+    public void error (String message) {
+        Core.printErr(message);
+        JOptionPane.showMessageDialog(this, message, "Error!", JOptionPane.WARNING_MESSAGE);
+    }
+
+    public void setIndex(int idx) {
+        model.setReady(false);
+        model.setIndex(idx); //TODO: use the observer patterm to run this method when index changes in the model
+        // get prev and next
+        model.setSubPicPrev(idx > 0 ? Core.getSubPictureTrg(idx-1) : null);
+        model.setSubPicNext(idx < Core.getNumFrames()-1 ? Core.getSubPictureTrg(idx+1) : null);
+
+        // update components
+        try {
+            Core.convertSup(idx, idx + 1, Core.getNumFrames());
+            model.setSubPic(Core.getSubPictureTrg(idx).copy());
+            SubPicture subPic = model.getSubPic();
+            model.setImage(Core.getTrgImagePatched(subPic));
+
+            if (subPic.erasePatch != null && subPic.erasePatch.size() > 0) {
+                jButtonUndoPatch.setEnabled(true);
+                jButtonUndoAllPatches.setEnabled(true);
+            }
+
+            model.setEnableSliders(false);
+            jSliderHorizontal.setMaximum(subPic.width);
+            jSliderHorizontal.setValue(subPic.getOfsX());
+            jSliderVertical.setMaximum(subPic.height);
+            jSliderVertical.setValue(subPic.height - subPic.getOfsY());
+            model.setEnableSliders(true);
+
+            jLabelInfo.setText("Frame " + (idx+1) + " of " + Core.getNumFrames());
+            jTextFieldStart.setText(ptsToTimeStr(subPic.startTime));
+            jTextFieldEnd.setText(ptsToTimeStr(subPic.endTime));
+            jTextFieldDuration.setText(ToolBox.formatDouble((subPic.endTime - subPic.startTime) / 90.0));
+
+            jTextFieldX.setText(String.valueOf(subPic.getOfsX()));
+            jTextFieldY.setText(String.valueOf(subPic.getOfsY()));
+
+            jPanelPreview.setOffsets(subPic.getOfsX(), subPic.getOfsY());
+            jPanelPreview.setDim(subPic.width, subPic.height);
+            jPanelPreview.setCropOfsY(Core.getCropOfsY());
+            jPanelPreview.setImage(model.getImage(), subPic.getImageWidth(), subPic.getImageHeight());
+            jPanelPreview.repaint();
+            jPanelPreview.setExcluded(subPic.exclude);
+
+            jCheckBoxExclude.setSelected(subPic.exclude);
+            jCheckBoxForced.setSelected(subPic.isforced);
+
+            model.setReady(true);
+
+        } catch (CoreException ex) {
+            error(ex.getMessage());
+        } catch (Exception ex) {
+            ToolBox.showException(ex);
+            Core.exit();
+            System.exit(4);
+        }
     }
 }

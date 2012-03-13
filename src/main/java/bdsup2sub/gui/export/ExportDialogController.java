@@ -44,7 +44,7 @@ public class ExportDialogController {
 
     private class FilenameTextFieldActionListener implements ActionListener {
         @Override
-        public void actionPerformed(ActionEvent e) {
+        public void actionPerformed(ActionEvent event) {
             String filename = view.getFilenameTextFieldText();
             if (filename != null) {
                 model.setFilename(FilenameUtils.removeExtension(filename) + "." + model.getExtension());
@@ -54,7 +54,7 @@ public class ExportDialogController {
 
     private class FilenameButtonActionListener implements ActionListener {
         @Override
-        public void actionPerformed(ActionEvent e) {
+        public void actionPerformed(ActionEvent event) {
             String parent = FilenameUtils.getParent(model.getFilename());
             String defaultFilename = FilenameUtils.getName(model.getFilename());
             String filename = ToolBox.getFilename(parent, defaultFilename, new String[]{model.getExtension()}, false, view.getOwner());
@@ -67,14 +67,14 @@ public class ExportDialogController {
 
     private class LanguageComboBoxItemListener implements ItemListener {
         @Override
-        public void itemStateChanged(ItemEvent e) {
+        public void itemStateChanged(ItemEvent event) {
             model.setLanguageIdx(view.getLanguageComboBoxSelectedItem());
         }
     }
 
     private class CancelButtonActionListener implements ActionListener {
         @Override
-        public void actionPerformed(ActionEvent e) {
+        public void actionPerformed(ActionEvent event) {
             model.setCanceled(true);
             view.dispose();
         }
@@ -82,7 +82,7 @@ public class ExportDialogController {
 
     private class SaveButtonActionListener implements ActionListener {
         @Override
-        public void actionPerformed(ActionEvent e) {
+        public void actionPerformed(ActionEvent event) {
             String filename = view.getFilenameTextFieldText();
             if (filename != null) {
                 model.setFilename(FilenameUtils.removeExtension(filename) + "." + model.getExtension());
@@ -99,14 +99,14 @@ public class ExportDialogController {
 
     private class ForcedCheckBoxItemListener implements ItemListener {
         @Override
-        public void itemStateChanged(ItemEvent e) {
+        public void itemStateChanged(ItemEvent event) {
             model.setExportForced(view.isForcedCheckBoxSelected());
         }
     }
 
     private class WritePGCPalCheckBoxItemListener implements ItemListener {
         @Override
-        public void itemStateChanged(ItemEvent e) {
+        public void itemStateChanged(ItemEvent event) {
             model.setWritePGCPalette(view.isWritePGCPalCheckBoxSelected());
         }
     }

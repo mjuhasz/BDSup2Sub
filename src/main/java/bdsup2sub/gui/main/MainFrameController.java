@@ -35,6 +35,7 @@ import java.util.List;
 
 import static bdsup2sub.core.Constants.APP_NAME_AND_VERSION;
 import static bdsup2sub.core.Constants.DEFAULT_DVD_PALETTE;
+import static bdsup2sub.gui.MyComboBoxEditor.*;
 
 public class MainFrameController {
 
@@ -719,7 +720,7 @@ public class MainFrameController {
             if (Core.isReady()) {
                 int idx = ToolBox.getInt(view.getSubNumComboBoxText()) - 1;
                 if (idx < 0 || idx >= Core.getNumFrames()) {
-                    view.setSubNumComboBoxBackground(MainFrameModel.ERROR_BACKGROUND);
+                    view.setSubNumComboBoxBackground(ERROR_BACKGROUND);
                 } else {
                     model.setSubIndex(idx);
                     (new Thread() {
@@ -741,7 +742,7 @@ public class MainFrameController {
                             }
                         }
                     }).start();
-                    view.setSubNumComboBoxBackground(MainFrameModel.OK_BACKGROUND);
+                    view.setSubNumComboBoxBackground(OK_BACKGROUND);
                 }
             }
         }
@@ -809,7 +810,7 @@ public class MainFrameController {
             if (Core.isReady()) {
                 int idx = ToolBox.getInt(view.getAlphaThresholdComboBoxText());
                 if (idx < 0 || idx > 255) {
-                    view.setAlphaThresholdComboBoxBackground(MainFrameModel.ERROR_BACKGROUND);
+                    view.setAlphaThresholdComboBoxBackground(ERROR_BACKGROUND);
                 } else {
                     model.setAlphaThreshold(idx);
                     (new Thread() {
@@ -829,7 +830,7 @@ public class MainFrameController {
                             }
                         }
                     }).start();
-                    view.setAlphaThresholdComboBoxBackground(MainFrameModel.OK_BACKGROUND);
+                    view.setAlphaThresholdComboBoxBackground(OK_BACKGROUND);
                 }
             }
         }
@@ -907,7 +908,7 @@ public class MainFrameController {
                 int lumThr[] = model.getLuminanceThreshold();
                 int idx = ToolBox.getInt(view.getMedLowThresholdComboBoxText());
                 if (idx < 0 || idx > 255 | idx >= lumThr[0])
-                    view.setMedLowThresholdComboBoxBackground(MainFrameModel.ERROR_BACKGROUND);
+                    view.setMedLowThresholdComboBoxBackground(ERROR_BACKGROUND);
                 else {
                     lumThr[1] = idx;
                     model.setLuminanceThreshold(lumThr);
@@ -927,7 +928,7 @@ public class MainFrameController {
                                 }
 
                             } } }).start();
-                    view.setMedLowThresholdComboBoxBackground(MainFrameModel.OK_BACKGROUND);
+                    view.setMedLowThresholdComboBoxBackground(OK_BACKGROUND);
                 }
             }
         }
@@ -1003,7 +1004,7 @@ public class MainFrameController {
                 int lumThr[] = model.getLuminanceThreshold();
                 int idx = ToolBox.getInt(view.getHiMedThresholdComboBoxText());
                 if (idx < 0 || idx > 255 | idx <= lumThr[1]) {
-                    view.setHiMedThresholdComboBoxBackground(MainFrameModel.ERROR_BACKGROUND);
+                    view.setHiMedThresholdComboBoxBackground(ERROR_BACKGROUND);
                 } else {
                     lumThr[0] = idx;
                     model.setLuminanceThreshold(lumThr);
@@ -1023,7 +1024,7 @@ public class MainFrameController {
                                 }
 
                             } } }).start();
-                    view.setHiMedThresholdComboBoxBackground(MainFrameModel.OK_BACKGROUND);
+                    view.setHiMedThresholdComboBoxBackground(OK_BACKGROUND);
                 }
             }
         }
