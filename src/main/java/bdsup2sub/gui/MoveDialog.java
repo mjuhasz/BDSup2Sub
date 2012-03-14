@@ -19,7 +19,7 @@ import bdsup2sub.core.CaptionMoveModeX;
 import bdsup2sub.core.CaptionMoveModeY;
 import bdsup2sub.core.Core;
 import bdsup2sub.core.CoreException;
-import bdsup2sub.gui.edit.EditPane;
+import bdsup2sub.gui.support.EditPane;
 import bdsup2sub.supstream.SubPicture;
 import bdsup2sub.utils.ToolBox;
 
@@ -711,11 +711,11 @@ public class MoveDialog extends JDialog {
 
             jLabelInfo.setText("Frame "+(idx+1)+" of "+Core.getNumFrames());
             move();
-            jPanelPreview.setOffsets(subPic.getOfsX(), subPic.getOfsY());
-            jPanelPreview.setDim(subPic.width, subPic.height);
+            jPanelPreview.setSubtitleOffsets(subPic.getOfsX(), subPic.getOfsY());
+            jPanelPreview.setScreenDimension(subPic.width, subPic.height);
             jPanelPreview.setImage(image,subPic.getImageWidth(), subPic.getImageHeight());
             jPanelPreview.setAspectRatio(aspectRatioTrg);
-            jPanelPreview.setCropOfsY(cropOfsY);
+            jPanelPreview.setCropOffsetY(cropOfsY);
             jPanelPreview.setExcluded(subPic.exclude);
             jPanelPreview.repaint();
             isReady = true;
@@ -835,7 +835,7 @@ public class MoveDialog extends JDialog {
         cineBarFactor = (1.0 - ASPECT_RATIO/aspectRatioTrg)/2.0;
         move();
         jPanelPreview.setAspectRatio(aspectRatioTrg);
-        jPanelPreview.setOffsets(subPic.getOfsX(), subPic.getOfsY());
+        jPanelPreview.setSubtitleOffsets(subPic.getOfsX(), subPic.getOfsY());
         jPanelPreview.repaint();
     }
 
@@ -898,7 +898,7 @@ public class MoveDialog extends JDialog {
 
                         if (y != cropOfsY) {
                             cropOfsY = y;
-                            jPanelPreview.setCropOfsY(cropOfsY);
+                            jPanelPreview.setCropOffsetY(cropOfsY);
                             setRatio(aspectRatioTrg);
                         }
                         jTextFieldCropOfsY.setText(""+cropOfsY);
@@ -915,7 +915,7 @@ public class MoveDialog extends JDialog {
                         } else {
                             if (y != cropOfsY) {
                                 cropOfsY = y;
-                                jPanelPreview.setCropOfsY(cropOfsY);
+                                jPanelPreview.setCropOffsetY(cropOfsY);
                                 setRatio(aspectRatioTrg);
                             }
                             jTextFieldCropOfsY.setBackground(okBgnd);
@@ -953,7 +953,7 @@ public class MoveDialog extends JDialog {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     cropOfsY = (int)(subPic.height*cineBarFactor+0.5); // height of one cinemascope bar in pixels
-                    jPanelPreview.setCropOfsY(cropOfsY);
+                    jPanelPreview.setCropOffsetY(cropOfsY);
                     setRatio(aspectRatioTrg);
                     jTextFieldCropOfsY.setText(""+cropOfsY);
                 }

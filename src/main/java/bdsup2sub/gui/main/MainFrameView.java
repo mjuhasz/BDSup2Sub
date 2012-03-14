@@ -16,7 +16,7 @@
 package bdsup2sub.gui.main;
 
 import bdsup2sub.core.*;
-import bdsup2sub.gui.edit.EditPane;
+import bdsup2sub.gui.support.EditPane;
 import bdsup2sub.gui.MyComboBoxEditor;
 
 import javax.swing.*;
@@ -789,7 +789,7 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
     }
 
     void setLayoutPaneCropOffsetY(int cropOfsY) {
-        jLayoutPane.setCropOfsY(cropOfsY);
+        jLayoutPane.setCropOffsetY(cropOfsY);
     }
 
     void repaintLayoutPane() {
@@ -1262,9 +1262,9 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                jLayoutPane.setDim(Core.getTrgWidth(index), Core.getTrgHeight(index));
-                jLayoutPane.setOffsets(Core.getTrgOfsX(index), Core.getTrgOfsY(index));
-                jLayoutPane.setCropOfsY(Core.getCropOfsY());
+                jLayoutPane.setScreenDimension(Core.getTrgWidth(index), Core.getTrgHeight(index));
+                jLayoutPane.setSubtitleOffsets(Core.getTrgOfsX(index), Core.getTrgOfsY(index));
+                jLayoutPane.setCropOffsetY(Core.getCropOfsY());
                 jLayoutPane.setImage(Core.getTrgImage(), Core.getTrgImgWidth(index), Core.getTrgImgHeight(index));
                 jLayoutPane.setExcluded(Core.getTrgExcluded(index));
                 jPanelTarget.setImage(Core.getTrgImage());

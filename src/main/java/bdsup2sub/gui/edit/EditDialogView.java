@@ -17,6 +17,7 @@ package bdsup2sub.gui.edit;
 
 import bdsup2sub.core.Core;
 import bdsup2sub.core.CoreException;
+import bdsup2sub.gui.support.EditPane;
 import bdsup2sub.supstream.SubPicture;
 import bdsup2sub.utils.ToolBox;
 
@@ -29,6 +30,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 
+import static bdsup2sub.gui.support.EditPane.SelectListener;
 import static bdsup2sub.gui.support.GuiUtils.centerRelativeToOwner;
 import static bdsup2sub.utils.TimeUtils.ptsToTimeStr;
 
@@ -499,7 +501,7 @@ public class EditDialogView extends JDialog {
             jPanelPreview.setSize(dim);
             jPanelPreview.setMinimumSize(dim);
             jPanelPreview.setMaximumSize(dim);
-            jPanelPreview.setAllowSelection(true);
+            jPanelPreview.setSelectionAllowed(true);
         }
         return jPanelPreview;
     }
@@ -513,7 +515,7 @@ public class EditDialogView extends JDialog {
     }
 
     void setPreviewPanelOffsets(int x, int y) {
-        jPanelPreview.setOffsets(x, y);
+        jPanelPreview.setSubtitleOffsets(x, y);
     }
 
     void setPreviewPanelExcluded(boolean excluded) {
@@ -825,14 +827,6 @@ public class EditDialogView extends JDialog {
         jButtonBottom.addActionListener(actionListener);
     }
 
-    ///////////////////////////////////
-
-
-    /**
-     * This method initializes jButtonStore
-     *
-     * @return javax.swing.JButton
-     */
     private JButton getJButtonStore() {
         if (jButtonStore == null) {
             jButtonStore = new JButton();
@@ -1034,9 +1028,9 @@ public class EditDialogView extends JDialog {
             jTextFieldX.setText(String.valueOf(subPic.getOfsX()));
             jTextFieldY.setText(String.valueOf(subPic.getOfsY()));
 
-            jPanelPreview.setOffsets(subPic.getOfsX(), subPic.getOfsY());
-            jPanelPreview.setDim(subPic.width, subPic.height);
-            jPanelPreview.setCropOfsY(Core.getCropOfsY());
+            jPanelPreview.setSubtitleOffsets(subPic.getOfsX(), subPic.getOfsY());
+            jPanelPreview.setScreenDimension(subPic.width, subPic.height);
+            jPanelPreview.setCropOffsetY(Core.getCropOfsY());
             jPanelPreview.setImage(model.getImage(), subPic.getImageWidth(), subPic.getImageHeight());
             jPanelPreview.repaint();
             jPanelPreview.setExcluded(subPic.exclude);
