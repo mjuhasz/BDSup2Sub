@@ -18,6 +18,7 @@ package bdsup2sub.gui.main;
 import bdsup2sub.bitmap.Palette;
 import bdsup2sub.core.*;
 import bdsup2sub.gui.*;
+import bdsup2sub.gui.color.ColorDialog;
 import bdsup2sub.gui.edit.EditDialog;
 import bdsup2sub.gui.export.ExportDialog;
 import bdsup2sub.utils.FilenameUtils;
@@ -421,7 +422,7 @@ public class MainFrameController {
     private class EditImportedDvdPaletteMenuItemActionListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent event) {
-            ColorDialog cDiag = new ColorDialog(view);
+            ColorDialog colorDialog = new ColorDialog(view);
             final String cName[] = {
                     "Color 0", "Color 1", "Color 2", "Color 3",
                     "Color 4", "Color 5", "Color 6", "Color 7",
@@ -434,12 +435,12 @@ public class MainFrameController {
                 cColor[i] = Core.getCurSrcDVDPalette().getColor(i);
                 cColorDefault[i] = Core.getDefSrcDVDPalette().getColor(i);
             }
-            cDiag.setParameters(cName, cColor, cColorDefault);
-            cDiag.setPath(model.getColorProfilePath());
-            cDiag.setVisible(true);
-            if (!cDiag.wasCanceled()) {
-                cColor = cDiag.getColors();
-                model.setColorProfilePath(cDiag.getPath());
+            colorDialog.setParameters(cName, cColor, cColorDefault);
+            colorDialog.setPath(model.getColorProfilePath());
+            colorDialog.setVisible(true);
+            if (!colorDialog.wasCanceled()) {
+                cColor = colorDialog.getColors();
+                model.setColorProfilePath(colorDialog.getPath());
                 Palette p = new Palette(cColor.length, true);
                 for (int i=0; i<cColor.length; i++) {
                     p.setColor(i, cColor[i]);

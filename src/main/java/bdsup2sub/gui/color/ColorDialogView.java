@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Volker Oth (0xdeadbeef) / Miklos Juhasz (mjuhasz)
+ * Copyright 2012 Miklos Juhasz (mjuhasz)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package bdsup2sub.gui;
+package bdsup2sub.gui.color;
 
 import bdsup2sub.core.CoreException;
 import bdsup2sub.tools.Props;
@@ -29,7 +29,7 @@ import java.io.File;
 import static bdsup2sub.core.Constants.APP_NAME_AND_VERSION;
 import static bdsup2sub.gui.support.GuiUtils.centerRelativeToOwner;
 
-public class ColorDialog extends JDialog {
+public class ColorDialogView extends JDialog {
     private static final long serialVersionUID = 0x000000001;
 
     private JPanel jContentPane;
@@ -42,95 +42,25 @@ public class ColorDialog extends JDialog {
     private JButton jButtonSave;
     private JButton jButtonLoad;
 
-    /** image icons to preview color */
-    private ImageIcon cIcon[];
-    /** selected colors */
-    private Color  cColor[];
-    /** default colors */
-    private Color  cColorDefault[];
-    /** color names */
-    private String cName[];
-    /** path to load and store color profiles */
-    private String colorPath;
+    private ImageIcon colorIcon[];
+    private Color selectedColor[];
+    private Color defaultColor[];
+    private String colorName[];
+    private String colorProfilePath;
+
     /** cancel state */
     private boolean canceled = true;
-    /** global reference to this class */
-    private Component thisFrame;
 
-    /**
-     * Paint JButton's Icon in a given color
-     * @param i ImageIcon to paint
-     * @param c Color to paint
-     */
-    private void paintIcon(ImageIcon i, Color c) {
-        Graphics g = i.getImage().getGraphics();
-        g.setColor(c);
-        g.setPaintMode();
-        g.fillRect(0,0,i.getIconWidth(),i.getIconHeight());
-    }
-
-    /**
-     * Change a color (by pressing the according button or double clicking the list item
-     * @param idx index of color
-     */
-    private void changeColor(int idx) {
-        Color c = JColorChooser.showDialog( null, "Chose Input Color "+cName[idx], cColor[idx] );
-        if (c != null) {
-            cColor[idx] = c;
-        }
-        paintIcon(cIcon[idx],  cColor[idx]);
-        jList.repaint();
-    }
-
-    /**
-     * Set dialog parameters
-     * @param name array of color names
-     * @param cCurrent current colors
-     * @param cDefault default colors
-     */
-    public void setParameters(String name[], Color cCurrent[], Color cDefault[]) {
-        cName = name;
-        cColorDefault = cDefault;
-        cColor = new Color[cName.length];
-        cIcon = new ImageIcon[cName.length];
-        // initialize color list box
-        jList = new JList(cName);
-        jList.setSelectedIndex(0);
-        jList.setSelectionMode( ListSelectionModel.SINGLE_SELECTION);
-        jList.setCellRenderer(new myListCellRenderer());
-        for (int i=0; i < cName.length; i++) {
-            cIcon[i] = new ImageIcon(new BufferedImage(12,12,BufferedImage.TYPE_INT_RGB ));
-            cColor[i] = new Color(cCurrent[i].getRGB());
-            paintIcon(cIcon[i],cColor[i]);
-        }
-        jList.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 2) {
-                    changeColor(((JList) e.getSource()).locationToIndex(e.getPoint()));
-                }
-            }
-        });
-
-        jScrollPane.setViewportView(jList);
-    }
-
-    /**
-     * get edited colors
-     * @return array of colors
-     */
-    public Color[] getColors() {
-        return cColor;
-    }
+    private ColorDialogModel model;
 
     /**
      * Constructor for modal dialog in parent frame
      * @param frame parent frame
      *
      */
-    public ColorDialog(JFrame frame) {
+    public ColorDialogView(ColorDialogModel model, Frame frame) {
         super(frame, true);
-        thisFrame = this;
+        this.model = model;
         initialize();
 
         centerRelativeToOwner(this);
@@ -147,7 +77,7 @@ public class ColorDialog extends JDialog {
         this.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                cColor = cColorDefault; // same as cancel
+                selectedColor = defaultColor; // same as cancel
             }
         });
     }
@@ -221,7 +151,7 @@ public class ColorDialog extends JDialog {
             btnCancel.setMnemonic('c');
             btnCancel.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
-                    cColor = cColorDefault;
+                    selectedColor = defaultColor;
                     dispose();
                 }
             });
@@ -242,9 +172,9 @@ public class ColorDialog extends JDialog {
             btnDefault.setMnemonic('r');
             btnDefault.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
-                    for (int i=0; i < cName.length; i++) {
-                        cColor[i] = new Color(cColorDefault[i].getRGB());
-                        paintIcon(cIcon[i],  cColor[i]);
+                    for (int i=0; i < colorName.length; i++) {
+                        selectedColor[i] = new Color(defaultColor[i].getRGB());
+                        paintIcon(colorIcon[i],  selectedColor[i]);
                     }
                     jList.repaint();
                 }
@@ -261,8 +191,8 @@ public class ColorDialog extends JDialog {
         @Override
         public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected,  boolean cellHasFocus) {
             Component retValue = super.getListCellRendererComponent( list, value, index, isSelected, cellHasFocus);
-            setText(cName[index]);
-            setIcon(cIcon[index]);
+            setText(colorName[index]);
+            setIcon(colorIcon[index]);
             return retValue;
         }
     }
@@ -294,7 +224,7 @@ public class ColorDialog extends JDialog {
      * @return path to color profiles
      */
     public String getPath() {
-        return colorPath;
+        return colorProfilePath;
     }
 
     /**
@@ -302,7 +232,7 @@ public class ColorDialog extends JDialog {
      * @param p path to color profiles
      */
     public void setPath(String p) {
-        colorPath = p;
+        colorProfilePath = p;
     }
 
     /**
@@ -328,9 +258,9 @@ public class ColorDialog extends JDialog {
                 public void actionPerformed(ActionEvent e) {
                     String[] ext = new String[1];
                     ext[0] = "ini";
-                    String p = FilenameUtils.getParent(colorPath);
-                    String fn = FilenameUtils.getName(colorPath);
-                    String fname = ToolBox.getFilename(p, fn, ext, false, thisFrame);
+                    String p = FilenameUtils.getParent(colorProfilePath);
+                    String fn = FilenameUtils.getName(colorProfilePath);
+                    String fname = ToolBox.getFilename(p, fn, ext, false, ColorDialogView.this);
                     if (fname != null) {
                         fname = FilenameUtils.removeExtension(fname) + ".ini";
                         File f = new File(fname);
@@ -339,22 +269,22 @@ public class ColorDialog extends JDialog {
                                 if ((f.exists() && !f.canWrite()) || (f.exists() && !f.canWrite())) {
                                     throw new CoreException("Target is write protected.");
                                 }
-                                if (JOptionPane.showConfirmDialog(thisFrame, "Target exists! Overwrite?",
+                                if (JOptionPane.showConfirmDialog(ColorDialogView.this, "Target exists! Overwrite?",
                                         "", JOptionPane.YES_NO_OPTION) == 1) {
                                     throw new CoreException();
                                 }
                             }
-                            colorPath = fname;
+                            colorProfilePath = fname;
                             Props colProps = new Props();
                             colProps.setHeader("COL - created by " + APP_NAME_AND_VERSION);
-                            for (int i=0; i<cColor.length; i++) {
-                                String s = ""+cColor[i].getRed()+","+cColor[i].getGreen()+","+cColor[i].getBlue();
+                            for (int i=0; i< selectedColor.length; i++) {
+                                String s = ""+ selectedColor[i].getRed()+","+ selectedColor[i].getGreen()+","+ selectedColor[i].getBlue();
                                 colProps.set("Color_"+i, s);
                             }
-                            colProps.save(colorPath);
+                            colProps.save(colorProfilePath);
                         } catch (CoreException ex) {
                             if (ex.getMessage() != null) {
-                                JOptionPane.showMessageDialog(thisFrame,ex.getMessage(),
+                                JOptionPane.showMessageDialog(ColorDialogView.this,ex.getMessage(),
                                         "Error!", JOptionPane.WARNING_MESSAGE);
                             }
                         }
@@ -380,16 +310,16 @@ public class ColorDialog extends JDialog {
                 public void actionPerformed(ActionEvent e) {
                     String[] ext = new String[1];
                     ext[0] = "ini";
-                    String p = FilenameUtils.getParent(colorPath);
-                    String fn = FilenameUtils.getName(colorPath);
-                    String fname = ToolBox.getFilename(p, fn, ext, true, thisFrame);
+                    String p = FilenameUtils.getParent(colorProfilePath);
+                    String fn = FilenameUtils.getName(colorProfilePath);
+                    String fname = ToolBox.getFilename(p, fn, ext, true, ColorDialogView.this);
                     if (fname != null) {
                         File f = new File(fname);
                         try {
                             if (f.exists()) {
                                 byte id[] = ToolBox.getFileID(fname, 4);
                                 if (id == null || id[0] != 0x23 || id[1] != 0x43 || id[2]!= 0x4F || id[3] != 0x4C) { //#COL
-                                    JOptionPane.showMessageDialog(thisFrame, "This is not a valid palette file",
+                                    JOptionPane.showMessageDialog(ColorDialogView.this, "This is not a valid palette file",
                                             "Wrong format!", JOptionPane.WARNING_MESSAGE);
                                     throw new CoreException();
                                 }
@@ -398,22 +328,22 @@ public class ColorDialog extends JDialog {
                             }
                             Props colProps = new Props();
                             colProps.load(fname);
-                            colorPath = fname;
-                            for (int i=0; i < cColor.length; i++) {
+                            colorProfilePath = fname;
+                            for (int i=0; i < selectedColor.length; i++) {
                                 String s = colProps.get("Color_"+i, "0,0,0");
                                 String sp[] = s.split(",");
                                 if (sp.length >= 3) {
                                     int r = Integer.valueOf(sp[0].trim())&0xff;
                                     int g = Integer.valueOf(sp[1].trim())&0xff;
                                     int b = Integer.valueOf(sp[2].trim())&0xff;
-                                    cColor[i] = new Color(r,g,b);
-                                    paintIcon(cIcon[i],  cColor[i]);
+                                    selectedColor[i] = new Color(r,g,b);
+                                    paintIcon(colorIcon[i],  selectedColor[i]);
                                 }
                             }
                             jList.repaint();
                         } catch (CoreException ex) {
                             if (ex.getMessage() != null) {
-                                JOptionPane.showMessageDialog(thisFrame,ex.getMessage(),
+                                JOptionPane.showMessageDialog(ColorDialogView.this,ex.getMessage(),
                                         "Error!", JOptionPane.WARNING_MESSAGE);
                             }
                         }
@@ -422,5 +352,71 @@ public class ColorDialog extends JDialog {
             });
         }
         return jButtonLoad;
+    }
+
+    /**
+     * Paint JButton's Icon in a given color
+     * @param i ImageIcon to paint
+     * @param c Color to paint
+     */
+    private void paintIcon(ImageIcon i, Color c) {
+        Graphics g = i.getImage().getGraphics();
+        g.setColor(c);
+        g.setPaintMode();
+        g.fillRect(0,0,i.getIconWidth(),i.getIconHeight());
+    }
+
+    /**
+     * Change a color (by pressing the according button or double clicking the list item
+     * @param idx index of color
+     */
+    private void changeColor(int idx) {
+        Color c = JColorChooser.showDialog( null, "Chose Input Color "+ colorName[idx], selectedColor[idx] );
+        if (c != null) {
+            selectedColor[idx] = c;
+        }
+        paintIcon(colorIcon[idx],  selectedColor[idx]);
+        jList.repaint();
+    }
+
+    /**
+     * Set dialog parameters
+     * @param name array of color names
+     * @param cCurrent current colors
+     * @param cDefault default colors
+     */
+    public void setParameters(String name[], Color cCurrent[], Color cDefault[]) {
+        colorName = name;
+        defaultColor = cDefault;
+        selectedColor = new Color[colorName.length];
+        colorIcon = new ImageIcon[colorName.length];
+        // initialize color list box
+        jList = new JList(colorName);
+        jList.setSelectedIndex(0);
+        jList.setSelectionMode( ListSelectionModel.SINGLE_SELECTION);
+        jList.setCellRenderer(new myListCellRenderer());
+        for (int i=0; i < colorName.length; i++) {
+            colorIcon[i] = new ImageIcon(new BufferedImage(12,12,BufferedImage.TYPE_INT_RGB ));
+            selectedColor[i] = new Color(cCurrent[i].getRGB());
+            paintIcon(colorIcon[i], selectedColor[i]);
+        }
+        jList.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    changeColor(((JList) e.getSource()).locationToIndex(e.getPoint()));
+                }
+            }
+        });
+
+        jScrollPane.setViewportView(jList);
+    }
+
+    /**
+     * get edited colors
+     * @return array of colors
+     */
+    public Color[] getColors() {
+        return selectedColor;
     }
 }
