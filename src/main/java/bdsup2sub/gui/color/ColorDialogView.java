@@ -15,18 +15,11 @@
  */
 package bdsup2sub.gui.color;
 
-import bdsup2sub.core.CoreException;
-import bdsup2sub.tools.Props;
-import bdsup2sub.utils.FilenameUtils;
-import bdsup2sub.utils.ToolBox;
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
 
-import static bdsup2sub.core.Constants.APP_NAME_AND_VERSION;
 import static bdsup2sub.gui.support.GuiUtils.centerRelativeToOwner;
 
 public class ColorDialogView extends JDialog {
@@ -34,58 +27,29 @@ public class ColorDialogView extends JDialog {
 
     private JPanel jContentPane;
     private JScrollPane jScrollPane;
-    private JList jList;
-    private JButton btnOk;
-    private JButton btnCancel;
-    private JButton btnDefault;
-    private JButton btnColor;
+    private JList jListColor;
+    private JButton jButtonOk;
+    private JButton jButtonCancel;
+    private JButton jButtonDefault;
+    private JButton jButtonColor;
     private JButton jButtonSave;
     private JButton jButtonLoad;
 
-    private ImageIcon colorIcon[];
-    private Color selectedColor[];
-    private Color defaultColor[];
-    private String colorName[];
-    private String colorProfilePath;
-
-    /** cancel state */
-    private boolean canceled = true;
-
     private ColorDialogModel model;
 
-    /**
-     * Constructor for modal dialog in parent frame
-     * @param frame parent frame
-     *
-     */
     public ColorDialogView(ColorDialogModel model, Frame frame) {
-        super(frame, true);
+        super(frame, "Choose Colors", true);
         this.model = model;
         initialize();
-
-        centerRelativeToOwner(this);
-        this.setResizable(false);
     }
 
-    /**
-     * This method initializes this dialog
-     */
     private void initialize() {
-        this.setContentPane(getJContentPane());
-        this.setSize(372, 231);
-        this.setTitle("Choose Colors");
-        this.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                selectedColor = defaultColor; // same as cancel
-            }
-        });
+        setContentPane(getJContentPane());
+        setSize(372, 231);
+        setResizable(false);
+        centerRelativeToOwner(this);
     }
 
-    /**
-     * This method initializes jContentPane
-     * @return javax.swing.JPanel
-     */
     private JPanel getJContentPane() {
         if(jContentPane == null) {
             JLabel lblColor = new JLabel();
@@ -94,21 +58,108 @@ public class ColorDialogView extends JDialog {
             lblColor.setText("Choose Color");
             lblColor.setBounds(15, 9, 73, 16);
             jContentPane.add(lblColor, null);
-            jContentPane.add(getBtnOk(), null);
-            jContentPane.add(getBtnCancel(), null);
-            jContentPane.add(getBtnDefault(), null);
-            jContentPane.add(getJScrollPane(), null);
-            jContentPane.add(getBtnColor(), null);
+            jContentPane.add(getJButtonOk(), null);
+            jContentPane.add(getJButtonCancel(), null);
+            jContentPane.add(getJButtonDefault(), null);
+            jContentPane.add(getJButtonColor(), null);
             jContentPane.add(getJButtonSave(), null);
             jContentPane.add(getJButtonLoad(), null);
+            jContentPane.add(getJScrollPane(), null);
+            initColorList();
         }
         return jContentPane;
     }
 
-    /**
-     * This method initializes jScrollPane
-     * @return javax.swing.JScrollPane
-     */
+    private JButton getJButtonOk() {
+        if (jButtonOk == null) {
+            jButtonOk = new JButton();
+            jButtonOk.setBounds(280, 162, 66, 20);
+            jButtonOk.setText("OK");
+            jButtonOk.setToolTipText("Apply changes and return");
+            jButtonOk.setMnemonic('o');
+        }
+        return jButtonOk;
+    }
+
+    void addOkButtonActionListener(ActionListener actionListener) {
+        jButtonOk.addActionListener(actionListener);
+    }
+
+    private JButton getJButtonCancel() {
+        if (jButtonCancel == null) {
+            jButtonCancel = new JButton();
+            jButtonCancel.setBounds(175, 161, 70, 20);
+            jButtonCancel.setText("Cancel");
+            jButtonCancel.setToolTipText("Lose changes and return");
+            jButtonCancel.setMnemonic('c');
+        }
+        return jButtonCancel;
+    }
+
+    void addCancelButtonActionListener(ActionListener actionListener) {
+        jButtonCancel.addActionListener(actionListener);
+    }
+
+    private JButton getJButtonDefault() {
+        if (jButtonDefault == null) {
+            jButtonDefault = new JButton();
+            jButtonDefault.setBounds(175, 60, 170, 20);
+            jButtonDefault.setText("Restore default Colors");
+            jButtonDefault.setToolTipText("Revert to default colors");
+            jButtonDefault.setMnemonic('r');
+        }
+        return jButtonDefault;
+    }
+
+    void addDefaultButtonActionListener(ActionListener actionListener) {
+        jButtonDefault.addActionListener(actionListener);
+    }
+
+    private JButton getJButtonColor() {
+        if (jButtonColor == null) {
+            jButtonColor = new JButton();
+            jButtonColor.setBounds(175, 30, 170, 20);
+            jButtonColor.setText("Change Color");
+            jButtonColor.setToolTipText("Edit the selected color");
+            jButtonColor.setMnemonic('h');
+        }
+        return jButtonColor;
+    }
+
+    void addColorButtonActionListener(ActionListener actionListener) {
+        jButtonColor.addActionListener(actionListener);
+    }
+
+    private JButton getJButtonSave() {
+        if (jButtonSave == null) {
+            jButtonSave = new JButton();
+            jButtonSave.setBounds(new Rectangle(175, 92, 170, 20));
+            jButtonSave.setText("Save Palette");
+            jButtonSave.setToolTipText("Save the current palette settings in an INI file");
+            jButtonSave.setMnemonic('s');
+        }
+        return jButtonSave;
+    }
+
+    void addSaveButtonActionListener(ActionListener actionListener) {
+        jButtonSave.addActionListener(actionListener);
+    }
+
+    private JButton getJButtonLoad() {
+        if (jButtonLoad == null) {
+            jButtonLoad = new JButton();
+            jButtonLoad.setBounds(new Rectangle(178, 126, 168, 18));
+            jButtonLoad.setText("Load Palette");
+            jButtonLoad.setToolTipText("Load palette settings from an INI file");
+            jButtonLoad.setMnemonic('l');
+        }
+        return jButtonLoad;
+    }
+
+    void addLoadButtonActionListener(ActionListener actionListener) {
+        jButtonLoad.addActionListener(actionListener);
+    }
+
     private JScrollPane getJScrollPane() {
         if (jScrollPane == null) {
             jScrollPane = new JScrollPane();
@@ -117,306 +168,46 @@ public class ColorDialogView extends JDialog {
         return jScrollPane;
     }
 
-    /**
-     * This method initializes btnOk
-     * @return javax.swing.JButton
-     */
-    private JButton getBtnOk() {
-        if (btnOk == null) {
-            btnOk = new JButton();
-            btnOk.setBounds(280, 162, 66, 20);
-            btnOk.setText("OK");
-            btnOk.setToolTipText("Apply changes and return");
-            btnOk.setMnemonic('o');
-            btnOk.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    canceled = false;
-                    dispose();
-                }
-            });
+    private void initColorList() {
+        jListColor = new JList(model.getColorNames());
+        jListColor.setSelectedIndex(0);
+        jListColor.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        for (int i=0; i < model.getColorNames().length; i++) {
+            model.getColorIcons()[i] = new ImageIcon(new BufferedImage(12, 12, BufferedImage.TYPE_INT_RGB));
+            paintIcon(model.getColorIcons()[i], model.getSelectedColors()[i]);
         }
-        return btnOk;
+        jScrollPane.setViewportView(jListColor);
     }
 
-    /**
-     * This method initializes btnCancel
-     * @return javax.swing.JButton
-     */
-    private JButton getBtnCancel() {
-        if (btnCancel == null) {
-            btnCancel = new JButton();
-            btnCancel.setBounds(175, 161, 70, 20);
-            btnCancel.setText("Cancel");
-            btnCancel.setToolTipText("Lose changes and return");
-            btnCancel.setMnemonic('c');
-            btnCancel.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    selectedColor = defaultColor;
-                    dispose();
-                }
-            });
-        }
-        return btnCancel;
+    void setColorListMouseListener(MouseListener mouseListener) {
+        jListColor.addMouseListener(mouseListener);
     }
 
-    /**
-     * This method initializes btnDefault
-     * @return javax.swing.JButton
-     */
-    private JButton getBtnDefault() {
-        if (btnDefault == null) {
-            btnDefault = new JButton();
-            btnDefault.setBounds(175, 60, 170, 20);
-            btnDefault.setText("Restore default Colors");
-            btnDefault.setToolTipText("Revert to default colors");
-            btnDefault.setMnemonic('r');
-            btnDefault.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    for (int i=0; i < colorName.length; i++) {
-                        selectedColor[i] = new Color(defaultColor[i].getRGB());
-                        paintIcon(colorIcon[i],  selectedColor[i]);
-                    }
-                    jList.repaint();
-                }
-            });
-        }
-        return btnDefault;
+    void setColorListCellRenderer(DefaultListCellRenderer cellRenderer) {
+        jListColor.setCellRenderer(cellRenderer);
     }
 
-    /**
-     * Modified ListCellRenderer to display text and color icons
-     */
-    private class myListCellRenderer extends DefaultListCellRenderer {
-        private static final long serialVersionUID = 0x000000001;
-        @Override
-        public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected,  boolean cellHasFocus) {
-            Component retValue = super.getListCellRendererComponent( list, value, index, isSelected, cellHasFocus);
-            setText(colorName[index]);
-            setIcon(colorIcon[index]);
-            return retValue;
-        }
+    void repaintColorList() {
+        jListColor.repaint();
     }
 
-    /**
-     * This method initializes jButton
-     *
-     * @return javax.swing.JButton
-     */
-    private JButton getBtnColor() {
-        if (btnColor == null) {
-            btnColor = new JButton();
-            btnColor.setBounds(175, 30, 170, 20);
-            btnColor.setText("Change Color");
-            btnColor.setToolTipText("Edit the selected color");
-            btnColor.setMnemonic('h');
-            btnColor.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    int idx = jList.getSelectedIndex();
-                    changeColor(idx);
-                }
-            });
-        }
-        return btnColor;
+    int getSelectedColor() {
+        return jListColor.getSelectedIndex();
     }
 
-    /**
-     * return path to color profiles
-     * @return path to color profiles
-     */
-    public String getPath() {
-        return colorProfilePath;
-    }
-
-    /**
-     * set path to color profiles
-     * @param p path to color profiles
-     */
-    public void setPath(String p) {
-        colorProfilePath = p;
-    }
-
-    /**
-     * return cancel state of this dialog
-     * @return true if canceled
-     */
-    public boolean wasCanceled() {
-        return canceled;
-    }
-
-    /**
-     * This method initializes jButtonSave
-     * @return javax.swing.JButton
-     */
-    private JButton getJButtonSave() {
-        if (jButtonSave == null) {
-            jButtonSave = new JButton();
-            jButtonSave.setBounds(new Rectangle(175, 92, 170, 20));
-            jButtonSave.setText("Save Palette");
-            jButtonSave.setToolTipText("Save the current palette settings in an INI file");
-            jButtonSave.setMnemonic('s');
-            jButtonSave.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    String[] ext = new String[1];
-                    ext[0] = "ini";
-                    String p = FilenameUtils.getParent(colorProfilePath);
-                    String fn = FilenameUtils.getName(colorProfilePath);
-                    String fname = ToolBox.getFilename(p, fn, ext, false, ColorDialogView.this);
-                    if (fname != null) {
-                        fname = FilenameUtils.removeExtension(fname) + ".ini";
-                        File f = new File(fname);
-                        try {
-                            if (f.exists()) {
-                                if ((f.exists() && !f.canWrite()) || (f.exists() && !f.canWrite())) {
-                                    throw new CoreException("Target is write protected.");
-                                }
-                                if (JOptionPane.showConfirmDialog(ColorDialogView.this, "Target exists! Overwrite?",
-                                        "", JOptionPane.YES_NO_OPTION) == 1) {
-                                    throw new CoreException();
-                                }
-                            }
-                            colorProfilePath = fname;
-                            Props colProps = new Props();
-                            colProps.setHeader("COL - created by " + APP_NAME_AND_VERSION);
-                            for (int i=0; i< selectedColor.length; i++) {
-                                String s = ""+ selectedColor[i].getRed()+","+ selectedColor[i].getGreen()+","+ selectedColor[i].getBlue();
-                                colProps.set("Color_"+i, s);
-                            }
-                            colProps.save(colorProfilePath);
-                        } catch (CoreException ex) {
-                            if (ex.getMessage() != null) {
-                                JOptionPane.showMessageDialog(ColorDialogView.this,ex.getMessage(),
-                                        "Error!", JOptionPane.WARNING_MESSAGE);
-                            }
-                        }
-                    }
-                }
-            });
-        }
-        return jButtonSave;
-    }
-
-    /**
-     * This method initializes jButtonLoad
-     * @return javax.swing.JButton
-     */
-    private JButton getJButtonLoad() {
-        if (jButtonLoad == null) {
-            jButtonLoad = new JButton();
-            jButtonLoad.setBounds(new Rectangle(178, 126, 168, 18));
-            jButtonLoad.setText("Load Palette");
-            jButtonLoad.setToolTipText("Load palette settings from an INI file");
-            jButtonLoad.setMnemonic('l');
-            jButtonLoad.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    String[] ext = new String[1];
-                    ext[0] = "ini";
-                    String p = FilenameUtils.getParent(colorProfilePath);
-                    String fn = FilenameUtils.getName(colorProfilePath);
-                    String fname = ToolBox.getFilename(p, fn, ext, true, ColorDialogView.this);
-                    if (fname != null) {
-                        File f = new File(fname);
-                        try {
-                            if (f.exists()) {
-                                byte id[] = ToolBox.getFileID(fname, 4);
-                                if (id == null || id[0] != 0x23 || id[1] != 0x43 || id[2]!= 0x4F || id[3] != 0x4C) { //#COL
-                                    JOptionPane.showMessageDialog(ColorDialogView.this, "This is not a valid palette file",
-                                            "Wrong format!", JOptionPane.WARNING_MESSAGE);
-                                    throw new CoreException();
-                                }
-                            } else {
-                                throw new CoreException("File not found.");
-                            }
-                            Props colProps = new Props();
-                            colProps.load(fname);
-                            colorProfilePath = fname;
-                            for (int i=0; i < selectedColor.length; i++) {
-                                String s = colProps.get("Color_"+i, "0,0,0");
-                                String sp[] = s.split(",");
-                                if (sp.length >= 3) {
-                                    int r = Integer.valueOf(sp[0].trim())&0xff;
-                                    int g = Integer.valueOf(sp[1].trim())&0xff;
-                                    int b = Integer.valueOf(sp[2].trim())&0xff;
-                                    selectedColor[i] = new Color(r,g,b);
-                                    paintIcon(colorIcon[i],  selectedColor[i]);
-                                }
-                            }
-                            jList.repaint();
-                        } catch (CoreException ex) {
-                            if (ex.getMessage() != null) {
-                                JOptionPane.showMessageDialog(ColorDialogView.this,ex.getMessage(),
-                                        "Error!", JOptionPane.WARNING_MESSAGE);
-                            }
-                        }
-                    }
-                }
-            });
-        }
-        return jButtonLoad;
-    }
-
-    /**
-     * Paint JButton's Icon in a given color
-     * @param i ImageIcon to paint
-     * @param c Color to paint
-     */
-    private void paintIcon(ImageIcon i, Color c) {
-        Graphics g = i.getImage().getGraphics();
-        g.setColor(c);
+    void paintIcon(ImageIcon icon, Color color) {
+        Graphics g = icon.getImage().getGraphics();
+        g.setColor(color);
         g.setPaintMode();
-        g.fillRect(0,0,i.getIconWidth(),i.getIconHeight());
+        g.fillRect(0, 0,icon.getIconWidth(), icon.getIconHeight());
     }
 
-    /**
-     * Change a color (by pressing the according button or double clicking the list item
-     * @param idx index of color
-     */
-    private void changeColor(int idx) {
-        Color c = JColorChooser.showDialog( null, "Chose Input Color "+ colorName[idx], selectedColor[idx] );
-        if (c != null) {
-            selectedColor[idx] = c;
+    void changeColor(int index) {
+        Color color = JColorChooser.showDialog( null, "Input Color " +  model.getColorNames()[index], model.getSelectedColors()[index] );
+        if (color != null) {
+            model.getSelectedColors()[index] = color;
         }
-        paintIcon(colorIcon[idx],  selectedColor[idx]);
-        jList.repaint();
-    }
-
-    /**
-     * Set dialog parameters
-     * @param name array of color names
-     * @param cCurrent current colors
-     * @param cDefault default colors
-     */
-    public void setParameters(String name[], Color cCurrent[], Color cDefault[]) {
-        colorName = name;
-        defaultColor = cDefault;
-        selectedColor = new Color[colorName.length];
-        colorIcon = new ImageIcon[colorName.length];
-        // initialize color list box
-        jList = new JList(colorName);
-        jList.setSelectedIndex(0);
-        jList.setSelectionMode( ListSelectionModel.SINGLE_SELECTION);
-        jList.setCellRenderer(new myListCellRenderer());
-        for (int i=0; i < colorName.length; i++) {
-            colorIcon[i] = new ImageIcon(new BufferedImage(12,12,BufferedImage.TYPE_INT_RGB ));
-            selectedColor[i] = new Color(cCurrent[i].getRGB());
-            paintIcon(colorIcon[i], selectedColor[i]);
-        }
-        jList.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 2) {
-                    changeColor(((JList) e.getSource()).locationToIndex(e.getPoint()));
-                }
-            }
-        });
-
-        jScrollPane.setViewportView(jList);
-    }
-
-    /**
-     * get edited colors
-     * @return array of colors
-     */
-    public Color[] getColors() {
-        return selectedColor;
+        paintIcon(model.getColorIcons()[index], model.getSelectedColors()[index]);
+        jListColor.repaint();
     }
 }

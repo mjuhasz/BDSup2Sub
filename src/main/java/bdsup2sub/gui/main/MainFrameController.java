@@ -369,8 +369,7 @@ public class MainFrameController {
     private class EditDefaultDvdPaletteMenuItemActionListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent event) {
-            ColorDialog cDiag = new ColorDialog(view);
-            final String cName[] = {
+            final String colorNames[] = {
                     "white","light gray","dark gray",
                     "Color 1 light","Color 1 dark",
                     "Color 2 light","Color 2 dark",
@@ -379,20 +378,19 @@ public class MainFrameController {
                     "Color 5 light","Color 5 dark",
                     "Color 6 light","Color 6 dark"
             };
-            Color cColor[] = new Color[15];
-            Color cColorDefault[] = new Color[15];
-            for (int i=0; i < cColor.length; i++) {
-                cColor[i] = Core.getCurrentDVDPalette().getColor(i+1);
-                cColorDefault[i] = DEFAULT_DVD_PALETTE.getColor(i+1);
+            Color currentColors[] = new Color[15];
+            Color defaultColors[] = new Color[15];
+            for (int i=0; i < currentColors.length; i++) {
+                currentColors[i] = Core.getCurrentDVDPalette().getColor(i+1);
+                defaultColors[i] = DEFAULT_DVD_PALETTE.getColor(i+1);
             }
-            cDiag.setParameters(cName, cColor, cColorDefault);
-            cDiag.setPath(model.getColorProfilePath());
-            cDiag.setVisible(true);
-            if (!cDiag.wasCanceled()) {
-                cColor = cDiag.getColors();
-                model.setColorProfilePath(cDiag.getPath());
-                for (int i=0; i<cColor.length; i++) {
-                    Core.getCurrentDVDPalette().setColor(i+1, cColor[i]);
+            ColorDialog colorDiag = new ColorDialog(view, colorNames, currentColors, defaultColors, model.getColorProfilePath());
+            colorDiag.setVisible(true);
+            if (!colorDiag.wasCanceled()) {
+                currentColors = colorDiag.getColors();
+                model.setColorProfilePath(colorDiag.getPath());
+                for (int i=0; i < currentColors.length; i++) {
+                    Core.getCurrentDVDPalette().setColor(i+1, currentColors[i]);
                 }
 
                 (new Thread() {
@@ -422,28 +420,26 @@ public class MainFrameController {
     private class EditImportedDvdPaletteMenuItemActionListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent event) {
-            ColorDialog colorDialog = new ColorDialog(view);
-            final String cName[] = {
+            final String colorNames[] = {
                     "Color 0", "Color 1", "Color 2", "Color 3",
                     "Color 4", "Color 5", "Color 6", "Color 7",
                     "Color 8", "Color 9", "Color 10", "Color 11",
                     "Color 12", "Color 13", "Color 14", "Color 15",
             };
-            Color cColor[] = new Color[16];
-            Color cColorDefault[] = new Color[16];
-            for (int i=0; i < cColor.length; i++) {
-                cColor[i] = Core.getCurSrcDVDPalette().getColor(i);
-                cColorDefault[i] = Core.getDefSrcDVDPalette().getColor(i);
+            Color currentColors[] = new Color[16];
+            Color defaultColors[] = new Color[16];
+            for (int i=0; i < currentColors.length; i++) {
+                currentColors[i] = Core.getCurSrcDVDPalette().getColor(i);
+                defaultColors[i] = Core.getDefSrcDVDPalette().getColor(i);
             }
-            colorDialog.setParameters(cName, cColor, cColorDefault);
-            colorDialog.setPath(model.getColorProfilePath());
+            ColorDialog colorDialog = new ColorDialog(view, colorNames, currentColors, defaultColors, model.getColorProfilePath());
             colorDialog.setVisible(true);
             if (!colorDialog.wasCanceled()) {
-                cColor = colorDialog.getColors();
+                currentColors = colorDialog.getColors();
                 model.setColorProfilePath(colorDialog.getPath());
-                Palette p = new Palette(cColor.length, true);
-                for (int i=0; i<cColor.length; i++) {
-                    p.setColor(i, cColor[i]);
+                Palette p = new Palette(currentColors.length, true);
+                for (int i=0; i<currentColors.length; i++) {
+                    p.setColor(i, currentColors[i]);
                 }
                 Core.setCurSrcDVDPalette(p);
 

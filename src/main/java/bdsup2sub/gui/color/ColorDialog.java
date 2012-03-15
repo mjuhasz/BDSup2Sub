@@ -15,7 +15,9 @@
  */
 package bdsup2sub.gui.color;
 
+import javax.swing.*;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 
 public class ColorDialog {
 
@@ -23,33 +25,39 @@ public class ColorDialog {
     private ColorDialogView view;
     private ColorDialogController controller;
 
-    public ColorDialog(Frame owner) {
+    public ColorDialog(Frame owner, String colorNames[], Color currentColors[], Color defaultColors[], String colorProfilePath) {
         model = new ColorDialogModel();
+        initModel(colorNames, currentColors, defaultColors, colorProfilePath);
+
         view = new ColorDialogView(model, owner);
         controller = new ColorDialogController(model, view);
+    }
+
+    private void initModel(String[] colorNames, Color[] currentColors, Color[] defaultColors, String colorProfilePath) {
+        model.setColorProfilePath(colorProfilePath);
+        model.setColorNames(colorNames);
+        model.setColorIcons(new ImageIcon[colorNames.length]);
+        model.setDefaultColors(defaultColors);
+        Color[] selectedColors = new Color[colorNames.length];
+        for (int i=0; i < colorNames.length; i++) {
+            selectedColors[i] = new Color(currentColors[i].getRGB());
+        }
+        model.setSelectedColors(selectedColors);
     }
 
     public void setVisible(boolean visible) {
         view.setVisible(visible);
     }
 
-    public void setParameters(String[] cName, Color[] cColor, Color[] cColorDefault) {
-        view.setParameters(cName, cColor, cColorDefault);
-    }
-
-    public void setPath(String colorProfilePath) {
-        view.setPath(colorProfilePath);
-    }
-
     public boolean wasCanceled() {
-        return view.wasCanceled();
+        return model.wasCanceled();
     }
 
     public Color[] getColors() {
-        return view.getColors();
+        return model.getSelectedColors();
     }
 
     public String getPath() {
-        return view.getPath();
+        return model.getColorProfilePath();
     }
 }

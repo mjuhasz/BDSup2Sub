@@ -33,7 +33,6 @@ public class EditDialog {
         view.setVisible(visible);
     }
 
-    //FIXME: remove this method created while making the mvc transition
     public int getIndex() {
         return model.getIndex();
     }
