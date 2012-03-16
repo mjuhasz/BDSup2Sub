@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package bdsup2sub.gui.color;
+package bdsup2sub.gui.palette;
 
 import bdsup2sub.core.CoreException;
 import bdsup2sub.tools.Props;
@@ -27,12 +27,12 @@ import java.io.File;
 
 import static bdsup2sub.core.Constants.APP_NAME_AND_VERSION;
 
-public class ColorDialogController {
+public class DvdPaletteDialogController {
 
-    private ColorDialogModel model;
-    private ColorDialogView view;
+    private DvdPaletteDialogModel model;
+    private DvdPaletteDialogView view;
 
-    public ColorDialogController(ColorDialogModel model, ColorDialogView view) {
+    public DvdPaletteDialogController(DvdPaletteDialogModel model, DvdPaletteDialogView view) {
         this.model = model;
         this.view = view;
 
@@ -124,7 +124,6 @@ public class ColorDialogController {
         }
     }
 
-
     private class LoadButtonActionListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -168,7 +167,6 @@ public class ColorDialogController {
     }
 
     private class ColorListCellRenderer extends DefaultListCellRenderer {
-        private static final long serialVersionUID = 0x000000001;
         @Override
         public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected,  boolean cellHasFocus) {
             Component retValue = super.getListCellRendererComponent( list, value, index, isSelected, cellHasFocus);

@@ -18,9 +18,10 @@ package bdsup2sub.gui.main;
 import bdsup2sub.bitmap.Palette;
 import bdsup2sub.core.*;
 import bdsup2sub.gui.*;
-import bdsup2sub.gui.color.ColorDialog;
+import bdsup2sub.gui.palette.DvdPaletteDialog;
 import bdsup2sub.gui.edit.EditDialog;
 import bdsup2sub.gui.export.ExportDialog;
+import bdsup2sub.gui.palette.FramePaletteDialog;
 import bdsup2sub.utils.FilenameUtils;
 import bdsup2sub.utils.ToolBox;
 
@@ -384,11 +385,11 @@ public class MainFrameController {
                 currentColors[i] = Core.getCurrentDVDPalette().getColor(i+1);
                 defaultColors[i] = DEFAULT_DVD_PALETTE.getColor(i+1);
             }
-            ColorDialog colorDiag = new ColorDialog(view, colorNames, currentColors, defaultColors, model.getColorProfilePath());
-            colorDiag.setVisible(true);
-            if (!colorDiag.wasCanceled()) {
-                currentColors = colorDiag.getColors();
-                model.setColorProfilePath(colorDiag.getPath());
+            DvdPaletteDialog dvdPaletteDialog = new DvdPaletteDialog(view, colorNames, currentColors, defaultColors, model.getColorProfilePath());
+            dvdPaletteDialog.setVisible(true);
+            if (!dvdPaletteDialog.wasCanceled()) {
+                currentColors = dvdPaletteDialog.getColors();
+                model.setColorProfilePath(dvdPaletteDialog.getPath());
                 for (int i=0; i < currentColors.length; i++) {
                     Core.getCurrentDVDPalette().setColor(i+1, currentColors[i]);
                 }
@@ -432,11 +433,11 @@ public class MainFrameController {
                 currentColors[i] = Core.getCurSrcDVDPalette().getColor(i);
                 defaultColors[i] = Core.getDefSrcDVDPalette().getColor(i);
             }
-            ColorDialog colorDialog = new ColorDialog(view, colorNames, currentColors, defaultColors, model.getColorProfilePath());
-            colorDialog.setVisible(true);
-            if (!colorDialog.wasCanceled()) {
-                currentColors = colorDialog.getColors();
-                model.setColorProfilePath(colorDialog.getPath());
+            DvdPaletteDialog dvdPaletteDialog = new DvdPaletteDialog(view, colorNames, currentColors, defaultColors, model.getColorProfilePath());
+            dvdPaletteDialog.setVisible(true);
+            if (!dvdPaletteDialog.wasCanceled()) {
+                currentColors = dvdPaletteDialog.getColors();
+                model.setColorProfilePath(dvdPaletteDialog.getPath());
                 Palette p = new Palette(currentColors.length, true);
                 for (int i=0; i<currentColors.length; i++) {
                     p.setColor(i, currentColors[i]);
@@ -471,9 +472,9 @@ public class MainFrameController {
     private class EditDvdFramePaletteMenuItemActionListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent event) {
-            FramePalDialog cDiag = new FramePalDialog(view);
-            cDiag.setCurrentSubtitleIndex(model.getSubIndex());
-            cDiag.setVisible(true);
+            FramePaletteDialog framePaletteDialog = new FramePaletteDialog(view);
+            framePaletteDialog.setCurrentSubtitleIndex(model.getSubIndex());
+            framePaletteDialog.setVisible(true);
 
             (new Thread() {
                 @Override

@@ -13,24 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package bdsup2sub.gui.color;
+package bdsup2sub.gui.palette;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.image.BufferedImage;
 
-public class ColorDialog {
+public class DvdPaletteDialog {
 
-    private ColorDialogModel model;
-    private ColorDialogView view;
-    private ColorDialogController controller;
+    private DvdPaletteDialogModel model;
+    private DvdPaletteDialogView view;
+    private DvdPaletteDialogController controller;
 
-    public ColorDialog(Frame owner, String colorNames[], Color currentColors[], Color defaultColors[], String colorProfilePath) {
-        model = new ColorDialogModel();
+    public DvdPaletteDialog(Frame owner, String colorNames[], Color currentColors[], Color defaultColors[], String colorProfilePath) {
+        model = new DvdPaletteDialogModel();
         initModel(colorNames, currentColors, defaultColors, colorProfilePath);
 
-        view = new ColorDialogView(model, owner);
-        controller = new ColorDialogController(model, view);
+        view = new DvdPaletteDialogView(model, owner);
+        controller = new DvdPaletteDialogController(model, view);
     }
 
     private void initModel(String[] colorNames, Color[] currentColors, Color[] defaultColors, String colorProfilePath) {

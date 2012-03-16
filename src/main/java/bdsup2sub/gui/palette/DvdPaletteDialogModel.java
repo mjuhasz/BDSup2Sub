@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package bdsup2sub.gui.color;
+package bdsup2sub.gui.palette;
 
 import javax.swing.*;
 import java.awt.*;
 
-public class ColorDialogModel {
+public class DvdPaletteDialogModel {
 
     private Color selectedColors[];
     private Color defaultColors[];

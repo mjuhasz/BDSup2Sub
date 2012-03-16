@@ -13,16 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package bdsup2sub.gui.color;
+package bdsup2sub.gui.palette;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
 
 import static bdsup2sub.gui.support.GuiUtils.centerRelativeToOwner;
 
-public class ColorDialogView extends JDialog {
+public class DvdPaletteDialogView extends JDialog {
     private static final long serialVersionUID = 0x000000001;
 
     private JPanel jContentPane;
@@ -35,9 +36,9 @@ public class ColorDialogView extends JDialog {
     private JButton jButtonSave;
     private JButton jButtonLoad;
 
-    private ColorDialogModel model;
+    private DvdPaletteDialogModel model;
 
-    public ColorDialogView(ColorDialogModel model, Frame frame) {
+    public DvdPaletteDialogView(DvdPaletteDialogModel model, Frame frame) {
         super(frame, "Choose Colors", true);
         this.model = model;
         initialize();

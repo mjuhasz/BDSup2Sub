@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Volker Oth (0xdeadbeef) / Miklos Juhasz (mjuhasz)
+ * Copyright 2012 Miklos Juhasz (mjuhasz)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package bdsup2sub.gui;
+package bdsup2sub.gui.palette;
 
 import bdsup2sub.bitmap.Palette;
 import bdsup2sub.core.Core;
@@ -27,7 +27,7 @@ import java.awt.image.BufferedImage;
 
 import static bdsup2sub.gui.support.GuiUtils.centerRelativeToOwner;
 
-public class FramePalDialog extends JDialog {
+public class FramePaletteDialogView extends JDialog {
 
     private static final long serialVersionUID = 1L;
 
@@ -52,15 +52,12 @@ public class FramePalDialog extends JDialog {
     private JButton jButtonResetAll;
     private JButton jButtonReset;
 
-    private int currentSubtitleIndex;
-    private ImageIcon colorPreviewIcon[];
-    private volatile boolean isReady; // semaphore to disable actions while changing component properties
-    private int alpha[];
-    private int palette[];
+    private FramePaletteDialogModel model;
 
 
-    public FramePalDialog(JFrame frame) {
+    public FramePaletteDialogView(FramePaletteDialogModel model, Frame frame) {
         super(frame, "Edit Frame Palette", true);
+        this.model = model;
 
         setSize(294, 209);
         setContentPane(getJContentPane());
@@ -68,11 +65,11 @@ public class FramePalDialog extends JDialog {
         setResizable(false);
 
         Palette palette = Core.getCurSrcDVDPalette();
-        colorPreviewIcon = new ImageIcon[16];
+        model.setColorPreviewIcon(new ImageIcon[16]);
         for (int i=0; i < palette.getSize(); i++) {
-            colorPreviewIcon[i] = new ImageIcon(new BufferedImage(12, 12, BufferedImage.TYPE_INT_RGB));
+            model.getColorPreviewIcon()[i] = new ImageIcon(new BufferedImage(12, 12, BufferedImage.TYPE_INT_RGB));
             Color c = new Color (palette.getARGB(i) | 0xff000000); // make fully opaque
-            paintIcon(colorPreviewIcon[i], c);
+            paintIcon(model.getColorPreviewIcon()[i], c);
             jComboBoxColor1.addItem(COLOR_NAME[i]);
             jComboBoxColor2.addItem(COLOR_NAME[i]);
             jComboBoxColor3.addItem(COLOR_NAME[i]);
@@ -158,7 +155,7 @@ public class FramePalDialog extends JDialog {
             int idx = ToolBox.getInt(value.toString());
             if (idx >= 0) {
                 setText(COLOR_NAME[idx]);
-                setIcon(colorPreviewIcon[idx]);
+                setIcon(model.getColorPreviewIcon()[idx]);
             }
             return retValue;
         }
@@ -180,10 +177,10 @@ public class FramePalDialog extends JDialog {
             jComboBoxColor1.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    if (isReady) {
+                    if (model.isReady()) {
                         int idx = ToolBox.getInt(jComboBoxColor1.getSelectedItem().toString());
                         if (idx >= 0 && idx < 16) {
-                            palette[0] = idx;
+                            model.getPalette()[0] = idx;
                         }
                     }
                 }
@@ -201,10 +198,10 @@ public class FramePalDialog extends JDialog {
             jComboBoxColor2.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    if (isReady) {
+                    if (model.isReady()) {
                         int idx = ToolBox.getInt(jComboBoxColor2.getSelectedItem().toString());
                         if (idx >= 0 && idx < 16) {
-                            palette[1] = idx;
+                            model.getPalette()[1] = idx;
                         }
                     }
                 }
@@ -222,10 +219,10 @@ public class FramePalDialog extends JDialog {
             jComboBoxColor3.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    if (isReady) {
+                    if (model.isReady()) {
                         int idx = ToolBox.getInt(jComboBoxColor3.getSelectedItem().toString());
                         if (idx >= 0 && idx < 16) {
-                            palette[2] = idx;
+                            model.getPalette()[2] = idx;
                         }
                     }
                 }
@@ -243,10 +240,10 @@ public class FramePalDialog extends JDialog {
             jComboBoxColor4.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    if (isReady) {
+                    if (model.isReady()) {
                         int idx = ToolBox.getInt(jComboBoxColor4.getSelectedItem().toString());
                         if (idx >= 0 && idx < 16) {
-                            palette[3] = idx;
+                            model.getPalette()[3] = idx;
                         }
                     }
                 }
@@ -264,10 +261,10 @@ public class FramePalDialog extends JDialog {
             jComboBoxAlpha1.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    if (isReady) {
+                    if (model.isReady()) {
                         int idx = ToolBox.getInt(jComboBoxAlpha1.getSelectedItem().toString());
                         if (idx >= 0 && idx < 16) {
-                            alpha[0] = idx;
+                            model.getAlpha()[0] = idx;
                         }
                     }
                 }
@@ -285,10 +282,10 @@ public class FramePalDialog extends JDialog {
             jComboBoxAlpha2.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    if (isReady) {
+                    if (model.isReady()) {
                         int idx = ToolBox.getInt(jComboBoxAlpha2.getSelectedItem().toString());
                         if (idx >= 0 && idx < 16) {
-                            alpha[1] = idx;
+                            model.getAlpha()[1] = idx;
                         }
                     }
                 }
@@ -306,10 +303,10 @@ public class FramePalDialog extends JDialog {
             jComboBoxAlpha3.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    if (isReady) {
+                    if (model.isReady()) {
                         int idx = ToolBox.getInt(jComboBoxAlpha3.getSelectedItem().toString());
                         if (idx >= 0 && idx < 16) {
-                            alpha[2] = idx;
+                            model.getAlpha()[2] = idx;
                         }
                     }
                 }
@@ -327,10 +324,10 @@ public class FramePalDialog extends JDialog {
             jComboBoxAlpha4.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    if (isReady) {
+                    if (model.isReady()) {
                         int idx = ToolBox.getInt(jComboBoxAlpha4.getSelectedItem().toString());
                         if (idx >= 0 && idx < 16) {
-                            alpha[3] = idx;
+                            model.getAlpha()[3] = idx;
                         }
                     }
                 }
@@ -350,14 +347,14 @@ public class FramePalDialog extends JDialog {
             jButtonOk.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    int a[] = Core.getFrameAlpha(currentSubtitleIndex);
-                    int p[] = Core.getFramePal(currentSubtitleIndex);
+                    int a[] = Core.getFrameAlpha(model.getCurrentSubtitleIndex());
+                    int p[] = Core.getFramePal(model.getCurrentSubtitleIndex());
                     for (int i= 0; i<4; i++) {
                         if (a != null) {
-                            a[i] = alpha[i];
+                            a[i] = model.getAlpha()[i];
                         }
                         if (p != null) {
-                            p[i] = palette[i];
+                            p[i] = model.getPalette()[i];
                         }
                     }
                     dispose();
@@ -400,10 +397,10 @@ public class FramePalDialog extends JDialog {
                         int p[] = Core.getFramePal(j);
                         for (int i= 0; i<4; i++) {
                             if (a != null) {
-                                a[i] = alpha[i];
+                                a[i] = model.getAlpha()[i];
                             }
                             if (p != null) {
-                                p[i] = palette[i];
+                                p[i] = model.getPalette()[i];
                             }
                         }
                     }
@@ -455,11 +452,12 @@ public class FramePalDialog extends JDialog {
             jButtonReset.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
+                    int currentSubtitleIndex = model.getCurrentSubtitleIndex();
                     int ao[] = Core.getOriginalFrameAlpha(currentSubtitleIndex);
                     int po[] = Core.getOriginalFramePal(currentSubtitleIndex);
                     int a[] = Core.getFrameAlpha(currentSubtitleIndex);
                     int p[] = Core.getFramePal(currentSubtitleIndex);
-                    for (int i= 0; i<4; i++) {
+                    for (int i = 0; i < 4; i++) {
                         if (a != null && ao != null) {
                             a[i] = ao[i];
                         }
@@ -475,14 +473,16 @@ public class FramePalDialog extends JDialog {
     }
 
     public void setCurrentSubtitleIndex(int idx) {
-        currentSubtitleIndex = idx;
-        isReady = false;
+        model.setCurrentSubtitleIndex(idx);
+        model.setReady(false);
 
         // we need a deep copy here to allow editing
-        alpha = new int[4];
-        palette = new int[4];
-        int a[] = Core.getFrameAlpha(currentSubtitleIndex);
-        int p[] = Core.getFramePal(currentSubtitleIndex);
+        int[] alpha = new int[4];
+        model.setAlpha(alpha);
+        int[] palette = new int[4];
+        model.setPalette(palette);
+        int a[] = Core.getFrameAlpha(model.getCurrentSubtitleIndex());
+        int p[] = Core.getFramePal(model.getCurrentSubtitleIndex());
         for (int i=0; i<4; i++) {
             if (a != null) {
                 alpha[i] = a[i];
@@ -502,6 +502,6 @@ public class FramePalDialog extends JDialog {
         jComboBoxColor3.setSelectedIndex(palette[2]);
         jComboBoxColor4.setSelectedIndex(palette[3]);
 
-        isReady = true;
+        model.setReady(true);
     }
 }
