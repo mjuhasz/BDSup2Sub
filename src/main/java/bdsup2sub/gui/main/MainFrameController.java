@@ -18,6 +18,7 @@ package bdsup2sub.gui.main;
 import bdsup2sub.bitmap.Palette;
 import bdsup2sub.core.*;
 import bdsup2sub.gui.*;
+import bdsup2sub.gui.conversion.ConversionDialog;
 import bdsup2sub.gui.move.MoveDialog;
 import bdsup2sub.gui.palette.DvdPaletteDialog;
 import bdsup2sub.gui.edit.EditDialog;
@@ -293,10 +294,10 @@ public class MainFrameController {
                                 }
                             }
 
-                            ConversionDialog trans = new ConversionDialog(view);
-                            trans.enableOptionMove(Core.getMoveCaptions());
-                            trans.setVisible(true);
-                            if (!trans.wasCanceled()) {
+                            ConversionDialog conversionDialog = new ConversionDialog(view);
+                            conversionDialog.enableOptionMove(Core.getMoveCaptions());
+                            conversionDialog.setVisible(true);
+                            if (!conversionDialog.wasCanceled()) {
                                 Core.scanSubtitles();
                                 if (Core.getMoveCaptions()) {
                                     Core.moveAllThreaded(view);

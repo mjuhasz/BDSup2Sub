@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Volker Oth (0xdeadbeef) / Miklos Juhasz (mjuhasz)
+ * Copyright 2012 Miklos Juhasz (mjuhasz)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,12 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package bdsup2sub.gui;
+package bdsup2sub.gui.conversion;
 
 import bdsup2sub.core.Configuration;
 import bdsup2sub.core.Core;
 import bdsup2sub.core.ForcedFlagState;
 import bdsup2sub.core.Resolution;
+import bdsup2sub.gui.MyComboBoxEditor;
 import bdsup2sub.utils.SubtitleUtils;
 import bdsup2sub.utils.ToolBox;
 
@@ -30,11 +31,11 @@ import java.awt.*;
 import java.awt.event.*;
 
 import static bdsup2sub.core.Configuration.*;
+import static bdsup2sub.core.Configuration.MAX_FREE_SCALE_FACTOR;
+import static bdsup2sub.core.Configuration.MIN_FREE_SCALE_FACTOR;
 import static bdsup2sub.gui.support.GuiUtils.centerRelativeToOwner;
 
-public class ConversionDialog extends JDialog {
-
-    private static final long serialVersionUID = 1L;
+public class ConversionDialogView extends JDialog {
 
     private final Configuration configuration = getInstance();
 
@@ -110,8 +111,11 @@ public class ConversionDialog extends JDialog {
 
     private static Dimension lDim = new Dimension(70,20);
 
-    public ConversionDialog(Frame owner) {
+    private ConversionDialogModel model;
+
+    public ConversionDialogView(ConversionDialogModel model, Frame owner) {
         super(owner, true);
+        this.model = model;
 
         // initialize internal variables
         fpsTrgEditor = new JTextField();
@@ -189,7 +193,7 @@ public class ConversionDialog extends JDialog {
         jComboBoxResolution.setEnabled(changeResolution);
         jCheckBoxResolution.setSelected(changeResolution);
 
-        jTextFieldDelay.setText(ToolBox.formatDouble(delayPTS/90.0));
+        jTextFieldDelay.setText(ToolBox.formatDouble(delayPTS / 90.0));
 
         jCheckBoxFrameRate.setSelected(changeFPS);
         jComboBoxFPSSrc.setSelectedItem(ToolBox.formatDouble(fpsSrc));
@@ -1276,7 +1280,7 @@ public class ConversionDialog extends JDialog {
                     check();
                 }
             });
-            }
+        }
         return jTextFieldMinTime;
     }
 

@@ -13,27 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package bdsup2sub.gui.palette;
+package bdsup2sub.gui.conversion;
 
 import java.awt.*;
 
-public class FramePaletteDialog {
+public class ConversionDialog {
 
-    private FramePaletteDialogModel model;
-    private FramePaletteDialogView view;
-    private FramePaletteDialogController controller;
+    private ConversionDialogModel model;
+    private ConversionDialogView view;
+    private ConversionDialogController controller;
 
-    public FramePaletteDialog(Frame owner) {
-        model = new FramePaletteDialogModel();
-        view = new FramePaletteDialogView(model, owner);
-        controller = new FramePaletteDialogController(model, view);
+    public ConversionDialog(Frame owner) {
+        model = new ConversionDialogModel();
+        view = new ConversionDialogView(model, owner);
+        controller = new ConversionDialogController(model, view);
     }
 
     public void setVisible(boolean visible) {
         view.setVisible(visible);
     }
 
-    public void setCurrentSubtitleIndex(int index) {
-        view.setCurrentSubtitleIndex(index);
+    public boolean wasCanceled() {
+        return view.wasCanceled();
+    }
+
+    public void enableOptionMove(boolean enable) {
+        view.enableOptionMove(enable);
     }
 }
