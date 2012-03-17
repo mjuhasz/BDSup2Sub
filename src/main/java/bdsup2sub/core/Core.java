@@ -20,7 +20,7 @@ import bdsup2sub.bitmap.BitmapWithPalette;
 import bdsup2sub.bitmap.ErasePatch;
 import bdsup2sub.bitmap.Palette;
 import bdsup2sub.gui.main.MainFrameView;
-import bdsup2sub.gui.Progress;
+import bdsup2sub.gui.support.Progress;
 import bdsup2sub.supstream.*;
 import bdsup2sub.tools.EnhancedPngEncoder;
 import bdsup2sub.utils.FilenameUtils;

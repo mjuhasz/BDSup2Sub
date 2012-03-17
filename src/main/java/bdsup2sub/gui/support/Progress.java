@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package bdsup2sub.gui;
+package bdsup2sub.gui.support;
 
 import bdsup2sub.core.Core;
 import bdsup2sub.core.CoreThreadState;
