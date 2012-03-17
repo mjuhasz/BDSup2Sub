@@ -47,7 +47,7 @@ public class EditDialogModel {
     }
 
     public double getFPSTrg() {
-        return configuration.getFPSTrg();
+        return configuration.getFpsTrg();
     }
 
     public long getMinTimePTS() {

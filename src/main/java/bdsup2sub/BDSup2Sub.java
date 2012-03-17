@@ -443,27 +443,27 @@ public class BDSup2Sub {
                             if (val.toLowerCase().equals("pal") || ival == 576) {
                                 r = Resolution.PAL;
                                 if (!defineFPStrg) {
-                                    configuration.setFPSTrg(Framerate.PAL.getValue());
+                                    configuration.setFpsTrg(Framerate.PAL.getValue());
                                 }
                             } else if (val.toLowerCase().equals("ntsc") || ival == 480) {
                                 r = Resolution.NTSC;
                                 if (!defineFPStrg) {
-                                    configuration.setFPSTrg(Framerate.NTSC.getValue());
+                                    configuration.setFpsTrg(Framerate.NTSC.getValue());
                                 }
                             } else if (val.toLowerCase().equals("720p") || ival == 720) {
                                 r = Resolution.HD_720;
                                 if (!defineFPStrg) {
-                                    configuration.setFPSTrg(Framerate.FPS_23_976.getValue());
+                                    configuration.setFpsTrg(Framerate.FPS_23_976.getValue());
                                 }
                             } else if (val.toLowerCase().equals("1440x1080")) {
                                 r = Resolution.HD_1440x1080;
                                 if (!defineFPStrg) {
-                                    configuration.setFPSTrg(Framerate.FPS_23_976.getValue());
+                                    configuration.setFpsTrg(Framerate.FPS_23_976.getValue());
                                 }
                             } else if (val.toLowerCase().equals("1080p") || ival == 1080) {
                                 r = Resolution.HD_1080;
                                 if (!defineFPStrg) {
-                                    configuration.setFPSTrg(Framerate.FPS_23_976.getValue());
+                                    configuration.setFpsTrg(Framerate.FPS_23_976.getValue());
                                 }
                             } else {
                                 fatalError("Illegal resolution: " + val);
@@ -539,18 +539,18 @@ public class BDSup2Sub {
                                 fpsSrc = 0; // stub to avoid undefined warning
                             } else {
                                 autoFPS = false;
-                                fpsSrc = SubtitleUtils.getFPS(srcStr);
+                                fpsSrc = SubtitleUtils.getFps(srcStr);
                                 if (fpsSrc <= 0) {
                                     fatalError("invalid source framerate: " + srcStr);
                                 }
-                                configuration.setFPSSrc(fpsSrc);
+                                configuration.setFpsSrc(fpsSrc);
                             }
-                            fpsTrg = SubtitleUtils.getFPS(val.substring(pos + 1));
+                            fpsTrg = SubtitleUtils.getFps(val.substring(pos + 1));
                             if (fpsTrg <= 0) {
                                 fatalError("invalid target value: " + val.substring(pos + 1));
                             }
                             if (!autoFPS) {
-                                configuration.setFPSTrg(fpsTrg);
+                                configuration.setFpsTrg(fpsTrg);
                             }
                             configuration.setConvertFPS(true);
                             System.out.println("OPTION: convert framerate from "
@@ -563,11 +563,11 @@ public class BDSup2Sub {
                                 Core.setKeepFps(true);
                                 System.out.println("OPTION: use source fps as target fps");
                             } else {
-                                fpsTrg = SubtitleUtils.getFPS(val);
+                                fpsTrg = SubtitleUtils.getFps(val);
                                 if (fpsTrg <= 0) {
                                     fatalError("invalid target framerate: " + val);
                                 }
-                                configuration.setFPSTrg(fpsTrg);
+                                configuration.setFpsTrg(fpsTrg);
                                 System.out.println("OPTION: synchronize target framerate to " + ToolBox.formatDouble(fpsTrg) + "fps");
                                 defineFPStrg = true;
                             }
@@ -582,7 +582,7 @@ public class BDSup2Sub {
                         } catch (NumberFormatException ex) {
                             fatalError("Illegal delay value: " + val);
                         }
-                        int delayPTS = (int) SubtitleUtils.syncTimePTS((long) delay, configuration.getFPSTrg(), configuration.getFPSTrg());
+                        int delayPTS = (int) SubtitleUtils.syncTimePTS((long) delay, configuration.getFpsTrg(), configuration.getFpsTrg());
                         configuration.setDelayPTS(delayPTS);
                         System.out.println("OPTION: set delay to " + ToolBox.formatDouble(delayPTS / 90.0));
                         break;
@@ -594,7 +594,7 @@ public class BDSup2Sub {
                         } catch (NumberFormatException ex) {
                             fatalError("Illegal value for minimum display time: " + val);
                         }
-                        int tMin = (int) SubtitleUtils.syncTimePTS((long) t, configuration.getFPSTrg(), configuration.getFPSTrg());
+                        int tMin = (int) SubtitleUtils.syncTimePTS((long) t, configuration.getFpsTrg(), configuration.getFpsTrg());
                         configuration.setMinTimePTS(tMin);
                         configuration.setFixShortFrames(true);
                         System.out.println("OPTION: set delay to " + ToolBox.formatDouble(tMin / 90.0));
@@ -771,8 +771,8 @@ public class BDSup2Sub {
             configuration.setOutputResolution(r);
 
             if (!Core.getKeepFps() && !defineFPStrg) {
-                configuration.setFPSTrg(Core.getDefaultFPS(r));
-                System.out.println("Target frame rate set to " + ToolBox.formatDouble(configuration.getFPSTrg())+"fps");
+                configuration.setFpsTrg(Core.getDefaultFPS(r));
+                System.out.println("Target frame rate set to " + ToolBox.formatDouble(configuration.getFpsTrg())+"fps");
             }
 
             // Step 3

@@ -64,6 +64,7 @@ public final class Configuration {
     private List<String> recentFiles;
     private int[] luminanceThreshold = {210, 160};
     private int alphaThreshold = 80;
+
     private Props props;
 
     private Configuration() {
@@ -454,33 +455,33 @@ public final class Configuration {
         return fpsSrc;
     }
 
-    public void setFPSSrc(double fpsSrc) {
+    public void setFpsSrc(double fpsSrc) {
         this.fpsSrc = fpsSrc;
     }
 
     public double loadFpsSrc() {
-        return SubtitleUtils.getFPS(props.get("fpsSrc", String.valueOf(fpsSrc)));
+        return SubtitleUtils.getFps(props.get("fpsSrc", String.valueOf(fpsSrc)));
     }
 
     public void storeFPSSrc(double fpsSrc) {
         props.set("fpsSrc", fpsSrc);
     }
 
-    public double getFPSTrg() {
+    public double getFpsTrg() {
         return fpsTrg;
     }
 
-    public void setFPSTrg(double fpsTrg) {
+    public void setFpsTrg(double fpsTrg) {
         this.fpsTrg = fpsTrg;
         setDelayPTS((int)SubtitleUtils.syncTimePTS(getDelayPTS(), fpsTrg, fpsTrg));
         setMinTimePTS((int)SubtitleUtils.syncTimePTS(getMinTimePTS(), fpsTrg, fpsTrg));
     }
 
     public double loadFpsTrg() {
-        return SubtitleUtils.getFPS(props.get("fpsTrg", String.valueOf(fpsTrg)));
+        return SubtitleUtils.getFps(props.get("fpsTrg", String.valueOf(fpsTrg)));
     }
 
-    public void storeFPSTrg(double fpsTrg) {
+    public void storeFpsTrg(double fpsTrg) {
         props.set("fpsTrg", fpsTrg);
     }
 

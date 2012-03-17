@@ -37,6 +37,8 @@ import static bdsup2sub.gui.support.GuiUtils.centerRelativeToOwner;
 
 public class ConversionDialogView extends JDialog {
 
+    private static final Dimension DIM_LABEL = new Dimension(70,20);
+
     private JPanel jContentPane;
     private JPanel jPanelResolution;
     private JComboBox jComboBoxResolution;
@@ -67,8 +69,6 @@ public class ConversionDialogView extends JDialog {
     private JPanel jPanelForced;
     private JComboBox jComboBoxForced;
 
-    private static Dimension lDim = new Dimension(70,20);
-
     private ConversionDialogModel model;
 
     public ConversionDialogView(ConversionDialogModel model, Frame owner) {
@@ -85,7 +85,7 @@ public class ConversionDialogView extends JDialog {
 
 
         jCheckBoxMove.setEnabled(false);
-        jCheckBoxMove.setSelected(model.isMoveCaptions());
+        jCheckBoxMove.setSelected(model.getMoveCaptions());
 
         // fill comboboxes and text fields
         for (Resolution r : Resolution.values()) {
@@ -125,31 +125,31 @@ public class ConversionDialogView extends JDialog {
      * Enter values into dialog elements
      */
     private void fillDialog() {
-        jComboBoxResolution.setSelectedIndex(model.getResolution().ordinal());
-        jComboBoxResolution.setEnabled(model.isChangeResolution());
-        jCheckBoxResolution.setSelected(model.isChangeResolution());
+        jComboBoxResolution.setSelectedIndex(model.getOutputResolution().ordinal());
+        jComboBoxResolution.setEnabled(model.getConvertResolution());
+        jCheckBoxResolution.setSelected(model.getConvertResolution());
 
         jTextFieldDelay.setText(ToolBox.formatDouble(model.getDelayPTS() / 90.0));
 
-        jCheckBoxFrameRate.setSelected(model.isChangeFPS());
+        jCheckBoxFrameRate.setSelected(model.getConvertFPS());
         jComboBoxFPSSrc.setSelectedItem(ToolBox.formatDouble(model.getFpsSrc()));
-        jComboBoxFPSSrc.setEnabled(model.isChangeFPS());
+        jComboBoxFPSSrc.setEnabled(model.getConvertFPS());
         jComboBoxFPSTrg.setSelectedItem(ToolBox.formatDouble(model.getFpsTrg()));
         jComboBoxFPSTrg.setEnabled(true);
 
         jTextFieldMinTime.setText(ToolBox.formatDouble(model.getMinTimePTS() / 90.0));
         jCheckBoxFixMinTime.setEnabled(true);
-        jCheckBoxFixMinTime.setSelected(model.isFixShortFrames());
+        jCheckBoxFixMinTime.setSelected(model.getFixShortFrames());
 
 
-        jCheckBoxFixMinTime.setSelected(model.isFixShortFrames());
-        jTextFieldMinTime.setEnabled(model.isFixShortFrames());
+        jCheckBoxFixMinTime.setSelected(model.getFixShortFrames());
+        jTextFieldMinTime.setEnabled(model.getFixShortFrames());
 
-        jCheckBoxScale.setSelected(model.isChangeScale());
-        jTextFieldScaleX.setText(ToolBox.formatDouble(model.getScaleX()));
-        jTextFieldScaleX.setEnabled(model.isChangeScale());
-        jTextFieldScaleY.setText(ToolBox.formatDouble(model.getScaleY()));
-        jTextFieldScaleY.setEnabled(model.isChangeScale());
+        jCheckBoxScale.setSelected(model.getApplyFreeScale());
+        jTextFieldScaleX.setText(ToolBox.formatDouble(model.getFreeScaleFactorX()));
+        jTextFieldScaleX.setEnabled(model.getApplyFreeScale());
+        jTextFieldScaleY.setText(ToolBox.formatDouble(model.getFreeScaleFactorY()));
+        jTextFieldScaleY.setEnabled(model.getApplyFreeScale());
 
         jComboBoxForced.setSelectedIndex(model.getForcedState().ordinal());
     }
@@ -204,7 +204,7 @@ public class ConversionDialogView extends JDialog {
             jPanelResolution.setPreferredSize(new Dimension(200, 70));
 
             JLabel label = new JLabel("Resolution");
-            label.setMinimumSize(lDim);
+            label.setMinimumSize(DIM_LABEL);
             jPanelResolution.add(getJCheckBoxResolution(), gridBagCheckBoxResolution);
             jPanelResolution.add(label, gridBagLabelResolution);
             jPanelResolution.add(getJComboBoxResolution(), gridBagComboResolution);
@@ -289,10 +289,10 @@ public class ConversionDialogView extends JDialog {
 
             jPanelFPS.add(getJCheckBoxFrameRate(), gridBagCheckBoxFrameRate);
             JLabel label = new JLabel("FPS Source");
-            label.setMinimumSize(lDim);
+            label.setMinimumSize(DIM_LABEL);
             jPanelFPS.add(label, gridBagLabelFPSSrc);
             label = new JLabel("FPS Target");
-            label.setMinimumSize(lDim);
+            label.setMinimumSize(DIM_LABEL);
             jPanelFPS.add(label, gridBagLabelFPSTrg);
             jPanelFPS.add(getJComboBoxFPSSrc(), gridBagComboFPSSrc);
             jPanelFPS.add(getJComboBoxFPSTrg(), gridBagComboFPSTrg);
@@ -349,13 +349,13 @@ public class ConversionDialogView extends JDialog {
             jPanelTimes.setPreferredSize(new Dimension(200, 100));
 
             JLabel label = new JLabel("Delay (ms)");
-            label.setMinimumSize(lDim);
+            label.setMinimumSize(DIM_LABEL);
             jPanelTimes.add(label, gridBagLabelDelay);
             jPanelTimes.add(getJTextFieldDelay(), gridBagTextDelay);
             jPanelTimes.add(getJCheckBoxFixMineTime(), gridBagCheckBoxFixMinTime);
             jPanelTimes.add(getJTextFieldMinTime(), gridBagTextMinTime);
             label = new JLabel("Min Time (ms)");
-            label.setMinimumSize(lDim);
+            label.setMinimumSize(DIM_LABEL);
             jPanelTimes.add(label, gridBagLabelMinTime);
         }
         return jPanelTimes;
@@ -410,11 +410,11 @@ public class ConversionDialogView extends JDialog {
 
             jPanelScale.add(getJCheckBoxScale(), gridBagCheckBoxScale);
             JLabel label = new JLabel("Scale X");
-            label.setMinimumSize(lDim);
+            label.setMinimumSize(DIM_LABEL);
             jPanelScale.add(label, gridBagLabelScaleX);
             jPanelScale.add(getJTextFieldScaleX(), gridBagTextScaleX);
             label = new JLabel("Scale Y");
-            label.setMinimumSize(lDim);
+            label.setMinimumSize(DIM_LABEL);
             jPanelScale.add(label, gridBagLabelScaleY);
             jPanelScale.add(getJTextFieldScaleY(), gridBagTextScaleY);
         }
@@ -490,7 +490,7 @@ public class ConversionDialogView extends JDialog {
             jPanelForced.setPreferredSize(new Dimension(200, 70));
 
             JLabel label = new JLabel("Force all");
-            label.setMinimumSize(lDim);
+            label.setMinimumSize(DIM_LABEL);
             jPanelForced.add(label, gridBagLabelForced);
             jPanelForced.add(getJComboBoxForced(), gridBagComboForced);
 
@@ -635,7 +635,7 @@ public class ConversionDialogView extends JDialog {
                         int idx = jComboBoxResolution.getSelectedIndex();
                         for (Resolution resolution : Resolution.values()) {
                             if (idx == resolution.ordinal()) {
-                                model.setResolution(resolution);
+                                model.setOutputResolution(resolution);
                                 if (!Core.getKeepFps()) {
                                     model.setFpsTrg(Core.getDefaultFPS(resolution));
                                 }
@@ -666,7 +666,7 @@ public class ConversionDialogView extends JDialog {
                 public void actionPerformed(ActionEvent e) {
                     if (model.isReady()) {
                         boolean changeFPS = jCheckBoxFrameRate.isSelected();
-                        model.setChangeFPS(changeFPS);
+                        model.setConvertFPS(changeFPS);
                         jComboBoxFPSSrc.setEnabled(changeFPS);
                     }
                 }
@@ -692,7 +692,7 @@ public class ConversionDialogView extends JDialog {
                 public void actionPerformed(ActionEvent e) {
                     if (model.isReady()) {
                         boolean changeResolution = jCheckBoxResolution.isSelected();
-                        model.setChangeResolution(changeResolution);
+                        model.setConvertResolution(changeResolution);
                         jComboBoxResolution.setEnabled(changeResolution);
                     }
                 }
@@ -741,7 +741,7 @@ public class ConversionDialogView extends JDialog {
                 public void actionPerformed(ActionEvent e) {
                     if (model.isReady()) {
                         String s = (String)jComboBoxFPSSrc.getSelectedItem();
-                        double fpsSrc = SubtitleUtils.getFPS(s);
+                        double fpsSrc = SubtitleUtils.getFps(s);
                         if (fpsSrc > 0) {
                             model.setFpsSrc(fpsSrc);
                         }
@@ -755,7 +755,7 @@ public class ConversionDialogView extends JDialog {
                 private void check() {
                     if (model.isReady()) {
                         String s = fpsSrcEditor.getText();
-                        double fpsSrc = SubtitleUtils.getFPS(s);
+                        double fpsSrc = SubtitleUtils.getFps(s);
                         Color color;
                         if (fpsSrc > 0) {
                             color = OK_BACKGROUND;
@@ -802,17 +802,17 @@ public class ConversionDialogView extends JDialog {
                 public void actionPerformed(ActionEvent e) {
                     if (model.isReady()) {
                         String s = (String)jComboBoxFPSTrg.getSelectedItem();
-                        double d = SubtitleUtils.getFPS(s);
+                        double d = SubtitleUtils.getFps(s);
                         if (d > 0) {
                             model.setFpsTrg(d);
                         }
                         jComboBoxFPSTrg.setSelectedItem(ToolBox.formatDouble(model.getFpsTrg()));
                         jComboBoxFPSTrg.getEditor().getEditorComponent().setBackground(OK_BACKGROUND);
                         //
-                        model.setDelayPTS((int)SubtitleUtils.syncTimePTS(model.getDelayPTS(), model.getFpsTrg(), model.getFPSTrgConf()));
+                        model.setDelayPTS((int)SubtitleUtils.syncTimePTS(model.getDelayPTS(), model.getFpsTrg(), model.getFpsTrgConf()));
                         jTextFieldDelay.setText(ToolBox.formatDouble(model.getFpsTrg() / 90.0));
                         //
-                        model.setMinTimePTS((int)SubtitleUtils.syncTimePTS(model.getMinTimePTS(), model.getFpsTrg(), model.getFPSTrgConf()));
+                        model.setMinTimePTS((int)SubtitleUtils.syncTimePTS(model.getMinTimePTS(), model.getFpsTrg(), model.getFpsTrgConf()));
                         jTextFieldMinTime.setText(ToolBox.formatDouble(model.getMinTimePTS() / 90.0));
                     }
                 }
@@ -821,10 +821,10 @@ public class ConversionDialogView extends JDialog {
                 private void check() {
                     if (model.isReady()) {
                         String s = fpsTrgEditor.getText();
-                        double fpsTrg = SubtitleUtils.getFPS(s);
+                        double fpsTrg = SubtitleUtils.getFps(s);
                         Color c;
                         if (fpsTrg > 0) {
-                            if ((int)SubtitleUtils.syncTimePTS(model.getDelayPTS(), model.getFpsTrg(), model.getFPSTrgConf()) != model.getDelayPTS() || model.getMinTimePTS() != (int)SubtitleUtils.syncTimePTS(model.getMinTimePTS(), model.getFpsTrg(), model.getFPSTrgConf())) {
+                            if ((int)SubtitleUtils.syncTimePTS(model.getDelayPTS(), model.getFpsTrg(), model.getFpsTrgConf()) != model.getDelayPTS() || model.getMinTimePTS() != (int)SubtitleUtils.syncTimePTS(model.getMinTimePTS(), model.getFpsTrg(), model.getFpsTrgConf())) {
                                 c = WARN_BACKGROUND;
                             } else {
                                 c = OK_BACKGROUND;
@@ -870,7 +870,7 @@ public class ConversionDialogView extends JDialog {
                         String s = jTextFieldDelay.getText();
                         try {
                             // don't use getDouble as the value can be negative
-                            model.setDelayPTS((int)SubtitleUtils.syncTimePTS((long)(Double.parseDouble(s) * 90), model.getFpsTrg(), model.getFPSTrgConf()));
+                            model.setDelayPTS((int)SubtitleUtils.syncTimePTS((long)(Double.parseDouble(s) * 90), model.getFpsTrg(), model.getFpsTrgConf()));
                         } catch (NumberFormatException ex) {
                         }
                         jTextFieldDelay.setBackground(OK_BACKGROUND);
@@ -884,7 +884,7 @@ public class ConversionDialogView extends JDialog {
                         String s = jTextFieldDelay.getText();
                         try {
                             // don't use getDouble as the value can be negative
-                            model.setDelayPTS((int)SubtitleUtils.syncTimePTS((long)(Double.parseDouble(s) * 90), model.getFpsTrg(), model.getFPSTrgConf()));
+                            model.setDelayPTS((int)SubtitleUtils.syncTimePTS((long)(Double.parseDouble(s) * 90), model.getFpsTrg(), model.getFpsTrgConf()));
                             if (!s.equalsIgnoreCase(ToolBox.formatDouble(model.getDelayPTS() / 90.0))) {
                                 jTextFieldDelay.setBackground(WARN_BACKGROUND);
                             } else {
@@ -950,37 +950,37 @@ public class ConversionDialogView extends JDialog {
                 public void actionPerformed(ActionEvent e) {
                     if (model.isReady()) {
                         // fps source
-                        model.storeConvertFPS(model.isChangeFPS());
-                        if (model.isChangeFPS()) {
-                            double fpsSrc  = SubtitleUtils.getFPS((String)jComboBoxFPSSrc.getSelectedItem());
+                        model.storeConvertFPS(model.getConvertFPS());
+                        if (model.getConvertFPS()) {
+                            double fpsSrc  = SubtitleUtils.getFps((String) jComboBoxFPSSrc.getSelectedItem());
                             if (fpsSrc > 0) {
                                 model.setFpsSrc(fpsSrc);
                                 model.storeFPSSrc(fpsSrc);
                             }
                         }
                         // fps target
-                        double fpsTrg = SubtitleUtils.getFPS((String)jComboBoxFPSTrg.getSelectedItem());
+                        double fpsTrg = SubtitleUtils.getFps((String) jComboBoxFPSTrg.getSelectedItem());
                         if (fpsTrg > 0) {
                             model.setFpsTrg(fpsTrg);
-                            model.storeFPSTrg(fpsTrg);
+                            model.storeFpsTrg(fpsTrg);
                         }
                         // delay
                         try {
-                            model.setDelayPTS((int)SubtitleUtils.syncTimePTS((long)(Double.parseDouble(jTextFieldDelay.getText()) * 90), model.getFpsTrg(), model.getFPSTrgConf()));
+                            model.setDelayPTS((int)SubtitleUtils.syncTimePTS((long)(Double.parseDouble(jTextFieldDelay.getText()) * 90), model.getFpsTrg(), model.getFpsTrgConf()));
                             model.storeDelayPTS(model.getDelayPTS());
                         } catch (NumberFormatException ex) {
                         }
                         // min time
-                        model.storeFixShortFrames(model.isFixShortFrames());
+                        model.storeFixShortFrames(model.getFixShortFrames());
                         try {
-                            model.setMinTimePTS((int)SubtitleUtils.syncTimePTS((long)(Double.parseDouble(jTextFieldMinTime.getText()) * 90), model.getFpsTrg(), model.getFPSTrgConf()));
+                            model.setMinTimePTS((int)SubtitleUtils.syncTimePTS((long)(Double.parseDouble(jTextFieldMinTime.getText()) * 90), model.getFpsTrg(), model.getFpsTrgConf()));
                             model.storeMinTimePTS(model.getMinTimePTS());
                         } catch (NumberFormatException ex) {
                         }
                         // exit
-                        model.storeConvertResolution(model.isChangeResolution());
-                        if (model.isChangeResolution()) {
-                            model.storeOutputResolution(model.getResolution());
+                        model.storeConvertResolution();
+                        if (model.getConvertResolution()) {
+                            model.storeOutputResolution(model.getOutputResolution());
                         }
                         // scaleX
                         double scaleX = ToolBox.getDouble(jTextFieldScaleX.getText());
@@ -990,7 +990,7 @@ public class ConversionDialogView extends JDialog {
                             } else if (scaleX < MIN_FREE_SCALE_FACTOR) {
                                 scaleX = MIN_FREE_SCALE_FACTOR;
                             }
-                            model.setScaleX(scaleX);
+                            model.setFreeScaleFactorX(scaleX);
                         }
                         // scaleY
                         double scaleY = ToolBox.getDouble(jTextFieldScaleY.getText());
@@ -1000,12 +1000,12 @@ public class ConversionDialogView extends JDialog {
                             } else if (scaleY < MIN_FREE_SCALE_FACTOR) {
                                 scaleY = MIN_FREE_SCALE_FACTOR;
                             }
-                            model.setScaleY(scaleY);
+                            model.setFreeScaleFactorY(scaleY);
                         }
                         // set scale X/Y
-                        model.storeApplyFreeScale(model.isChangeScale());
-                        if (model.isChangeScale()) {
-                            model.storeFreeScaleFactor(model.getScaleX(), model.getScaleY());
+                        model.storeApplyFreeScale(model.getApplyFreeScale());
+                        if (model.getApplyFreeScale()) {
+                            model.storeFreeScaleFactor(model.getFreeScaleFactorX(), model.getFreeScaleFactorY());
                         }
                         // forceAll is not stored
                         model.storeConfig();
@@ -1028,22 +1028,23 @@ public class ConversionDialogView extends JDialog {
             jButtonRestore.setMnemonic('e');
             jButtonRestore.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
-                    model.setChangeResolution(model.loadConvertResolution());
-                    if (model.isChangeResolution()) {
-                        model.setResolution(model.loadOutputResolution());
+                    boolean convertResolution = model.loadConvertResolution();
+                    model.setConvertResolution(convertResolution);
+                    if (convertResolution) {
+                        model.setOutputResolution(model.loadOutputResolution());
                     }
-                    model.setChangeFPS(model.loadConvertFPS());
-                    if (model.isChangeFPS() && !model.isFpsSrcCertain()) {
+                    model.setConvertFPS(model.loadConvertFPS());
+                    if (model.getConvertFPS() && !model.isFpsSrcCertain()) {
                         model.setFpsSrc(model.loadFpsSrc());
                     }
                     model.setFpsTrg(model.loadFpsTrg());
                     model.setDelayPTS(model.loadDelayPTS());
                     model.setFixShortFrames(model.loadFixShortFrames());
                     model.setMinTimePTS(model.loadMinTimePTS());
-                    model.setChangeScale(model.loadApplyFreeScale());
-                    if (model.isChangeScale()) {
-                        model.setScaleX(model.loadFreeScaleFactorX());
-                        model.setScaleY(model.loadFreeScaleFactorY());
+                    model.setApplyFreeScale(model.loadApplyFreeScale());
+                    if (model.getApplyFreeScale()) {
+                        model.setFreeScaleFactorX(model.loadFreeScaleFactorX());
+                        model.setFreeScaleFactorY(model.loadFreeScaleFactorY());
                     }
                     model.setForcedState(Core.getForceAll());
                     fillDialog();
@@ -1066,12 +1067,13 @@ public class ConversionDialogView extends JDialog {
             jButtonReset.setMnemonic('t');
             jButtonReset.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
-                    model.setChangeResolution(CONVERT_RESOLUTION_BY_DEFAULT);
-                    if (model.isChangeResolution()) {
-                        model.setResolution(DEFAULT_TARGET_RESOLUTION);
+                    boolean convertResolution = CONVERT_RESOLUTION_BY_DEFAULT;
+                    model.setConvertResolution(convertResolution);
+                    if (convertResolution) {
+                        model.setOutputResolution(DEFAULT_TARGET_RESOLUTION);
                     }
-                    model.setChangeFPS(CONVERT_FRAMERATE_BY_DEFAULT);
-                    if (model.isChangeFPS()) {
+                    model.setConvertFPS(CONVERT_FRAMERATE_BY_DEFAULT);
+                    if (model.getConvertFPS()) {
                         if (!model.isFpsSrcCertain()) {
                             model.setFpsSrc(DEFAULT_SOURCE_FRAMERATE);
                         }
@@ -1082,10 +1084,10 @@ public class ConversionDialogView extends JDialog {
                     model.setDelayPTS(DEFAULT_PTS_DELAY);
                     model.setFixShortFrames(FIX_SHORT_FRAMES_BY_DEFAULT);
                     model.setMinTimePTS(DEFAULT_MIN_DISPLAY_TIME_PTS);
-                    model.setChangeScale(APPLY_FREE_SCALE_BY_DEFAULT);
-                    if (model.isChangeScale()) {
-                        model.setScaleX(DEFAULT_FREE_SCALE_FACTOR_X);
-                        model.setScaleY(DEFAULT_FREE_SCALE_FACTOR_Y);
+                    model.setApplyFreeScale(APPLY_FREE_SCALE_BY_DEFAULT);
+                    if (model.getApplyFreeScale()) {
+                        model.setFreeScaleFactorX(DEFAULT_FREE_SCALE_FACTOR_X);
+                        model.setFreeScaleFactorY(DEFAULT_FREE_SCALE_FACTOR_Y);
                     }
                     model.setForcedState(ForcedFlagState.KEEP);
                     fillDialog();
@@ -1111,7 +1113,7 @@ public class ConversionDialogView extends JDialog {
                 public void itemStateChanged(ItemEvent e) {
                     if (model.isReady()) {
                         boolean changeScale = jCheckBoxScale.isSelected();
-                        model.setChangeScale(changeScale);
+                        model.setApplyFreeScale(changeScale);
                         jTextFieldScaleX.setEnabled(changeScale);
                         jTextFieldScaleY.setEnabled(changeScale);
                     }
@@ -1163,7 +1165,7 @@ public class ConversionDialogView extends JDialog {
                     if (model.isReady()) {
                         String s = jTextFieldMinTime.getText();
                         try {
-                            model.setMinTimePTS((int)SubtitleUtils.syncTimePTS((long)(Double.parseDouble(s) * 90), model.getFpsTrg(), model.getFPSTrgConf()));
+                            model.setMinTimePTS((int)SubtitleUtils.syncTimePTS((long)(Double.parseDouble(s) * 90), model.getFpsTrg(), model.getFpsTrgConf()));
                         } catch (NumberFormatException ex) {
                         }
                         jTextFieldMinTime.setBackground(OK_BACKGROUND);
@@ -1176,7 +1178,7 @@ public class ConversionDialogView extends JDialog {
                     if (model.isReady()) {
                         String s = jTextFieldMinTime.getText();
                         try {
-                            model.setMinTimePTS((int)SubtitleUtils.syncTimePTS((long)(Double.parseDouble(s) * 90), model.getFpsTrg(), model.getFPSTrgConf()));
+                            model.setMinTimePTS((int)SubtitleUtils.syncTimePTS((long)(Double.parseDouble(s) * 90), model.getFpsTrg(), model.getFpsTrgConf()));
                             if (!s.equalsIgnoreCase(ToolBox.formatDouble(model.getMinTimePTS() / 90.0))) {
                                 jTextFieldMinTime.setBackground(WARN_BACKGROUND);
                             } else {
@@ -1220,37 +1222,38 @@ public class ConversionDialogView extends JDialog {
                 public void actionPerformed(ActionEvent e) {
                     if (model.isReady()) {
                         // fps source
-                        model.setConvertFPSConf(model.isChangeFPS());
-                        if (model.isChangeFPS()) {
-                            double fpsSrc = SubtitleUtils.getFPS((String)jComboBoxFPSSrc.getSelectedItem());
+                        model.setConvertFPSConf(model.getConvertFPS());
+                        if (model.getConvertFPS()) {
+                            double fpsSrc = SubtitleUtils.getFps((String) jComboBoxFPSSrc.getSelectedItem());
                             if (fpsSrc > 0) {
                                 model.setFpsSrc(fpsSrc);
                                 model.setFPSSrcConf(fpsSrc);
                             }
                         }
                         // fps target
-                        double fpsTrg = SubtitleUtils.getFPS((String)jComboBoxFPSTrg.getSelectedItem());
+                        double fpsTrg = SubtitleUtils.getFps((String) jComboBoxFPSTrg.getSelectedItem());
                         if (fpsTrg > 0) {
                             model.setFpsTrg(fpsTrg);
-                            model.setFPSTrgConf(fpsTrg);
+                            model.setFpsTrgConf(fpsTrg);
                         }
                         // delay
                         try {
-                            model.setDelayPTS((int)SubtitleUtils.syncTimePTS((long)(Double.parseDouble(jTextFieldDelay.getText()) * 90), model.getFpsTrg(), model.getFPSTrgConf()));
+                            model.setDelayPTS((int)SubtitleUtils.syncTimePTS((long)(Double.parseDouble(jTextFieldDelay.getText()) * 90), model.getFpsTrg(), model.getFpsTrgConf()));
                             model.setDelayPTSConf(model.getDelayPTS());
                         } catch (NumberFormatException ex) {
                         }
                         // min time
-                        model.setFixShortFramesConf(model.isFixShortFrames());
+                        model.setFixShortFramesConf(model.getFixShortFrames());
                         try {
-                            model.setMinTimePTS((int)SubtitleUtils.syncTimePTS((long)(Double.parseDouble(jTextFieldMinTime.getText()) * 90), model.getFpsTrg(), model.getFPSTrgConf()));
+                            model.setMinTimePTS((int)SubtitleUtils.syncTimePTS((long)(Double.parseDouble(jTextFieldMinTime.getText()) * 90), model.getFpsTrg(), model.getFpsTrgConf()));
                             model.setMinTimePTSConf(model.getMinTimePTS());
                         } catch (NumberFormatException ex) {
                         }
                         // exit
-                        model.setConvertResolutionConf(model.isChangeResolution());
-                        if (model.isChangeResolution()) {
-                            model.setOutputResolutionConf(model.getResolution());
+                        boolean convertResolution = model.getConvertResolution();
+                        model.setConvertResolutionConf(convertResolution);
+                        if (convertResolution) {
+                            model.setOutputResolutionConf(model.getOutputResolution());
                         }
                         // scaleX
                         double scaleX = ToolBox.getDouble(jTextFieldScaleX.getText());
@@ -1260,7 +1263,7 @@ public class ConversionDialogView extends JDialog {
                             } else if (scaleX < MIN_FREE_SCALE_FACTOR) {
                                 scaleX = MIN_FREE_SCALE_FACTOR;
                             }
-                            model.setScaleX(scaleX);
+                            model.setFreeScaleFactorX(scaleX);
                         }
                         // scaleY
                         double scaleY = ToolBox.getDouble(jTextFieldScaleY.getText());
@@ -1270,19 +1273,19 @@ public class ConversionDialogView extends JDialog {
                             } else if (scaleY < MIN_FREE_SCALE_FACTOR) {
                                 scaleY = MIN_FREE_SCALE_FACTOR;
                             }
-                            model.setScaleY(scaleY);
+                            model.setFreeScaleFactorY(scaleY);
                         }
                         // set scale X/Y
-                        model.setApplyFreeScaleConf(model.isChangeScale());
-                        if (model.isChangeScale()) {
-                            model.setFreeScaleFactorConf(model.getScaleX(), model.getScaleY());
+                        model.setApplyFreeScaleConf(model.getApplyFreeScale());
+                        if (model.getApplyFreeScale()) {
+                            model.setFreeScaleFactorConf(model.getFreeScaleFactorX(), model.getFreeScaleFactorY());
                         }
                         model.setCancel(false);
                         // forced state
                         Core.setForceAll(model.getForcedState());
                         // keep move settings
                         if (jCheckBoxMove.isEnabled()) {
-                            Core.setMoveCaptions(model.isMoveCaptions());
+                            Core.setMoveCaptions(model.getMoveCaptions());
                         }
                         //
                         dispose();
@@ -1314,9 +1317,9 @@ public class ConversionDialogView extends JDialog {
                             } else if (scaleX < MIN_FREE_SCALE_FACTOR) {
                                 scaleX = MIN_FREE_SCALE_FACTOR;
                             }
-                            model.setScaleX(scaleX);
+                            model.setFreeScaleFactorX(scaleX);
                         }
-                        jTextFieldScaleX.setText(ToolBox.formatDouble(model.getScaleX()));
+                        jTextFieldScaleX.setText(ToolBox.formatDouble(model.getFreeScaleFactorX()));
                         jTextFieldScaleX.setBackground(OK_BACKGROUND);
                     }
                 }
@@ -1326,7 +1329,7 @@ public class ConversionDialogView extends JDialog {
                     if (model.isReady()) {
                         double scaleX = ToolBox.getDouble(jTextFieldScaleX.getText());
                         if (scaleX >= MIN_FREE_SCALE_FACTOR && scaleX <= MAX_FREE_SCALE_FACTOR) {
-                            model.setScaleX(scaleX);
+                            model.setFreeScaleFactorX(scaleX);
                             jTextFieldScaleX.setBackground(OK_BACKGROUND);
                         } else {
                             jTextFieldScaleX.setBackground(ERROR_BACKGROUND);
@@ -1372,9 +1375,9 @@ public class ConversionDialogView extends JDialog {
                             } else if (scaleY < MIN_FREE_SCALE_FACTOR) {
                                 scaleY = MIN_FREE_SCALE_FACTOR;
                             }
-                            model.setScaleY(scaleY);
+                            model.setFreeScaleFactorY(scaleY);
                         }
-                        jTextFieldScaleY.setText(ToolBox.formatDouble(model.getScaleY()));
+                        jTextFieldScaleY.setText(ToolBox.formatDouble(model.getFreeScaleFactorY()));
                     }
                 }
             });
@@ -1383,7 +1386,7 @@ public class ConversionDialogView extends JDialog {
                     if (model.isReady()) {
                         double scaleY = ToolBox.getDouble(jTextFieldScaleY.getText());
                         if (scaleY >= MIN_FREE_SCALE_FACTOR && scaleY <= MAX_FREE_SCALE_FACTOR) {
-                            model.setScaleY(scaleY);
+                            model.setFreeScaleFactorY(scaleY);
                             jTextFieldScaleY.setBackground(OK_BACKGROUND);
                         } else {
                             jTextFieldScaleY.setBackground(ERROR_BACKGROUND);

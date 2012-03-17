@@ -227,7 +227,7 @@ public class SupXml implements Substream {
      * @throws CoreException
      */
     public static void writeXml(final String fname, final SubPicture pics[]) throws CoreException {
-        double fps = configuration.getFPSTrg();
+        double fps = configuration.getFpsTrg();
         double fpsXml = XmlFps(fps);
         long t;
         BufferedWriter out = null;
@@ -472,7 +472,7 @@ public class SupXml implements Substream {
                 case FORMAT:
                     at = atts.getValue("FrameRate");
                     if (at != null) {
-                        fps = SubtitleUtils.getFPS(at);
+                        fps = SubtitleUtils.getFps(at);
                         fpsXml = XmlFps(fps);
                         Core.print("fps: " + ToolBox.formatDouble(fps) + "\n");
                     }

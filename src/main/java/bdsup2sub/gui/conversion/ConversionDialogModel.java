@@ -25,209 +25,72 @@ public class ConversionDialogModel {
 
     private final Configuration configuration = Configuration.getInstance();
 
-    /** selected output resolution */
-    private Resolution resolution;
-    /** selected delay in 90kHz resolution */
-    private int     delayPTS;
-    /** selected minimum frame time in 90kHz resolution */
-    private int     minTimePTS;
-    /** flag that tells whether to convert the frame rate or not */
-    private boolean changeFPS;
-    /** flag that tells whether to convert the resolution or not */
-    private boolean changeResolution;
-    /** flag that tells whether to fix frames shorter than a minimum time */
+    private Resolution outputResolution;
+    private int delayPTS;
+    private int minTimePTS;
+    private boolean convertFPS;
+    private boolean convertResolution;
     private boolean fixShortFrames;
-    /** source frame rate */
     private double  fpsSrc;
-    /** target frame rate */
     private double  fpsTrg;
-    /** cancel state */
-    private boolean cancel;
-    /** semaphore to disable actions while changing component properties */
-    private volatile boolean isReady;
-    /** flag that tells whether to use free scaling or not */
-    private boolean changeScale;
-    /** X scaling factor */
-    private double scaleX;
-    /** Y scaling factor */
-    private double scaleY;
-    /** source fps is certain */
+    private boolean applyFreeScale;
+    private double freeScaleFactorX;
+    private double freeScaleFactorY;
     private boolean fpsSrcCertain;
-    /** clear/set all forced flags */
     private ForcedFlagState forcedState;
-    /** apply move settings */
     private boolean moveCaptions;
 
+    private boolean cancel;
+    private volatile boolean isReady;
+
     public ConversionDialogModel() {
-        changeResolution = configuration.getConvertResolution();
+        convertResolution = configuration.getConvertResolution();
 
         // fix output resolution in case that it should not be changed
         // change target resolution to source resolution if no conversion is needed
-        if (!changeResolution && Core.getNumFrames() > 0) {
-            resolution = Core.getResolution(Core.getSubPictureSrc(0).width, Core.getSubPictureSrc(0).height);
+        if (!convertResolution && Core.getNumFrames() > 0) {
+            outputResolution = Core.getResolution(Core.getSubPictureSrc(0).width, Core.getSubPictureSrc(0).height);
         } else {
-            resolution = configuration.getOutputResolution();
+            outputResolution = configuration.getOutputResolution();
         }
 
         moveCaptions = Core.getMoveCaptions();
 
         delayPTS = configuration.getDelayPTS();
-        minTimePTS = (int) SubtitleUtils.syncTimePTS(configuration.getMinTimePTS(), configuration.getFPSTrg(), configuration.getFPSTrg());
-        changeFPS = configuration.getConvertFPS();
-        changeScale = configuration.getApplyFreeScale();
+        minTimePTS = (int) SubtitleUtils.syncTimePTS(configuration.getMinTimePTS(), configuration.getFpsTrg(), configuration.getFpsTrg());
+        convertFPS = configuration.getConvertFPS();
+        applyFreeScale = configuration.getApplyFreeScale();
         fixShortFrames = configuration.getFixShortFrames();
         fpsSrc = configuration.getFPSSrc();
-        fpsTrg = configuration.getFPSTrg();
-        scaleX = configuration.getFreeScaleFactorX();
-        scaleY = configuration.getFreeScaleFactorY();
+        fpsTrg = configuration.getFpsTrg();
+        freeScaleFactorX = configuration.getFreeScaleFactorX();
+        freeScaleFactorY = configuration.getFreeScaleFactorY();
         fpsSrcCertain = configuration.isFpsSrcCertain();
         forcedState = Core.getForceAll();
-    }
-
-    public void setConvertFPSConf(boolean convertFPS) {
-        configuration.setConvertFPS(convertFPS);
-    }
-
-    public void setFPSSrcConf(double fpsSrc) {
-        configuration.setFPSSrc(fpsSrc);
-    }
-    
-    public double getFPSTrgConf() {
-        return configuration.getFPSTrg();
-    }
-
-    public void setFPSTrgConf(double fpsTrg) {
-        configuration.setFPSTrg(fpsTrg);
-    }
-
-    public void setDelayPTSConf(int delayPTS) {
-        configuration.setDelayPTS(delayPTS);
-    }
-
-    public void setFixShortFramesConf(boolean fixShortFrames) {
-        configuration.setFixShortFrames(fixShortFrames);
-    }
-
-    public void setMinTimePTSConf(int minTimePTS) {
-        configuration.setMinTimePTS(minTimePTS);
-    }
-
-    public void setConvertResolutionConf(boolean convertResolution) {
-        configuration.setConvertResolution(convertResolution);
-    }
-
-    public void setOutputResolutionConf(Resolution outputResolution) {
-        configuration.setOutputResolution(outputResolution);
-    }
-
-    public void setFreeScaleFactorConf(double x, double y) {
-        configuration.setFreeScaleFactor(x, y);
-    }
-    
-    public void setApplyFreeScaleConf(boolean applyFreeScale) {
-        configuration.setApplyFreeScale(applyFreeScale);
-    }
-
-////////////////////////////////////////////////
-
-    public void storeConvertFPS(boolean convertFPS) {
-        configuration.storeConvertFPS(convertFPS);
-    }
-
-    public void storeFPSSrc(double fpsSrc) {
-        configuration.storeFPSSrc(fpsSrc);
-    }
-
-    public void storeFPSTrg(double fpsTrg) {
-        configuration.storeFPSTrg(fpsTrg);
-    }
-
-    public void storeDelayPTS(int delayPTS) {
-        configuration.storeDelayPTS(delayPTS);
-    }
-
-    public void storeFixShortFrames(boolean fixShortFrames) {
-        configuration.storeFixShortFrames(fixShortFrames);
-    }
-
-    public void storeMinTimePTS(int minTimePTS) {
-        configuration.storeMinTimePTS(minTimePTS);
-    }
-
-    public void storeConvertResolution(boolean convertResolution) {
-        configuration.storeConvertResolution(convertResolution);
-    }
-
-    public void storeOutputResolution(Resolution outputResolution) {
-        configuration.storeOutputResolution(outputResolution);
-    }
-
-    public void storeApplyFreeScale(boolean applyFreeScale) {
-        configuration.storeApplyFreeScale(applyFreeScale);
-    }
-
-    public void storeFreeScaleFactor(double x, double y) {
-        configuration.storeFreeScaleFactor(x, y);
     }
 
     public void storeConfig() {
         configuration.storeConfig();
     }
 
-    ////////////////////////////////////////////////
-
-    public boolean loadConvertResolution() {
-        return configuration.loadConvertResolution();
+    public Resolution getOutputResolution() {
+        return outputResolution;
     }
 
-    public boolean loadConvertFPS() {
-        return configuration.loadConvertFPS();
+    public void setOutputResolution(Resolution outputResolution) {
+        this.outputResolution = outputResolution;
     }
 
-    public int loadDelayPTS() {
-        return configuration.loadDelayPTS();
-    }
-
-    public boolean loadFixShortFrames() {
-        return configuration.loadFixShortFrames();
-    }
-
-    public int loadMinTimePTS() {
-        return configuration.loadMinTimePTS();
-    }
-
-    public boolean loadApplyFreeScale() {
-        return configuration.loadApplyFreeScale();
-    }
-
-    public double loadFreeScaleFactorX() {
-        return configuration.loadFreeScaleFactorX();
-    }
-
-    public double loadFreeScaleFactorY() {
-        return configuration.loadFreeScaleFactorY();
-    }
-
-    public double loadFpsSrc() {
-        return configuration.loadFpsSrc();
-    }
-
-    public double loadFpsTrg() {
-        return configuration.loadFpsTrg();
+    public void setOutputResolutionConf(Resolution outputResolution) {
+        configuration.setOutputResolution(outputResolution);
     }
 
     public Resolution loadOutputResolution() {
         return configuration.loadOutputResolution();
     }
 
-    ////////////////////////////////////////////////
-
-    public Resolution getResolution() {
-        return resolution;
-    }
-
-    public void setResolution(Resolution resolution) {
-        this.resolution = resolution;
+    public void storeOutputResolution(Resolution outputResolution) {
+        configuration.storeOutputResolution(outputResolution);
     }
 
     public int getDelayPTS() {
@@ -238,6 +101,18 @@ public class ConversionDialogModel {
         this.delayPTS = delayPTS;
     }
 
+    public void setDelayPTSConf(int delayPTS) {
+        configuration.setDelayPTS(delayPTS);
+    }
+
+    public int loadDelayPTS() {
+        return configuration.loadDelayPTS();
+    }
+
+    public void storeDelayPTS(int delayPTS) {
+        configuration.storeDelayPTS(delayPTS);
+    }
+
     public int getMinTimePTS() {
         return minTimePTS;
     }
@@ -246,28 +121,76 @@ public class ConversionDialogModel {
         this.minTimePTS = minTimePTS;
     }
 
-    public boolean isChangeFPS() {
-        return changeFPS;
+    public void setMinTimePTSConf(int minTimePTS) {
+        configuration.setMinTimePTS(minTimePTS);
     }
 
-    public void setChangeFPS(boolean changeFPS) {
-        this.changeFPS = changeFPS;
+    public int loadMinTimePTS() {
+        return configuration.loadMinTimePTS();
     }
 
-    public boolean isChangeResolution() {
-        return changeResolution;
+    public void storeMinTimePTS(int minTimePTS) {
+        configuration.storeMinTimePTS(minTimePTS);
     }
 
-    public void setChangeResolution(boolean changeResolution) {
-        this.changeResolution = changeResolution;
+    public boolean getConvertFPS() {
+        return convertFPS;
     }
 
-    public boolean isFixShortFrames() {
+    public void setConvertFPS(boolean convertFPS) {
+        this.convertFPS = convertFPS;
+    }
+
+    public void setConvertFPSConf(boolean convertFPS) {
+        configuration.setConvertFPS(convertFPS);
+    }
+
+    public boolean loadConvertFPS() {
+        return configuration.loadConvertFPS();
+    }
+
+    public void storeConvertFPS(boolean convertFPS) {
+        configuration.storeConvertFPS(convertFPS);
+    }
+
+    public boolean getConvertResolution() {
+        return convertResolution;
+    }
+
+    public void setConvertResolution(boolean convertResolution) {
+        this.convertResolution = convertResolution;
+    }
+
+    public void setConvertResolutionConf(boolean convertResolution) {
+        configuration.setConvertResolution(convertResolution);
+    }
+
+    public boolean loadConvertResolution() {
+        return configuration.loadConvertResolution();
+    }
+
+    public void storeConvertResolution() {
+        configuration.storeConvertResolution(convertResolution);
+    }
+
+    public boolean getFixShortFrames() {
         return fixShortFrames;
     }
 
     public void setFixShortFrames(boolean fixShortFrames) {
         this.fixShortFrames = fixShortFrames;
+    }
+
+    public void setFixShortFramesConf(boolean fixShortFrames) {
+        configuration.setFixShortFrames(fixShortFrames);
+    }
+
+    public boolean loadFixShortFrames() {
+        return configuration.loadFixShortFrames();
+    }
+
+    public void storeFixShortFrames(boolean fixShortFrames) {
+        configuration.storeFixShortFrames(fixShortFrames);
     }
 
     public double getFpsSrc() {
@@ -278,6 +201,18 @@ public class ConversionDialogModel {
         this.fpsSrc = fpsSrc;
     }
 
+    public void setFPSSrcConf(double fpsSrc) {
+        configuration.setFpsSrc(fpsSrc);
+    }
+
+    public double loadFpsSrc() {
+        return configuration.loadFpsSrc();
+    }
+
+    public void storeFPSSrc(double fpsSrc) {
+        configuration.storeFPSSrc(fpsSrc);
+    }
+
     public double getFpsTrg() {
         return fpsTrg;
     }
@@ -286,45 +221,75 @@ public class ConversionDialogModel {
         this.fpsTrg = fpsTrg;
     }
 
-    public boolean wasCanceled() {
-        return cancel;
+    public double getFpsTrgConf() {
+        return configuration.getFpsTrg();
     }
 
-    public void setCancel(boolean cancel) {
-        this.cancel = cancel;
+    public void setFpsTrgConf(double fpsTrg) {
+        configuration.setFpsTrg(fpsTrg);
     }
 
-    public boolean isReady() {
-        return isReady;
+    public double loadFpsTrg() {
+        return configuration.loadFpsTrg();
     }
 
-    public void setReady(boolean ready) {
-        isReady = ready;
+    public void storeFpsTrg(double fpsTrg) {
+        configuration.storeFpsTrg(fpsTrg);
     }
 
-    public boolean isChangeScale() {
-        return changeScale;
+    public boolean getApplyFreeScale() {
+        return applyFreeScale;
     }
 
-    public void setChangeScale(boolean changeScale) {
-        this.changeScale = changeScale;
+    public void setApplyFreeScale(boolean applyFreeScale) {
+        this.applyFreeScale = applyFreeScale;
     }
 
-    public double getScaleX() {
-        return scaleX;
+    public void setApplyFreeScaleConf(boolean applyFreeScale) {
+        configuration.setApplyFreeScale(applyFreeScale);
     }
 
-    public void setScaleX(double scaleX) {
-        this.scaleX = scaleX;
+    public boolean loadApplyFreeScale() {
+        return configuration.loadApplyFreeScale();
     }
 
-    public double getScaleY() {
-        return scaleY;
+    public void storeApplyFreeScale(boolean applyFreeScale) {
+        configuration.storeApplyFreeScale(applyFreeScale);
     }
 
-    public void setScaleY(double scaleY) {
-        this.scaleY = scaleY;
+    public double getFreeScaleFactorX() {
+        return freeScaleFactorX;
     }
+
+    public double getFreeScaleFactorY() {
+        return freeScaleFactorY;
+    }
+
+    public void setFreeScaleFactorX(double freeScaleFactorX) {
+        this.freeScaleFactorX = freeScaleFactorX;
+    }
+
+    public void setFreeScaleFactorY(double freeScaleFactorY) {
+        this.freeScaleFactorY = freeScaleFactorY;
+    }
+
+    public void setFreeScaleFactorConf(double x, double y) {
+        configuration.setFreeScaleFactor(x, y);
+    }
+
+    public double loadFreeScaleFactorX() {
+        return configuration.loadFreeScaleFactorX();
+    }
+
+    public double loadFreeScaleFactorY() {
+        return configuration.loadFreeScaleFactorY();
+    }
+
+    public void storeFreeScaleFactor(double x, double y) {
+        configuration.storeFreeScaleFactor(x, y);
+    }
+
+    /////////////
 
     public boolean isFpsSrcCertain() {
         return fpsSrcCertain;
@@ -342,11 +307,27 @@ public class ConversionDialogModel {
         this.forcedState = forcedState;
     }
 
-    public boolean isMoveCaptions() {
+    public boolean getMoveCaptions() {
         return moveCaptions;
     }
 
     public void setMoveCaptions(boolean moveCaptions) {
         this.moveCaptions = moveCaptions;
+    }
+
+    public boolean wasCanceled() {
+        return cancel;
+    }
+
+    public void setCancel(boolean cancel) {
+        this.cancel = cancel;
+    }
+
+    public boolean isReady() {
+        return isReady;
+    }
+
+    public void setReady(boolean ready) {
+        isReady = ready;
     }
 }

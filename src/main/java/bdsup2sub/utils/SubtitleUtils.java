@@ -22,7 +22,7 @@ public final class SubtitleUtils {
     private SubtitleUtils() {
     }
 
-    public static double getFPS(String fps) {
+    public static double getFps(String fps) {
         fps = fps.toLowerCase().trim();
         if (fps.equals("pal")  || fps.equals("25p") || fps.equals("25")) {
             return Framerate.PAL.getValue();

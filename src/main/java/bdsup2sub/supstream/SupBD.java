@@ -609,7 +609,7 @@ public class SupBD implements Substream {
         byte buf[] = new byte[size];
         int index = 0;
 
-        int fpsId = getFpsId(configuration.getFPSTrg());
+        int fpsId = getFpsId(configuration.getFpsTrg());
 
         /* time (in 90kHz resolution) needed to initialize (clear) the screen buffer
            based on the composition pixel rate of 256e6 bit/s - always rounded up */

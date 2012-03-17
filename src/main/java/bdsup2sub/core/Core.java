@@ -499,16 +499,16 @@ public class Core  extends Thread {
 
         // try to detect source frame rate
         if (substream == supBD) {
-            configuration.setFPSSrc(supBD.getFps(0));
+            configuration.setFpsSrc(supBD.getFps(0));
             configuration.setFpsSrcCertain(true);
             if (Core.keepFps) {
-                configuration.setFPSTrg(configuration.getFPSSrc());
+                configuration.setFpsTrg(configuration.getFPSSrc());
             }
         } else {
             // for HD-DVD we need to guess
             useBT601 = false;
             configuration.setFpsSrcCertain(false);
-            configuration.setFPSSrc(Framerate.FPS_23_976.getValue());
+            configuration.setFpsSrc(Framerate.FPS_23_976.getValue());
         }
     }
 
@@ -558,10 +558,10 @@ public class Core  extends Thread {
         }
 
         // set frame rate
-        configuration.setFPSSrc(supXml.getFps());
+        configuration.setFpsSrc(supXml.getFps());
         configuration.setFpsSrcCertain(true);
         if (Core.keepFps) {
-            configuration.setFPSTrg(configuration.getFPSSrc());
+            configuration.setFpsTrg(configuration.getFPSSrc());
         }
     }
 
@@ -660,18 +660,18 @@ public class Core  extends Thread {
         int h = substream.getSubPicture(0).height; //substream.getBitmap().getHeight();
         switch (h) {
             case 480:
-                configuration.setFPSSrc(Framerate.NTSC.getValue());
+                configuration.setFpsSrc(Framerate.NTSC.getValue());
                 useBT601 = true;
                 configuration.setFpsSrcCertain(true);
                 break;
             case 576:
-                configuration.setFPSSrc(Framerate.PAL.getValue());
+                configuration.setFpsSrc(Framerate.PAL.getValue());
                 useBT601 = true;
                 configuration.setFpsSrcCertain(true);
                 break;
             default:
                 useBT601 = false;
-                configuration.setFPSSrc(Framerate.FPS_23_976.getValue());
+                configuration.setFpsSrc(Framerate.FPS_23_976.getValue());
                 configuration.setFpsSrcCertain(false);
         }
     }
@@ -752,10 +752,10 @@ public class Core  extends Thread {
         }
 
         if (subPic.startTime != ts) {
-            subPic.startTime = SubtitleUtils.syncTimePTS(ts, configuration.getFPSTrg(), configuration.getFPSTrg());
+            subPic.startTime = SubtitleUtils.syncTimePTS(ts, configuration.getFpsTrg(), configuration.getFpsTrg());
         }
         if (subPic.endTime != te) {
-            subPic.endTime = SubtitleUtils.syncTimePTS(te, configuration.getFPSTrg(), configuration.getFPSTrg());
+            subPic.endTime = SubtitleUtils.syncTimePTS(te, configuration.getFpsTrg(), configuration.getFpsTrg());
         }
     }
 
@@ -848,7 +848,7 @@ public class Core  extends Thread {
     public static void scanSubtitles() {
         boolean convertFPS = configuration.getConvertFPS();
         subPictures = new SubPicture[substream.getNumFrames()];
-        double factTS = convertFPS ? configuration.getFPSSrc() / configuration.getFPSTrg() : 1.0;
+        double factTS = convertFPS ? configuration.getFPSSrc() / configuration.getFpsTrg() : 1.0;
 
         // change target resolution to source resolution if no conversion is needed
         if (!configuration.getConvertResolution() && getNumFrames() > 0) {
@@ -882,8 +882,8 @@ public class Core  extends Thread {
                 subPictures[i].endTime = (long)(te * factTS + 0.5) + delayPTS;
             }
             // synchronize to target frame rate
-            subPictures[i].startTime = SubtitleUtils.syncTimePTS(subPictures[i].startTime, configuration.getFPSTrg(), configuration.getFPSTrg());
-            subPictures[i].endTime = SubtitleUtils.syncTimePTS(subPictures[i].endTime, configuration.getFPSTrg(), configuration.getFPSTrg());
+            subPictures[i].startTime = SubtitleUtils.syncTimePTS(subPictures[i].startTime, configuration.getFpsTrg(), configuration.getFpsTrg());
+            subPictures[i].endTime = SubtitleUtils.syncTimePTS(subPictures[i].endTime, configuration.getFpsTrg(), configuration.getFpsTrg());
 
             // set forced flag
             SubPicture picTrg = subPictures[i];
@@ -993,7 +993,7 @@ public class Core  extends Thread {
         }
 
         boolean convertFPS = configuration.getConvertFPS();
-        double fpsTrg = configuration.getFPSTrg();
+        double fpsTrg = configuration.getFpsTrg();
         double fpsSrc = configuration.getFPSSrc();
         if (convertFPS && !convertFpsOld) {
             factTS = fpsSrc / fpsTrg;

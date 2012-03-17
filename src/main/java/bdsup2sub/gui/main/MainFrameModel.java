@@ -17,7 +17,6 @@ package bdsup2sub.gui.main;
 
 import bdsup2sub.core.*;
 
-import javax.swing.*;
 import java.awt.*;
 import java.util.List;
 
@@ -163,7 +162,7 @@ public class MainFrameModel {
     }
 
     public double getFPSTrg() {
-        return configuration.getFPSTrg();
+        return configuration.getFpsTrg();
     }
 
     public Resolution getOutputResolution() {

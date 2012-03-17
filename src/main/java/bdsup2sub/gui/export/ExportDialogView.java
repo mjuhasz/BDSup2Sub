@@ -27,8 +27,6 @@ import static bdsup2sub.gui.support.GuiUtils.centerRelativeToOwner;
 
 public class ExportDialogView extends JDialog {
 
-    private static final long serialVersionUID = 1L;
-
     private JPanel jContentPane;
     private JTextField jTextFieldFilename;
     private JButton jButtonFileName;
