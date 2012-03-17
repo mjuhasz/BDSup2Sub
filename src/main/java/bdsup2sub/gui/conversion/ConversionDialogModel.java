@@ -289,8 +289,6 @@ public class ConversionDialogModel {
         configuration.storeFreeScaleFactor(x, y);
     }
 
-    /////////////
-
     public boolean isFpsSrcCertain() {
         return fpsSrcCertain;
     }

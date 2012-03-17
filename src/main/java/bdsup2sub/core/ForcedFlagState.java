@@ -16,7 +16,22 @@
 package bdsup2sub.core;
 
 public enum ForcedFlagState {
-    KEEP,
-    SET,
-    CLEAR,
+    KEEP {
+        @Override
+        public String toString() {
+            return "keep";
+        }
+    },
+    SET {
+        @Override
+        public String toString() {
+            return "set all";
+        }
+    },
+    CLEAR {
+        @Override
+        public String toString() {
+            return "clear all";
+        }
+    },
 }

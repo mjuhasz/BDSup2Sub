@@ -38,23 +38,22 @@ import static bdsup2sub.gui.support.GuiUtils.centerRelativeToOwner;
 public class ConversionDialogView extends JDialog {
 
     private static final Dimension DIM_LABEL = new Dimension(70,20);
+    private static final String[] FRAMERATES = {"23.975", "23.976", "24", "25", "29.97", "50", "59.94"};
 
     private JPanel jContentPane;
     private JPanel jPanelResolution;
     private JComboBox jComboBoxResolution;
     private JCheckBox jCheckBoxFrameRate;
     private JCheckBox jCheckBoxResolution;
-    private JPanel jPanelFPS;
-    private JComboBox jComboBoxFPSSrc;
-    private JComboBox jComboBoxFPSTrg;
+    private JPanel jPanelFps;
+    private JComboBox jComboBoxFpsSrc;
+    private JComboBox jComboBoxFpsTrg;
     private JPanel jPanelMove;
     private JCheckBox jCheckBoxMove;
     private JPanel jPanelTimes;
     private JTextField jTextFieldDelay;
     private JCheckBox jCheckBoxFixMinTime;
     private JTextField jTextFieldMinTime;
-    private JTextField fpsTrgEditor;
-    private JTextField fpsSrcEditor;
     private JPanel jPanelDefaults;
     private JButton jButtonStore;
     private JButton jButtonRestore;
@@ -72,58 +71,14 @@ public class ConversionDialogView extends JDialog {
     private ConversionDialogModel model;
 
     public ConversionDialogView(ConversionDialogModel model, Frame owner) {
-        super(owner, true);
+        super(owner, "Conversion Options", true);
         this.model = model;
 
-        // initialize internal variables
-        fpsTrgEditor = new JTextField();
-        fpsSrcEditor = new JTextField();
-
         initialize();
-        centerRelativeToOwner(this);
-        setResizable(false);
-
-
-        jCheckBoxMove.setEnabled(false);
-        jCheckBoxMove.setSelected(model.getMoveCaptions());
-
-        // fill comboboxes and text fields
-        for (Resolution r : Resolution.values()) {
-            jComboBoxResolution.addItem(r.toString());
-        }
-
-        jComboBoxFPSSrc.addItem("23.975");
-        jComboBoxFPSSrc.addItem("23.976");
-        jComboBoxFPSSrc.addItem("24");
-        jComboBoxFPSSrc.addItem("25");
-        jComboBoxFPSSrc.addItem("29.97");
-        jComboBoxFPSSrc.addItem("50");
-        jComboBoxFPSSrc.addItem("59.94");
-
-        jComboBoxFPSTrg.addItem("23.975");
-        jComboBoxFPSTrg.addItem("23.976");
-        jComboBoxFPSTrg.addItem("24");
-        jComboBoxFPSTrg.addItem("25");
-        jComboBoxFPSTrg.addItem("29.97");
-        jComboBoxFPSTrg.addItem("50");
-        jComboBoxFPSTrg.addItem("59.94");
-
-        jComboBoxFPSSrc.setEditor(new MyComboBoxEditor(fpsSrcEditor));
-        jComboBoxFPSTrg.setEditor(new MyComboBoxEditor(fpsTrgEditor));
-
-        // note: order has to be ordinal order of enum!
-        jComboBoxForced.addItem("keep      ");
-        jComboBoxForced.addItem("set all   ");
-        jComboBoxForced.addItem("clear all ");
-
         fillDialog();
-
         model.setReady(true);
     }
 
-    /**
-     * Enter values into dialog elements
-     */
     private void fillDialog() {
         jComboBoxResolution.setSelectedIndex(model.getOutputResolution().ordinal());
         jComboBoxResolution.setEnabled(model.getConvertResolution());
@@ -132,10 +87,10 @@ public class ConversionDialogView extends JDialog {
         jTextFieldDelay.setText(ToolBox.formatDouble(model.getDelayPTS() / 90.0));
 
         jCheckBoxFrameRate.setSelected(model.getConvertFPS());
-        jComboBoxFPSSrc.setSelectedItem(ToolBox.formatDouble(model.getFpsSrc()));
-        jComboBoxFPSSrc.setEnabled(model.getConvertFPS());
-        jComboBoxFPSTrg.setSelectedItem(ToolBox.formatDouble(model.getFpsTrg()));
-        jComboBoxFPSTrg.setEnabled(true);
+        jComboBoxFpsSrc.setSelectedItem(ToolBox.formatDouble(model.getFpsSrc()));
+        jComboBoxFpsSrc.setEnabled(model.getConvertFPS());
+        jComboBoxFpsTrg.setSelectedItem(ToolBox.formatDouble(model.getFpsTrg()));
+        jComboBoxFpsTrg.setEnabled(true);
 
         jTextFieldMinTime.setText(ToolBox.formatDouble(model.getMinTimePTS() / 90.0));
         jCheckBoxFixMinTime.setEnabled(true);
@@ -154,14 +109,12 @@ public class ConversionDialogView extends JDialog {
         jComboBoxForced.setSelectedIndex(model.getForcedState().ordinal());
     }
 
-    /**
-     * This method initializes this dialog
-     */
     private void initialize() {
-        this.setSize(500, 350);
-        this.setTitle("Conversion Options");
-        this.setPreferredSize(new Dimension(500, 350));
-        this.setContentPane(getJContentPane());
+        setSize(500, 350);
+        setPreferredSize(new Dimension(500, 350));
+        setContentPane(getJContentPane());
+        centerRelativeToOwner(this);
+        setResizable(false);
         this.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
@@ -171,11 +124,6 @@ public class ConversionDialogView extends JDialog {
         });
     }
 
-    /**
-     * This method initializes jPanelResolution
-     *
-     * @return javax.swing.JPanel
-     */
     private JPanel getJPanelResolution() {
         if (jPanelResolution == null) {
             GridBagConstraints gridBagCheckBoxResolution = new GridBagConstraints();
@@ -213,11 +161,6 @@ public class ConversionDialogView extends JDialog {
         return jPanelResolution;
     }
 
-    /**
-     * This method initializes jPanelMove
-     *
-     * @return javax.swing.JPanel
-     */
     private JPanel getJPanelMove() {
         if (jPanelMove == null) {
             GridBagConstraints gridBagCheckBoxMove = new GridBagConstraints();
@@ -240,71 +183,61 @@ public class ConversionDialogView extends JDialog {
     }
 
 
-    /**
-     * This method initializes jPanelFPS
-     *
-     * @return javax.swing.JPanel
-     */
-    private JPanel getJPanelFPS() {
-        if (jPanelFPS == null) {
+    private JPanel getJPanelFps() {
+        if (jPanelFps == null) {
             GridBagConstraints gridBagCheckBoxFrameRate = new GridBagConstraints();
             gridBagCheckBoxFrameRate.gridx = 0;
             gridBagCheckBoxFrameRate.gridy = 0;
             gridBagCheckBoxFrameRate.anchor = GridBagConstraints.WEST;
             gridBagCheckBoxFrameRate.gridwidth = 2;
 
-            GridBagConstraints gridBagLabelFPSSrc = new GridBagConstraints();
-            gridBagLabelFPSSrc.gridx = 0;
-            gridBagLabelFPSSrc.gridy = 1;
-            gridBagLabelFPSSrc.anchor = GridBagConstraints.WEST;
-            gridBagLabelFPSSrc.insets = new Insets(2, 6, 2, 0);
+            GridBagConstraints gridBagLabelFpsSrc = new GridBagConstraints();
+            gridBagLabelFpsSrc.gridx = 0;
+            gridBagLabelFpsSrc.gridy = 1;
+            gridBagLabelFpsSrc.anchor = GridBagConstraints.WEST;
+            gridBagLabelFpsSrc.insets = new Insets(2, 6, 2, 0);
 
-            GridBagConstraints gridBagComboFPSSrc = new GridBagConstraints();
-            gridBagComboFPSSrc.gridx = 1;
-            gridBagComboFPSSrc.gridy = 1;
-            //gridBagComboFPSSrc.fill = GridBagConstraints.NONE;
-            gridBagComboFPSSrc.weightx = 1.0;
-            gridBagComboFPSSrc.anchor = GridBagConstraints.WEST;
-            gridBagComboFPSSrc.insets = new Insets(2, 4, 2, 4);
+            GridBagConstraints gridBagComboFpsSrc = new GridBagConstraints();
+            gridBagComboFpsSrc.gridx = 1;
+            gridBagComboFpsSrc.gridy = 1;
+            //gridBagComboFpsSrc.fill = GridBagConstraints.NONE;
+            gridBagComboFpsSrc.weightx = 1.0;
+            gridBagComboFpsSrc.anchor = GridBagConstraints.WEST;
+            gridBagComboFpsSrc.insets = new Insets(2, 4, 2, 4);
 
-            GridBagConstraints gridBagLabelFPSTrg = new GridBagConstraints();
-            gridBagLabelFPSTrg.gridx = 0;
-            gridBagLabelFPSTrg.gridy = 2;
-            gridBagLabelFPSTrg.anchor = GridBagConstraints.WEST;
-            gridBagLabelFPSTrg.insets = new Insets(2, 6, 2, 0);
+            GridBagConstraints gridBagLabelFpsTrg = new GridBagConstraints();
+            gridBagLabelFpsTrg.gridx = 0;
+            gridBagLabelFpsTrg.gridy = 2;
+            gridBagLabelFpsTrg.anchor = GridBagConstraints.WEST;
+            gridBagLabelFpsTrg.insets = new Insets(2, 6, 2, 0);
 
-            GridBagConstraints gridBagComboFPSTrg = new GridBagConstraints();
-            //gridBagComboFPSTrg.fill = GridBagConstraints.VERTICAL;
-            gridBagComboFPSTrg.gridx = 1;
-            gridBagComboFPSTrg.gridy = 2;
-            gridBagComboFPSTrg.weightx = 1.0;
-            gridBagComboFPSTrg.anchor = GridBagConstraints.WEST;
-            gridBagComboFPSTrg.insets = new Insets(2, 4, 2, 4);
+            GridBagConstraints gridBagComboFpsTrg = new GridBagConstraints();
+            //gridBagComboFpsTrg.fill = GridBagConstraints.VERTICAL;
+            gridBagComboFpsTrg.gridx = 1;
+            gridBagComboFpsTrg.gridy = 2;
+            gridBagComboFpsTrg.weightx = 1.0;
+            gridBagComboFpsTrg.anchor = GridBagConstraints.WEST;
+            gridBagComboFpsTrg.insets = new Insets(2, 4, 2, 4);
 
-            jPanelFPS = new JPanel();
-            jPanelFPS.setLayout(new GridBagLayout());
-            jPanelFPS.setBorder(BorderFactory.createTitledBorder(null, "Framerate", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, new Font("Tahoma", Font.PLAIN, 11), new Color(0, 70, 213)));
-            jPanelFPS.setMinimumSize(new Dimension(200, 100));
-            jPanelFPS.setPreferredSize(new Dimension(200, 100));
+            jPanelFps = new JPanel();
+            jPanelFps.setLayout(new GridBagLayout());
+            jPanelFps.setBorder(BorderFactory.createTitledBorder(null, "Framerate", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, new Font("Tahoma", Font.PLAIN, 11), new Color(0, 70, 213)));
+            jPanelFps.setMinimumSize(new Dimension(200, 100));
+            jPanelFps.setPreferredSize(new Dimension(200, 100));
 
-            jPanelFPS.add(getJCheckBoxFrameRate(), gridBagCheckBoxFrameRate);
+            jPanelFps.add(getJCheckBoxFrameRate(), gridBagCheckBoxFrameRate);
             JLabel label = new JLabel("FPS Source");
             label.setMinimumSize(DIM_LABEL);
-            jPanelFPS.add(label, gridBagLabelFPSSrc);
+            jPanelFps.add(label, gridBagLabelFpsSrc);
             label = new JLabel("FPS Target");
             label.setMinimumSize(DIM_LABEL);
-            jPanelFPS.add(label, gridBagLabelFPSTrg);
-            jPanelFPS.add(getJComboBoxFPSSrc(), gridBagComboFPSSrc);
-            jPanelFPS.add(getJComboBoxFPSTrg(), gridBagComboFPSTrg);
+            jPanelFps.add(label, gridBagLabelFpsTrg);
+            jPanelFps.add(getJComboBoxFpsSrc(), gridBagComboFpsSrc);
+            jPanelFps.add(getJComboBoxFpsTrg(), gridBagComboFpsTrg);
         }
-        return jPanelFPS;
+        return jPanelFps;
     }
 
-    /**
-     * This method initializes jPanelTimes
-     *
-     * @return javax.swing.JPanel
-     */
     private JPanel getJPanelTimes() {
         if (jPanelTimes == null) {
             GridBagConstraints gridBagLabelDelay = new GridBagConstraints();
@@ -352,7 +285,7 @@ public class ConversionDialogView extends JDialog {
             label.setMinimumSize(DIM_LABEL);
             jPanelTimes.add(label, gridBagLabelDelay);
             jPanelTimes.add(getJTextFieldDelay(), gridBagTextDelay);
-            jPanelTimes.add(getJCheckBoxFixMineTime(), gridBagCheckBoxFixMinTime);
+            jPanelTimes.add(getJCheckBoxFixMinTime(), gridBagCheckBoxFixMinTime);
             jPanelTimes.add(getJTextFieldMinTime(), gridBagTextMinTime);
             label = new JLabel("Min Time (ms)");
             label.setMinimumSize(DIM_LABEL);
@@ -361,11 +294,6 @@ public class ConversionDialogView extends JDialog {
         return jPanelTimes;
     }
 
-    /**
-     * This method initializes jPanelScale
-     *
-     * @return javax.swing.JPanel
-     */
     private JPanel getJPanelScale() {
         if (jPanelScale == null) {
             GridBagConstraints gridBagCheckBoxScale = new GridBagConstraints();
@@ -421,11 +349,6 @@ public class ConversionDialogView extends JDialog {
         return jPanelScale;
     }
 
-    /**
-     * This method initializes jPanelButtons
-     *
-     * @return javax.swing.JPanel
-     */
     private JPanel getJPanelDefaults() {
         if (jPanelDefaults == null) {
             GridBagConstraints gridBagButtonStore = new GridBagConstraints();
@@ -462,11 +385,6 @@ public class ConversionDialogView extends JDialog {
         return jPanelDefaults;
     }
 
-    /**
-     * This method initializes jPanelForced
-     *
-     * @return javax.swing.JPanel
-     */
     private JPanel getJPanelForced() {
         if (jPanelForced == null) {
 
@@ -498,11 +416,6 @@ public class ConversionDialogView extends JDialog {
         return jPanelForced;
     }
 
-    /**
-     * This method initializes jPanelButtons
-     *
-     * @return javax.swing.JPanel
-     */
     private JPanel getJPanelButtons() {
         if (jPanelButtons == null) {
             GridBagConstraints gridBagButtonCancel = new GridBagConstraints();
@@ -530,11 +443,6 @@ public class ConversionDialogView extends JDialog {
         return jPanelButtons;
     }
 
-
-    /**
-     * This method initializes jContentPane
-     * @return javax.swing.JPanel
-     */
     private JPanel getJContentPane() {
         if (jContentPane == null) {
             GridBagConstraints gridBagPanelResolution = new GridBagConstraints();
@@ -608,7 +516,7 @@ public class ConversionDialogView extends JDialog {
 
             jContentPane.add(getJPanelResolution(), gridBagPanelResolution);
             jContentPane.add(getJPanelMove(), gridBagPanelMove);
-            jContentPane.add(getJPanelFPS(), gridBagPanelFPS);
+            jContentPane.add(getJPanelFps(), gridBagPanelFPS);
             jContentPane.add(getJPanelTimes(), gridBagPanelTimes);
             jContentPane.add(getJPanelScale(), gridBagPanelScale);
             jContentPane.add(getJPanelForced(), gridBagPanelForced);
@@ -618,10 +526,6 @@ public class ConversionDialogView extends JDialog {
         return jContentPane;
     }
 
-    /**
-     * This method initializes jComboBoxResolution
-     * @return javax.swing.JComboBox
-     */
     private JComboBox getJComboBoxResolution() {
         if (jComboBoxResolution == null) {
             jComboBoxResolution = new JComboBox();
@@ -629,6 +533,9 @@ public class ConversionDialogView extends JDialog {
             jComboBoxResolution.setMinimumSize(new Dimension(150, 20));
             jComboBoxResolution.setEditable(false);
             jComboBoxResolution.setToolTipText("Select the target resolution");
+            for (Resolution resolution : Resolution.values()) {
+                jComboBoxResolution.addItem(resolution.toString());
+            }
             jComboBoxResolution.addItemListener(new ItemListener() {
                 public void itemStateChanged(ItemEvent e) {
                     if (model.isReady()) {
@@ -639,7 +546,7 @@ public class ConversionDialogView extends JDialog {
                                 if (!Core.getKeepFps()) {
                                     model.setFpsTrg(Core.getDefaultFPS(resolution));
                                 }
-                                jComboBoxFPSTrg.setSelectedItem(ToolBox.formatDouble(model.getFpsTrg()));
+                                jComboBoxFpsTrg.setSelectedItem(ToolBox.formatDouble(model.getFpsTrg()));
                                 break;
                             }
                         }
@@ -650,10 +557,6 @@ public class ConversionDialogView extends JDialog {
         return jComboBoxResolution;
     }
 
-    /**
-     * This method initializes jCheckBoxFrameRate
-     * @return javax.swing.JCheckBox
-     */
     private JCheckBox getJCheckBoxFrameRate() {
         if (jCheckBoxFrameRate == null) {
             jCheckBoxFrameRate = new JCheckBox();
@@ -667,7 +570,7 @@ public class ConversionDialogView extends JDialog {
                     if (model.isReady()) {
                         boolean changeFPS = jCheckBoxFrameRate.isSelected();
                         model.setConvertFPS(changeFPS);
-                        jComboBoxFPSSrc.setEnabled(changeFPS);
+                        jComboBoxFpsSrc.setEnabled(changeFPS);
                     }
                 }
             });
@@ -675,10 +578,6 @@ public class ConversionDialogView extends JDialog {
         return jCheckBoxFrameRate;
     }
 
-    /**
-     * This method initializes jCheckBoxResolution
-     * @return javax.swing.JCheckBox
-     */
     private JCheckBox getJCheckBoxResolution() {
         if (jCheckBoxResolution == null) {
             jCheckBoxResolution = new JCheckBox();
@@ -701,10 +600,6 @@ public class ConversionDialogView extends JDialog {
         return jCheckBoxResolution;
     }
 
-    /**
-     * This method initializes jCheckBoxMove
-     * @return javax.swing.JCheckBox
-     */
     private JCheckBox getJCheckBoxMove() {
         if (jCheckBoxMove == null) {
             jCheckBoxMove = new JCheckBox();
@@ -714,6 +609,8 @@ public class ConversionDialogView extends JDialog {
             jCheckBoxMove.setDisplayedMnemonicIndex(8);
             jCheckBoxMove.setFocusable(false);
             jCheckBoxMove.setIconTextGap(10);
+            jCheckBoxMove.setEnabled(false);
+            jCheckBoxMove.setSelected(model.getMoveCaptions());
             jCheckBoxMove.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     if (model.isReady()) {
@@ -725,28 +622,30 @@ public class ConversionDialogView extends JDialog {
         return jCheckBoxMove;
     }
 
-    /**
-     * This method initializes jComboBoxFPSSrc
-     * @return javax.swing.JComboBox
-     */
-    private JComboBox getJComboBoxFPSSrc() {
-        if (jComboBoxFPSSrc == null) {
-            jComboBoxFPSSrc = new JComboBox();
-            jComboBoxFPSSrc.setPreferredSize(new Dimension(200, 20));
-            jComboBoxFPSSrc.setMinimumSize(new Dimension(150, 20));
-            jComboBoxFPSSrc.setEditable(true);
-            jComboBoxFPSSrc.setEnabled(false);
-            jComboBoxFPSSrc.setToolTipText("Set the source frame rate (only needed for frame rate conversion)");
-            jComboBoxFPSSrc.addActionListener(new ActionListener() {
+    private JComboBox getJComboBoxFpsSrc() {
+        if (jComboBoxFpsSrc == null) {
+            jComboBoxFpsSrc = new JComboBox();
+            jComboBoxFpsSrc.setPreferredSize(new Dimension(200, 20));
+            jComboBoxFpsSrc.setMinimumSize(new Dimension(150, 20));
+            jComboBoxFpsSrc.setEditable(true);
+            jComboBoxFpsSrc.setEnabled(false);
+            jComboBoxFpsSrc.setToolTipText("Set the source frame rate (only needed for frame rate conversion)");
+            for (String fps : FRAMERATES) {
+                jComboBoxFpsSrc.addItem(fps);
+            }
+            final JTextField fpsSrcEditor = new JTextField();
+            jComboBoxFpsSrc.setEditor(new MyComboBoxEditor(fpsSrcEditor));
+
+            jComboBoxFpsSrc.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     if (model.isReady()) {
-                        String s = (String)jComboBoxFPSSrc.getSelectedItem();
+                        String s = (String) jComboBoxFpsSrc.getSelectedItem();
                         double fpsSrc = SubtitleUtils.getFps(s);
                         if (fpsSrc > 0) {
                             model.setFpsSrc(fpsSrc);
                         }
-                        jComboBoxFPSSrc.setSelectedItem(ToolBox.formatDouble(model.getFpsSrc()));
-                        jComboBoxFPSSrc.getEditor().getEditorComponent().setBackground(OK_BACKGROUND);
+                        jComboBoxFpsSrc.setSelectedItem(ToolBox.formatDouble(model.getFpsSrc()));
+                        jComboBoxFpsSrc.getEditor().getEditorComponent().setBackground(OK_BACKGROUND);
                         model.setFpsSrcCertain(false);
                     }
                 }
@@ -783,31 +682,33 @@ public class ConversionDialogView extends JDialog {
                 }
             });
         }
-        return jComboBoxFPSSrc;
+        return jComboBoxFpsSrc;
     }
 
-    /**
-     * This method initializes jComboBoxFPSTrg
-     * @return javax.swing.JComboBox
-     */
-    private JComboBox getJComboBoxFPSTrg() {
-        if (jComboBoxFPSTrg == null) {
-            jComboBoxFPSTrg = new JComboBox();
-            jComboBoxFPSTrg.setPreferredSize(new Dimension(200, 20));
-            jComboBoxFPSTrg.setMinimumSize(new Dimension(150, 20));
-            jComboBoxFPSTrg.setEditable(true);
-            jComboBoxFPSTrg.setEnabled(false);
-            jComboBoxFPSTrg.setToolTipText("Set the target frame rate");
-            jComboBoxFPSTrg.addActionListener(new ActionListener() {
+    private JComboBox getJComboBoxFpsTrg() {
+        if (jComboBoxFpsTrg == null) {
+            jComboBoxFpsTrg = new JComboBox();
+            jComboBoxFpsTrg.setPreferredSize(new Dimension(200, 20));
+            jComboBoxFpsTrg.setMinimumSize(new Dimension(150, 20));
+            jComboBoxFpsTrg.setEditable(true);
+            jComboBoxFpsTrg.setEnabled(false);
+            jComboBoxFpsTrg.setToolTipText("Set the target frame rate");
+            for (String fps : FRAMERATES) {
+                jComboBoxFpsTrg.addItem(fps);
+            }
+            final JTextField fpsTrgEditor = new JTextField();
+            jComboBoxFpsTrg.setEditor(new MyComboBoxEditor(fpsTrgEditor));
+            
+            jComboBoxFpsTrg.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     if (model.isReady()) {
-                        String s = (String)jComboBoxFPSTrg.getSelectedItem();
+                        String s = (String) jComboBoxFpsTrg.getSelectedItem();
                         double d = SubtitleUtils.getFps(s);
                         if (d > 0) {
                             model.setFpsTrg(d);
                         }
-                        jComboBoxFPSTrg.setSelectedItem(ToolBox.formatDouble(model.getFpsTrg()));
-                        jComboBoxFPSTrg.getEditor().getEditorComponent().setBackground(OK_BACKGROUND);
+                        jComboBoxFpsTrg.setSelectedItem(ToolBox.formatDouble(model.getFpsTrg()));
+                        jComboBoxFpsTrg.getEditor().getEditorComponent().setBackground(OK_BACKGROUND);
                         //
                         model.setDelayPTS((int)SubtitleUtils.syncTimePTS(model.getDelayPTS(), model.getFpsTrg(), model.getFpsTrgConf()));
                         jTextFieldDelay.setText(ToolBox.formatDouble(model.getFpsTrg() / 90.0));
@@ -852,13 +753,9 @@ public class ConversionDialogView extends JDialog {
                 }
             });
         }
-        return jComboBoxFPSTrg;
+        return jComboBoxFpsTrg;
     }
 
-    /**
-     * This method initializes jTextFieldDelay
-     * @return javax.swing.JTextField
-     */
     private JTextField getJTextFieldDelay() {
         if (jTextFieldDelay == null) {
             jTextFieldDelay = new JTextField();
@@ -916,10 +813,6 @@ public class ConversionDialogView extends JDialog {
 
 
 
-    /**
-     * This method initializes jButtonCancel
-     * @return javax.swing.JButton
-     */
     private JButton getJButtonCancel() {
         if (jButtonCancel == null) {
             jButtonCancel = new JButton();
@@ -936,10 +829,6 @@ public class ConversionDialogView extends JDialog {
         return jButtonCancel;
     }
 
-    /**
-     * This method initializes jButtonStore
-     * @return javax.swing.JButton
-     */
     private JButton getJButtonStore() {
         if (jButtonStore == null) {
             jButtonStore = new JButton();
@@ -952,14 +841,14 @@ public class ConversionDialogView extends JDialog {
                         // fps source
                         model.storeConvertFPS(model.getConvertFPS());
                         if (model.getConvertFPS()) {
-                            double fpsSrc  = SubtitleUtils.getFps((String) jComboBoxFPSSrc.getSelectedItem());
+                            double fpsSrc  = SubtitleUtils.getFps((String) jComboBoxFpsSrc.getSelectedItem());
                             if (fpsSrc > 0) {
                                 model.setFpsSrc(fpsSrc);
                                 model.storeFPSSrc(fpsSrc);
                             }
                         }
                         // fps target
-                        double fpsTrg = SubtitleUtils.getFps((String) jComboBoxFPSTrg.getSelectedItem());
+                        double fpsTrg = SubtitleUtils.getFps((String) jComboBoxFpsTrg.getSelectedItem());
                         if (fpsTrg > 0) {
                             model.setFpsTrg(fpsTrg);
                             model.storeFpsTrg(fpsTrg);
@@ -1016,10 +905,6 @@ public class ConversionDialogView extends JDialog {
         return jButtonStore;
     }
 
-    /**
-     * This method initializes jButtonRestore
-     * @return javax.swing.JButton
-     */
     private JButton getJButtonRestore() {
         if (jButtonRestore == null) {
             jButtonRestore = new JButton();
@@ -1054,11 +939,6 @@ public class ConversionDialogView extends JDialog {
         return jButtonRestore;
     }
 
-
-    /**
-     * This method initializes jButtonReset
-     * @return javax.swing.JButton
-     */
     private JButton getJButtonReset() {
         if (jButtonReset == null) {
             jButtonReset = new JButton();
@@ -1097,10 +977,6 @@ public class ConversionDialogView extends JDialog {
         return jButtonReset;
     }
 
-    /**
-     * This method initializes jCheckBoxScale
-     * @return javax.swing.JCheckBox
-     */
     private JCheckBox getJCheckBoxScale() {
         if (jCheckBoxScale == null) {
             jCheckBoxScale = new JCheckBox();
@@ -1123,12 +999,7 @@ public class ConversionDialogView extends JDialog {
         return jCheckBoxScale;
     }
 
-
-    /**
-     * This method initializes jCheckBoxFixMinTime
-     * @return javax.swing.JCheckBox
-     */
-    private JCheckBox getJCheckBoxFixMineTime() {
+    private JCheckBox getJCheckBoxFixMinTime() {
         if (jCheckBoxFixMinTime == null) {
             jCheckBoxFixMinTime = new JCheckBox();
             jCheckBoxFixMinTime.setToolTipText("Force a minimum display duration of 'Min Time'");
@@ -1149,10 +1020,6 @@ public class ConversionDialogView extends JDialog {
         return jCheckBoxFixMinTime;
     }
 
-    /**
-     * This method initializes jComboBoxMinTime
-     * @return javax.swing.JComboBox
-     */
     private JTextField getJTextFieldMinTime() {
         if (jTextFieldMinTime == null) {
             jTextFieldMinTime = new JTextField();
@@ -1208,10 +1075,6 @@ public class ConversionDialogView extends JDialog {
         return jTextFieldMinTime;
     }
 
-    /**
-     * This method initializes jButtonOk
-     * @return javax.swing.JButton
-     */
     private JButton getJButtonOk() {
         if (jButtonOk == null) {
             jButtonOk = new JButton();
@@ -1224,14 +1087,14 @@ public class ConversionDialogView extends JDialog {
                         // fps source
                         model.setConvertFPSConf(model.getConvertFPS());
                         if (model.getConvertFPS()) {
-                            double fpsSrc = SubtitleUtils.getFps((String) jComboBoxFPSSrc.getSelectedItem());
+                            double fpsSrc = SubtitleUtils.getFps((String) jComboBoxFpsSrc.getSelectedItem());
                             if (fpsSrc > 0) {
                                 model.setFpsSrc(fpsSrc);
                                 model.setFPSSrcConf(fpsSrc);
                             }
                         }
                         // fps target
-                        double fpsTrg = SubtitleUtils.getFps((String) jComboBoxFPSTrg.getSelectedItem());
+                        double fpsTrg = SubtitleUtils.getFps((String) jComboBoxFpsTrg.getSelectedItem());
                         if (fpsTrg > 0) {
                             model.setFpsTrg(fpsTrg);
                             model.setFpsTrgConf(fpsTrg);
@@ -1296,11 +1159,6 @@ public class ConversionDialogView extends JDialog {
         return jButtonOk;
     }
 
-    /**
-     * This method initializes jTextFieldScaleX
-     *
-     * @return javax.swing.JTextField
-     */
     private JTextField getJTextFieldScaleX() {
         if (jTextFieldScaleX == null) {
             jTextFieldScaleX = new JTextField();
@@ -1355,11 +1213,6 @@ public class ConversionDialogView extends JDialog {
         return jTextFieldScaleX;
     }
 
-    /**
-     * This method initializes jTextFieldScaleY
-     *
-     * @return javax.swing.JTextField
-     */
     private JTextField getJTextFieldScaleY() {
         if (jTextFieldScaleY == null) {
             jTextFieldScaleY = new JTextField();
@@ -1412,10 +1265,6 @@ public class ConversionDialogView extends JDialog {
         return jTextFieldScaleY;
     }
 
-    /**
-     * This method initializes jComboBoxForced
-     * @return javax.swing.JComboBox
-     */
     private JComboBox getJComboBoxForced() {
         if (jComboBoxForced == null) {
             jComboBoxForced = new JComboBox();
@@ -1423,6 +1272,9 @@ public class ConversionDialogView extends JDialog {
             jComboBoxForced.setMinimumSize(new Dimension(150, 20));
             jComboBoxForced.setEditable(false);
             jComboBoxForced.setToolTipText("Select the target resolution");
+            for (ForcedFlagState state : ForcedFlagState.values()) {
+                jComboBoxForced.addItem(state.toString());
+            }
             jComboBoxForced.addItemListener(new ItemListener() {
                 public void itemStateChanged(ItemEvent e) {
                     if (model.isReady()) {
@@ -1440,10 +1292,6 @@ public class ConversionDialogView extends JDialog {
         return jComboBoxForced;
     }
 
-    /**
-     * Enable the "Keep move settings" checkbox (default: disabled)
-     * @param e true: enable, false: disable
-     */
     public void enableOptionMove(boolean e) {
         jCheckBoxMove.setEnabled(e);
     }
