@@ -34,7 +34,7 @@ public class ConversionDialog {
     }
 
     public boolean wasCanceled() {
-        return view.wasCanceled();
+        return model.wasCanceled();
     }
 
     public void enableOptionMove(boolean enable) {
