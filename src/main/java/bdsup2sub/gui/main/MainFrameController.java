@@ -18,6 +18,7 @@ package bdsup2sub.gui.main;
 import bdsup2sub.bitmap.Palette;
 import bdsup2sub.core.*;
 import bdsup2sub.gui.*;
+import bdsup2sub.gui.move.MoveDialog;
 import bdsup2sub.gui.palette.DvdPaletteDialog;
 import bdsup2sub.gui.edit.EditDialog;
 import bdsup2sub.gui.export.ExportDialog;
@@ -504,9 +505,9 @@ public class MainFrameController {
         @Override
         public void actionPerformed(ActionEvent event) {
             if (Core.isReady()) {
-                MoveDialog ed = new MoveDialog(view);
-                ed.setCurrentSubtitleIndex(model.getSubIndex());
-                ed.setVisible(true);
+                MoveDialog moveDialog = new MoveDialog(view);
+                moveDialog.setCurrentSubtitleIndex(model.getSubIndex());
+                moveDialog.setVisible(true);
                 if (Core.getMoveCaptions()) {
                     try {
                         Core.moveAllThreaded(view);
@@ -517,8 +518,8 @@ public class MainFrameController {
                         view.exit(4);
                     }
                 }
-                model.setSubIndex(ed.getCurrentSubtitleIndex());
-                view.setLayoutPaneAspectRatio(ed.getTrgRatio());
+                model.setSubIndex(moveDialog.getCurrentSubtitleIndex());
+                view.setLayoutPaneAspectRatio(moveDialog.getTrgRatio());
                 (new Thread() {
                     @Override
                     public void run() {
