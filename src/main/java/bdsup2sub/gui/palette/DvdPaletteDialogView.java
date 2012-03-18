@@ -23,8 +23,7 @@ import java.awt.image.BufferedImage;
 
 import static bdsup2sub.gui.support.GuiUtils.centerRelativeToOwner;
 
-public class DvdPaletteDialogView extends JDialog {
-    private static final long serialVersionUID = 0x000000001;
+class DvdPaletteDialogView extends JDialog {
 
     private JPanel jContentPane;
     private JScrollPane jScrollPane;
@@ -36,7 +35,7 @@ public class DvdPaletteDialogView extends JDialog {
     private JButton jButtonSave;
     private JButton jButtonLoad;
 
-    private DvdPaletteDialogModel model;
+    private final DvdPaletteDialogModel model;
 
     public DvdPaletteDialogView(DvdPaletteDialogModel model, Frame frame) {
         super(frame, "Choose Colors", true);

@@ -39,8 +39,8 @@ import static bdsup2sub.utils.TimeUtils.timeStrToPTS;
 
 public class EditDialogController {
 
-    private EditDialogModel model;
-    private EditDialogView view;
+    private final EditDialogModel model;
+    private final EditDialogView view;
 
     public EditDialogController(EditDialogModel model, EditDialogView view) {
         this.model = model;

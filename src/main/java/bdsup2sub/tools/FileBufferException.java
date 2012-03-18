@@ -17,11 +17,6 @@ package bdsup2sub.tools;
 
 public class FileBufferException extends Exception {
 
-    public static final long serialVersionUID = 0x000000001;
-
-    public FileBufferException() {
-    }
-
     public FileBufferException(String s) {
         super(s);
     }

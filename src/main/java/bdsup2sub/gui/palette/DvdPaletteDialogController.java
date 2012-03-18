@@ -27,10 +27,10 @@ import java.io.File;
 
 import static bdsup2sub.core.Constants.APP_NAME_AND_VERSION;
 
-public class DvdPaletteDialogController {
+class DvdPaletteDialogController {
 
-    private DvdPaletteDialogModel model;
-    private DvdPaletteDialogView view;
+    private final DvdPaletteDialogModel model;
+    private final DvdPaletteDialogView view;
 
     public DvdPaletteDialogController(DvdPaletteDialogModel model, DvdPaletteDialogView view) {
         this.model = model;

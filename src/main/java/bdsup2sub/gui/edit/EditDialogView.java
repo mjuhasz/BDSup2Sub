@@ -34,9 +34,7 @@ import static bdsup2sub.gui.support.EditPane.SelectListener;
 import static bdsup2sub.gui.support.GuiUtils.centerRelativeToOwner;
 import static bdsup2sub.utils.TimeUtils.ptsToTimeStr;
 
-public class EditDialogView extends JDialog {
-
-    private static final long serialVersionUID = 1L;
+class EditDialogView extends JDialog {
 
     private JPanel jContentPane;
     private JPanel jPanelUp;
@@ -73,7 +71,7 @@ public class EditDialogView extends JDialog {
     private JButton jButtonUndoPatch;
     private JButton jButtonUndoAllPatches;
 
-    private EditDialogModel model;
+    private final EditDialogModel model;
 
 
     public EditDialogView(EditDialogModel model, Frame owner) {
@@ -989,7 +987,7 @@ public class EditDialogView extends JDialog {
         jButtonStorePrev.addActionListener(actionListener);
     }
 
-    public void error (String message) {
+    void error(String message) {
         Core.printErr(message);
         JOptionPane.showMessageDialog(this, message, "Error!", JOptionPane.WARNING_MESSAGE);
     }

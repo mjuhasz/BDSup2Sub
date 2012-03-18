@@ -19,9 +19,9 @@ import java.awt.*;
 
 public class EditDialog {
 
-    private EditDialogModel model;
-    private EditDialogView view;
-    private EditDialogController controller;
+    private final EditDialogModel model;
+    private final EditDialogView view;
+    private final EditDialogController controller;
 
     public EditDialog(Frame owner) {
         model = new EditDialogModel();

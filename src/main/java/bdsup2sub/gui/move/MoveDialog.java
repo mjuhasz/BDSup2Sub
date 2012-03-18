@@ -19,9 +19,9 @@ import java.awt.*;
 
 public class MoveDialog {
 
-    private MoveDialogModel model;
-    private MoveDialogView view;
-    private MoveDialogController controller;
+    private final MoveDialogModel model;
+    private final MoveDialogView view;
+    private final MoveDialogController controller;
 
     public MoveDialog(Frame owner) {
         model = new MoveDialogModel();

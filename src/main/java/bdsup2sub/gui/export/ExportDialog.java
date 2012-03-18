@@ -19,9 +19,9 @@ import java.awt.*;
 
 public class ExportDialog {
 
-    private ExportDialogModel model;
-    private ExportDialogView view;
-    private ExportDialogController controller;
+    private final ExportDialogModel model;
+    private final ExportDialogView view;
+    private final ExportDialogController controller;
 
     public ExportDialog(String path, Frame owner) {
         model = new ExportDialogModel();

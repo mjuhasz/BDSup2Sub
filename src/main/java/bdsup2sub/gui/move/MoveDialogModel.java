@@ -22,7 +22,7 @@ import bdsup2sub.supstream.SubPicture;
 
 import java.awt.image.BufferedImage;
 
-public class MoveDialogModel {
+class MoveDialogModel {
 
     private BufferedImage image;
     private CaptionMoveModeX moveModeX = CaptionMoveModeX.KEEP_POSITION;

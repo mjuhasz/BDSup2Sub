@@ -21,7 +21,7 @@ import bdsup2sub.supstream.SubPicture;
 
 import java.awt.image.BufferedImage;
 
-public class EditDialogModel {
+class EditDialogModel {
 
     private final Configuration configuration = Configuration.getInstance();
 
@@ -34,12 +34,13 @@ public class EditDialogModel {
     private int minWidth = 768;
     private int minHeight = 432;
 
-    private volatile boolean isReady; //TODO: this is UI related, does not belong to the model
     private volatile boolean edited;
-    private boolean enableSliders; //TODO: this is UI related, does not belong to the model
+
+    private volatile boolean isReady;
+    private boolean enableSliders;
 
     public EditDialogModel() {
-        frameTime = (int)(90000/getFPSTrg());
+        frameTime = (int)(90000 / getFPSTrg());
     }
 
     public Resolution getOutputResolution() {
@@ -96,10 +97,6 @@ public class EditDialogModel {
 
     public int getFrameTime() {
         return frameTime;
-    }
-
-    public void setFrameTime(int frameTime) {
-        this.frameTime = frameTime;
     }
 
     public int getMinWidth() {

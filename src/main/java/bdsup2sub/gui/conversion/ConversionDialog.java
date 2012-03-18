@@ -19,9 +19,9 @@ import java.awt.*;
 
 public class ConversionDialog {
 
-    private ConversionDialogModel model;
-    private ConversionDialogView view;
-    private ConversionDialogController controller;
+    private final ConversionDialogModel model;
+    private final ConversionDialogView view;
+    private final ConversionDialogController controller;
 
     public ConversionDialog(Frame owner) {
         model = new ConversionDialogModel();

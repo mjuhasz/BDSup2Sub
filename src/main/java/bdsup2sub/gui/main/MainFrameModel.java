@@ -20,7 +20,7 @@ import bdsup2sub.core.*;
 import java.awt.*;
 import java.util.List;
 
-public class MainFrameModel {
+class MainFrameModel {
 
     private final Configuration configuration = Configuration.getInstance();
 

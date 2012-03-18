@@ -17,8 +17,6 @@ package bdsup2sub.core;
 
 public class CoreException extends Exception {
 
-    public static final long serialVersionUID = 0x000000001;
-
     public CoreException() {
     }
 

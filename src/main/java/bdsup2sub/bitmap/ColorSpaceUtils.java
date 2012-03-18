@@ -15,7 +15,7 @@
  */
 package bdsup2sub.bitmap;
 
-public final class ColorSpaceUtils {
+final class ColorSpaceUtils {
 
     private ColorSpaceUtils() {
     }

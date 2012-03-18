@@ -21,7 +21,7 @@ import bdsup2sub.core.ForcedFlagState;
 import bdsup2sub.core.Resolution;
 import bdsup2sub.utils.SubtitleUtils;
 
-public class ConversionDialogModel {
+class ConversionDialogModel {
 
     private final Configuration configuration = Configuration.getInstance();
 

@@ -20,9 +20,9 @@ import java.awt.*;
 
 public class DvdPaletteDialog {
 
-    private DvdPaletteDialogModel model;
-    private DvdPaletteDialogView view;
-    private DvdPaletteDialogController controller;
+    private final DvdPaletteDialogModel model;
+    private final DvdPaletteDialogView view;
+    private final DvdPaletteDialogController controller;
 
     public DvdPaletteDialog(Frame owner, String colorNames[], Color currentColors[], Color defaultColors[], String colorProfilePath) {
         model = new DvdPaletteDialogModel();

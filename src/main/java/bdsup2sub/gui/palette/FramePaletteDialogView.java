@@ -27,9 +27,7 @@ import java.awt.image.BufferedImage;
 
 import static bdsup2sub.gui.support.GuiUtils.centerRelativeToOwner;
 
-public class FramePaletteDialogView extends JDialog {
-
-    private static final long serialVersionUID = 1L;
+class FramePaletteDialogView extends JDialog {
 
     /** array containing the 16 numeric values 00 - 15 as strings */
     private static final String[] COLOR_NAME = { "00", "01", "02", "03", "04", "05", "06" ,"07", "08", "09", "10", "11", "12", "13", "14", "15"};
@@ -52,7 +50,7 @@ public class FramePaletteDialogView extends JDialog {
     private JButton jButtonResetAll;
     private JButton jButtonReset;
 
-    private FramePaletteDialogModel model;
+    private final FramePaletteDialogModel model;
 
 
     public FramePaletteDialogView(FramePaletteDialogModel model, Frame frame) {
@@ -148,7 +146,6 @@ public class FramePaletteDialogView extends JDialog {
      * Modified ListCellRenderer to display text and color icons
      */
     private class MyListCellRenderer extends DefaultListCellRenderer {
-        private static final long serialVersionUID = 1L;
         @Override
         public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected,  boolean cellHasFocus) {
             Component retValue = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);

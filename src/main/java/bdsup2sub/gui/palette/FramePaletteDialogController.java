@@ -15,10 +15,10 @@
  */
 package bdsup2sub.gui.palette;
 
-public class FramePaletteDialogController {
+class FramePaletteDialogController {
 
-    private FramePaletteDialogModel model;
-    private FramePaletteDialogView view;
+    private final FramePaletteDialogModel model;
+    private final FramePaletteDialogView view;
 
     public FramePaletteDialogController(FramePaletteDialogModel model, FramePaletteDialogView view) {
         this.model = model;

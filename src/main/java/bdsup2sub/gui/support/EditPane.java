@@ -26,8 +26,6 @@ import java.awt.image.BufferedImage;
  */
 public class EditPane extends JPanel {
 
-    private static final long serialVersionUID = 1L;
-
     private static final double SCREEN_ASPECT_RATIO = 16.0/9;
 
     private BufferedImage image;
@@ -37,11 +35,9 @@ public class EditPane extends JPanel {
     private int offsetY;
     private int subtitleImageWidth;
     private int subtitleImageHeight;
-    private static double aspectRatioInnerFrame = 21.0/9;
-    private static double cinemascopeBarFactor = 5.0/42;
+    private double cinemascopeBarFactor = 5.0/42;
     private int cropOffsetY;
     private static final int INSET = 2;
-    private boolean layoutPane;
     private int selectionStartX = -1;
     private int selectionEndX;
     private int selectionStartY;
@@ -53,6 +49,7 @@ public class EditPane extends JPanel {
     private int yCrop;
     private double xScaleCaption;
     private double yScaleCaption;
+    private final boolean layoutPane;
 
     private SelectListener selectListener;
 
@@ -82,7 +79,7 @@ public class EditPane extends JPanel {
     /**
      * Create color gradient, cinemascope bars and draw scaled down subtitle image.
      */
-    public void draw(Graphics graphics) {
+    void draw(Graphics graphics) {
         Graphics2D graphics2D = (Graphics2D)graphics;
 
         int width = this.getWidth();
@@ -208,8 +205,7 @@ public class EditPane extends JPanel {
     }
 
     public void setAspectRatio(double aspectRatio) {
-        this.aspectRatioInnerFrame = aspectRatio;
-        this.cinemascopeBarFactor = (1.0 - SCREEN_ASPECT_RATIO / aspectRatioInnerFrame) / 2.0;
+        this.cinemascopeBarFactor = (1.0 - SCREEN_ASPECT_RATIO / aspectRatio) / 2.0;
     }
 
     public void setCropOffsetY(int offset) {

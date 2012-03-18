@@ -24,7 +24,7 @@ public enum Framerate {
     PAL_I(50.0),
     NTSC_I(60000.0/1001);
 
-    private double value;
+    private final double value;
 
     private Framerate(double value) {
         this.value = value;

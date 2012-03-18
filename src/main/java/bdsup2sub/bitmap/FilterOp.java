@@ -30,11 +30,11 @@ import com.mortennobel.imagescaling.ResampleFilters;
  * @author Morten Nobel-Joergensen / 0xdeadbeef / mjuhasz
  */
 
-public class FilterOp {
+class FilterOp {
     private int srcWidth;
     private int srcHeight;
-    private int dstWidth;
-    private int dstHeight;
+    private final int dstWidth;
+    private final int dstHeight;
 
     private byte r[];
     private byte g[];
@@ -43,7 +43,7 @@ public class FilterOp {
 
     private SubSamplingData horizontalSubsamplingData;
     private SubSamplingData verticalSubsamplingData;
-    private ResampleFilter filter;
+    private final ResampleFilter filter;
 
     public FilterOp(ResampleFilter filter, int dstWidth, int dstHeight) {
         this.filter = filter;

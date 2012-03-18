@@ -15,10 +15,10 @@
  */
 package bdsup2sub.gui.conversion;
 
-public class ConversionDialogController {
+class ConversionDialogController {
 
-    private ConversionDialogModel model;
-    private ConversionDialogView view;
+    private final ConversionDialogModel model;
+    private final ConversionDialogView view;
 
     public ConversionDialogController(ConversionDialogModel model, ConversionDialogView view) {
         this.model = model;

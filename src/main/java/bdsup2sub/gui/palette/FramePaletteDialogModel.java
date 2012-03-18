@@ -17,7 +17,7 @@ package bdsup2sub.gui.palette;
 
 import javax.swing.*;
 
-public class FramePaletteDialogModel {
+class FramePaletteDialogModel {
 
     private int currentSubtitleIndex;
     private ImageIcon colorPreviewIcon[];

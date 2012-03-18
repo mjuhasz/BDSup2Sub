@@ -17,9 +17,9 @@ package bdsup2sub.gui.main;
 
 public class MainFrame {
 
-    private MainFrameModel model;
-    private MainFrameView view;
-    private MainFrameController controller;
+    private final MainFrameModel model;
+    private final MainFrameView view;
+    private final MainFrameController controller;
 
     public MainFrame(String sourceFile) {
         model = new MainFrameModel();

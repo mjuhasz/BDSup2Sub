@@ -33,7 +33,6 @@ import java.net.URISyntaxException;
 import java.net.URL;
 
 public class Help extends JFrame {
-    private static final long serialVersionUID = 0x000000001;
 
     private JPanel jContentPane;
     private JScrollPane jScrollPane;

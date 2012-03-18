@@ -25,7 +25,7 @@ import java.awt.event.*;
 import static bdsup2sub.core.Constants.LANGUAGES;
 import static bdsup2sub.gui.support.GuiUtils.centerRelativeToOwner;
 
-public class ExportDialogView extends JDialog {
+class ExportDialogView extends JDialog {
 
     private JPanel jContentPane;
     private JTextField jTextFieldFilename;
@@ -36,7 +36,7 @@ public class ExportDialogView extends JDialog {
     private JButton jButtonCancel;
     private JButton jButtonSave;
 
-    private ExportDialogModel model;
+    private final ExportDialogModel model;
 
     public ExportDialogView(ExportDialogModel model, Frame owner) {
         super(owner, true);

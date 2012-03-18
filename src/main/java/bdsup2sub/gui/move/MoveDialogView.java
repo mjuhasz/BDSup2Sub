@@ -34,7 +34,7 @@ import static bdsup2sub.core.Configuration.ERROR_BACKGROUND;
 import static bdsup2sub.core.Configuration.OK_BACKGROUND;
 import static bdsup2sub.gui.support.GuiUtils.centerRelativeToOwner;
 
-public class MoveDialogView extends JDialog {
+class MoveDialogView extends JDialog {
 
     private static final Dimension DIMENSION_LABEL = new Dimension(70,14);
     private static final Dimension DIMENSION_TEXTFIELD = new Dimension(40,20);
@@ -72,7 +72,7 @@ public class MoveDialogView extends JDialog {
 
     private static final double SCREEN_ASPECT_RATIO = 16.0/9;
 
-    private MoveDialogModel model;
+    private final MoveDialogModel model;
 
 
     public MoveDialogView(MoveDialogModel model, Frame owner) {
@@ -645,7 +645,7 @@ public class MoveDialogView extends JDialog {
         return jTextFieldOffsetY;
     }
 
-    public void error(String message) {
+    void error(String message) {
         Core.printErr(message);
         JOptionPane.showMessageDialog(this, message, "Error!", JOptionPane.WARNING_MESSAGE);
     }
@@ -660,7 +660,7 @@ public class MoveDialogView extends JDialog {
             model.setSubPic(subPic);
             model.setImage(Core.getTrgImagePatched(subPic));
 
-            model.setOffsetX(subPic.getOfsX());
+            model.setOriginalX(subPic.getOfsX());
             model.setOriginalY(subPic.getOfsY());
 
             jLabelInfo.setText("Frame " + (idx+1) + " of " + Core.getNumFrames());
@@ -773,7 +773,7 @@ public class MoveDialogView extends JDialog {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     model.setMoveModeY(CaptionMoveModeY.KEEP_POSITION);
-                    model.getSubPic().setOfsY(model.getOffsetY());
+                    model.getSubPic().setOfsY(model.getOriginalY());
                     setRatio(model.getTargetScreenAspectRatio());
                 }
             });

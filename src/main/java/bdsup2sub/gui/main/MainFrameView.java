@@ -36,8 +36,6 @@ import static bdsup2sub.core.Constants.AUTHOR_AND_DATE;
 
 public class MainFrameView extends JFrame implements ClipboardOwner {
 
-    private static final long serialVersionUID = 1L;
-
     private JPanel jContentPane;
     private JPanel jPanelTop;
     private JPanel jPanelInfoSource;
@@ -93,7 +91,7 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
 
     private ActionListener recentFilesMenuActionListener;
     
-    private MainFrameModel model;
+    private final MainFrameModel model;
     
     public MainFrameView(MainFrameModel model) {
         super(APP_NAME_AND_VERSION);

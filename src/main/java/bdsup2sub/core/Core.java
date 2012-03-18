@@ -43,7 +43,7 @@ import static com.mortennobel.imagescaling.ResampleFilters.*;
  */
 public class Core  extends Thread {
 
-    private static Configuration configuration = Configuration.getInstance();
+    private static final Configuration configuration = Configuration.getInstance();
 
     /** Enumeration of functionalities executed in the started thread */
     private enum RunType {

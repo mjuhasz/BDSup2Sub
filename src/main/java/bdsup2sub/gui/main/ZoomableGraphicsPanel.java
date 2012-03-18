@@ -21,13 +21,12 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 
-public class ZoomableGraphicsPanel extends JPanel {
+class ZoomableGraphicsPanel extends JPanel {
 
-    private static final long serialVersionUID = 1L;
     private int zoomScale = 1;
     private BufferedImage image;
-    private Color color1 = Color.BLUE;
-    private Color color2 = Color.BLACK;
+    private final Color color1 = Color.BLUE;
+    private final Color color2 = Color.BLACK;
 
     public ZoomableGraphicsPanel() {
         addMouseListener(new MouseListener());

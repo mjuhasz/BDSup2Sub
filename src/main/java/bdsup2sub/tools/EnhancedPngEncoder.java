@@ -45,9 +45,9 @@ public class EnhancedPngEncoder extends PngEncoder {
     /** tRNS tag. */
     private static final byte TRNS[] = {0x74, 0x52, 0x4e, 0x53 };
 
-    protected BufferedImage image;
-    protected WritableRaster wRaster;
-    protected int tType;
+    private BufferedImage image;
+    private WritableRaster wRaster;
+    private int tType;
 
     public EnhancedPngEncoder() {
         this(null, false, FILTER_NONE, 0);
@@ -92,7 +92,7 @@ public class EnhancedPngEncoder extends PngEncoder {
      * @param whichFilter 0=none, 1=sub, 2=up
      * @param compLevel 0..9
      */
-    public EnhancedPngEncoder(BufferedImage image, boolean encodeAlpha, int whichFilter, int compLevel) {
+    private EnhancedPngEncoder(BufferedImage image, boolean encodeAlpha, int whichFilter, int compLevel) {
         this.image = image;
         this.encodeAlpha = encodeAlpha;
         setFilter(whichFilter);
@@ -176,7 +176,7 @@ public class EnhancedPngEncoder extends PngEncoder {
      * eight-bit bytes, turns off alpha encoding.
      * @return true if 1-byte or 4-byte data, false otherwise
      */
-    protected boolean establishStorageInfo() {
+    boolean establishStorageInfo() {
         int dataBytes;
 
         wRaster = image.getRaster();
@@ -228,7 +228,7 @@ public class EnhancedPngEncoder extends PngEncoder {
         bytePos = writeInt4((int) crcValue, bytePos);
     }
 
-    protected void writePalette(IndexColorModel icm) {
+    void writePalette(IndexColorModel icm) {
         byte[] redPal = new byte[256];
         byte[] greenPal = new byte[256];
         byte[] bluePal = new byte[256];
@@ -253,7 +253,7 @@ public class EnhancedPngEncoder extends PngEncoder {
         bytePos = writeInt4((int) crcValue, bytePos);
     }
 
-    protected void writeAlpha(IndexColorModel icm) {
+    void writeAlpha(IndexColorModel icm) {
         byte[] alpha = new byte[256];
         icm.getAlphas(alpha);
         bytePos = writeInt4(256, bytePos);

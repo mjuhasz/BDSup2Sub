@@ -15,10 +15,10 @@
  */
 package bdsup2sub.gui.move;
 
-public class MoveDialogController {
+class MoveDialogController {
 
-    private MoveDialogModel model;
-    private MoveDialogView view;
+    private final MoveDialogModel model;
+    private final MoveDialogView view;
 
     public MoveDialogController(MoveDialogModel model, MoveDialogView view) {
         this.model = model;

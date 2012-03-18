@@ -34,7 +34,7 @@ import static bdsup2sub.core.Configuration.MAX_FREE_SCALE_FACTOR;
 import static bdsup2sub.core.Configuration.MIN_FREE_SCALE_FACTOR;
 import static bdsup2sub.gui.support.GuiUtils.centerRelativeToOwner;
 
-public class ConversionDialogView extends JDialog {
+class ConversionDialogView extends JDialog {
 
     private static final Dimension DIM_LABEL = new Dimension(70,20);
     private static final String[] FRAMERATES = {"23.975", "23.976", "24", "25", "29.97", "50", "59.94"};
@@ -67,7 +67,7 @@ public class ConversionDialogView extends JDialog {
     private JPanel jPanelForced;
     private JComboBox jComboBoxForced;
 
-    private ConversionDialogModel model;
+    private final ConversionDialogModel model;
 
     public ConversionDialogView(ConversionDialogModel model, Frame owner) {
         super(owner, "Conversion Options", true);

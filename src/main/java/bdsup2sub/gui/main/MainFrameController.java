@@ -41,10 +41,10 @@ import static bdsup2sub.core.Configuration.*;
 import static bdsup2sub.core.Constants.APP_NAME_AND_VERSION;
 import static bdsup2sub.core.Constants.DEFAULT_DVD_PALETTE;
 
-public class MainFrameController {
+class MainFrameController {
 
-    private MainFrameView view;
-    private MainFrameModel model;
+    private final MainFrameView view;
+    private final MainFrameModel model;
     private final Object threadSemaphore = new Object();
 
 
@@ -233,7 +233,6 @@ public class MainFrameController {
 
 
     private class DragAndDropTransferHandler extends TransferHandler {
-        private static final long serialVersionUID = 1L;
 
         @Override
         public boolean canImport(TransferSupport support) {
@@ -1145,8 +1144,8 @@ public class MainFrameController {
             String s = view.getConsoleSelectedText();
             try {
                 if ( s!= null) {
-                    Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(""), (ClipboardOwner) view);
-                    Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(s), (ClipboardOwner) view);
+                    Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(""), view);
+                    Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(s), view);
                 }
             } catch (OutOfMemoryError ex) {
                 JOptionPane.showMessageDialog(view, "Out of heap! Use -Xmx256m to increase heap!" , "Error!", JOptionPane.WARNING_MESSAGE);

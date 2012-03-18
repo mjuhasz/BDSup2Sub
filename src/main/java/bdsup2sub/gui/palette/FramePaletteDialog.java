@@ -19,9 +19,9 @@ import java.awt.*;
 
 public class FramePaletteDialog {
 
-    private FramePaletteDialogModel model;
-    private FramePaletteDialogView view;
-    private FramePaletteDialogController controller;
+    private final FramePaletteDialogModel model;
+    private final FramePaletteDialogView view;
+    private final FramePaletteDialogController controller;
 
     public FramePaletteDialog(Frame owner) {
         model = new FramePaletteDialogModel();

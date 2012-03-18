@@ -18,7 +18,7 @@ package bdsup2sub.gui.export;
 import bdsup2sub.core.Configuration;
 import bdsup2sub.core.OutputMode;
 
-public class ExportDialogModel {
+class ExportDialogModel {
 
     private final Configuration configuration = Configuration.getInstance();
 
@@ -114,10 +114,6 @@ public class ExportDialogModel {
 
     public String getExtension() {
         return extension;
-    }
-
-    public void setExtension(String extension) {
-        this.extension = extension;
     }
 
     public String getDialogTitle() {

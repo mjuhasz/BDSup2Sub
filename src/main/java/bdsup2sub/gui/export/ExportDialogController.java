@@ -21,10 +21,10 @@ import bdsup2sub.utils.ToolBox;
 
 import java.awt.event.*;
 
-public class ExportDialogController {
+class ExportDialogController {
 
-    private ExportDialogModel model;
-    private ExportDialogView view;
+    private final ExportDialogModel model;
+    private final ExportDialogView view;
 
     public ExportDialogController(ExportDialogModel model, ExportDialogView view) {
         this.model = model;

@@ -18,7 +18,7 @@ package bdsup2sub.gui.palette;
 import javax.swing.*;
 import java.awt.*;
 
-public class DvdPaletteDialogModel {
+class DvdPaletteDialogModel {
 
     private Color selectedColors[];
     private Color defaultColors[];
