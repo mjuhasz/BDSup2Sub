@@ -103,11 +103,11 @@ public class Core  extends Thread {
     /** Used for handling Xmls */
     private static SupXml supXml;
     /** Used for handling VobSub */
-    private static SubDVD subDVD;
+    private static SubDvd subDVD;
     /** Used for handling SUP/IFO */
-    private static SupDVD supDVD;
+    private static SupDvd supDVD;
     /** Used for common handling of either SUPs */
-    private static Substream substream;
+    private static SubtitleStream subtitleStream;
 
     /** Array of subpictures used for editing and export */
     private static SubPicture subPictures[];
@@ -328,7 +328,7 @@ public class Core  extends Thread {
      */
     public static void createSubThreaded(String fname, JFrame parent) throws Exception {
         fileName = fname;
-        progressMax = substream.getNumFrames();
+        progressMax = subtitleStream.getFrameCount();
         progressLast = 0;
         progress = new Progress(parent);
         progress.setTitle("Exporting");
@@ -367,7 +367,7 @@ public class Core  extends Thread {
     private static void determineFramePal(int index) {
         if ((inMode != InputMode.VOBSUB && inMode != InputMode.SUPIFO) || configuration.getPaletteMode() != PaletteMode.KEEP_EXISTING) {
             // get the primary color from the source palette
-            int rgbSrc[] = substream.getPalette().getRGB(substream.getPrimaryColorIndex());
+            int rgbSrc[] = subtitleStream.getPalette().getRGB(subtitleStream.getPrimaryColorIndex());
 
             // match with primary color from 16 color target palette
             // note: skip index 0 , primary colors at even positions
@@ -410,22 +410,22 @@ public class Core  extends Thread {
             subVobTrg.alpha = DEFAULT_ALPHA;
             subVobTrg.pal = palFrame;
 
-            trgPal = SubDVD.decodePalette(subVobTrg, trgPallete);
+            trgPal = SubDvd.decodePalette(subVobTrg, trgPallete);
         } else {
             // use palette from loaded VobSub or SUP/IFO
             Palette miniPal = new Palette(4, true);
             int alpha[];
             int palFrame[];
-            SubstreamDVD substreamDVD;
+            DvdSubtitleStream substreamDvd;
 
             if (inMode == InputMode.VOBSUB) {
-                substreamDVD = subDVD;
+                substreamDvd = subDVD;
             } else {
-                substreamDVD = supDVD;
+                substreamDvd = supDVD;
             }
 
-            alpha = substreamDVD.getFrameAlpha(index);
-            palFrame = substreamDVD.getFramePal(index);
+            alpha = substreamDvd.getFrameAlpha(index);
+            palFrame = substreamDvd.getFramePalette(index);
 
             for (int i=0; i < 4; i++) {
                 int a = (alpha[i]*0xff)/0xf;
@@ -462,31 +462,31 @@ public class Core  extends Thread {
             }
         }
 
-        // close existing substream
-        if (substream != null) {
-            substream.close();
+        // close existing subtitleStream
+        if (subtitleStream != null) {
+            subtitleStream.close();
         }
 
         // check first two byte to determine whether this is a BD-SUP or HD-DVD-SUP
         byte id[] = ToolBox.getFileID(fname, 2);
         if (id != null && id[0] == 0x50 && id[1] == 0x47) {
             supBD = new SupBD(fname);
-            substream = supBD;
+            subtitleStream = supBD;
             supHD = null;
             inMode = InputMode.BDSUP;
         } else {
             supHD = new SupHD(fname);
-            substream = supHD;
+            subtitleStream = supHD;
             supBD = null;
             inMode = InputMode.HDDVDSUP;
         }
 
         // decode first frame
-        substream.decode(0);
+        subtitleStream.decode(0);
         subVobTrg = new SubPictureDVD();
 
         // automatically set luminance thresholds for VobSub conversion
-        int maxLum = substream.getPalette().getY()[substream.getPrimaryColorIndex()] & 0xff;
+        int maxLum = subtitleStream.getPalette().getY()[subtitleStream.getPrimaryColorIndex()] & 0xff;
         int[] luminanceThreshold = new int[2];
         configuration.setLuminanceThreshold(luminanceThreshold);
         if (maxLum > 30) {
@@ -498,7 +498,7 @@ public class Core  extends Thread {
         }
 
         // try to detect source frame rate
-        if (substream == supBD) {
+        if (subtitleStream == supBD) {
             configuration.setFpsSrc(supBD.getFps(0));
             configuration.setFpsSrcCertain(true);
             if (Core.keepFps) {
@@ -522,23 +522,23 @@ public class Core  extends Thread {
         resetErrors();
         resetWarnings();
 
-        // close existing substream
-        if (substream != null) {
-            substream.close();
+        // close existing subtitleStream
+        if (subtitleStream != null) {
+            subtitleStream.close();
         }
 
 
         supXml = new SupXml(fname);
-        substream = supXml;
+        subtitleStream = supXml;
 
         inMode = InputMode.XML;
 
         // decode first frame
-        substream.decode(0);
+        subtitleStream.decode(0);
         subVobTrg = new SubPictureDVD();
 
         // automatically set luminance thresholds for VobSub conversion
-        int maxLum = substream.getPalette().getY()[substream.getPrimaryColorIndex()] & 0xff;
+        int maxLum = subtitleStream.getPalette().getY()[subtitleStream.getPrimaryColorIndex()] & 0xff;
         int[] luminanceThreshold = new int[2];
         configuration.setLuminanceThreshold(luminanceThreshold);
         if (maxLum > 30) {
@@ -594,12 +594,12 @@ public class Core  extends Thread {
         resetErrors();
         resetWarnings();
 
-        // close existing substream
-        if (substream != null) {
-            substream.close();
+        // close existing subtitleStream
+        if (subtitleStream != null) {
+            subtitleStream.close();
         }
 
-        SubstreamDVD substreamDVD;
+        DvdSubtitleStream substreamDvd;
         String fnI;
         String fnS;
 
@@ -612,37 +612,37 @@ public class Core  extends Thread {
                 fnI = fname;
                 fnS = FilenameUtils.removeExtension(fname) + ".sub";
             }
-            subDVD = new SubDVD(fnS, fnI);
-            substream = subDVD;
+            subDVD = new SubDvd(fnS, fnI);
+            subtitleStream = subDVD;
             inMode = InputMode.VOBSUB;
-            substreamDVD = subDVD;
+            substreamDvd = subDVD;
         } else {
             // SUP/IFO
             fnI = fname;
             fnS = FilenameUtils.removeExtension(fname) + ".sup";
-            supDVD = new SupDVD(fnS, fnI);
-            substream = supDVD;
+            supDVD = new SupDvd(fnS, fnI);
+            subtitleStream = supDVD;
             inMode = InputMode.SUPIFO;
-            substreamDVD = supDVD;
+            substreamDvd = supDVD;
         }
 
         // decode first frame
-        substream.decode(0);
+        subtitleStream.decode(0);
         subVobTrg = new SubPictureDVD();
-        defaultSourceDVDPalette = substreamDVD.getSrcPalette();
+        defaultSourceDVDPalette = substreamDvd.getSrcPalette();
         currentSourceDVDPalette = new Palette(defaultSourceDVDPalette);
 
         // automatically set luminance thresholds for VobSub conversion
-        int primColIdx = substream.getPrimaryColorIndex();
-        int yMax = substream.getPalette().getY()[primColIdx] & 0xff;
+        int primColIdx = subtitleStream.getPrimaryColorIndex();
+        int yMax = subtitleStream.getPalette().getY()[primColIdx] & 0xff;
         int[] luminanceThreshold = new int[2];
         configuration.setLuminanceThreshold(luminanceThreshold);
         if (yMax > 10) {
             // find darkest opaque color
             int yMin = yMax;
             for (int i=0; i < 4; i++) {
-                int y = substream.getPalette().getY()[i] & 0xff;
-                int a = substream.getPalette().getAlpha(i);
+                int y = subtitleStream.getPalette().getY()[i] & 0xff;
+                int a = subtitleStream.getPalette().getAlpha(i);
                 if (y < yMin && a > configuration.getAlphaThreshold()) {
                     yMin = y;
                 }
@@ -654,10 +654,10 @@ public class Core  extends Thread {
             luminanceThreshold[1] = 160;
         }
 
-        configuration.setLanguageIdx(substreamDVD.getLanguageIdx());
+        configuration.setLanguageIdx(substreamDvd.getLanguageIdx());
 
         // set frame rate
-        int h = substream.getSubPicture(0).height; //substream.getBitmap().getHeight();
+        int h = subtitleStream.getSubPicture(0).height; //subtitleStream.getBitmap().getHeight();
         switch (h) {
             case 480:
                 configuration.setFpsSrc(Framerate.NTSC.getValue());
@@ -766,7 +766,7 @@ public class Core  extends Thread {
      * @return true: image size has changed, false: image size didn't change.
      */
     private static boolean updateTrgPic(int index) {
-        SubPicture picSrc = substream.getSubPicture(index);
+        SubPicture picSrc = subtitleStream.getSubPicture(index);
         SubPicture picTrg = subPictures[index];
         double scaleX = (double)picTrg.width/picSrc.width;
         double scaleY = (double)picTrg.height/picSrc.height;
@@ -847,7 +847,7 @@ public class Core  extends Thread {
      */
     public static void scanSubtitles() {
         boolean convertFPS = configuration.getConvertFPS();
-        subPictures = new SubPicture[substream.getNumFrames()];
+        subPictures = new SubPicture[subtitleStream.getFrameCount()];
         double factTS = convertFPS ? configuration.getFPSSrc() / configuration.getFpsTrg() : 1.0;
 
         // change target resolution to source resolution if no conversion is needed
@@ -868,7 +868,7 @@ public class Core  extends Thread {
         // first run: clone source subpics, apply speedup/down,
         SubPicture picSrc;
         for (int i=0; i<subPictures.length; i++) {
-            picSrc = substream.getSubPicture(i);
+            picSrc = subtitleStream.getSubPicture(i);
             subPictures[i] = picSrc.copy();
             long ts = picSrc.startTime;
             long te = picSrc.endTime;
@@ -1023,7 +1023,7 @@ public class Core  extends Thread {
         // first run: clone source subpics, apply speedup/down,
         for (int i=0; i < subPictures.length; i++) {
             picOld = subPictures[i];
-            picSrc = substream.getSubPicture(i);
+            picSrc = subtitleStream.getSubPicture(i);
             subPictures[i] = picOld.copy();
 
             // set forced flag
@@ -1166,13 +1166,13 @@ public class Core  extends Thread {
      */
     private static void convertSup(int index, int displayNum, int displayMax, boolean skipScaling) throws CoreException{
         int w,h;
-        int startOfs = (int)substream.getStartOffset(index);
-        SubPicture subPic = substream.getSubPicture(index);
+        int startOfs = (int) subtitleStream.getStartOffset(index);
+        SubPicture subPic = subtitleStream.getSubPicture(index);
 
-        printX("Decoding frame "+displayNum+"/"+displayMax+((substream == supXml)?"\n":(" at offset "+ToolBox.toHexLeftZeroPadded(startOfs,8)+"\n")));
+        printX("Decoding frame "+displayNum+"/"+displayMax+((subtitleStream == supXml)?"\n":(" at offset "+ToolBox.toHexLeftZeroPadded(startOfs,8)+"\n")));
 
         synchronized (semaphore) {
-            substream.decode(index);
+            subtitleStream.decode(index);
             w = subPic.getImageWidth();
             h = subPic.getImageHeight();
             OutputMode outputMode = configuration.getOutputMode();
@@ -1230,50 +1230,50 @@ public class Core  extends Thread {
                 if (w==trgWidth && h==trgHeight) {
                     // don't scale at all
                     if ( (inMode == InputMode.VOBSUB || inMode == InputMode.SUPIFO) && paletteMode == PaletteMode.KEEP_EXISTING) {
-                        tBm = substream.getBitmap(); // no conversion
+                        tBm = subtitleStream.getBitmap(); // no conversion
                     } else {
-                        tBm = substream.getBitmap().getBitmapWithNormalizedPalette(substream.getPalette().getAlpha(), configuration.getAlphaThreshold(), substream.getPalette().getY(), configuration.getLuminanceThreshold()); // reduce palette
+                        tBm = subtitleStream.getBitmap().getBitmapWithNormalizedPalette(subtitleStream.getPalette().getAlpha(), configuration.getAlphaThreshold(), subtitleStream.getPalette().getY(), configuration.getLuminanceThreshold()); // reduce palette
                     }
                 } else {
                     // scale up/down
                     if ((inMode == InputMode.VOBSUB || inMode == InputMode.SUPIFO) && paletteMode == PaletteMode.KEEP_EXISTING) {
                         // keep palette
                         if (f != null) {
-                            tBm = substream.getBitmap().scaleFilter(trgWidth, trgHeight, substream.getPalette(), f);
+                            tBm = subtitleStream.getBitmap().scaleFilter(trgWidth, trgHeight, subtitleStream.getPalette(), f);
                         } else {
-                            tBm = substream.getBitmap().scaleBilinear(trgWidth, trgHeight, substream.getPalette());
+                            tBm = subtitleStream.getBitmap().scaleBilinear(trgWidth, trgHeight, subtitleStream.getPalette());
                         }
                     } else {
                         // reduce palette
                         if (f != null) {
-                            tBm = substream.getBitmap().scaleFilterLm(trgWidth, trgHeight, substream.getPalette(), configuration.getAlphaThreshold(), configuration.getLuminanceThreshold(), f);
+                            tBm = subtitleStream.getBitmap().scaleFilterLm(trgWidth, trgHeight, subtitleStream.getPalette(), configuration.getAlphaThreshold(), configuration.getLuminanceThreshold(), f);
                         } else {
-                            tBm = substream.getBitmap().scaleBilinearLm(trgWidth, trgHeight, substream.getPalette(), configuration.getAlphaThreshold(), configuration.getLuminanceThreshold());
+                            tBm = subtitleStream.getBitmap().scaleBilinearLm(trgWidth, trgHeight, subtitleStream.getPalette(), configuration.getAlphaThreshold(), configuration.getLuminanceThreshold());
                         }
                     }
                 }
             } else {
                 // export (up to) 256 color palette
-                tPal = substream.getPalette();
+                tPal = subtitleStream.getPalette();
                 if (w==trgWidth && h==trgHeight) {
-                    tBm = substream.getBitmap(); // no scaling, no conversion
+                    tBm = subtitleStream.getBitmap(); // no scaling, no conversion
                 } else {
                     // scale up/down
                     if (paletteMode == PaletteMode.KEEP_EXISTING) {
                         // keep palette
                         if (f != null) {
-                            tBm = substream.getBitmap().scaleFilter(trgWidth, trgHeight, substream.getPalette(), f);
+                            tBm = subtitleStream.getBitmap().scaleFilter(trgWidth, trgHeight, subtitleStream.getPalette(), f);
                         } else {
-                            tBm = substream.getBitmap().scaleBilinear(trgWidth, trgHeight, substream.getPalette());
+                            tBm = subtitleStream.getBitmap().scaleBilinear(trgWidth, trgHeight, subtitleStream.getPalette());
                         }
                     } else {
                         // create new palette
                         boolean dither = paletteMode == PaletteMode.CREATE_DITHERED;
                         BitmapWithPalette pb;
                         if (f != null) {
-                            pb = substream.getBitmap().scaleFilter(trgWidth, trgHeight, substream.getPalette(), f, dither);
+                            pb = subtitleStream.getBitmap().scaleFilter(trgWidth, trgHeight, subtitleStream.getPalette(), f, dither);
                         } else {
-                            pb = substream.getBitmap().scaleBilinear(trgWidth, trgHeight, substream.getPalette(), dither);
+                            pb = subtitleStream.getBitmap().scaleBilinear(trgWidth, trgHeight, subtitleStream.getPalette(), dither);
                         }
                         tBm = pb.bitmap;
                         tPal = pb.palette;
@@ -1343,7 +1343,7 @@ public class Core  extends Thread {
 
             // main loop
             int offset = 0;
-            for (int i=0; i < substream.getNumFrames(); i++) {
+            for (int i=0; i < subtitleStream.getFrameCount(); i++) {
                 // for threaded version
                 if (isCancelled()) {
                     throw new CoreException("Cancelled by user!");
@@ -1356,14 +1356,14 @@ public class Core  extends Thread {
                         offsets.add(offset);
                         convertSup(i, frameNum/2+1, maxNum);
                         subVobTrg.copyInfo(subPictures[i]);
-                        byte buf[] = SubDVD.createSubFrame(subVobTrg, trgBitmap);
+                        byte buf[] = SubDvd.createSubFrame(subVobTrg, trgBitmap);
                         out.write(buf);
                         offset += buf.length;
                         timestamps.add((int)subPictures[i].startTime);
                     } else if (outputMode == OutputMode.SUPIFO) {
                         convertSup(i, frameNum/2+1, maxNum);
                         subVobTrg.copyInfo(subPictures[i]);
-                        byte buf[] = SupDVD.createSupFrame(subVobTrg, trgBitmap);
+                        byte buf[] = SupDvd.createSupFrame(subVobTrg, trgBitmap);
                         out.write(buf);
                     } else if (outputMode == OutputMode.BDSUP) {
                         subPictures[i].compNum = frameNum;
@@ -1421,7 +1421,7 @@ public class Core  extends Thread {
             } else {
                 trgPallete = currentSourceDVDPalette;
             }
-            SubDVD.writeIdx(fname, subPictures[0], ofs, ts, trgPallete);
+            SubDvd.writeIdx(fname, subPictures[0], ofs, ts, trgPallete);
         } else if (outputMode == OutputMode.XML) {
             // XML - write ML
             printX("\nWriting "+fname+"\n");
@@ -1435,7 +1435,7 @@ public class Core  extends Thread {
             }
             fname = FilenameUtils.removeExtension(fname) + ".ifo";
             printX("\nWriting "+fname+"\n");
-            SupDVD.writeIFO(fname, subPictures[0], trgPallete);
+            SupDvd.writeIFO(fname, subPictures[0], trgPallete);
         }
 
         // only possible for SUB/IDX and SUP/IFO (else there is no public palette)
@@ -1474,7 +1474,7 @@ public class Core  extends Thread {
      * @throws Exception
      */
     public static void moveAllThreaded(JFrame parent) throws Exception {
-        progressMax = substream.getNumFrames();
+        progressMax = subtitleStream.getFrameCount();
         progressLast = 0;
         progress = new Progress(parent);
         progress.setTitle("Moving");
@@ -1891,7 +1891,7 @@ public class Core  extends Thread {
      */
     public static BufferedImage getSrcImage() {
         synchronized (semaphore) {
-            return substream.getImage();
+            return subtitleStream.getImage();
         }
     }
 
@@ -1903,8 +1903,8 @@ public class Core  extends Thread {
      */
     public static BufferedImage getSrcImage(int idx) throws CoreException {
         synchronized (semaphore) {
-            substream.decode(idx);
-            return substream.getImage();
+            subtitleStream.decode(idx);
+            return subtitleStream.getImage();
         }
     }
 
@@ -2020,7 +2020,7 @@ public class Core  extends Thread {
      * @return Number of subtitles
      */
     public static int getNumFrames() {
-        return substream == null ? 0 : substream.getNumFrames();
+        return subtitleStream == null ? 0 : subtitleStream.getFrameCount();
     }
 
     /**
@@ -2028,7 +2028,7 @@ public class Core  extends Thread {
      * @return Number of forced subtitles
      */
     public static int getNumForcedFrames() {
-        return substream == null ? 0 : substream.getNumForcedFrames();
+        return subtitleStream == null ? 0 : subtitleStream.getForcedFrameCount();
     }
 
     /**
@@ -2055,7 +2055,7 @@ public class Core  extends Thread {
     public static String getSrcInfoStr(int index) {
         String text;
 
-        SubPicture pic = substream.getSubPicture(index);
+        SubPicture pic = subtitleStream.getSubPicture(index);
         text  = "screen size: "+pic.width+"x"+pic.height+"    ";
         text +=	"image size: "+pic.getImageWidth()+"x"+pic.getImageHeight()+"    ";
         text += "pos: ("+pic.getOfsX()+","+pic.getOfsY()+") - ("+(pic.getOfsX()+pic.getImageWidth())+","+(pic.getOfsY()+pic.getImageHeight())+")    ";
@@ -2118,7 +2118,7 @@ public class Core  extends Thread {
      */
     public static SubPicture getSubPictureSrc(int index) {
         synchronized (semaphore) {
-            return substream.getSubPicture(index);
+            return subtitleStream.getSubPicture(index);
         }
     }
 
@@ -2315,14 +2315,14 @@ public class Core  extends Thread {
     public static void setCurSrcDVDPalette(Palette pal) {
         currentSourceDVDPalette = pal;
 
-        SubstreamDVD substreamDVD = null;
+        DvdSubtitleStream substreamDvd = null;
         if (inMode == InputMode.VOBSUB) {
-            substreamDVD = subDVD;
+            substreamDvd = subDVD;
         } else if (inMode == InputMode.SUPIFO) {
-            substreamDVD = supDVD;
+            substreamDvd = supDVD;
         }
 
-        substreamDVD.setSrcPalette(currentSourceDVDPalette);
+        substreamDvd.setSrcPalette(currentSourceDVDPalette);
     }
 
     /**
@@ -2331,16 +2331,16 @@ public class Core  extends Thread {
      * @return Frame palette of given subtitle as array of int (4 entries)
      */
     public static int[] getFramePal(int index) {
-        SubstreamDVD substreamDVD = null;
+        DvdSubtitleStream substreamDvd = null;
 
         if (inMode == InputMode.VOBSUB) {
-            substreamDVD = subDVD;
+            substreamDvd = subDVD;
         } else if (inMode == InputMode.SUPIFO) {
-            substreamDVD = supDVD;
+            substreamDvd = supDVD;
         }
 
-        if (substreamDVD != null) {
-            return substreamDVD.getFramePal(index);
+        if (substreamDvd != null) {
+            return substreamDvd.getFramePalette(index);
         } else {
             return null;
         }
@@ -2352,16 +2352,16 @@ public class Core  extends Thread {
      * @return Frame alpha values of given subtitle as array of int (4 entries)
      */
     public static int[] getFrameAlpha(int index) {
-        SubstreamDVD substreamDVD = null;
+        DvdSubtitleStream substreamDvd = null;
 
         if (inMode == InputMode.VOBSUB) {
-            substreamDVD = subDVD;
+            substreamDvd = subDVD;
         } else if (inMode == InputMode.SUPIFO) {
-            substreamDVD = supDVD;
+            substreamDvd = supDVD;
         }
 
-        if (substreamDVD != null) {
-            return substreamDVD.getFrameAlpha(index);
+        if (substreamDvd != null) {
+            return substreamDvd.getFrameAlpha(index);
         } else {
             return null;
         }
@@ -2373,16 +2373,16 @@ public class Core  extends Thread {
      * @return Frame palette of given subtitle as array of int (4 entries)
      */
     public static int[] getOriginalFramePal(int index) {
-        SubstreamDVD substreamDVD = null;
+        DvdSubtitleStream substreamDvd = null;
 
         if (inMode == InputMode.VOBSUB) {
-            substreamDVD = subDVD;
+            substreamDvd = subDVD;
         } else if (inMode == InputMode.SUPIFO) {
-            substreamDVD = supDVD;
+            substreamDvd = supDVD;
         }
 
-        if (substreamDVD != null) {
-            return substreamDVD.getOriginalFramePal(index);
+        if (substreamDvd != null) {
+            return substreamDvd.getOriginalFramePalette(index);
         } else {
             return null;
         }
@@ -2394,16 +2394,16 @@ public class Core  extends Thread {
      * @return Frame alpha values of given subtitle as array of int (4 entries)
      */
     public static int[] getOriginalFrameAlpha(int index) {
-        SubstreamDVD substreamDVD = null;
+        DvdSubtitleStream substreamDvd = null;
 
         if (inMode == InputMode.VOBSUB) {
-            substreamDVD = subDVD;
+            substreamDvd = subDVD;
         } else if (inMode == InputMode.SUPIFO) {
-            substreamDVD = supDVD;
+            substreamDvd = supDVD;
         }
 
-        if (substreamDVD != null) {
-            return substreamDVD.getOriginalFrameAlpha(index);
+        if (substreamDvd != null) {
+            return substreamDvd.getOriginalFrameAlpha(index);
         } else {
             return null;
         }

@@ -39,7 +39,7 @@ import static bdsup2sub.utils.TimeUtils.timeStrToPTS;
 /**
  * Handling of SUB/IDX (VobSub) streams.
  */
-public class SubDVD implements Substream, SubstreamDVD {
+public class SubDvd implements DvdSubtitleStream {
 
     private static final Configuration configuration = Configuration.getInstance();
 
@@ -121,7 +121,7 @@ public class SubDVD implements Substream, SubstreamDVD {
      * @param fnIdx file name of IDX file
      * @throws CoreException
      */
-    public SubDVD(String fnSub, String fnIdx) throws CoreException {
+    public SubDvd(String fnSub, String fnIdx) throws CoreException {
         readIdx(fnIdx);
         Core.setProgressMax(subPictures.size());
         try {
@@ -1293,7 +1293,7 @@ public class SubDVD implements Substream, SubstreamDVD {
     }
 
     /* (non-Javadoc)
-     * @see Substream#decode(int)
+     * @see SubtitleStream#decode(int)
      */
     public void decode(int index) throws CoreException {
         if (index < subPictures.size()) {
@@ -1308,7 +1308,7 @@ public class SubDVD implements Substream, SubstreamDVD {
      * @param index index of caption
      * @return int array with 4 entries representing frame palette
      */
-    public int[] getFramePal(int index) {
+    public int[] getFramePalette(int index) {
         return subPictures.get(index).pal;
     }
 
@@ -1317,7 +1317,7 @@ public class SubDVD implements Substream, SubstreamDVD {
      * @param index index of caption
      * @return int array with 4 entries representing frame palette
      */
-    public int[] getOriginalFramePal(int index) {
+    public int[] getOriginalFramePalette(int index) {
         return subPictures.get(index).originalPal;
     }
 
@@ -1340,70 +1340,70 @@ public class SubDVD implements Substream, SubstreamDVD {
     }
 
     /* (non-Javadoc)
-     * @see Substream#getImage(Bitmap)
+     * @see SubtitleStream#getImage(Bitmap)
      */
     public BufferedImage getImage(Bitmap bm) {
         return bm.getImage(palette.getColorModel());
     }
 
     /* (non-Javadoc)
-     * @see Substream#getPalette()
+     * @see SubtitleStream#getPalette()
      */
     public Palette getPalette() {
         return palette;
     }
 
     /* (non-Javadoc)
-     * @see Substream#getBitmap()
+     * @see SubtitleStream#getBitmap()
      */
     public Bitmap getBitmap() {
         return bitmap;
     }
 
     /* (non-Javadoc)
-     * @see Substream#getImage()
+     * @see SubtitleStream#getImage()
      */
     public BufferedImage getImage() {
         return bitmap.getImage(palette.getColorModel());
     }
 
     /* (non-Javadoc)
-     * @see Substream#getPrimaryColorIndex()
+     * @see SubtitleStream#getPrimaryColorIndex()
      */
     public int getPrimaryColorIndex() {
         return primaryColorIndex;
     }
 
     /* (non-Javadoc)
-     * @see Substream#getSubPicture(int)
+     * @see SubtitleStream#getSubPicture(int)
      */
     public SubPicture getSubPicture(int index) {
         return subPictures.get(index);
     }
 
     /* (non-Javadoc)
-     * @see Substream#getNumFrames()
+     * @see SubtitleStream#getNumFrames()
      */
-    public int getNumFrames() {
+    public int getFrameCount() {
         return subPictures.size();
     }
 
     /* (non-Javadoc)
-     * @see Substream#getNumForcedFrames()
+     * @see SubtitleStream#getNumForcedFrames()
      */
-    public int getNumForcedFrames() {
+    public int getForcedFrameCount() {
         return numForcedFrames;
     }
 
     /* (non-Javadoc)
-     * @see Substream#isForced(int)
+     * @see SubtitleStream#isForced(int)
      */
     public boolean isForced(int index) {
         return subPictures.get(index).isforced;
     }
 
     /* (non-Javadoc)
-     * @see Substream#close()
+     * @see SubtitleStream#close()
      */
     public void close() {
         if (buffer!=null)
@@ -1411,21 +1411,21 @@ public class SubDVD implements Substream, SubstreamDVD {
     }
 
     /* (non-Javadoc)
-     * @see Substream#getEndTime(int)
+     * @see SubtitleStream#getEndTime(int)
      */
     public long getEndTime(int index) {
         return subPictures.get(index).endTime;
     }
 
     /* (non-Javadoc)
-     * @see Substream#getStartTime(int)
+     * @see SubtitleStream#getStartTime(int)
      */
     public long getStartTime(int index) {
         return subPictures.get(index).startTime;
     }
 
     /* (non-Javadoc)
-     * @see Substream#getStartOffset(int)
+     * @see SubtitleStream#getStartOffset(int)
      */
     public long getStartOffset(int index) {
         return subPictures.get(index).offset;

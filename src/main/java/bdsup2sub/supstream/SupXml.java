@@ -49,7 +49,7 @@ import static bdsup2sub.utils.TimeUtils.timeStrXmlToPTS;
 /**
  * Reading and writing of Blu-Ray captions in Xml/Png format.
  */
-public class SupXml implements Substream {
+public class SupXml implements SubtitleStream {
 
     private static final Configuration configuration = Configuration.getInstance();
 
@@ -125,14 +125,14 @@ public class SupXml implements Substream {
     }
 
     /* (non-Javadoc)
-     * @see deadbeef.SupTools.Substream#close()
+     * @see deadbeef.SupTools.SubtitleStream#close()
      */
     @Override
     public void close() {
     }
 
     /* (non-Javadoc)
-     * @see deadbeef.SupTools.Substream#decode(int)
+     * @see deadbeef.SupTools.SubtitleStream#decode(int)
      */
     @Override
     public void decode(int index) throws CoreException {
@@ -303,56 +303,56 @@ public class SupXml implements Substream {
     }
 
     /* (non-Javadoc)
-     * @see Substream#getBitmap()
+     * @see SubtitleStream#getBitmap()
      */
     public Bitmap getBitmap() {
         return bitmap;
     }
 
     /* (non-Javadoc)
-     * @see Substream#getImage()
+     * @see SubtitleStream#getImage()
      */
     public BufferedImage getImage() {
         return bitmap.getImage(palette.getColorModel());
     }
 
     /* (non-Javadoc)
-     * @see Substream#getImage(Bitmap)
+     * @see SubtitleStream#getImage(Bitmap)
      */
     public BufferedImage getImage(final Bitmap bm) {
         return bm.getImage(palette.getColorModel());
     }
 
     /* (non-Javadoc)
-     * @see Substream#getNumForcedFrames()
+     * @see SubtitleStream#getNumForcedFrames()
      */
-    public int getNumForcedFrames() {
+    public int getForcedFrameCount() {
         return numForcedFrames;
     }
 
     /* (non-Javadoc)
-     * @see Substream#getNumFrames()
+     * @see SubtitleStream#getNumFrames()
      */
-    public int getNumFrames() {
+    public int getFrameCount() {
         return subPictures.size();
     }
 
     /* (non-Javadoc)
-     * @see Substream#getPalette()
+     * @see SubtitleStream#getPalette()
      */
     public Palette getPalette() {
         return palette;
     }
 
     /* (non-Javadoc)
-     * @see Substream#getPrimaryColorIndex()
+     * @see SubtitleStream#getPrimaryColorIndex()
      */
     public int getPrimaryColorIndex() {
         return primaryColorIndex;
     }
 
     /* (non-Javadoc)
-     * @see deadbeef.SupTools.Substream#getStartOffset(int)
+     * @see deadbeef.SupTools.SubtitleStream#getStartOffset(int)
      */
     public long getStartOffset(int index) {
         // dummy
@@ -360,28 +360,28 @@ public class SupXml implements Substream {
     }
 
     /* (non-Javadoc)
-     * @see Substream#getSubPicture(int)
+     * @see SubtitleStream#getSubPicture(int)
      */
     public SubPicture getSubPicture(int index) {
         return subPictures.get(index);
     }
 
     /* (non-Javadoc)
-     * @see Substream#getEndTime(int)
+     * @see SubtitleStream#getEndTime(int)
      */
     public long getEndTime(int index) {
         return subPictures.get(index).endTime;
     }
 
     /* (non-Javadoc)
-     * @see Substream#getStartTime(int)
+     * @see SubtitleStream#getStartTime(int)
      */
     public long getStartTime(final int index) {
         return subPictures.get(index).startTime;
     }
 
     /* (non-Javadoc)
-     * @see Substream#isForced(int)
+     * @see SubtitleStream#isForced(int)
      */
     public boolean isForced(int index) {
         return subPictures.get(index).isforced;

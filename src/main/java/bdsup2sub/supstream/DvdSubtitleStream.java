@@ -18,9 +18,9 @@ package bdsup2sub.supstream;
 import bdsup2sub.bitmap.Palette;
 
 /**
- * Interface to handle SUB/IDX and SUP/IFO the same way where possible.
+ * Interface fot SUB/IDX and SUP/IFO handling.
  */
-public interface SubstreamDVD extends Substream {
+public interface DvdSubtitleStream extends SubtitleStream {
 
     /**
      * Get frame alpha values.
@@ -34,7 +34,7 @@ public interface SubstreamDVD extends Substream {
      * @param index Index of caption
      * @return Integer array with 4 entries representing the frame palette
      */
-    int[] getFramePal(int index);
+    int[] getFramePalette(int index);
 
     /**
      * Get original frame alpha values (as they were before editing).
@@ -48,7 +48,7 @@ public interface SubstreamDVD extends Substream {
      * @param index index of caption
      * @return Integer array with 4 entries representing the original frame palette.
      */
-    int[] getOriginalFramePal(int index);
+    int[] getOriginalFramePalette(int index);
 
     /**
      * Get imported 16 color DVD Palette.

@@ -21,10 +21,7 @@ import bdsup2sub.core.CoreException;
 
 import java.awt.image.BufferedImage;
 
-/**
- * Interface to handle different subtitle input streams in the same way.
- */
-public interface Substream {
+public interface SubtitleStream {
 
     /**
      * Return the Palette of the current (last decoded) frame.
@@ -39,8 +36,8 @@ public interface Substream {
     Bitmap getBitmap();
 
     /**
-     * Return current (last decoded) frame as BufferedImage
-     * @return Current (last decoded) frame as BufferedImage
+     * Return current (last decoded) frame
+     * @return Current (last decoded) frame
      */
     BufferedImage getImage();
 
@@ -68,13 +65,13 @@ public interface Substream {
      * Get number of frames in the currently loaded subtitle stream.
      * @return Number of frames
      */
-    int getNumFrames();
+    int getFrameCount();
 
     /**
      * Get number of forced frames in the currently loaded subtitle stream.
      * @return Number of forced frames
      */
-    int getNumForcedFrames();
+    int getForcedFrameCount();
 
     /**
      * Get forced flag of given frame.
