@@ -37,9 +37,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import static bdsup2sub.core.Configuration.*;
 import static bdsup2sub.core.Constants.APP_NAME_AND_VERSION;
 import static bdsup2sub.core.Constants.DEFAULT_DVD_PALETTE;
-import static bdsup2sub.gui.MyComboBoxEditor.*;
 
 public class MainFrameController {
 

@@ -17,7 +17,6 @@ package bdsup2sub.gui.main;
 
 import bdsup2sub.core.*;
 import bdsup2sub.gui.support.EditPane;
-import bdsup2sub.gui.MyComboBoxEditor;
 
 import javax.swing.*;
 import javax.swing.event.DocumentListener;
@@ -83,10 +82,10 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
     private JComboBox jComboBoxOutputFormat;
     private JComboBox jComboBoxPalette;
     private JComboBox jComboBoxFilter;
-    private JTextField jTextSubNum = new JTextField();
-    private JTextField jTextAlphaThreshold = new JTextField();
-    private JTextField jTextMedLowThreshold = new JTextField();
-    private JTextField jTextHiMedThreshold = new JTextField();
+    private JTextField jTextSubNum;
+    private JTextField jTextAlphaThreshold;
+    private JTextField jTextMedLowThreshold;
+    private JTextField jTextHiMedThreshold;
 
     private JPopupMenu jPopupMenu;
     private JMenuItem jPopupMenuItemCopy;
@@ -879,7 +878,7 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
             jComboBoxSubNum.setMinimumSize(new Dimension(80, 20));
             jComboBoxSubNum.setToolTipText("Set subtitle number");
             jComboBoxSubNum.setEditable(true);
-            jComboBoxSubNum.setEditor(new MyComboBoxEditor(jTextSubNum));
+            jTextSubNum = (JTextField) jComboBoxSubNum.getEditor().getEditorComponent();
         }
         return jComboBoxSubNum;
     }
@@ -927,7 +926,7 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
             for (int i=0; i < 256; i++) {
                 jComboBoxAlphaThreshold.addItem(i);
             }
-            jComboBoxAlphaThreshold.setEditor(new MyComboBoxEditor(jTextAlphaThreshold));
+            jTextAlphaThreshold = (JTextField) jComboBoxAlphaThreshold.getEditor().getEditorComponent();
         }
         return jComboBoxAlphaThreshold;
     }
@@ -973,7 +972,7 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
             for (int i=0; i < 256; i++) {
                 jComboBoxHiMedThreshold.addItem(i);
             }
-            jComboBoxHiMedThreshold.setEditor(new MyComboBoxEditor(jTextHiMedThreshold));
+            jTextHiMedThreshold = (JTextField) jComboBoxHiMedThreshold.getEditor().getEditorComponent();
         }
         return jComboBoxHiMedThreshold;
     }
@@ -1013,7 +1012,7 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
             for (int i=0; i < 256; i++) {
                 jComboBoxMedLowThreshold.addItem(i);
             }
-            jComboBoxMedLowThreshold.setEditor(new MyComboBoxEditor(jTextMedLowThreshold));
+            jTextMedLowThreshold = (JTextField) jComboBoxMedLowThreshold.getEditor().getEditorComponent();
         }
         return jComboBoxMedLowThreshold;
     }

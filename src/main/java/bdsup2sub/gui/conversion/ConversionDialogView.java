@@ -18,7 +18,6 @@ package bdsup2sub.gui.conversion;
 import bdsup2sub.core.Core;
 import bdsup2sub.core.ForcedFlagState;
 import bdsup2sub.core.Resolution;
-import bdsup2sub.gui.MyComboBoxEditor;
 import bdsup2sub.utils.SubtitleUtils;
 import bdsup2sub.utils.ToolBox;
 
@@ -26,13 +25,13 @@ import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.plaf.basic.BasicComboBoxEditor;
 import java.awt.*;
 import java.awt.event.*;
 
 import static bdsup2sub.core.Configuration.*;
 import static bdsup2sub.core.Configuration.MAX_FREE_SCALE_FACTOR;
 import static bdsup2sub.core.Configuration.MIN_FREE_SCALE_FACTOR;
-import static bdsup2sub.gui.MyComboBoxEditor.*;
 import static bdsup2sub.gui.support.GuiUtils.centerRelativeToOwner;
 
 public class ConversionDialogView extends JDialog {
@@ -633,9 +632,6 @@ public class ConversionDialogView extends JDialog {
             for (String fps : FRAMERATES) {
                 jComboBoxFpsSrc.addItem(fps);
             }
-            final JTextField fpsSrcEditor = new JTextField();
-            jComboBoxFpsSrc.setEditor(new MyComboBoxEditor(fpsSrcEditor));
-
             jComboBoxFpsSrc.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     if (model.isReady()) {
@@ -650,6 +646,7 @@ public class ConversionDialogView extends JDialog {
                     }
                 }
             });
+            final JTextField fpsSrcEditor = (JTextField) jComboBoxFpsSrc.getEditor().getEditorComponent();
             fpsSrcEditor.getDocument().addDocumentListener(new DocumentListener() {
                 private void check() {
                     if (model.isReady()) {
@@ -696,9 +693,6 @@ public class ConversionDialogView extends JDialog {
             for (String fps : FRAMERATES) {
                 jComboBoxFpsTrg.addItem(fps);
             }
-            final JTextField fpsTrgEditor = new JTextField();
-            jComboBoxFpsTrg.setEditor(new MyComboBoxEditor(fpsTrgEditor));
-            
             jComboBoxFpsTrg.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     if (model.isReady()) {
@@ -718,6 +712,7 @@ public class ConversionDialogView extends JDialog {
                     }
                 }
             });
+            final JTextField fpsTrgEditor = (JTextField) jComboBoxFpsTrg.getEditor().getEditorComponent();
             fpsTrgEditor.getDocument().addDocumentListener(new DocumentListener() {
                 private void check() {
                     if (model.isReady()) {

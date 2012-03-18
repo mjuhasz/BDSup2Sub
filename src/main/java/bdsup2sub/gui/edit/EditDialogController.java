@@ -16,8 +16,8 @@
 package bdsup2sub.gui.edit;
 
 import bdsup2sub.bitmap.ErasePatch;
+import bdsup2sub.core.Configuration;
 import bdsup2sub.core.Core;
-import bdsup2sub.gui.support.EditPane;
 import bdsup2sub.supstream.SubPicture;
 import bdsup2sub.utils.SubtitleUtils;
 import bdsup2sub.utils.ToolBox;
@@ -32,7 +32,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 
-import static bdsup2sub.gui.MyComboBoxEditor.*;
+import static bdsup2sub.core.Configuration.*;
 import static bdsup2sub.gui.support.EditPane.*;
 import static bdsup2sub.utils.TimeUtils.ptsToTimeStr;
 import static bdsup2sub.utils.TimeUtils.timeStrToPTS;

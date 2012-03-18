@@ -19,6 +19,7 @@ import bdsup2sub.tools.Props;
 import bdsup2sub.utils.FilenameUtils;
 import bdsup2sub.utils.SubtitleUtils;
 
+import javax.swing.*;
 import java.awt.*;
 import java.util.*;
 import java.util.List;
@@ -26,6 +27,10 @@ import java.util.List;
 import static bdsup2sub.core.Constants.APP_NAME_AND_VERSION;
 
 public final class Configuration {
+
+    public static final Color OK_BACKGROUND = UIManager.getColor("TextField.background");
+    public static final Color WARN_BACKGROUND = new Color(0xffffffc0);
+    public static final Color ERROR_BACKGROUND = new Color(0xffe1acac);
 
     public static final boolean CONVERT_RESOLUTION_BY_DEFAULT = false;
     public static final boolean CONVERT_FRAMERATE_BY_DEFAULT = false;

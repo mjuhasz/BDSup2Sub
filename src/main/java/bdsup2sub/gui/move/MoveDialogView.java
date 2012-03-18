@@ -30,8 +30,8 @@ import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.*;
 
-import static bdsup2sub.gui.MyComboBoxEditor.ERROR_BACKGROUND;
-import static bdsup2sub.gui.MyComboBoxEditor.OK_BACKGROUND;
+import static bdsup2sub.core.Configuration.ERROR_BACKGROUND;
+import static bdsup2sub.core.Configuration.OK_BACKGROUND;
 import static bdsup2sub.gui.support.GuiUtils.centerRelativeToOwner;
 
 public class MoveDialogView extends JDialog {
