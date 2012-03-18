@@ -17,8 +17,8 @@ package bdsup2sub.gui.main;
 
 import bdsup2sub.bitmap.Palette;
 import bdsup2sub.core.*;
-import bdsup2sub.gui.*;
 import bdsup2sub.gui.conversion.ConversionDialog;
+import bdsup2sub.gui.help.Help;
 import bdsup2sub.gui.move.MoveDialog;
 import bdsup2sub.gui.palette.DvdPaletteDialog;
 import bdsup2sub.gui.edit.EditDialog;
@@ -648,10 +648,7 @@ class MainFrameController {
     private class HelpMenuItemActionListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent event) {
-            Help help = new Help();
-            help.setLocation(view.getX() + 30, view.getY() + 30);
-            help.setSize(800, 600);
-            help.setVisible(true);
+            new Help(view).setVisible(true);
         }
     }
 

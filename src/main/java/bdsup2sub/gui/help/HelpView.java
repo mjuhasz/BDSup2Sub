@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Volker Oth (0xdeadbeef) / Miklos Juhasz (mjuhasz)
+ * Copyright 2012 Miklos Juhasz (mjuhasz)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,10 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package bdsup2sub.gui;
+package bdsup2sub.gui.help;
 
 import bdsup2sub.core.Constants;
-import bdsup2sub.tools.Props;
 import bdsup2sub.utils.ToolBox;
 
 import javax.swing.*;
@@ -32,7 +31,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 
-public class Help extends JFrame {
+public class HelpView extends JFrame {
 
     private JPanel jContentPane;
     private JScrollPane jScrollPane;
@@ -41,16 +40,17 @@ public class Help extends JFrame {
     private JMenuItem jPopupMenuItemOpen;
     private JEditorPane thisEditor;
 
-    private URL helpURL;
-    private Props chapters;
+    private final HelpModel model;
 
 
-    public Help() {
+    public HelpView(HelpModel model, Frame mainFrame) {
         super(Constants.APP_NAME_AND_VERSION + " Help");
+        this.model = model;
 
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-        setSize(600,600);
+        setSize(800, 600);
         setContentPane(getJContentPane());
+        setLocation(mainFrame.getX() + 30, mainFrame.getY() + 30);
 
         init();
     }
@@ -59,14 +59,10 @@ public class Help extends JFrame {
      * init function. loads html page.
      */
     private void init() {
-        ClassLoader loader = Help.class.getClassLoader();
-        helpURL = loader.getResource("help.htm");
-        chapters = new Props();
-        chapters.load(loader.getResource("help.ini"));
-
         try {
+            final URL helpURL = model.getHelpURL();
             thisEditor = new JEditorPane(helpURL);
-            thisEditor.setEditable( false );
+            thisEditor.setEditable(false);
             // needed to open browser via clicking on a link
             thisEditor.addHyperlinkListener(new HyperlinkListener() {
                 public void hyperlinkUpdate(HyperlinkEvent e) {
@@ -99,7 +95,7 @@ public class Help extends JFrame {
             jPopupMenu.addSeparator();
             String s;
             int i = 0;
-            while ((s = chapters.get("chapter_"+i, "")).length() > 0) {
+            while ((s = model.getChapters().get("chapter_" + i, "")).length() > 0) {
                 String str[] = s.split(",");
                 if (str.length == 2) {
                     JMenuItem j = new JMenuItem();
@@ -225,7 +221,7 @@ public class Help extends JFrame {
 /**
  * Listener to implement the popup chapter selection
  */
-class helpAnchorListener implements ActionListener {	
+class helpAnchorListener implements ActionListener {
     private URL chapterUrl;
     private JEditorPane editor;
 
