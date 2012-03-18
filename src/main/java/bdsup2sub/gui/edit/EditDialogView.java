@@ -994,7 +994,7 @@ class EditDialogView extends JDialog {
 
     public void setIndex(int idx) {
         model.setReady(false);
-        model.setIndex(idx); //TODO: use the observer patterm to run this method when index changes in the model
+        model.setIndex(idx); //TODO: use the observer pattern to run this method when index changes in the model
         // get prev and next
         model.setSubPicPrev(idx > 0 ? Core.getSubPictureTrg(idx-1) : null);
         model.setSubPicNext(idx < Core.getNumFrames()-1 ? Core.getSubPictureTrg(idx+1) : null);
