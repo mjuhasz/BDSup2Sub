@@ -57,10 +57,7 @@ class FramePaletteDialogView extends JDialog {
         super(frame, "Edit Frame Palette", true);
         this.model = model;
 
-        setSize(294, 209);
-        setContentPane(getJContentPane());
-        centerRelativeToOwner(this);
-        setResizable(false);
+        initialize();
 
         Palette palette = Core.getCurSrcDVDPalette();
         model.setColorPreviewIcon(new ImageIcon[16]);
@@ -86,6 +83,13 @@ class FramePaletteDialogView extends JDialog {
         jComboBoxColor2.repaint();
         jComboBoxColor3.repaint();
         jComboBoxColor4.repaint();
+    }
+
+    private void initialize() {
+        setSize(294, 209);
+        setContentPane(getJContentPane());
+        centerRelativeToOwner(this);
+        setResizable(false);
     }
 
     private JPanel getJContentPane() {
@@ -142,6 +146,216 @@ class FramePaletteDialogView extends JDialog {
         return jContentPane;
     }
 
+    private JComboBox getJComboBoxColor1() {
+        if (jComboBoxColor1 == null) {
+            jComboBoxColor1 = new JComboBox();
+            jComboBoxColor1.setBounds(new Rectangle(70, 10, 61, 16));
+            jComboBoxColor1.setEditable(false);
+            jComboBoxColor1.setToolTipText("Set palette index of frame color 1");
+        }
+        return jComboBoxColor1;
+    }
+
+    void addColor1ComboBoxActionListener(ActionListener actionListener) {
+        jComboBoxColor1.addActionListener(actionListener);
+    }
+
+    private JComboBox getJComboBoxColor2() {
+        if (jComboBoxColor2 == null) {
+            jComboBoxColor2 = new JComboBox();
+            jComboBoxColor2.setBounds(new Rectangle(70, 35, 61, 16));
+            jComboBoxColor2.setEditable(false);
+            jComboBoxColor2.setToolTipText("Set palette index of frame color 2");
+        }
+        return jComboBoxColor2;
+    }
+
+    void addColor2ComboBoxActionListener(ActionListener actionListener) {
+        jComboBoxColor2.addActionListener(actionListener);
+    }
+
+    private JComboBox getJComboBoxColor3() {
+        if (jComboBoxColor3 == null) {
+            jComboBoxColor3 = new JComboBox();
+            jComboBoxColor3.setBounds(new Rectangle(70, 60, 61, 16));
+            jComboBoxColor3.setEditable(false);
+            jComboBoxColor3.setToolTipText("Set palette index of frame color 3");
+        }
+        return jComboBoxColor3;
+    }
+
+    void addColor3ComboBoxActionListener(ActionListener actionListener) {
+        jComboBoxColor3.addActionListener(actionListener);
+    }
+
+    private JComboBox getJComboBoxColor4() {
+        if (jComboBoxColor4 == null) {
+            jComboBoxColor4 = new JComboBox();
+            jComboBoxColor4.setBounds(new Rectangle(70, 85, 61, 16));
+            jComboBoxColor4.setEditable(false);
+            jComboBoxColor4.setToolTipText("Set palette index of frame color 4");
+        }
+        return jComboBoxColor4;
+    }
+
+    void addColor4ComboBoxActionListener(ActionListener actionListener) {
+        jComboBoxColor4.addActionListener(actionListener);
+    }
+
+    private JComboBox getJComboBoxAlpha1() {
+        if (jComboBoxAlpha1 == null) {
+            jComboBoxAlpha1 = new JComboBox();
+            jComboBoxAlpha1.setBounds(new Rectangle(215, 10, 56, 16));
+            jComboBoxAlpha1.setEditable(false);
+            jComboBoxAlpha1.setToolTipText("Set alpha value of frame color 1");
+        }
+        return jComboBoxAlpha1;
+    }
+
+    void addAlpha1ComboBoxActionListener(ActionListener actionListener) {
+        jComboBoxAlpha1.addActionListener(actionListener);
+    }
+
+    private JComboBox getJComboBoxAlpha2() {
+        if (jComboBoxAlpha2 == null) {
+            jComboBoxAlpha2 = new JComboBox();
+            jComboBoxAlpha2.setBounds(new Rectangle(215, 35, 56, 16));
+            jComboBoxAlpha2.setEditable(false);
+            jComboBoxAlpha2.setToolTipText("Set alpha value of frame color 2");
+        }
+        return jComboBoxAlpha2;
+    }
+
+    void addAlpha2ComboBoxActionListener(ActionListener actionListener) {
+        jComboBoxAlpha2.addActionListener(actionListener);
+    }
+
+    private JComboBox getJComboBoxAlpha3() {
+        if (jComboBoxAlpha3 == null) {
+            jComboBoxAlpha3 = new JComboBox();
+            jComboBoxAlpha3.setBounds(new Rectangle(215, 60, 56, 16));
+            jComboBoxAlpha3.setEditable(false);
+            jComboBoxAlpha3.setToolTipText("Set alpha value of frame color 3");
+        }
+        return jComboBoxAlpha3;
+    }
+
+    void addAlpha3ComboBoxActionListener(ActionListener actionListener) {
+        jComboBoxAlpha3.addActionListener(actionListener);
+    }
+
+    private JComboBox getJComboBoxAlpha4() {
+        if (jComboBoxAlpha4 == null) {
+            jComboBoxAlpha4 = new JComboBox();
+            jComboBoxAlpha4.setBounds(new Rectangle(215, 85, 56, 16));
+            jComboBoxAlpha4.setEditable(false);
+            jComboBoxAlpha4.setToolTipText("Set alpha value of frame color 4");
+        }
+        return jComboBoxAlpha4;
+    }
+
+    void addAlpha4ComboBoxActionListener(ActionListener actionListener) {
+        jComboBoxAlpha4.addActionListener(actionListener);
+    }
+
+    private JButton getJButtonCancel() {
+        if (jButtonCancel == null) {
+            jButtonCancel = new JButton();
+            jButtonCancel.setName("jButtonCancel");
+            jButtonCancel.setBounds(new Rectangle(10, 145, 75, 21));
+            jButtonCancel.setText("Cancel");
+            jButtonCancel.setToolTipText("Lose changes and return");
+            jButtonCancel.setMnemonic('c');
+        }
+        return jButtonCancel;
+    }
+
+    void addCancelButtonActionListener(ActionListener actionListener) {
+        jButtonCancel.addActionListener(actionListener);
+    }
+
+    private JButton getJButtonOk() {
+        if (jButtonOk == null) {
+            jButtonOk = new JButton();
+            jButtonOk.setName("jButtonOk");
+            jButtonOk.setBounds(new Rectangle(200, 145, 75, 21));
+            jButtonOk.setText("Ok");
+            jButtonOk.setToolTipText("Use current settings and return");
+            jButtonOk.setMnemonic('o');
+        }
+        return jButtonOk;
+    }
+
+    void addOkButtonActionListener(ActionListener actionListener) {
+        jButtonOk.addActionListener(actionListener);
+    }
+
+    private JButton getJButtonSetAll() {
+        if (jButtonSetAll == null) {
+            jButtonSetAll = new JButton();
+            jButtonSetAll.setBounds(new Rectangle(200, 115, 75, 21));
+            jButtonSetAll.setText("Set All");
+            jButtonSetAll.setToolTipText("Apply these settings for whole stream and return");
+            jButtonSetAll.setMnemonic('s');
+        }
+        return jButtonSetAll;
+    }
+
+    void addSetAllButtonActionListener(ActionListener actionListener) {
+        jButtonSetAll.addActionListener(actionListener);
+    }
+
+    private JButton getJButtonResetAll() {
+        if (jButtonResetAll == null) {
+            jButtonResetAll = new JButton();
+            jButtonResetAll.setBounds(new Rectangle(105, 115, 75, 23));
+            jButtonResetAll.setText("Reset All");
+            jButtonResetAll.setToolTipText("Revert to original frame palettes for whole stream and return");
+            jButtonResetAll.setMnemonic('a');
+        }
+        return jButtonResetAll;
+    }
+
+    void addResetAllButtonActionListener(ActionListener actionListener) {
+        jButtonResetAll.addActionListener(actionListener);
+    }
+
+    private JButton getJButtonReset() {
+        if (jButtonReset == null) {
+            jButtonReset = new JButton();
+            jButtonReset.setBounds(new Rectangle(105, 145, 75, 23));
+            jButtonReset.setText("Reset");
+            jButtonReset.setToolTipText("Revert to original frame palette");
+            jButtonReset.setMnemonic('r');
+        }
+        return jButtonReset;
+    }
+
+    void addResetButtonActionListener(ActionListener actionListener) {
+        jButtonReset.addActionListener(actionListener);
+    }
+
+    private void paintIcon(ImageIcon icon, Color color) {
+        Graphics graphics = icon.getImage().getGraphics();
+        graphics.setColor(color);
+        graphics.setPaintMode();
+        graphics.fillRect(0, 0, icon.getIconWidth(), icon.getIconHeight());
+    }
+
+    void updateComboBoxSelections() {
+        int[] alpha = model.getAlpha();
+        jComboBoxAlpha1.setSelectedIndex(alpha[0]);
+        jComboBoxAlpha2.setSelectedIndex(alpha[1]);
+        jComboBoxAlpha3.setSelectedIndex(alpha[2]);
+        jComboBoxAlpha4.setSelectedIndex(alpha[3]);
+
+        int[] palette = model.getPalette();
+        jComboBoxColor1.setSelectedIndex(palette[0]);
+        jComboBoxColor2.setSelectedIndex(palette[1]);
+        jComboBoxColor3.setSelectedIndex(palette[2]);
+        jComboBoxColor4.setSelectedIndex(palette[3]);
+    }
+
     /**
      * Modified ListCellRenderer to display text and color icons
      */
@@ -156,349 +370,5 @@ class FramePaletteDialogView extends JDialog {
             }
             return retValue;
         }
-    }
-
-    private void paintIcon(ImageIcon icon, Color color) {
-        Graphics graphics = icon.getImage().getGraphics();
-        graphics.setColor(color);
-        graphics.setPaintMode();
-        graphics.fillRect(0, 0, icon.getIconWidth(), icon.getIconHeight());
-    }
-
-    private JComboBox getJComboBoxColor1() {
-        if (jComboBoxColor1 == null) {
-            jComboBoxColor1 = new JComboBox();
-            jComboBoxColor1.setBounds(new Rectangle(70, 10, 61, 16));
-            jComboBoxColor1.setEditable(false);
-            jComboBoxColor1.setToolTipText("Set palette index of frame color 1");
-            jComboBoxColor1.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    if (model.isReady()) {
-                        int idx = ToolBox.getInt(jComboBoxColor1.getSelectedItem().toString());
-                        if (idx >= 0 && idx < 16) {
-                            model.getPalette()[0] = idx;
-                        }
-                    }
-                }
-            });
-        }
-        return jComboBoxColor1;
-    }
-
-    private JComboBox getJComboBoxColor2() {
-        if (jComboBoxColor2 == null) {
-            jComboBoxColor2 = new JComboBox();
-            jComboBoxColor2.setBounds(new Rectangle(70, 35, 61, 16));
-            jComboBoxColor2.setEditable(false);
-            jComboBoxColor2.setToolTipText("Set palette index of frame color 2");
-            jComboBoxColor2.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    if (model.isReady()) {
-                        int idx = ToolBox.getInt(jComboBoxColor2.getSelectedItem().toString());
-                        if (idx >= 0 && idx < 16) {
-                            model.getPalette()[1] = idx;
-                        }
-                    }
-                }
-            });
-        }
-        return jComboBoxColor2;
-    }
-
-    private JComboBox getJComboBoxColor3() {
-        if (jComboBoxColor3 == null) {
-            jComboBoxColor3 = new JComboBox();
-            jComboBoxColor3.setBounds(new Rectangle(70, 60, 61, 16));
-            jComboBoxColor3.setEditable(false);
-            jComboBoxColor3.setToolTipText("Set palette index of frame color 3");
-            jComboBoxColor3.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    if (model.isReady()) {
-                        int idx = ToolBox.getInt(jComboBoxColor3.getSelectedItem().toString());
-                        if (idx >= 0 && idx < 16) {
-                            model.getPalette()[2] = idx;
-                        }
-                    }
-                }
-            });
-        }
-        return jComboBoxColor3;
-    }
-
-    private JComboBox getJComboBoxColor4() {
-        if (jComboBoxColor4 == null) {
-            jComboBoxColor4 = new JComboBox();
-            jComboBoxColor4.setBounds(new Rectangle(70, 85, 61, 16));
-            jComboBoxColor4.setEditable(false);
-            jComboBoxColor4.setToolTipText("Set palette index of frame color 4");
-            jComboBoxColor4.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    if (model.isReady()) {
-                        int idx = ToolBox.getInt(jComboBoxColor4.getSelectedItem().toString());
-                        if (idx >= 0 && idx < 16) {
-                            model.getPalette()[3] = idx;
-                        }
-                    }
-                }
-            });
-        }
-        return jComboBoxColor4;
-    }
-
-    private JComboBox getJComboBoxAlpha1() {
-        if (jComboBoxAlpha1 == null) {
-            jComboBoxAlpha1 = new JComboBox();
-            jComboBoxAlpha1.setBounds(new Rectangle(215, 10, 56, 16));
-            jComboBoxAlpha1.setEditable(false);
-            jComboBoxAlpha1.setToolTipText("Set alpha value of frame color 1");
-            jComboBoxAlpha1.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    if (model.isReady()) {
-                        int idx = ToolBox.getInt(jComboBoxAlpha1.getSelectedItem().toString());
-                        if (idx >= 0 && idx < 16) {
-                            model.getAlpha()[0] = idx;
-                        }
-                    }
-                }
-            });
-        }
-        return jComboBoxAlpha1;
-    }
-
-    private JComboBox getJComboBoxAlpha2() {
-        if (jComboBoxAlpha2 == null) {
-            jComboBoxAlpha2 = new JComboBox();
-            jComboBoxAlpha2.setBounds(new Rectangle(215, 35, 56, 16));
-            jComboBoxAlpha2.setEditable(false);
-            jComboBoxAlpha2.setToolTipText("Set alpha value of frame color 2");
-            jComboBoxAlpha2.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    if (model.isReady()) {
-                        int idx = ToolBox.getInt(jComboBoxAlpha2.getSelectedItem().toString());
-                        if (idx >= 0 && idx < 16) {
-                            model.getAlpha()[1] = idx;
-                        }
-                    }
-                }
-            });
-        }
-        return jComboBoxAlpha2;
-    }
-
-    private JComboBox getJComboBoxAlpha3() {
-        if (jComboBoxAlpha3 == null) {
-            jComboBoxAlpha3 = new JComboBox();
-            jComboBoxAlpha3.setBounds(new Rectangle(215, 60, 56, 16));
-            jComboBoxAlpha3.setEditable(false);
-            jComboBoxAlpha3.setToolTipText("Set alpha value of frame color 3");
-            jComboBoxAlpha3.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    if (model.isReady()) {
-                        int idx = ToolBox.getInt(jComboBoxAlpha3.getSelectedItem().toString());
-                        if (idx >= 0 && idx < 16) {
-                            model.getAlpha()[2] = idx;
-                        }
-                    }
-                }
-            });
-        }
-        return jComboBoxAlpha3;
-    }
-
-    private JComboBox getJComboBoxAlpha4() {
-        if (jComboBoxAlpha4 == null) {
-            jComboBoxAlpha4 = new JComboBox();
-            jComboBoxAlpha4.setBounds(new Rectangle(215, 85, 56, 16));
-            jComboBoxAlpha4.setEditable(false);
-            jComboBoxAlpha4.setToolTipText("Set alpha value of frame color 4");
-            jComboBoxAlpha4.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    if (model.isReady()) {
-                        int idx = ToolBox.getInt(jComboBoxAlpha4.getSelectedItem().toString());
-                        if (idx >= 0 && idx < 16) {
-                            model.getAlpha()[3] = idx;
-                        }
-                    }
-                }
-            });
-        }
-        return jComboBoxAlpha4;
-    }
-
-    private JButton getJButtonOk() {
-        if (jButtonOk == null) {
-            jButtonOk = new JButton();
-            jButtonOk.setName("jButtonOk");
-            jButtonOk.setBounds(new Rectangle(200, 145, 75, 21));
-            jButtonOk.setText("Ok");
-            jButtonOk.setToolTipText("Use current settings and return");
-            jButtonOk.setMnemonic('o');
-            jButtonOk.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    int a[] = Core.getFrameAlpha(model.getCurrentSubtitleIndex());
-                    int p[] = Core.getFramePal(model.getCurrentSubtitleIndex());
-                    for (int i= 0; i<4; i++) {
-                        if (a != null) {
-                            a[i] = model.getAlpha()[i];
-                        }
-                        if (p != null) {
-                            p[i] = model.getPalette()[i];
-                        }
-                    }
-                    dispose();
-                }
-            });
-        }
-        return jButtonOk;
-    }
-
-    private JButton getJButtonCancel() {
-        if (jButtonCancel == null) {
-            jButtonCancel = new JButton();
-            jButtonCancel.setName("jButtonCancel");
-            jButtonCancel.setBounds(new Rectangle(10, 145, 75, 21));
-            jButtonCancel.setText("Cancel");
-            jButtonCancel.setToolTipText("Lose changes and return");
-            jButtonCancel.setMnemonic('c');
-            jButtonCancel.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    dispose();
-                }
-            });
-        }
-        return jButtonCancel;
-    }
-
-    private JButton getJButtonSetAll() {
-        if (jButtonSetAll == null) {
-            jButtonSetAll = new JButton();
-            jButtonSetAll.setBounds(new Rectangle(200, 115, 75, 21));
-            jButtonSetAll.setText("Set All");
-            jButtonSetAll.setToolTipText("Apply these settings for whole stream and return");
-            jButtonSetAll.setMnemonic('s');
-            jButtonSetAll.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    for (int j=0; j < Core.getNumFrames(); j++) {
-                        int a[] = Core.getFrameAlpha(j);
-                        int p[] = Core.getFramePal(j);
-                        for (int i= 0; i<4; i++) {
-                            if (a != null) {
-                                a[i] = model.getAlpha()[i];
-                            }
-                            if (p != null) {
-                                p[i] = model.getPalette()[i];
-                            }
-                        }
-                    }
-                    dispose();
-                }
-            });
-        }
-        return jButtonSetAll;
-    }
-
-    private JButton getJButtonResetAll() {
-        if (jButtonResetAll == null) {
-            jButtonResetAll = new JButton();
-            jButtonResetAll.setBounds(new Rectangle(105, 115, 75, 23));
-            jButtonResetAll.setText("Reset All");
-            jButtonResetAll.setToolTipText("Revert to original frame palettes for whole stream and return");
-            jButtonResetAll.setMnemonic('a');
-            jButtonResetAll.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    for (int j=0; j < Core.getNumFrames(); j++) {
-                        int ao[] = Core.getOriginalFrameAlpha(j);
-                        int po[] = Core.getOriginalFramePal(j);
-                        int a[] = Core.getFrameAlpha(j);
-                        int p[] = Core.getFramePal(j);
-                        for (int i= 0; i<4; i++) {
-                            if (a != null && ao != null) {
-                                a[i] = ao[i];
-                            }
-                            if (p != null && po != null) {
-                                p[i] = po[i];
-                            }
-                        }
-                    }
-                    dispose();
-                }
-            });
-        }
-        return jButtonResetAll;
-    }
-
-    private JButton getJButtonReset() {
-        if (jButtonReset == null) {
-            jButtonReset = new JButton();
-            jButtonReset.setBounds(new Rectangle(105, 145, 75, 23));
-            jButtonReset.setText("Reset");
-            jButtonReset.setToolTipText("Revert to original frame palette");
-            jButtonReset.setMnemonic('r');
-            jButtonReset.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    int currentSubtitleIndex = model.getCurrentSubtitleIndex();
-                    int ao[] = Core.getOriginalFrameAlpha(currentSubtitleIndex);
-                    int po[] = Core.getOriginalFramePal(currentSubtitleIndex);
-                    int a[] = Core.getFrameAlpha(currentSubtitleIndex);
-                    int p[] = Core.getFramePal(currentSubtitleIndex);
-                    for (int i = 0; i < 4; i++) {
-                        if (a != null && ao != null) {
-                            a[i] = ao[i];
-                        }
-                        if (p != null && po != null) {
-                            p[i] = po[i];
-                        }
-                    }
-                    setCurrentSubtitleIndex(currentSubtitleIndex);
-                }
-            });
-        }
-        return jButtonReset;
-    }
-
-    public void setCurrentSubtitleIndex(int idx) {
-        model.setCurrentSubtitleIndex(idx);
-        model.setReady(false);
-
-        // we need a deep copy here to allow editing
-        int[] alpha = new int[4];
-        model.setAlpha(alpha);
-        int[] palette = new int[4];
-        model.setPalette(palette);
-        int a[] = Core.getFrameAlpha(model.getCurrentSubtitleIndex());
-        int p[] = Core.getFramePal(model.getCurrentSubtitleIndex());
-        for (int i=0; i<4; i++) {
-            if (a != null) {
-                alpha[i] = a[i];
-            }
-            if (p != null) {
-                palette[i]   = p[i];
-            }
-        }
-
-        jComboBoxAlpha1.setSelectedIndex(alpha[0]);
-        jComboBoxAlpha2.setSelectedIndex(alpha[1]);
-        jComboBoxAlpha3.setSelectedIndex(alpha[2]);
-        jComboBoxAlpha4.setSelectedIndex(alpha[3]);
-
-        jComboBoxColor1.setSelectedIndex(palette[0]);
-        jComboBoxColor2.setSelectedIndex(palette[1]);
-        jComboBoxColor3.setSelectedIndex(palette[2]);
-        jComboBoxColor4.setSelectedIndex(palette[3]);
-
-        model.setReady(true);
     }
 }

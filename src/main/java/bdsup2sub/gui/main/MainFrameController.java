@@ -473,8 +473,7 @@ class MainFrameController {
     private class EditDvdFramePaletteMenuItemActionListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent event) {
-            FramePaletteDialog framePaletteDialog = new FramePaletteDialog(view);
-            framePaletteDialog.setCurrentSubtitleIndex(model.getSubIndex());
+            FramePaletteDialog framePaletteDialog = new FramePaletteDialog(view, model.getSubIndex());
             framePaletteDialog.setVisible(true);
 
             (new Thread() {

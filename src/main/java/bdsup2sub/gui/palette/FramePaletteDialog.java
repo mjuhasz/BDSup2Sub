@@ -23,17 +23,15 @@ public class FramePaletteDialog {
     private final FramePaletteDialogView view;
     private final FramePaletteDialogController controller;
 
-    public FramePaletteDialog(Frame owner) {
+    public FramePaletteDialog(Frame owner, int subtitleIndex) {
         model = new FramePaletteDialogModel();
         view = new FramePaletteDialogView(model, owner);
         controller = new FramePaletteDialogController(model, view);
+
+        controller.setCurrentSubtitleIndex(subtitleIndex);
     }
 
     public void setVisible(boolean visible) {
         view.setVisible(visible);
-    }
-
-    public void setCurrentSubtitleIndex(int index) {
-        view.setCurrentSubtitleIndex(index);
     }
 }
