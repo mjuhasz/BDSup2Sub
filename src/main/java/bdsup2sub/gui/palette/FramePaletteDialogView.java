@@ -25,12 +25,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 
+import static bdsup2sub.gui.palette.FramePaletteDialogModel.COLOR_NAME;
 import static bdsup2sub.gui.support.GuiUtils.centerRelativeToOwner;
 
 class FramePaletteDialogView extends JDialog {
-
-    /** array containing the 16 numeric values 00 - 15 as strings */
-    private static final String[] COLOR_NAME = { "00", "01", "02", "03", "04", "05", "06" ,"07", "08", "09", "10", "11", "12", "13", "14", "15"};
 
     private JPanel jContentPane;
 
@@ -58,31 +56,6 @@ class FramePaletteDialogView extends JDialog {
         this.model = model;
 
         initialize();
-
-        Palette palette = Core.getCurSrcDVDPalette();
-        model.setColorPreviewIcon(new ImageIcon[16]);
-        for (int i=0; i < palette.getSize(); i++) {
-            model.getColorPreviewIcon()[i] = new ImageIcon(new BufferedImage(12, 12, BufferedImage.TYPE_INT_RGB));
-            Color c = new Color (palette.getARGB(i) | 0xff000000); // make fully opaque
-            paintIcon(model.getColorPreviewIcon()[i], c);
-            jComboBoxColor1.addItem(COLOR_NAME[i]);
-            jComboBoxColor2.addItem(COLOR_NAME[i]);
-            jComboBoxColor3.addItem(COLOR_NAME[i]);
-            jComboBoxColor4.addItem(COLOR_NAME[i]);
-            jComboBoxAlpha1.addItem(COLOR_NAME[i]);
-            jComboBoxAlpha2.addItem(COLOR_NAME[i]);
-            jComboBoxAlpha3.addItem(COLOR_NAME[i]);
-            jComboBoxAlpha4.addItem(COLOR_NAME[i]);
-        }
-        MyListCellRenderer myListCellRenderer = new MyListCellRenderer();
-        jComboBoxColor1.setRenderer(myListCellRenderer);
-        jComboBoxColor2.setRenderer(myListCellRenderer);
-        jComboBoxColor3.setRenderer(myListCellRenderer);
-        jComboBoxColor4.setRenderer(myListCellRenderer);
-        jComboBoxColor1.repaint();
-        jComboBoxColor2.repaint();
-        jComboBoxColor3.repaint();
-        jComboBoxColor4.repaint();
     }
 
     private void initialize() {
@@ -90,6 +63,8 @@ class FramePaletteDialogView extends JDialog {
         setContentPane(getJContentPane());
         centerRelativeToOwner(this);
         setResizable(false);
+
+        initComboBoxColorPreviewIcons(model);
     }
 
     private JPanel getJContentPane() {
@@ -335,11 +310,40 @@ class FramePaletteDialogView extends JDialog {
         jButtonReset.addActionListener(actionListener);
     }
 
+    private void initComboBoxColorPreviewIcons(FramePaletteDialogModel model) {
+        Palette palette = Core.getCurSrcDVDPalette();
+        model.setColorPreviewIcon(new ImageIcon[16]);
+        for (int i=0; i < palette.getSize(); i++) {
+            model.getColorPreviewIcon()[i] = new ImageIcon(new BufferedImage(12, 12, BufferedImage.TYPE_INT_RGB));
+            Color c = new Color (palette.getARGB(i) | 0xff000000); // make fully opaque
+            paintIcon(model.getColorPreviewIcon()[i], c);
+            jComboBoxColor1.addItem(COLOR_NAME[i]);
+            jComboBoxColor2.addItem(COLOR_NAME[i]);
+            jComboBoxColor3.addItem(COLOR_NAME[i]);
+            jComboBoxColor4.addItem(COLOR_NAME[i]);
+            jComboBoxAlpha1.addItem(COLOR_NAME[i]);
+            jComboBoxAlpha2.addItem(COLOR_NAME[i]);
+            jComboBoxAlpha3.addItem(COLOR_NAME[i]);
+            jComboBoxAlpha4.addItem(COLOR_NAME[i]);
+        }
+    }
+
     private void paintIcon(ImageIcon icon, Color color) {
         Graphics graphics = icon.getImage().getGraphics();
         graphics.setColor(color);
         graphics.setPaintMode();
         graphics.fillRect(0, 0, icon.getIconWidth(), icon.getIconHeight());
+    }
+
+    void addComboBoxCellRenderers(ListCellRenderer listCellRenderer) {
+        jComboBoxColor1.setRenderer(listCellRenderer);
+        jComboBoxColor2.setRenderer(listCellRenderer);
+        jComboBoxColor3.setRenderer(listCellRenderer);
+        jComboBoxColor4.setRenderer(listCellRenderer);
+        jComboBoxColor1.repaint();
+        jComboBoxColor2.repaint();
+        jComboBoxColor3.repaint();
+        jComboBoxColor4.repaint();
     }
 
     void updateComboBoxSelections() {
@@ -354,21 +358,5 @@ class FramePaletteDialogView extends JDialog {
         jComboBoxColor2.setSelectedIndex(palette[1]);
         jComboBoxColor3.setSelectedIndex(palette[2]);
         jComboBoxColor4.setSelectedIndex(palette[3]);
-    }
-
-    /**
-     * Modified ListCellRenderer to display text and color icons
-     */
-    private class MyListCellRenderer extends DefaultListCellRenderer {
-        @Override
-        public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected,  boolean cellHasFocus) {
-            Component retValue = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-            int idx = ToolBox.getInt(value.toString());
-            if (idx >= 0) {
-                setText(COLOR_NAME[idx]);
-                setIcon(model.getColorPreviewIcon()[idx]);
-            }
-            return retValue;
-        }
     }
 }

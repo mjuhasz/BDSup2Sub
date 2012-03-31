@@ -19,10 +19,13 @@ import bdsup2sub.core.Core;
 import bdsup2sub.utils.ToolBox;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Arrays;
 import java.util.Collections;
+
+import static bdsup2sub.gui.palette.FramePaletteDialogModel.COLOR_NAME;
 
 class FramePaletteDialogController {
 
@@ -37,6 +40,8 @@ class FramePaletteDialogController {
         addAlphaComboBoxActionListeners(view);
 
         addButtonActionListeners(view);
+
+        view.addComboBoxCellRenderers(new TextWithColorIconListCellRenderer());
     }
 
     private void addColorComboBoxActionListeners(FramePaletteDialogView view) {
@@ -216,6 +221,19 @@ class FramePaletteDialogController {
         }
         if (palette != null) {
             System.arraycopy(palette, 0, model.getPalette(), 0, palette.length);
+        }
+    }
+
+    private class TextWithColorIconListCellRenderer extends DefaultListCellRenderer {
+        @Override
+        public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected,  boolean cellHasFocus) {
+            Component retValue = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+            int idx = ToolBox.getInt(value.toString());
+            if (idx >= 0) {
+                setText(COLOR_NAME[idx]);
+                setIcon(model.getColorPreviewIcon()[idx]);
+            }
+            return retValue;
         }
     }
 }
