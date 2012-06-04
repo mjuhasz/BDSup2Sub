@@ -121,35 +121,30 @@ public class SupBD implements SubtitleStream {
     };
 
 
-    /**
-     * Constructor
-     * @param fn file name of SUP file to read
-     * @throws CoreException
-     */
-    public SupBD(String fn) throws CoreException {
+    public SupBD(String filename) throws CoreException {
         //int tFrame = (int)(90000/Core.getFPSSrc());
         int index = 0;
         try {
-            buffer = new FileBuffer(fn);
+            buffer = new FileBuffer(filename);
         } catch (FileBufferException ex) {
             throw new CoreException(ex.getMessage());
         }
         int bufsize = (int)buffer.getSize();
         SupSegment segment;
-        SubPictureBD pic = null;
-        SubPictureBD picLast = null;
+        SubPictureBD subPictureBD = null;
+        SubPictureBD lastSubPicture = null;
         SubPictureBD picTmp = null;
         subPictures = new ArrayList<SubPictureBD>();
-        int odsCtr = 0;
-        int pdsCtr = 0;
-        int odsCtrOld = 0;
-        int pdsCtrOld = 0;
-        int compNum = -1;
-        int compNumOld = -1;
-        int compCount = 0;
+        int odsCounter = 0;
+        int pdsCounter = 0;
+        int odsCounterOld = 0;
+        int pdsCounterOld = 0;
+        int compositionNumber = -1;
+        int compositionNumberOld = -1;
+        int compositionCount = 0;
         long ptsPCS = 0;
         boolean paletteUpdate = false;
-        PGSCompositionState cs = PGSCompositionState.INVALID;
+        PGSCompositionState compositionState = PGSCompositionState.INVALID;
 
         try {
             while (index < bufsize) {
@@ -159,206 +154,191 @@ public class SupBD implements SubtitleStream {
                 }
                 Core.setProgress(index);
                 segment = readSegment(index);
-                String out;
+                String msg;
                 String so[] = new String[1]; // hack to return string
                 switch (segment.segmentType) {
-                    case 0x14:
-                        out = "PDS ofs:"+ToolBox.toHexLeftZeroPadded(index,8)+
-                        ", size:"+ToolBox.toHexLeftZeroPadded(segment.segmentSize,4);
-                        if (compNum != compNumOld) {
-                            if (pic != null) {
+                    case 0x14: // palette
+                        msg = "PDS offset: " + ToolBox.toHexLeftZeroPadded(index, 8) + ", size: " + ToolBox.toHexLeftZeroPadded(segment.segmentSize, 4);
+                        if (compositionNumber != compositionNumberOld) {
+                            if (subPictureBD != null) {
                                 so[0] = null;
-                                int ps = parsePDS(segment, pic, so);
-                                if (ps >= 0) {
-                                    Core.print(out+", "+so[0] + "\n");
-                                    if (ps > 0) { // don't count empty palettes
-                                        pdsCtr++;
+                                int paletteSize = parsePDS(segment, subPictureBD, so);
+                                if (paletteSize >= 0) {
+                                    Core.print(msg + ", " + so[0] + "\n");
+                                    if (paletteSize > 0) {
+                                        pdsCounter++;
                                     }
                                 } else {
-                                    Core.print(out + "\n");
+                                    Core.print(msg + "\n");
                                     Core.printWarn(so[0] + "\n");
                                 }
                             } else {
-                                Core.print(out + "\n");
+                                Core.print(msg + "\n");
                                 Core.printWarn("missing PTS start -> ignored\n");
                             }
                         } else {
-                            Core.print(out + ", comp # unchanged -> ignored\n");
+                            Core.print(msg + ", composition number unchanged -> ignored\n");
                         }
                         break;
-                    case 0x15:
-                        out = "ODS ofs:" + ToolBox.toHexLeftZeroPadded(index,8)
-                        + ", size:" + ToolBox.toHexLeftZeroPadded(segment.segmentSize,4);
-                        if (compNum != compNumOld) {
+                    case 0x15: // image bitmap data
+                        msg = "ODS offset: " + ToolBox.toHexLeftZeroPadded(index, 8) + ", size: " + ToolBox.toHexLeftZeroPadded(segment.segmentSize, 4);
+                        if (compositionNumber != compositionNumberOld) {
                             if (!paletteUpdate) {
-                                if (pic != null) {
+                                if (subPictureBD != null) {
                                     so[0] = null;
-                                    if (parseODS(segment, pic, so)) {
-                                        odsCtr++;
+                                    if (parseODS(segment, subPictureBD, so)) {
+                                        odsCounter++;
                                     }
-                                    if (so[0] != null) {
-                                        out += ", " + so[0];
-                                    }
-                                    Core.print(out + ", img size: " + pic.getImageWidth() + "*" + pic.getImageHeight() + "\n");
+                                    Core.print(msg + ", img size: " + subPictureBD.getImageWidth() + "*" + subPictureBD.getImageHeight() + (so[0] == null ? "\n" : ", " + so[0]) + "\n");
                                 } else {
-                                    Core.print(out + "\n");
+                                    Core.print(msg + "\n");
                                     Core.printWarn("missing PTS start -> ignored\n");
                                 }
                             } else {
-                                Core.print(out + "\n");
+                                Core.print(msg + "\n");
                                 Core.printWarn("palette update only -> ignored\n");
                             }
                         } else {
-                            Core.print(out + ", comp # unchanged -> ignored\n");
+                            Core.print(msg + ", composition number unchanged -> ignored\n");
                         }
                         break;
-                    case 0x16:
-                        compNum = getCompositionNumber(segment);
-                        cs = getCompositionState(segment);
+                    case 0x16: // time codes
+                        compositionNumber = getCompositionNumber(segment);
+                        compositionState = getCompositionState(segment);
                         paletteUpdate = getPaletteUpdateFlag(segment);
                         ptsPCS = segment.segmentPTSTimestamp;
                         if (segment.segmentSize >= 0x13) {
-                            compCount = 1; // could be also 2, but we'll ignore this for the moment
+                            compositionCount = 1; // could be also 2, but we'll ignore this for the moment
+                        } else {
+                            compositionCount = 0;
                         }
-                        else {
-                            compCount = 0;
-                        }
-                        if (cs == PGSCompositionState.INVALID) {
-                            Core.printWarn("Illegal composition state at offset "+ToolBox.toHexLeftZeroPadded(index,8)+"\n");
-                        } else if (cs == PGSCompositionState.EPOCH_START) {
+                        if (compositionState == PGSCompositionState.INVALID) {
+                            Core.printWarn("Illegal composition state at offset " + ToolBox.toHexLeftZeroPadded(index, 8) + "\n");
+                        } else if (compositionState == PGSCompositionState.EPOCH_START) {
                             // new frame
-                            if (subPictures.size() > 0 && (odsCtr==0 || pdsCtr==0)) {
+                            if (subPictures.size() > 0 && (odsCounter == 0 || pdsCounter == 0)) {
                                 Core.printWarn("missing PDS/ODS: last epoch is discarded\n");
-                                subPictures.remove(subPictures.size()-1);
-                                compNumOld = compNum-1;
+                                subPictures.remove(subPictures.size() - 1);
+                                compositionNumberOld = compositionNumber - 1;
                                 if (subPictures.size() > 0) {
-                                    picLast = subPictures.get(subPictures.size()-1);
+                                    lastSubPicture = subPictures.get(subPictures.size() - 1);
                                 } else {
-                                    picLast = null;
+                                    lastSubPicture = null;
                                 }
                             } else {
-                                picLast = pic;
+                                lastSubPicture = subPictureBD;
                             }
-                            pic = new SubPictureBD();
-                            subPictures.add(pic); // add to list
-                            pic.startTime = segment.segmentPTSTimestamp;
-                            Core.printX("#> " + (subPictures.size()) + " (" + ptsToTimeStr(pic.startTime) + ")\n");
+                            subPictureBD = new SubPictureBD();
+                            subPictures.add(subPictureBD);
+                            subPictureBD.startTime = segment.segmentPTSTimestamp;
+                            Core.printX("#> " + (subPictures.size()) + " (" + ptsToTimeStr(subPictureBD.startTime) + ")\n");
 
                             so[0] = null;
-                            parsePCS(segment, pic, so);
-                            // fix end time stamp of previous pic if still missing
-                            if (picLast != null && picLast.endTime == 0) {
-                                picLast.endTime = pic.startTime;
+                            parsePCS(segment, subPictureBD, so);
+                            // fix end time stamp of previous subPictureBD if still missing
+                            if (lastSubPicture != null && lastSubPicture.endTime == 0) {
+                                lastSubPicture.endTime = subPictureBD.startTime;
                             }
 
-                            out = "PCS ofs:" + ToolBox.toHexLeftZeroPadded(index,8)
-                            + ", START, size:" + ToolBox.toHexLeftZeroPadded(segment.segmentSize,4)
-                            + ", comp#: " + compNum + ", forced: " + pic.isforced;
-                            if (so[0] != null) {
-                                out += ", " + so[0] + "\n";
-                            } else {
-                                out += "\n";
-                            }
-                            out += "PTS start: " + ptsToTimeStr(pic.startTime);
-                            out += ", screen size: " + pic.width + "*" + pic.height + "\n";
-                            odsCtr = 0;
-                            pdsCtr = 0;
-                            odsCtrOld = 0;
-                            pdsCtrOld = 0;
+                            msg = "PCS offset: " + ToolBox.toHexLeftZeroPadded(index, 8) + ", START, size: " + ToolBox.toHexLeftZeroPadded(segment.segmentSize, 4) + ", composition number: " + compositionNumber + ", forced: " + subPictureBD.isforced + (so[0] == null ? "\n" : ", " + so[0] + "\n");
+                            msg += "PTS start: " + ptsToTimeStr(subPictureBD.startTime) + ", screen size: " + subPictureBD.width + "*" + subPictureBD.height + "\n";
+                            Core.print(msg);
+
+                            odsCounter = 0;
+                            pdsCounter = 0;
+                            odsCounterOld = 0;
+                            pdsCounterOld = 0;
                             picTmp = null;
-                            Core.print(out);
                         } else {
-                            if (pic == null) {
-                                Core.printWarn("missing start of epoch at offset "+ToolBox.toHexLeftZeroPadded(index,8)+"\n");
+                            if (subPictureBD == null) {
+                                Core.printWarn("missing start of epoch at offset " + ToolBox.toHexLeftZeroPadded(index, 8) + "\n");
                                 break;
                             }
-                            out = "PCS ofs:" + ToolBox.toHexLeftZeroPadded(index,8) + ", ";
-                            switch (cs) {
+                            msg = "PCS offset:" + ToolBox.toHexLeftZeroPadded(index, 8) + ", ";
+                            switch (compositionState) {
                                 case EPOCH_CONTINUE:
-                                    out += "CONT, ";
+                                    msg += "CONT, ";
                                     break;
                                 case ACQU_POINT:
-                                    out += "ACQU, ";
+                                    msg += "ACQU, ";
                                     break;
                                 case NORMAL:
-                                    out += "NORM, ";
+                                    msg += "NORM, ";
                                     break;
                             }
-                            out += " size: " + ToolBox.toHexLeftZeroPadded(segment.segmentSize,4)
-                            + ", comp#: " + compNum + ", forced: " + pic.isforced;
-                            if (compNum != compNumOld) {
+                            msg += " size: " + ToolBox.toHexLeftZeroPadded(segment.segmentSize, 4) + ", composition number: " + compositionNumber + ", forced: " + subPictureBD.isforced;
+                            if (compositionNumber != compositionNumberOld) {
                                 so[0] = null;
                                 // store state to be able to revert to it
-                                picTmp = pic.deepCopy();
+                                picTmp = subPictureBD.deepCopy();
                                 picTmp.endTime = ptsPCS;
-                                // create new pic
-                                parsePCS(segment, pic, so);
+                                // create new subPictureBD
+                                parsePCS(segment, subPictureBD, so);
                             }
                             if (so[0] != null) {
-                                out += ", " + so[0];
+                                msg += ", " + so[0];
                             }
-                            out += ", pal update: " + paletteUpdate + "\n";
-                            out += "PTS: " + ptsToTimeStr(segment.segmentPTSTimestamp) + "\n";
-                            Core.print(out);
+                            msg += ", pal update: " + paletteUpdate + "\n";
+                            msg += "PTS: " + ptsToTimeStr(segment.segmentPTSTimestamp) + "\n";
+                            Core.print(msg);
                         }
                         break;
-                    case 0x17:
-                        out = "WDS ofs:"+ToolBox.toHexLeftZeroPadded(index,8)
-                        + ", size:"+ToolBox.toHexLeftZeroPadded(segment.segmentSize,4);
-                        if (pic != null) {
-                            parseWDS(segment, pic);
-                            Core.print(out + ", dim: " + pic.winWidth + "*" + pic.winHeight + "\n");
+                    case 0x17: // window info
+                        msg = "WDS offset: " + ToolBox.toHexLeftZeroPadded(index, 8) + ", size: " + ToolBox.toHexLeftZeroPadded(segment.segmentSize, 4);
+                        if (subPictureBD != null) {
+                            parseWDS(segment, subPictureBD);
+                            Core.print(msg + ", dim: " + subPictureBD.winWidth + "*" + subPictureBD.winHeight + "\n");
                         } else {
-                            Core.print(out + "\n");
+                            Core.print(msg + "\n");
                             Core.printWarn("Missing PTS start -> ignored\n");
                         }
                         break;
-                    case 0x80:
-                        Core.print("END ofs:" + ToolBox.toHexLeftZeroPadded(index,8) + "\n");
+                    case 0x80: // END
+                        Core.print("END offset: " + ToolBox.toHexLeftZeroPadded(index, 8) + "\n");
                         // decide whether to store this last composition section as caption or merge it
-                        if (cs == PGSCompositionState.EPOCH_START) {
-                            if (compCount>0 && odsCtr>odsCtrOld && compNum!=compNumOld && picMergable(picLast, pic)) {
+                        if (compositionState == PGSCompositionState.EPOCH_START) {
+                            if (compositionCount>0 && odsCounter>odsCounterOld && compositionNumber!=compositionNumberOld && picMergable(lastSubPicture, subPictureBD)) {
                                 // the last start epoch did not contain any (new) content
                                 // and should be merged to the previous frame
                                 subPictures.remove(subPictures.size()-1);
-                                pic = picLast;
+                                subPictureBD = lastSubPicture;
                                 if (subPictures.size() > 0) {
-                                    picLast = subPictures.get(subPictures.size()-1);
+                                    lastSubPicture = subPictures.get(subPictures.size()-1);
                                 } else {
-                                    picLast = null;
+                                    lastSubPicture = null;
                                 }
                                 Core.printX("#< caption merged\n");
                             }
                         } else {
                             long startTime = 0;
-                            if (pic != null) {
-                                startTime = pic.startTime;  // store
-                                pic.startTime = ptsPCS;    // set for testing merge
+                            if (subPictureBD != null) {
+                                startTime = subPictureBD.startTime;  // store
+                                subPictureBD.startTime = ptsPCS;    // set for testing merge
                             }
 
-                            if (compCount>0 && odsCtr>odsCtrOld && compNum!=compNumOld && !picMergable(picTmp, pic)) {
+                            if (compositionCount>0 && odsCounter>odsCounterOld && compositionNumber!=compositionNumberOld && !picMergable(picTmp, subPictureBD)) {
                                 // last PCS should be stored as separate caption
-                                if (odsCtr-odsCtrOld>1 || pdsCtr-pdsCtrOld>1) {
+                                if (odsCounter-odsCounterOld>1 || pdsCounter-pdsCounterOld>1) {
                                     Core.printWarn("multiple PDS/ODS definitions: result may be erratic\n");
                                 }
-                                // replace pic with picTmp (deepCopy created before new PCS)
+                                // replace subPictureBD with picTmp (deepCopy created before new PCS)
                                 subPictures.set(subPictures.size()-1, picTmp); // replace in list
-                                picLast = picTmp;
-                                subPictures.add(pic); // add to list
-                                Core.printX("#< " + (subPictures.size()) + " (" + ptsToTimeStr(pic.startTime) + ")\n");
-                                odsCtrOld = odsCtr;
+                                lastSubPicture = picTmp;
+                                subPictures.add(subPictureBD); // add to list
+                                Core.printX("#< " + (subPictures.size()) + " (" + ptsToTimeStr(subPictureBD.startTime) + ")\n");
+                                odsCounterOld = odsCounter;
 
                             } else {
-                                if (pic != null) {
-                                    // merge with previous pic
-                                    pic.startTime = startTime; // restore
-                                    pic.endTime = ptsPCS;
+                                if (subPictureBD != null) {
+                                    // merge with previous subPictureBD
+                                    subPictureBD.startTime = startTime; // restore
+                                    subPictureBD.endTime = ptsPCS;
                                     // for the unlikely case that forced flag changed during one captions
                                     if (picTmp != null && picTmp.isforced) {
-                                        pic.isforced = true;
+                                        subPictureBD.isforced = true;
                                     }
 
-                                    if (pdsCtr > pdsCtrOld || paletteUpdate) {
+                                    if (pdsCounter > pdsCounterOld || paletteUpdate) {
                                         Core.printWarn("palette animation: result may be erratic\n");
                                     }
                                 } else {
@@ -366,8 +346,8 @@ public class SupBD implements SubtitleStream {
                                 }
                             }
                         }
-                        pdsCtrOld = pdsCtr;
-                        compNumOld = compNum;
+                        pdsCounterOld = pdsCounter;
+                        compositionNumberOld = compositionNumber;
                         break;
                     default:
                         Core.printWarn("<unknown> " + ToolBox.toHexLeftZeroPadded(segment.segmentType, 2) + " ofs:" + ToolBox.toHexLeftZeroPadded(index, 8) + "\n");
@@ -385,7 +365,7 @@ public class SupBD implements SubtitleStream {
         }
 
         // check if last frame is valid
-        if (subPictures.size() > 0 && (odsCtr==0 || pdsCtr==0)) {
+        if (subPictures.size() > 0 && (odsCounter==0 || pdsCounter==0)) {
             Core.printWarn("missing PDS/ODS: last epoch is discarded\n");
             subPictures.remove(subPictures.size()-1);
         }
