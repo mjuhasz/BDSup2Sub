@@ -298,11 +298,12 @@ public class Core  extends Thread {
         } else if (ifo || sid == StreamID.IFO) {
             runType = RunType.READSUPIFO;
         } else {
-			File ifoFile = new File(ToolBox.stripExtension(fname)+".ifo");
-			if (ifoFile.exists())
+			File ifoFile = new File(FilenameUtils.removeExtension(fname) + ".ifo");
+            if (ifoFile.exists()) {
                 runType = RunType.READSUPIFO;
-			else
+            } else {
                 runType = RunType.READSUP;
+            }
 		}
 
         currentStreamID = sid;
@@ -622,13 +623,13 @@ public class Core  extends Thread {
             substreamDvd = subDVD;
         } else {
             // SUP/IFO
-            if (ToolBox.getExtension(fname) == "ifo") {
-				fnI = fname;
-				fnS = ToolBox.stripExtension(fname)+".sup";
-			} else {
-				fnI = ToolBox.stripExtension(fname)+".ifo";
-				fnS = fname;
-			}
+            if (FilenameUtils.getExtension(fname).equals("ifo")) {
+                fnI = fname;
+                fnS = FilenameUtils.removeExtension(fname) + ".sup";
+            } else {
+                fnI = FilenameUtils.removeExtension(fname) + ".ifo";
+                fnS = fname;
+            }
             supDVD = new SupDvd(fnS, fnI);
             subtitleStream = supDVD;
             inMode = InputMode.SUPIFO;
