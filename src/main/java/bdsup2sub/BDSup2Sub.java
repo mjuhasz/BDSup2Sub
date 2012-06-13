@@ -347,30 +347,28 @@ public class BDSup2Sub {
                 String a = arg;
 
                 // detect source and target
-                if (a.charAt(0) != '/') {
-                    if (src == null) {
-                        src = a;
-                        continue;
-                    } else if (trg == null) {
-                        trg = a;
-                        String ext = FilenameUtils.getExtension(trg);
-                        if (ext.isEmpty()) {
-                            fatalError("No extension given for target " + trg);
-                        }
-                        if (ext.equals("sup")) {
-                            mode = OutputMode.BDSUP;
-                        } else if (ext.equals("sub") || ext.equals("idx")) {
-                            mode = OutputMode.VOBSUB;
-                        } else if (ext.equals("xml")) {
-                            mode = OutputMode.XML;
-                        } else if (ext.equals("ifo")) {
-                            mode = OutputMode.SUPIFO;
-                        } else {
-                            fatalError("Unknown extension of target " + trg);
-                        }
-                        configuration.setOutputMode(mode);
-                        continue;
+                if (src == null) {
+                    src = a;
+                    continue;
+                } else if (trg == null) {
+                    trg = a;
+                    String ext = FilenameUtils.getExtension(trg);
+                    if (ext.isEmpty()) {
+                        fatalError("No extension given for target " + trg);
                     }
+                    if (ext.equals("sup")) {
+                        mode = OutputMode.BDSUP;
+                    } else if (ext.equals("sub") || ext.equals("idx")) {
+                        mode = OutputMode.VOBSUB;
+                    } else if (ext.equals("xml")) {
+                        mode = OutputMode.XML;
+                    } else if (ext.equals("ifo")) {
+                        mode = OutputMode.SUPIFO;
+                    } else {
+                        fatalError("Unknown extension of target " + trg);
+                    }
+                    configuration.setOutputMode(mode);
+                    continue;
                 }
 
                 boolean switchOn = true;
