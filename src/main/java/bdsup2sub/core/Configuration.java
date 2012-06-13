@@ -328,7 +328,7 @@ public final class Configuration {
     }
 
     public boolean loadConvertFPS() {
-        return props.get("convertFPS", convertFPS);
+        return props.get("convertFPS", CONVERT_FRAMERATE_BY_DEFAULT);
     }
 
     public void storeConvertFPS(boolean convertFPS) {
@@ -347,7 +347,7 @@ public final class Configuration {
     }
 
     public int loadDelayPTS() {
-        return props.get("delayPTS", delayPTS);
+        return props.get("delayPTS", DEFAULT_PTS_DELAY);
     }
 
     public void storeDelayPTS(int delayPTS) {
@@ -366,7 +366,7 @@ public final class Configuration {
     }
 
     public boolean loadFixShortFrames() {
-        return props.get("fixShortFrames", fixShortFrames);
+        return props.get("fixShortFrames", FIX_SHORT_FRAMES_BY_DEFAULT);
     }
 
     public void storeFixShortFrames(boolean fixShortFrames) {
@@ -385,7 +385,7 @@ public final class Configuration {
     }
 
     public int loadMinTimePTS() {
-        return props.get("minTimePTS", minTimePTS);
+        return props.get("minTimePTS", DEFAULT_MIN_DISPLAY_TIME_PTS);
     }
 
     public void storeMinTimePTS(int minTimePTS) {
@@ -401,7 +401,7 @@ public final class Configuration {
     }
 
     public boolean loadApplyFreeScale() {
-        return props.get("applyFreeScale", applyFreeScale);
+        return props.get("applyFreeScale", APPLY_FREE_SCALE_BY_DEFAULT);
     }
 
     public void storeApplyFreeScale(boolean applyFreeScale) {
@@ -433,11 +433,11 @@ public final class Configuration {
     }
 
     public double loadFreeScaleFactorX() {
-        return props.get("freeScaleX", freeScaleFactorX);
+        return props.get("freeScaleX", DEFAULT_FREE_SCALE_FACTOR_X);
     }
 
     public double loadFreeScaleFactorY() {
-        return props.get("freeScaleY", freeScaleFactorY);
+        return props.get("freeScaleY", DEFAULT_FREE_SCALE_FACTOR_Y);
     }
 
     public void storeFreeScaleFactor(double x, double y) {
@@ -465,7 +465,7 @@ public final class Configuration {
     }
 
     public double loadFpsSrc() {
-        return SubtitleUtils.getFps(props.get("fpsSrc", String.valueOf(fpsSrc)));
+        return SubtitleUtils.getFps(props.get("fpsSrc", String.valueOf(DEFAULT_SOURCE_FRAMERATE)));
     }
 
     public void storeFPSSrc(double fpsSrc) {
@@ -483,7 +483,7 @@ public final class Configuration {
     }
 
     public double loadFpsTrg() {
-        return SubtitleUtils.getFps(props.get("fpsTrg", String.valueOf(fpsTrg)));
+        return SubtitleUtils.getFps(props.get("fpsTrg", String.valueOf(DEFAULT_TARGET_FRAMERATE)));
     }
 
     public void storeFpsTrg(double fpsTrg) {
@@ -508,7 +508,7 @@ public final class Configuration {
 
     public Resolution loadOutputResolution() {
         try {
-            return Resolution.valueOf(props.get("resolutionTrg", outputResolution.name()));
+            return Resolution.valueOf(props.get("resolutionTrg", DEFAULT_TARGET_RESOLUTION.name()));
         } catch (IllegalArgumentException e) {
             return DEFAULT_TARGET_RESOLUTION;
         }
