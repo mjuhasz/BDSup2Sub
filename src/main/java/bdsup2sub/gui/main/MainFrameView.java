@@ -32,7 +32,7 @@ import java.awt.image.BufferedImage;
 import java.util.List;
 
 import static bdsup2sub.core.Constants.APP_NAME_AND_VERSION;
-import static bdsup2sub.core.Constants.AUTHOR_AND_DATE;
+import static bdsup2sub.core.Constants.DEVELOPERS_AND_DATE;
 
 public class MainFrameView extends JFrame implements ClipboardOwner {
 
@@ -102,7 +102,7 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
         Core.setMainFrame(this);
 
         printToConsole(APP_NAME_AND_VERSION + " - a converter from Blu-Ray/HD-DVD SUP to DVD SUB/IDX and more\n");
-        printToConsole(AUTHOR_AND_DATE + "\n");
+        printToConsole(DEVELOPERS_AND_DATE + "\n");
         printToConsole("Official thread at Doom9: http://forum.doom9.org/showthread.php?t=145277\n\n");
         flushConsole();
     }

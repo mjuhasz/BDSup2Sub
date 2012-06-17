@@ -277,7 +277,7 @@ public class BDSup2Sub {
         // check if help screen was requested
         if (args.length == 1 && (args[0].equals("/?") || args[0].equalsIgnoreCase("/help")) ) {
             // output help
-            System.out.println(APP_NAME_AND_VERSION + " - " + AUTHOR_AND_DATE);
+            System.out.println(APP_NAME_AND_VERSION + " - " + DEVELOPERS_AND_DATE);
             System.out.println("Syntax:");
             System.out.println("java -jar BDSup2Sub <in> <out> [options]");
             System.out.println("Options:");
