@@ -38,6 +38,7 @@
     </dependencies>
 
     <build>
+        <finalName>${name}-${version}</finalName>
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
