@@ -12,6 +12,7 @@
     <properties>
         <main.class>bdsup2sub.BDSup2Sub</main.class>
         <maven.build.timestamp.format>yyyy-MM-dd</maven.build.timestamp.format>
+        <timestamp>${maven.build.timestamp}</timestamp>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
