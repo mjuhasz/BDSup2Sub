@@ -943,7 +943,7 @@ public class SubDvd implements DvdSubtitleStream {
                 // 1 byte    pts length
                 int ptsLength = buffer.getByte(ofs+=1);
                 ofs += 1 + ptsLength; // skip PTS and stream ID
-                int packetStreamID = buffer.getByte(ofs++) & 0xf;
+                int packetStreamID = buffer.getByte(ofs++) - 0x20;
                 if (packetStreamID != streamID) {
                     // packet doesn't belong to stream -> skip
                     if (nextOfs % 0x800 != 0) {
