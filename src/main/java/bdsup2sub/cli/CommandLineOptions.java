@@ -228,14 +228,14 @@ public class CommandLineOptions {
         Option languageCode = OptionBuilder
                 .withArgName("langcode")
                 .withLongOpt(LANGUAGE_CODE)
-                .withDescription("language code used for SUB/IDX export\nDefault: de")
+                .withDescription("language code used for SUB/IDX export\nDefault: en")
                 .hasArg().create();
         options.addOption(languageCode);
 
         Option paletteFile = OptionBuilder
                 .withArgName("file")
                 .withLongOpt(PALETTE_FILE)
-                .withDescription("load palette file for SUB/IDX conversion\nDefault: use builtin palette")
+                .withDescription("load palette file for SUB/IDX conversion\nDefault: use built-in palette")
                 .hasArg().create();
         options.addOption(paletteFile);
     }
