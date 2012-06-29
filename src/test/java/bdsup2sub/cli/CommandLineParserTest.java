@@ -15,15 +15,16 @@
  */
 package bdsup2sub.cli;
 
-import bdsup2sub.core.CaptionMoveModeY;
-import bdsup2sub.core.PaletteMode;
-import bdsup2sub.core.Resolution;
-import bdsup2sub.core.ScalingFilter;
+import bdsup2sub.core.*;
 import org.apache.commons.cli.ParseException;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.io.File;
+import java.io.FileOutputStream;
+
+import static bdsup2sub.core.Configuration.*;
 import static org.junit.Assert.*;
 
 public class CommandLineParserTest {
@@ -206,13 +207,13 @@ public class CommandLineParserTest {
     @Test
     public void shouldDelayDefaultToZero() throws Exception {
         subject.parse("--version");
-        assertEquals(0, subject.getDelay().doubleValue(), 0);
+        assertEquals(0, subject.getDelay(), 0);
     }
 
     @Test
     public void shouldAcceptValidDelayArg() throws Exception {
         subject.parse("--delay", "-200");
-        assertEquals(-200, subject.getDelay().doubleValue(), 0);
+        assertEquals(-200, subject.getDelay(), 0);
     }
 
     @Test(expected = ParseException.class)
@@ -304,13 +305,13 @@ public class CommandLineParserTest {
     @Test
     public void shouldMaximumMergeTimeDifferenceDefaultTo200ms() throws Exception {
         subject.parse("--version");
-        assertEquals(200, subject.getMaximumTimeDifference().doubleValue(), 0);
+        assertEquals(200, subject.getMaximumTimeDifference(), 0);
     }
 
     @Test
     public void shouldAcceptValidMaximumMergeTimeDifferenceArg() throws Exception {
         subject.parse("--maxtimediff", "900");
-        assertEquals(900, subject.getMaximumTimeDifference().doubleValue(), 0);
+        assertEquals(900, subject.getMaximumTimeDifference(), 0);
     }
 
     @Test(expected = ParseException.class)
@@ -385,19 +386,328 @@ public class CommandLineParserTest {
     }
 
     @Test(expected = ParseException.class)
-    public void shouldRejectInvalidAlphaThresholdArg() throws Exception {
+    public void shouldRejectInvalidMoveXArg() throws Exception {
+        subject.parse("--movex", "foo,2");
+    }
+
+    @Test
+    public void shouldMoveYModeDefaultToKeep() throws Exception {
+        subject.parse("--version");
+        assertEquals(CaptionMoveModeY.KEEP_POSITION, subject.getMoveModeY());
+        assertEquals(10, subject.getMoveYOffset(), 0);
+    }
+
+    @Test(expected = ParseException.class)
+    public void shouldRejectInvalidMoveXOffsetArg() throws Exception {
+        subject.parse("--movex", "2,foo");
+    }
+
+    @Test(expected = ParseException.class)
+    public void shouldRejectIfMissingMoveXArg() throws Exception {
+        subject.parse("--movex");
+    }
+
+    @Test
+    public void shouldParseMoveXModeWithValidArgs() throws Exception {
+        subject.parse("--movex", "left,12");
+        assertEquals(CaptionMoveModeX.LEFT, subject.getMoveModeX());
+        assertEquals(12, subject.getMoveXOffset(), 0);
+    }
+
+    @Test
+    public void shouldParseMoveXModeWithoutOffset() throws Exception {
+        subject.parse("--movex", "right");
+        assertEquals(CaptionMoveModeX.RIGHT, subject.getMoveModeX());
+    }
+
+    @Test(expected = ParseException.class)
+    public void shouldRejectOutOfRangeMoveXOffset() throws Exception {
+        subject.parse("--movein", "right,-2");
+    }
+
+    @Test
+    public void shouldMoveXModeDefaultToKeep() throws Exception {
+        subject.parse("--version");
+        assertEquals(CaptionMoveModeX.KEEP_POSITION, subject.getMoveModeX());
+        assertEquals(10, subject.getMoveXOffset(), 0);
+    }
+
+    @Test(expected = ParseException.class)
+    public void shouldRejectInvalidCropLinesArg() throws Exception {
+        subject.parse("--croplines", "-1");
+    }
+
+    @Test
+    public void shouldCropLinesDefaultToZero() throws Exception {
+        subject.parse("--version");
+        assertEquals(0, subject.getCropLines());
+    }
+
+    @Test
+    public void shouldAcceptValidCropLinesArg() throws Exception {
+        subject.parse("--croplines", "75");
+        assertEquals(75, subject.getCropLines());
+    }
+
+    @Test(expected = ParseException.class)
+    public void shouldRejectNegativeAlphaCropThresholdArg() throws Exception {
+        subject.parse("--alphacropthr", "-1");
+    }
+
+    @Test(expected = ParseException.class)
+    public void shouldRejectOutOfRangeAlphaCropThresholdArg() throws Exception {
+        subject.parse("--alphacropthr", "256");
+    }
+
+    @Test
+    public void shouldAlphaThresholdDefaultTo14() throws Exception {
+        subject.parse("--version");
+        assertEquals(DEFAULT_ALPHA_CROP_THRESHOLD, subject.getAlphaCropThreshold());
+    }
+
+    @Test
+    public void shouldAcceptValidAlphaCropThresholdArg() throws Exception {
+        subject.parse("--alphacropthr", "75");
+        assertEquals(75, subject.getAlphaCropThreshold());
+    }
+
+    @Test(expected = ParseException.class)
+    public void shouldRejectInvalidScaleXArg() throws Exception {
+        subject.parse("--scale", "foo,2");
+    }
+
+    @Test(expected = ParseException.class)
+    public void shouldRejectInvalidScaleYArg() throws Exception {
+        subject.parse("--scale", "2,foo");
+    }
+
+    @Test(expected = ParseException.class)
+    public void shouldRejectIfMissingScaleArg() throws Exception {
+        subject.parse("--scale");
+    }
+
+    @Test(expected = ParseException.class)
+    public void shouldRejectIfMissingSecondScaleArg() throws Exception {
+        subject.parse("--scale", "2");
+    }
+
+    @Test(expected = ParseException.class)
+    public void shouldRejectOutOfRangeXScaleArg() throws Exception {
+        subject.parse("--scale", String.valueOf(MIN_FREE_SCALE_FACTOR - 1) + ",1");
+    }
+
+    @Test(expected = ParseException.class)
+    public void shouldRejectOutOfRangeYScaleArg() throws Exception {
+        subject.parse("--scale", "1," + String.valueOf(MAX_FREE_SCALE_FACTOR + 1));
+    }
+
+    @Test
+    public void shouldScaleHaveDefault() throws Exception {
+        subject.parse("--version");
+        assertEquals(DEFAULT_FREE_SCALE_FACTOR_X, subject.getScaleX(), 0);
+        assertEquals(DEFAULT_FREE_SCALE_FACTOR_Y, subject.getScaleY(), 0);
+    }
+
+    @Test
+    public void shouldParseExportPalette() throws Exception {
+        subject.parse("--exppal");
+        assertTrue(subject.isExportPalette());
+    }
+
+    @Test
+    public void shouldExportPaletteDefaultToFalse() throws Exception {
+        subject.parse("--version");
+        assertFalse(subject.isExportPalette());
+    }
+
+    @Test
+    public void shouldParseExportForcedSubtitlesOnly() throws Exception {
+        subject.parse("--forcedonly");
+        assertTrue(subject.isExportForcedSubtitlesOnly());
+    }
+
+    @Test
+    public void shouldExportForcedSubtitlesOnlyDefaultToFalse() throws Exception {
+        subject.parse("--version");
+        assertFalse(subject.isExportForcedSubtitlesOnly());
+    }
+
+    @Test
+    public void shouldParseForceAllArg() throws Exception {
+        subject.parse("--forcedflag", "set");
+        assertEquals(ForcedFlagState.SET, subject.getForcedFlagState());
+
+        subject.parse("--forcedflag", "clear");
+        assertEquals(ForcedFlagState.CLEAR, subject.getForcedFlagState());
+    }
+
+    @Test
+    public void shouldForceAllDefaultToKeep() throws Exception {
+        subject.parse("--version");
+        assertEquals(ForcedFlagState.KEEP, subject.getForcedFlagState());
+    }
+
+    @Test(expected = ParseException.class)
+    public void shouldRejectInvalidForcedFlagArg() throws Exception {
+        subject.parse("--forcedflag", "foo");
+    }
+
+    @Test(expected = ParseException.class)
+    public void shouldRejectIfMissingForcedFlagArg() throws Exception {
+        subject.parse("--forcedflag");
+    }
+
+    @Test
+    public void shouldParseSwapCrCbArg() throws Exception {
+        subject.parse("--swap");
+        assertTrue(subject.isSwapCrCb());
+    }
+
+    @Test
+    public void shouldSwapCrCbDefaultToFalse() throws Exception {
+        subject.parse("--version");
+        assertFalse(subject.isSwapCrCb());
+    }
+
+    @Test
+    public void shouldParseFixInvisibleArg() throws Exception {
+        subject.parse("--fixinv");
+        assertTrue(subject.isFixInvisibleFrames());
+    }
+
+    @Test
+    public void shouldFixInvisibleDefaultToFalse() throws Exception {
+        subject.parse("--version");
+        assertFalse(subject.isFixInvisibleFrames());
+    }
+
+    @Test
+    public void shouldParseVerboseArg() throws Exception {
+        subject.parse("--verbose");
+        assertTrue(subject.isVerbose());
+    }
+
+    @Test
+    public void shouldVerboseDefaultToFalse() throws Exception {
+        subject.parse("--version");
+        assertFalse(subject.isVerbose());
+    }
+
+    @Test(expected = ParseException.class)
+    public void shouldRejectIfMissingAlphaThresholdArg() throws Exception {
+        subject.parse("--alphathr");
+    }
+
+    @Test(expected = ParseException.class)
+    public void shouldRejectNegativeAlphaThresholdArg() throws Exception {
         subject.parse("--alphathr", "-1");
+    }
+
+    @Test(expected = ParseException.class)
+    public void shouldRejectOutOfRangeAlphaThresholdArg() throws Exception {
+        subject.parse("--alphathr", "256");
     }
 
     @Test
     public void shouldAlphaThresholdDefaultTo80() throws Exception {
-        subject.parse("--alphathr", "80");
-        assertEquals(80, subject.getAlphaThreshold().intValue());
+        subject.parse("--version");
+        assertEquals(DEFAULT_ALPHA_THRESHOLD, subject.getAlphaThreshold());
     }
 
     @Test
     public void shouldAcceptValidAlphaThresholdArg() throws Exception {
         subject.parse("--alphathr", "75");
-        assertEquals(75, subject.getAlphaThreshold().intValue());
+        assertEquals(75, subject.getAlphaThreshold());
+    }
+
+    @Test(expected = ParseException.class)
+    public void shouldRejectNegativeLuminanceLowMidThresholdArg() throws Exception {
+        subject.parse("--lumlowmidthr", "-1");
+    }
+
+    @Test(expected = ParseException.class)
+    public void shouldRejectNegativeLuminanceMidHighThresholdArg() throws Exception {
+        subject.parse("--lummidhighthr", "-1");
+    }
+
+    @Test(expected = ParseException.class)
+    public void shouldRejectOutOfRangeLuminanceLowMidThresholdArg() throws Exception {
+        subject.parse("--lumlowmidthr", "256");
+    }
+
+    @Test(expected = ParseException.class)
+    public void shouldRejectOutOfRangeLuminanceMidHighThresholdArg() throws Exception {
+        subject.parse("--lummidhighthr", "256");
+    }
+
+    @Test
+    public void shouldLuminanceLowMidThresholdDefaultTo160() throws Exception {
+        subject.parse("--version");
+        assertEquals(DEFAULT_LUMINANCE_LOW_MID_THRESHOLD, subject.getLumLowMidThreshold());
+    }
+
+    @Test
+    public void shouldLuminanceMidHighThresholdDefaultTo210() throws Exception {
+        subject.parse("--version");
+        assertEquals(DEFAULT_LUMINANCE_MID_HIGH_THRESHOLD, subject.getLumMidHighThreshold());
+    }
+
+    @Test
+    public void shouldAcceptValidLuminanceLowMidThresholdArg() throws Exception {
+        subject.parse("--lumlowmidthr", "75");
+        assertEquals(75, subject.getLumLowMidThreshold());
+    }
+
+    @Test
+    public void shouldAcceptValidLuminanceMidHighThresholdArg() throws Exception {
+        subject.parse("--lummidhighthr", "230");
+        assertEquals(230, subject.getLumMidHighThreshold());
+    }
+
+    @Test(expected = ParseException.class)
+    public void shouldRejectLuminanceLowMidBeingGreaterThanMidHigh() throws Exception {
+        subject.parse("--lumlowmidthr", "75", "--lummidhighthr", "50");
+    }
+
+    @Test(expected = ParseException.class)
+    public void shouldRejectMissingLanguageCodeArg() throws Exception {
+        subject.parse("--langcode");
+    }
+
+    @Test
+    public void shouldParseLanguageCodeArg() throws Exception {
+        subject.parse("--langcode", "de");
+        assertTrue(subject.getLanguageIndex() > 0 && subject.getLanguageIndex() < Constants.LANGUAGES.length - 1);
+    }
+
+    @Test
+    public void shouldLanguageCodeDefaultToEnglish() throws Exception {
+        subject.parse("--version");
+        assertEquals(0, subject.getLanguageIndex());
+        assertEquals("en", Constants.LANGUAGES[0][1]);
+    }
+
+    @Test(expected = ParseException.class)
+    public void shouldRejectNonExistentPaletteFileArg() throws Exception {
+        subject.parse("--palettefile", "foo");
+    }
+
+    @Test(expected = ParseException.class)
+    public void shouldRejectIfMissingPaletteFileArg() throws Exception {
+        subject.parse("--palettefile");
+    }
+
+    @Test
+    public void shouldAcceptValidPaletteFileArg() throws Exception {
+        File paletteFile = File.createTempFile("paletteFile", null);
+        paletteFile.deleteOnExit();
+
+        FileOutputStream fos = new FileOutputStream(paletteFile);
+        fos.write(new byte[] { 0x23, 0x43, 0x4F, 0x4C });
+        fos.close();
+
+        subject.parse("--palettefile", paletteFile.getAbsolutePath());
+
+        assertEquals(paletteFile, subject.getPaletteFile());
     }
 }

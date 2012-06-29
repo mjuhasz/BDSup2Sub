@@ -33,6 +33,9 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.ArrayList;
 
+import static bdsup2sub.core.Configuration.DEFAULT_CROP_LINE_COUNT;
+import static bdsup2sub.core.Configuration.DEFAULT_MOVE_X_OFFSET;
+import static bdsup2sub.core.Configuration.DEFAULT_MOVE_Y_OFFSET;
 import static bdsup2sub.core.Constants.*;
 import static bdsup2sub.utils.TimeUtils.ptsToTimeStr;
 import static com.mortennobel.imagescaling.ResampleFilters.*;
@@ -120,7 +123,7 @@ public class Core  extends Thread {
     /** Flag that defines whether to swap Cr/Cb components when loading a SUP */
     private static boolean swapCrCb;
     /** Y coordinate crop offset - when exporting, the Y position will be decreased by this value */
-    private static int cropOfsY = 0;
+    private static int cropOfsY = DEFAULT_CROP_LINE_COUNT;
     /** Use BT.601 color model instead of BT.709 */
     private static boolean useBT601;
     /** Use src fps for trg if possible */
@@ -129,9 +132,9 @@ public class Core  extends Thread {
     /** Factor to calculate height of one cinemascope bar from screen height */
     private static double cineBarFactor = 5.0/42;
     /** Additional y offset to consider when moving */
-    private static int moveOffsetY = 10;
+    private static int moveOffsetY = DEFAULT_MOVE_Y_OFFSET;
     /** Additional x offset to consider when moving */
-    private static int moveOffsetX = 10;
+    private static int moveOffsetX = DEFAULT_MOVE_X_OFFSET;
     /** Move move in Y direction */
     private static CaptionMoveModeY moveModeY = CaptionMoveModeY.KEEP_POSITION;
     /** Move move in X direction */

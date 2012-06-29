@@ -45,6 +45,15 @@ public final class Configuration {
     public static final double DEFAULT_SOURCE_FRAMERATE = Framerate.FPS_23_976.getValue();
     public static final double DEFAULT_TARGET_FRAMERATE = Framerate.PAL.getValue();
     public static final Resolution DEFAULT_TARGET_RESOLUTION = Resolution.PAL;
+    public static final int DEFAULT_ALPHA_CROP_THRESHOLD = 14;
+    public static final int DEFAULT_ALPHA_THRESHOLD = 80;
+    public static final int DEFAULT_LUMINANCE_MID_HIGH_THRESHOLD = 210;
+    public static final int DEFAULT_LUMINANCE_LOW_MID_THRESHOLD = 160;
+    public static final int DEFAULT_MOVE_Y_OFFSET = 10;
+    public static final int DEFAULT_MOVE_X_OFFSET = 10;
+    public static final int DEFAULT_CROP_LINE_COUNT = 0;
+    //Two equal captions are merged of they are closer than 200ms (0.2*90000 = 18000)
+    public static final int DEFAULT_MERGE_PTS_DIFF = 18000;
 
     private boolean convertResolution = CONVERT_RESOLUTION_BY_DEFAULT;
     private boolean convertFPS = CONVERT_FRAMERATE_BY_DEFAULT;
@@ -67,8 +76,8 @@ public final class Configuration {
     private static final Configuration INSTANCE = new Configuration();
     private final String configFilePath;
     private List<String> recentFiles;
-    private int[] luminanceThreshold = {210, 160};
-    private int alphaThreshold = 80;
+    private int[] luminanceThreshold = { DEFAULT_LUMINANCE_MID_HIGH_THRESHOLD, DEFAULT_LUMINANCE_LOW_MID_THRESHOLD };
+    private int alphaThreshold = DEFAULT_ALPHA_THRESHOLD;
 
     private Props props;
 
@@ -174,8 +183,7 @@ public final class Configuration {
      * Get maximum time difference for merging captions.
      */
     public int getMergePTSdiff() {
-        //Two equal captions are merged of they are closer than 200ms (0.2*90000 = 18000)
-        return props.get("mergePTSdiff", 18000);
+        return props.get("mergePTSdiff", DEFAULT_MERGE_PTS_DIFF);
     }
 
     public void setMergePTSdiff(int mergePTSdiff) {
@@ -186,7 +194,7 @@ public final class Configuration {
      * Get alpha threshold for cropping.
      */
     public int getAlphaCrop() {
-        return props.get("alphaCrop", 14);
+        return props.get("alphaCrop", DEFAULT_ALPHA_CROP_THRESHOLD);
     }
 
     public void setAlphaCrop(int alphaCrop) {
