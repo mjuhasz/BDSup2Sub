@@ -30,8 +30,9 @@ import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
-import static bdsup2sub.core.Constants.DEFAULT_DVD_PALETTE;
 import static bdsup2sub.core.Constants.LANGUAGES;
 import static bdsup2sub.utils.ByteUtils.*;
 import static bdsup2sub.utils.ToolBox.toHexLeftZeroPadded;
@@ -43,38 +44,27 @@ public class SupDvd implements DvdSubtitleStream {
 
     private static final Configuration configuration = Configuration.getInstance();
 
-    /** ArrayList of captions contained in the current file  */
-    private ArrayList<SubPictureDVD> subPictures = new ArrayList<SubPictureDVD>();
-    /** color palette read from ifo file  */
-    private Palette srcPalette = new Palette(DEFAULT_DVD_PALETTE);
+    private List<SubPictureDVD> subPictures = new ArrayList<SubPictureDVD>();
+
+    private int screenWidth = 720;
+    private int screenHeight = 576;
+    private int languageIdx;
+    private Palette srcPalette;
+
     /** color palette created for last decoded caption  */
     private Palette palette;
     /** bitmap of the last decoded caption  */
     private Bitmap bitmap;
-    /** screen width of imported VobSub  */
-    private int screenWidth = 720;
-    /** screen height of imported VobSub  */
-    private int screenHeight = 576;
-    /** global x offset  */
-    private int ofsXglob;
-    /** global y offset  */
-    private int ofsYglob;
-    /** global delay  */
-    private int delayGlob;
-    /** index of language read from IFO */
-    private int languageIdx;
     /** FileBuffer for reading SUP */
-    private FileBuffer buffer;
+    private FileBuffer fileBuffer;
     /** index of dominant color for the current caption  */
     private int primaryColorIndex;
     /** number of forced captions in the current file  */
     private int numForcedFrames;
     /** store last alpha values for invisible workaround */
-    private static int lastAlpha[] = {0, 0xf, 0xf, 0xf};
-    /* the string "DVDVIDEO-VTS" as byte representation */
-    private static byte IFOheader[] = { 0x44, 0x56, 0x44, 0x56, 0x49, 0x44, 0x45, 0x4F, 0x2D, 0x56, 0x54, 0x53 };
+    private static int lastAlpha[] = { 0, 0xf, 0xf, 0xf };
 
-    private static byte controlHeader[] = {
+    private static byte[] controlHeader = {
         0x00,													//  dummy byte (for shifting when forced)
         0x00, 0x00,												//  0: offset to end sequence
         0x01,													//  2: CMD 1: start displaying
@@ -89,31 +79,237 @@ public class SupDvd implements DvdSubtitleStream {
     };
 
 
-    /**
-     * Constructor
-     * @param fnSup file name of SUP file
-     * @param fnIfo file name of IFO file
-     * @throws CoreException
-     */
-    public SupDvd(String fnSup, String fnIfo) throws CoreException {
-        readIFO(fnIfo);
+    public SupDvd(String supFile, String ifoFile) throws CoreException {
+        IfoFileAttributes ifoFileAttributes = new IfoFileAttributes(ifoFile);
+        this.screenHeight = ifoFileAttributes.getScreenHeight();
+        this.screenWidth = ifoFileAttributes.getScreenWidth();
+        this.languageIdx = ifoFileAttributes.getLanguageIdx();
+        this.srcPalette = ifoFileAttributes.getSrcPalette();
 
+        readSupFile(supFile);
+    }
+
+    private void readSupFile(String supFile) throws CoreException {
         try {
-            long ofs = 0;
-            buffer = new FileBuffer(fnSup);
-            long size = buffer.getSize();
-            Core.setProgressMax((int)size);
+            long offset = 0;
+            fileBuffer = new FileBuffer(supFile);
+            long size = fileBuffer.getSize();
+            Core.setProgressMax((int) size);
             int i = 0;
             do {
                 Core.printX("# " + (++i) + "\n");
-                Core.setProgress((int)ofs);
-                Core.print("Ofs: " + ToolBox.toHexLeftZeroPadded(ofs , 8)+"\n");
-                ofs = readSupFrame(ofs, buffer);
-            } while (ofs < size);
+                Core.setProgress((int)offset);
+                Core.print("Offset: " + ToolBox.toHexLeftZeroPadded(offset, 8) + "\n");
+                offset = readSupFrame(offset, fileBuffer);
+            } while (offset < size);
         } catch (FileBufferException e) {
             throw new CoreException(e.getMessage());
         }
         Core.printX("\nDetected " + numForcedFrames + " forced captions.\n");
+    }
+
+    private long readSupFrame(long offset, FileBuffer buffer) throws CoreException  {
+        long ctrlOffset;
+        int  ctrlOfsRel;
+        int  rleSize;
+        int  ctrlSize;
+        ImageObjectFragment rleFrag;
+        int  length;
+        byte ctrlHeader[];
+
+        try {
+            // 2 bytes:  packet identifier 0x5350
+            long startOffset = offset;
+            if (buffer.getWord(offset) != 0x5350) {
+                throw new CoreException("Missing packet identifier at offset " + ToolBox.toHexLeftZeroPadded(offset, 8));
+            }
+            // 8 bytes PTS:  system clock reference, but use only the first 4
+            SubPictureDVD pic = new SubPictureDVD();
+            pic.offset = offset;
+            pic.width = screenWidth;
+            pic.height = screenHeight;
+
+            int pts = buffer.getDWordLE(offset += 2);
+            pic.startTime = pts;
+            // 2 bytes:  packet length (number of bytes after this entry)
+            length = buffer.getWord(offset += 8);
+            // 2 bytes: offset to control buffer
+            ctrlOfsRel = buffer.getWord(offset += 2);
+            rleSize = ctrlOfsRel - 2;           // calculate size of RLE buffer
+            ctrlSize = length - ctrlOfsRel - 2; // calculate size of control header
+            if (ctrlSize < 0) {
+                throw new CoreException("Invalid control buffer size");
+            }
+            ctrlOffset = ctrlOfsRel + offset;   // absolute offset of control header
+            offset += 2;
+            pic.rleFragments = new ArrayList<ImageObjectFragment>(1);
+            rleFrag = new ImageObjectFragment();
+            rleFrag.imageBufferOfs = offset;
+            rleFrag.imagePacketSize = rleSize;
+            pic.rleFragments.add(rleFrag);
+            pic.rleSize = rleSize;
+
+            pic.pal = new int[4];
+            pic.alpha = new int[4];
+            int alphaSum = 0;
+            int[] alphaUpdate = new int[4];
+            int alphaUpdateSum;
+            int delay = -1;
+            boolean colorAlphaUpdate = false;
+
+            Core.print("SP_DCSQT at ofs: " + ToolBox.toHexLeftZeroPadded(ctrlOffset, 8) + "\n");
+
+            // copy control header in buffer (to be more compatible with VobSub)
+            ctrlHeader = new byte[ctrlSize];
+            for (int i=0; i < ctrlSize; i++) {
+                ctrlHeader[i] = (byte)buffer.getByte(ctrlOffset + i);
+            }
+
+            try {
+                // parse control header
+                int b;
+                int index = 0;
+                int endSeqOfs = getWord(ctrlHeader, index) - ctrlOfsRel - 2;
+                if (endSeqOfs < 0 || endSeqOfs > ctrlSize) {
+                    Core.printWarn("Invalid end sequence offset -> no end time\n");
+                    endSeqOfs = ctrlSize;
+                }
+                index += 2;
+                parse_ctrl:
+                while (index < endSeqOfs) {
+                    int cmd = getByte(ctrlHeader, index++);
+                    switch (cmd) {
+                        case 0: // forced (?)
+                            pic.isforced = true;
+                            numForcedFrames++;
+                            break;
+                        case 1: // start display
+                            break;
+                        case 3: // palette info
+                            b = getByte(ctrlHeader, index++);
+                            pic.pal[3] = (b >> 4);
+                            pic.pal[2] = b & 0x0f;
+                            b = getByte(ctrlHeader, index++);
+                            pic.pal[1] = (b >> 4);
+                            pic.pal[0] = b & 0x0f;
+                            Core.print("Palette:   " + pic.pal[0] + ", " + pic.pal[1] + ", " + pic.pal[2] + ", " + pic.pal[3] + "\n");
+                            break;
+                        case 4: // alpha info
+                            b = getByte(ctrlHeader, index++);
+                            pic.alpha[3] = (b >> 4);
+                            pic.alpha[2] = b & 0x0f;
+                            b = getByte(ctrlHeader, index++);
+                            pic.alpha[1] = (b >> 4);
+                            pic.alpha[0] = b & 0x0f;
+                            for (int i = 0; i < 4; i++) {
+                                alphaSum += pic.alpha[i] & 0xff;
+                            }
+                            Core.print("Alpha:     " + pic.alpha[0] + ", " + pic.alpha[1] + ", " + pic.alpha[2] + ", " + pic.alpha[3] + "\n");
+                            break;
+                        case 5: // coordinates
+                            int xOfs = (getByte(ctrlHeader, index) << 4) | (getByte(ctrlHeader, index+1) >> 4);
+                            pic.setOfsX(xOfs);
+                            pic.setImageWidth((((getByte(ctrlHeader, index + 1) & 0xf) << 8) | (getByte(ctrlHeader, index + 2))) - xOfs + 1);
+                            int yOfs = (getByte(ctrlHeader, index + 3) << 4) | (getByte(ctrlHeader, index + 4) >> 4);
+                            pic.setOfsY(yOfs);
+                            pic.setImageHeight((((getByte(ctrlHeader, index + 4) & 0xf) << 8) | (getByte(ctrlHeader, index + 5))) - yOfs + 1);
+                            Core.print("Area info:" + " ("
+                                    + pic.getOfsX() + ", "+pic.getOfsY() + ") - (" + (pic.getOfsX() + pic.getImageWidth()-1) + ", "
+                                    + (pic.getOfsY() + pic.getImageHeight()-1) + ")\n");
+                            index += 6;
+                            break;
+                        case 6: // offset to RLE buffer
+                            pic.evenOfs = getWord(ctrlHeader, index) - 4;
+                            pic.oddOfs  = getWord(ctrlHeader, index + 2) - 4;
+                            index += 4;
+                            Core.print("RLE ofs:   " + ToolBox.toHexLeftZeroPadded(pic.evenOfs, 4) + ", " + ToolBox.toHexLeftZeroPadded(pic.oddOfs, 4) + "\n");
+                            break;
+                        case 7: // color/alpha update
+                            colorAlphaUpdate = true;
+                            //int len = ToolBox.getWord(ctrlHeader, index);
+                            // ignore the details for now, but just get alpha and palette info
+                            alphaUpdateSum = 0;
+                            b = getByte(ctrlHeader, index + 10);
+                            alphaUpdate[3] = (b >> 4);
+                            alphaUpdate[2] = b & 0x0f;
+                            b = getByte(ctrlHeader, index + 11);
+                            alphaUpdate[1] = (b >> 4);
+                            alphaUpdate[0] = b & 0x0f;
+                            for (int i = 0; i < 4; i++) {
+                                alphaUpdateSum += alphaUpdate[i] & 0xff;
+                            }
+                            // only use more opaque colors
+                            if (alphaUpdateSum > alphaSum) {
+                                alphaSum = alphaUpdateSum;
+                                System.arraycopy(alphaUpdate, 0, pic.alpha, 0, 4);
+                                // take over frame palette
+                                b = getByte(ctrlHeader, index+8);
+                                pic.pal[3] = (b >> 4);
+                                pic.pal[2] = b & 0x0f;
+                                b = getByte(ctrlHeader, index+9);
+                                pic.pal[1] = (b >> 4);
+                                pic.pal[0] = b & 0x0f;
+                            }
+                            // search end sequence
+                            index = endSeqOfs;
+                            delay = getWord(ctrlHeader, index) * 1024;
+                            endSeqOfs = getWord(ctrlHeader, index + 2)-ctrlOfsRel - 2;
+                            if (endSeqOfs < 0 || endSeqOfs > ctrlSize) {
+                                Core.printWarn("Invalid end sequence offset -> no end time\n");
+                                endSeqOfs = ctrlSize;
+                            }
+                            index += 4;
+                            break;
+                        case 0xff: // end sequence
+                            break parse_ctrl;
+                        default:
+                            Core.printWarn("Unknown control sequence " + toHexLeftZeroPadded(cmd, 2) + " skipped\n");
+                            break;
+                    }
+                }
+
+                if (endSeqOfs != ctrlSize) {
+                    int ctrlSeqCount = 1;
+                    index = -1;
+                    int nextIndex = endSeqOfs;
+                    while (nextIndex != index) {
+                        index = nextIndex;
+                        delay = getWord(ctrlHeader, index) * 1024;
+                        nextIndex = getWord(ctrlHeader, index + 2) - ctrlOfsRel - 2;
+                        ctrlSeqCount++;
+                    }
+                    if (ctrlSeqCount > 2) {
+                        Core.printWarn("Control sequence(s) ignored - result may be erratic.");
+                    }
+                    pic.endTime = pic.startTime + delay;
+                } else {
+                    pic.endTime = pic.startTime;
+                }
+
+                pic.setOriginal();
+
+                if (colorAlphaUpdate) {
+                    Core.printWarn("Palette update/alpha fading detected - result may be erratic.\n");
+                }
+
+                if (alphaSum == 0) {
+                    if (configuration.getFixZeroAlpha()) {
+                        System.arraycopy(lastAlpha, 0, pic.alpha, 0, 4);
+                        Core.printWarn("Invisible caption due to zero alpha - used alpha info of last caption.\n");
+                    } else {
+                        Core.printWarn("Invisible caption due to zero alpha (not fixed due to user setting).\n");
+                    }
+                }
+                lastAlpha = pic.alpha;
+            } catch (IndexOutOfBoundsException ex) {
+                throw new CoreException("Index " + ex.getMessage() + " out of bounds in control header.");
+            }
+
+            subPictures.add(pic);
+            return startOffset + length + 0x0a;
+        } catch (FileBufferException ex) {
+            throw new CoreException(ex.getMessage());
+        }
     }
 
     /**
@@ -236,217 +432,6 @@ public class SupDvd implements DvdSubtitleStream {
     }
 
     /**
-     * Read one frame from SUP file
-     * @param ofs offset of current frame
-     * @param buffer File Buffer to read from
-     * @return offset to next frame
-     * @throws CoreException
-     */
-    long readSupFrame(long ofs, FileBuffer buffer) throws CoreException  {
-        long ctrlOfs;
-        int  ctrlOfsRel;
-        int  rleSize;
-        int  ctrlSize;
-        ImageObjectFragment rleFrag;
-        int  length;
-        byte ctrlHeader[];
-
-        try {
-            // 2 bytes:  packet identifier 0x5350
-            long startOfs = ofs;
-            if (buffer.getWord(ofs) != 0x5350) {
-                throw new CoreException("Missing packet identifier at ofs " + ToolBox.toHexLeftZeroPadded(ofs, 8));
-            }
-            // 8 bytes PTS:  system clock reference, but use only the first 4
-            SubPictureDVD pic = new SubPictureDVD();
-            pic.offset = ofs;
-            pic.width = screenWidth;
-            pic.height = screenHeight;
-
-            int pts = buffer.getDWordLE(ofs+=2);
-            pic.startTime = pts + delayGlob;
-            // 2 bytes:  packet length (number of bytes after this entry)
-            length = buffer.getWord(ofs+=8);
-            // 2 bytes: offset to control buffer
-            ctrlOfsRel = buffer.getWord(ofs+=2);
-            rleSize = ctrlOfsRel-2;				// calculate size of RLE buffer
-            ctrlSize = length-ctrlOfsRel-2;		// calculate size of control header
-            if (ctrlSize < 0) {
-                throw new CoreException("Invalid control buffer size");
-            }
-            ctrlOfs = ctrlOfsRel + ofs;			// absolute offset of control header
-            ofs += 2;
-            pic.rleFragments = new ArrayList<ImageObjectFragment>(1);
-            rleFrag = new ImageObjectFragment();
-            rleFrag.imageBufferOfs = ofs;
-            rleFrag.imagePacketSize = rleSize;
-            pic.rleFragments.add(rleFrag);
-            pic.rleSize = rleSize;
-
-            pic.pal = new int[4];
-            pic.alpha = new int[4];
-            int alphaSum = 0;
-            int alphaUpdate[] = new int[4];
-            int alphaUpdateSum;
-            int delay = -1;
-            boolean ColAlphaUpdate = false;
-
-            Core.print("SP_DCSQT at ofs: " + ToolBox.toHexLeftZeroPadded(ctrlOfs, 8) + "\n");
-
-            // copy control header in buffer (to be more compatible with VobSub)
-            ctrlHeader = new byte[ctrlSize];
-            for (int i=0; i < ctrlSize; i++) {
-                ctrlHeader[i] = (byte)buffer.getByte(ctrlOfs + i);
-            }
-
-            try {
-                // parse control header
-                int b;
-                int index = 0;
-                int endSeqOfs = getWord(ctrlHeader, index)-ctrlOfsRel-2;
-                if (endSeqOfs < 0 || endSeqOfs > ctrlSize) {
-                    Core.printWarn("Invalid end sequence offset -> no end time\n");
-                    endSeqOfs = ctrlSize;
-                }
-                index += 2;
-                parse_ctrl:
-                while (index < endSeqOfs) {
-                    int cmd = getByte(ctrlHeader, index++);
-                    switch (cmd) {
-                        case 0: // forced (?)
-                            pic.isforced = true;
-                            numForcedFrames++;
-                            break;
-                        case 1: // start display
-                            break;
-                        case 3: // palette info
-                            b = getByte(ctrlHeader, index++);
-                            pic.pal[3] = (b >> 4);
-                            pic.pal[2] = b & 0x0f;
-                            b = getByte(ctrlHeader, index++);
-                            pic.pal[1] = (b >> 4);
-                            pic.pal[0] = b & 0x0f;
-                            Core.print("Palette:   "+pic.pal[0]+", "+pic.pal[1]+", "+pic.pal[2]+", "+pic.pal[3]+"\n");
-                            break;
-                        case 4: // alpha info
-                            b = getByte(ctrlHeader, index++);
-                            pic.alpha[3] = (b >> 4);
-                            pic.alpha[2] = b & 0x0f;
-                            b = getByte(ctrlHeader, index++);
-                            pic.alpha[1] = (b >> 4);
-                            pic.alpha[0] = b & 0x0f;
-                            for (int i = 0; i < 4; i++) {
-                                alphaSum += pic.alpha[i] & 0xff;
-                            }
-                            Core.print("Alpha:     " + pic.alpha[0] + ", " + pic.alpha[1] + ", " + pic.alpha[2] + ", " + pic.alpha[3] + "\n");
-                            break;
-                        case 5: // coordinates
-                            int xOfs = (getByte(ctrlHeader, index)<<4) | (getByte(ctrlHeader, index+1)>>4);
-                            pic.setOfsX(ofsXglob + xOfs);
-                            pic.setImageWidth((((getByte(ctrlHeader, index+1)&0xf)<<8) | (getByte(ctrlHeader, index+2))) - xOfs + 1);
-                            int yOfs = (getByte(ctrlHeader, index+3)<<4) | (getByte(ctrlHeader, index+4)>>4);
-                            pic.setOfsY(ofsYglob+yOfs);
-                            pic.setImageHeight((((getByte(ctrlHeader, index+4)&0xf)<<8) | (getByte(ctrlHeader, index+5))) - yOfs + 1);
-                            Core.print("Area info:" + " ("
-                                    + pic.getOfsX() + ", "+pic.getOfsY() + ") - (" + (pic.getOfsX() + pic.getImageWidth()-1) + ", "
-                                    + (pic.getOfsY() + pic.getImageHeight()-1) + ")\n");
-                            index += 6;
-                            break;
-                        case 6: // offset to RLE buffer
-                            pic.evenOfs = getWord(ctrlHeader, index) - 4;
-                            pic.oddOfs  = getWord(ctrlHeader, index+2) - 4;
-                            index += 4;
-                            Core.print("RLE ofs:   " + ToolBox.toHexLeftZeroPadded(pic.evenOfs, 4) + ", " + ToolBox.toHexLeftZeroPadded(pic.oddOfs, 4) + "\n");
-                            break;
-                        case 7: // color/alpha update
-                            ColAlphaUpdate = true;
-                            //int len = ToolBox.getWord(ctrlHeader, index);
-                            // ignore the details for now, but just get alpha and palette info
-                            alphaUpdateSum = 0;
-                            b = getByte(ctrlHeader, index+10);
-                            alphaUpdate[3] = (b >> 4);
-                            alphaUpdate[2] = b & 0x0f;
-                            b = getByte(ctrlHeader, index+11);
-                            alphaUpdate[1] = (b >> 4);
-                            alphaUpdate[0] = b & 0x0f;
-                            for (int i = 0; i < 4; i++) {
-                                alphaUpdateSum += alphaUpdate[i] & 0xff;
-                            }
-                            // only use more opaque colors
-                            if (alphaUpdateSum > alphaSum) {
-                                alphaSum = alphaUpdateSum;
-                                System.arraycopy(alphaUpdate, 0, pic.alpha, 0, 4);
-                                // take over frame palette
-                                b = getByte(ctrlHeader, index+8);
-                                pic.pal[3] = (b >> 4);
-                                pic.pal[2] = b & 0x0f;
-                                b = getByte(ctrlHeader, index+9);
-                                pic.pal[1] = (b >> 4);
-                                pic.pal[0] = b & 0x0f;
-                            }
-                            // search end sequence
-                            index = endSeqOfs;
-                            delay = getWord(ctrlHeader, index)*1024;
-                            endSeqOfs = getWord(ctrlHeader, index+2)-ctrlOfsRel-2;
-                            if (endSeqOfs < 0 || endSeqOfs > ctrlSize) {
-                                Core.printWarn("Invalid end sequence offset -> no end time\n");
-                                endSeqOfs = ctrlSize;
-                            }
-                            index += 4;
-                            break;
-                        case 0xff: // end sequence
-                            break parse_ctrl;
-                        default:
-                            Core.printWarn("Unknown control sequence " + toHexLeftZeroPadded(cmd, 2) + " skipped\n");
-                            break;
-                    }
-                }
-
-                if (endSeqOfs != ctrlSize) {
-                    int ctrlSeqCount = 1;
-                    index = -1;
-                    int nextIndex = endSeqOfs;
-                    while (nextIndex != index) {
-                        index = nextIndex;
-                        delay = getWord(ctrlHeader, index) * 1024;
-                        nextIndex = getWord(ctrlHeader, index + 2) - ctrlOfsRel - 2;
-                        ctrlSeqCount++;
-                    }
-                    if (ctrlSeqCount > 2) {
-                        Core.printWarn("Control sequence(s) ignored - result may be erratic.");
-                    }
-                    pic.endTime = pic.startTime + delay;
-                } else {
-                    pic.endTime = pic.startTime;
-                }
-
-                pic.setOriginal();
-
-                if (ColAlphaUpdate) {
-                    Core.printWarn("Palette update/alpha fading detected - result may be erratic.\n");
-                }
-
-                if (alphaSum == 0) {
-                    if (configuration.getFixZeroAlpha()) {
-                        System.arraycopy(lastAlpha, 0, pic.alpha, 0, 4);
-                        Core.printWarn("Invisible caption due to zero alpha - used alpha info of last caption.\n");
-                    } else {
-                        Core.printWarn("Invisible caption due to zero alpha (not fixed due to user setting).\n");
-                    }
-                }
-                lastAlpha = pic.alpha;
-            } catch (IndexOutOfBoundsException ex) {
-                throw new CoreException("Index " + ex.getMessage() + " out of bounds in control header.");
-            }
-
-            subPictures.add(pic);
-            return startOfs + length + 0x0a;
-        } catch (FileBufferException ex) {
-            throw new CoreException(ex.getMessage());
-        }
-    }
-
-    /**
      * Create IFO file
      * @param fname file name
      * @param pic a SubPicture object used to read screen width and height
@@ -525,144 +510,6 @@ public class SupDvd implements DvdSubtitleStream {
         }
     }
 
-    /**
-     * Read palette and size/frame info from IFO file
-     * @param fname file name
-     * @throws CoreException
-     */
-    void readIFO(String fname) throws CoreException {
-        final FileBuffer buf;
-        try {
-            buf = new FileBuffer(fname);
-            byte header[] = new byte[IFOheader.length];
-            buf.getBytes(0, header, IFOheader.length);
-            for (int i = 0; i < IFOheader.length; i++)
-                if (header[i]!=IFOheader[i]) {
-                    throw new CoreException("Not a valid IFO file.");
-                }
-
-            // video attributes
-            int vidAttr = buf.getWord(0x200);
-            if ( (vidAttr & 0x3000) != 0) {
-                // PAL
-                switch ((vidAttr>>3) & 3) {
-                    case 0:
-                        screenWidth = 720;
-                        screenHeight = 576;
-                        break;
-                    case 1:
-                        screenWidth = 704;
-                        screenHeight = 576;
-                        break;
-                    case 2:
-                        screenWidth = 352;
-                        screenHeight = 576;
-                        break;
-                    case 3:
-                        screenWidth = 352;
-                        screenHeight = 288;
-                        break;
-                }
-            } else {
-                // NTSC
-                switch ((vidAttr>>3) & 3) {
-                    case 0:
-                        screenWidth = 720;
-                        screenHeight = 480;
-                        break;
-                    case 1:
-                        screenWidth = 704;
-                        screenHeight = 480;
-                        break;
-                    case 2:
-                        screenWidth = 352;
-                        screenHeight = 480;
-                        break;
-                    case 3:
-                        screenWidth = 352;
-                        screenHeight = 240;
-                        break;
-                }
-            }
-            Core.print("Resolution: " + screenWidth + "x" + screenHeight + "\n");
-
-            // get start offset of Titles&Chapters table
-            long VTS_PGCITI_ofs = buf.getDWord(0xCC) * 2048;
-
-            // get language index of subtitle streams (ignore all but first language)
-            if (buf.getWord(0x254) > 0 && buf.getByte(0x256) == 1) {
-                StringBuilder langSB = new StringBuilder(2);
-                boolean found = false;
-                langSB.append((char)buf.getByte(0x258));
-                langSB.append((char)buf.getByte(0x259));
-                String lang = langSB.toString();
-                for (int i=0; i < LANGUAGES.length; i++) {
-                    if (lang.equalsIgnoreCase(LANGUAGES[i][1])) {
-                        languageIdx = i;
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found) {
-                    Core.printWarn("Illegal language id: " + lang + "\n");
-                } else {
-                    Core.print("Set language to: " + lang + "\n");
-                }
-            } else {
-                Core.printWarn("Missing language id.\n");
-            }
-
-            // PTT_SRPTI
-            VTS_PGCITI_ofs += buf.getDWord(VTS_PGCITI_ofs+0x0C);
-            Core.print("Reading palette from offset: " + ToolBox.toHexLeftZeroPadded(VTS_PGCITI_ofs, 8) + "\n");
-
-            // assume palette in VTS_PGC_1
-            long index = VTS_PGCITI_ofs;
-            for (int i=0; i < 16; i++) {
-                int y  = buf.getByte(index+0xA4+4*i+1) & 0xff;
-                int cb = buf.getByte(index+0xA4+4*i+2) & 0xff;
-                int cr = buf.getByte(index+0xA4+4*i+3) & 0xff;
-                srcPalette.setYCbCr(i, y, cb, cr);
-            }
-        } catch (FileBufferException e) {
-            throw new CoreException(e.getMessage());
-        }
-    }
-
-    /**
-     * decode given picture
-     * @param pic SubPicture object containing info about caption
-     * @throws CoreException
-     */
-    private void decode(SubPictureDVD pic) throws CoreException {
-        palette = SubDvd.decodePalette(pic, srcPalette);
-        bitmap  = SubDvd.decodeImage(pic, buffer, palette.getIndexOfMostTransparentPaletteEntry());
-
-        // crop
-        BitmapBounds bounds = bitmap.getCroppingBounds(palette.getAlpha(), configuration.getAlphaCrop());
-        if (bounds.yMin>0 || bounds.xMin > 0 || bounds.xMax<bitmap.getWidth()-1 || bounds.yMax<bitmap.getHeight()-1) {
-            int w = bounds.xMax - bounds.xMin + 1;
-            int h = bounds.yMax - bounds.yMin + 1;
-            if (w<2) {
-                w = 2;
-            }
-            if (h<2) {
-                h = 2;
-            }
-            bitmap = bitmap.crop(bounds.xMin, bounds.yMin, w, h);
-            // update picture
-            pic.setImageWidth(w);
-            pic.setImageHeight(h);
-            pic.setOfsX(pic.originalX + bounds.xMin);
-            pic.setOfsY(pic.originalY + bounds.yMin);
-        }
-
-        primaryColorIndex = bitmap.getPrimaryColorIndex(palette.getAlpha(), configuration.getAlphaThreshold(), palette.getY());
-    }
-
-    /* (non-Javadoc)
-     * @see SubtitleStream#decode(int)
-     */
     public void decode(int index) throws CoreException {
         if (index < subPictures.size()) {
             decode(subPictures.get(index));
@@ -671,155 +518,109 @@ public class SupDvd implements DvdSubtitleStream {
         }
     }
 
-    /**
-     * Return frame palette
-     * @param index index of caption
-     * @return int array with 4 entries representing frame palette
-     */
+    private void decode(SubPictureDVD pic) throws CoreException {
+        palette = SubDvd.decodePalette(pic, srcPalette);
+        bitmap  = SubDvd.decodeImage(pic, fileBuffer, palette.getIndexOfMostTransparentPaletteEntry());
+
+        // crop
+        BitmapBounds bounds = bitmap.getCroppingBounds(palette.getAlpha(), configuration.getAlphaCrop());
+        if (bounds.yMin > 0 || bounds.xMin > 0 || bounds.xMax < bitmap.getWidth() - 1 || bounds.yMax < bitmap.getHeight() - 1) {
+            int width = bounds.xMax - bounds.xMin + 1;
+            int height = bounds.yMax - bounds.yMin + 1;
+            if (width < 2) {
+                width = 2;
+            }
+            if (height < 2) {
+                height = 2;
+            }
+            bitmap = bitmap.crop(bounds.xMin, bounds.yMin, width, height);
+            // update picture
+            pic.setImageWidth(width);
+            pic.setImageHeight(height);
+            pic.setOfsX(pic.originalX + bounds.xMin);
+            pic.setOfsY(pic.originalY + bounds.yMin);
+        }
+        primaryColorIndex = bitmap.getPrimaryColorIndex(palette.getAlpha(), configuration.getAlphaThreshold(), palette.getY());
+    }
+
     public int[] getFramePalette(int index) {
         return subPictures.get(index).pal;
     }
 
-    /**
-     * Return original frame palette
-     * @param index index of caption
-     * @return int array with 4 entries representing frame palette
-     */
     public int[] getOriginalFramePalette(int index) {
         return subPictures.get(index).originalPal;
     }
 
-    /**
-     * Return frame alpha
-     * @param index index of caption
-     * @return int array with 4 entries representing frame alphas
-     */
     public int[] getFrameAlpha(int index) {
         return subPictures.get(index).alpha;
     }
 
-    /**
-     * Return original frame alpha
-     * @param index index of caption
-     * @return int array with 4 entries representing frame alphas
-     */
     public int[] getOriginalFrameAlpha(int index) {
         return subPictures.get(index).originalAlpha;
     }
 
-    /* (non-Javadoc)
-     * @see SubtitleStream#getImage(Bitmap)
-     */
     public BufferedImage getImage(Bitmap bm) {
         return bm.getImage(palette.getColorModel());
     }
 
-    /* (non-Javadoc)
-     * @see SubtitleStream#getPalette()
-     */
     public Palette getPalette() {
         return palette;
     }
 
-    /* (non-Javadoc)
-     * @see SubtitleStream#getBitmap()
-     */
     public Bitmap getBitmap() {
         return bitmap;
     }
 
-    /* (non-Javadoc)
-     * @see SubtitleStream#getImage()
-     */
     public BufferedImage getImage() {
         return bitmap.getImage(palette.getColorModel());
     }
 
-    /* (non-Javadoc)
-     * @see SubtitleStream#getPrimaryColorIndex()
-     */
     public int getPrimaryColorIndex() {
         return primaryColorIndex;
     }
 
-    /* (non-Javadoc)
-     * @see SubtitleStream#getSubPicture(int)
-     */
     public SubPicture getSubPicture(int index) {
         return subPictures.get(index);
     }
 
-    /* (non-Javadoc)
-     * @see SubtitleStream#getNumFrames()
-     */
     public int getFrameCount() {
         return subPictures.size();
     }
 
-    /* (non-Javadoc)
-     * @see SubtitleStream#getNumForcedFrames()
-     */
     public int getForcedFrameCount() {
         return numForcedFrames;
     }
 
-    /* (non-Javadoc)
-     * @see SubtitleStream#isForced(int)
-     */
     public boolean isForced(int index) {
         return subPictures.get(index).isforced;
     }
 
-    /* (non-Javadoc)
-     * @see SubtitleStream#close()
-     */
     public void close() {
-        if (buffer!=null) {
-            buffer.close();
+        if (fileBuffer !=null) {
+            fileBuffer.close();
         }
     }
 
-    /* (non-Javadoc)
-     * @see SubtitleStream#getEndTime(int)
-     */
     public long getEndTime(int index) {
         return subPictures.get(index).endTime;
     }
 
-    /* (non-Javadoc)
-     * @see SubtitleStream#getStartTime(int)
-     */
     public long getStartTime(int index) {
         return subPictures.get(index).startTime;
     }
 
-    /* (non-Javadoc)
-     * @see SubtitleStream#getStartOffset(int)
-     */
     public long getStartOffset(int index) {
         return subPictures.get(index).offset;
     }
 
-    /**
-     * get language index read from Ids
-     * @return language as String
-     */
     public int getLanguageIdx() {
         return languageIdx;
     }
 
-    /**
-     * get imported palette
-     * @return imported palette
-     */
     public Palette getSrcPalette() {
         return srcPalette;
     }
 
-    /**
-     * set imported palette
-     * @param pal new palette
-     */
     public void setSrcPalette(Palette pal) {
         srcPalette = pal;
     }
