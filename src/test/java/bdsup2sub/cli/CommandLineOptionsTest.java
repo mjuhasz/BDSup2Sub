@@ -71,9 +71,9 @@ public class CommandLineOptionsTest {
 
     @Test
     public void shouldHaveLoadSettingsOption() {
-        String option = "load-settings";
+        String option = "L";
         assertTrue(options.hasOption(option));
-        assertNull(options.getOption(option).getOpt());
+        assertEquals("load-settings", options.getOption(option).getLongOpt());
         assertFalse(options.getOption(option).isRequired());
         assertFalse(options.getOption(option).hasArg());
     }
@@ -91,14 +91,14 @@ public class CommandLineOptionsTest {
 
     @Test
     public void shouldHaveConvertFramerateOption() {
-        String option = "convertfps";
+        String option = "C";
         assertTrue(options.hasOption(option));
-        assertNull(options.getOption(option).getOpt());
+        assertEquals("convertfps", options.getOption(option).getLongOpt());
         assertFalse(options.getOption(option).isRequired());
         assertEquals(2, options.getOption(option).getArgs());
         assertFalse(options.getOption(option).hasOptionalArg());
         assertEquals(',', options.getOption(option).getValueSeparator());
-        assertEquals("<src>, <trg>", options.getOption(option).getArgName());
+        assertEquals("src>, <trg", options.getOption(option).getArgName());
     }
 
     @Test
@@ -224,9 +224,9 @@ public class CommandLineOptionsTest {
 
     @Test
     public void shouldHaveScaleOption() {
-        String option = "scale";
+        String option = "S";
         assertTrue(options.hasOption(option));
-        assertNull(options.getOption(option).getOpt());
+        assertEquals("scale", options.getOption(option).getLongOpt());
         assertFalse(options.getOption(option).isRequired());
         assertEquals(2, options.getOption(option).getArgs());
         assertFalse(options.getOption(option).hasOptionalArg());
@@ -236,27 +236,27 @@ public class CommandLineOptionsTest {
 
     @Test
     public void shouldHaveExportPaletteOption() {
-        String option = "exppal";
+        String option = "P";
         assertTrue(options.hasOption(option));
-        assertNull(options.getOption(option).getOpt());
+        assertEquals("exppal", options.getOption(option).getLongOpt());
         assertFalse(options.getOption(option).isRequired());
         assertFalse(options.getOption(option).hasArg());
     }
 
     @Test
     public void shouldHaveExportForcedSubtitlesOnlyOption() {
-        String option = "forcedonly";
+        String option = "D";
         assertTrue(options.hasOption(option));
-        assertNull(options.getOption(option).getOpt());
+        assertEquals("forcedonly", options.getOption(option).getLongOpt());
         assertFalse(options.getOption(option).isRequired());
         assertFalse(options.getOption(option).hasArg());
     }
 
     @Test
     public void shouldHaveForcedFlagStateOption() {
-        String option = "forcedflag";
+        String option = "F";
         assertTrue(options.hasOption(option));
-        assertNull(options.getOption(option).getOpt());
+        assertEquals("forcedflag", options.getOption(option).getLongOpt());
         assertFalse(options.getOption(option).isRequired());
         assertTrue(options.getOption(option).hasArg());
         assertFalse(options.getOption(option).hasOptionalArg());
@@ -265,27 +265,27 @@ public class CommandLineOptionsTest {
 
     @Test
     public void shouldHaveSwapCrCbOption() {
-        String option = "swap";
+        String option = "w";
         assertTrue(options.hasOption(option));
-        assertNull(options.getOption(option).getOpt());
+        assertEquals("swap", options.getOption(option).getLongOpt());
         assertFalse(options.getOption(option).isRequired());
         assertFalse(options.getOption(option).hasArg());
     }
 
     @Test
     public void shouldHaveFixInvisibleFramesOption() {
-        String option = "fixinv";
+        String option = "i";
         assertTrue(options.hasOption(option));
-        assertNull(options.getOption(option).getOpt());
+        assertEquals("fixinv", options.getOption(option).getLongOpt());
         assertFalse(options.getOption(option).isRequired());
         assertFalse(options.getOption(option).hasArg());
     }
 
     @Test
     public void shouldHaveAlphaThresholdOption() {
-        String option = "alphathr";
+        String option = "A";
         assertTrue(options.hasOption(option));
-        assertNull(options.getOption(option).getOpt());
+        assertEquals("alphathr", options.getOption(option).getLongOpt());
         assertFalse(options.getOption(option).isRequired());
         assertTrue(options.getOption(option).hasArg());
         assertFalse(options.getOption(option).hasOptionalArg());
@@ -294,9 +294,9 @@ public class CommandLineOptionsTest {
 
     @Test
     public void shouldHaveLuminanceLowMidThresholdOption() {
-        String option = "lumlowmidthr";
+        String option = "M";
         assertTrue(options.hasOption(option));
-        assertNull(options.getOption(option).getOpt());
+        assertEquals("lumlowmidthr", options.getOption(option).getLongOpt());
         assertFalse(options.getOption(option).isRequired());
         assertTrue(options.getOption(option).hasArg());
         assertFalse(options.getOption(option).hasOptionalArg());
@@ -305,9 +305,9 @@ public class CommandLineOptionsTest {
 
     @Test
     public void shouldHaveLuminanceMidHighThresholdOption() {
-        String option = "lummidhighthr";
+        String option = "H";
         assertTrue(options.hasOption(option));
-        assertNull(options.getOption(option).getOpt());
+        assertEquals("lummidhighthr", options.getOption(option).getLongOpt());
         assertFalse(options.getOption(option).isRequired());
         assertTrue(options.getOption(option).hasArg());
         assertFalse(options.getOption(option).hasOptionalArg());
@@ -316,9 +316,9 @@ public class CommandLineOptionsTest {
 
     @Test
     public void shouldHaveLanguageCodeOption() {
-        String option = "langcode";
+        String option = "l";
         assertTrue(options.hasOption(option));
-        assertNull(options.getOption(option).getOpt());
+        assertEquals("langcode", options.getOption(option).getLongOpt());
         assertFalse(options.getOption(option).isRequired());
         assertTrue(options.getOption(option).hasArg());
         assertFalse(options.getOption(option).hasOptionalArg());
@@ -327,9 +327,9 @@ public class CommandLineOptionsTest {
 
     @Test
     public void shouldHavePaletteFileOption() {
-        String option = "palettefile";
+        String option = "t";
         assertTrue(options.hasOption(option));
-        assertNull(options.getOption(option).getOpt());
+        assertEquals("palettefile", options.getOption(option).getLongOpt());
         assertFalse(options.getOption(option).isRequired());
         assertTrue(options.getOption(option).hasArg());
         assertFalse(options.getOption(option).hasOptionalArg());

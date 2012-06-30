@@ -23,6 +23,7 @@ import bdsup2sub.utils.ToolBox;
 import org.apache.commons.cli.*;
 
 import java.io.File;
+import java.util.Comparator;
 
 import static bdsup2sub.cli.CommandLineOptions.*;
 import static bdsup2sub.core.Configuration.*;
@@ -280,9 +281,7 @@ public class CommandLineParser {
             exportForcedSubtitlesOnly = line.hasOption(EXPORT_FORCED_SUBTITLES_ONLY) ? Optional.of(Boolean.TRUE) : Optional.<Boolean>absent();
             if (line.hasOption(FORCED_FLAG)) {
                 String value = line.getOptionValue(FORCED_FLAG);
-                if (value.equalsIgnoreCase("keep")) {
-                    forcedFlagState = Optional.of(ForcedFlagState.KEEP);
-                } else if (value.equalsIgnoreCase("set")) {
+                if (value.equalsIgnoreCase("set")) {
                     forcedFlagState = Optional.of(ForcedFlagState.SET);
                 } else if (value.equalsIgnoreCase("clear")) {
                     forcedFlagState = Optional.of(ForcedFlagState.CLEAR);
@@ -497,6 +496,19 @@ public class CommandLineParser {
 
     public void printHelp() {
         HelpFormatter formatter = new HelpFormatter();
-        formatter.printHelp("java -jar BDSup2Sub <in> <out> [options]", options);
+        formatter.setOptionComparator(new Comparator() {
+            @Override
+            public int compare(Object o1, Object o2) {
+                Option opt1 = (Option) o1;
+                Option opt2 = (Option) o2;
+
+                int opt1Index = OPTION_ORDER.indexOf(opt1.getOpt());
+                int opt2Index = OPTION_ORDER.indexOf(opt2.getOpt());
+
+                return (int) Math.signum(opt1Index - opt2Index);
+            }
+        });
+        formatter.setWidth(80);
+        formatter.printHelp("java -jar BDSup2Sub [options] -o <output> <input>", options);
     }
 }
