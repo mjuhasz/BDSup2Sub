@@ -250,7 +250,7 @@ public class BDSup2Sub {
                 subtitleFile = new File(FilenameUtils.removeExtension(outputFile) + ".sup");
                 indexFile = null;
             }
-            if ((indexFile != null && !indexFile.canWrite()) || (!subtitleFile.canWrite())) {
+            if ((indexFile != null && indexFile.exists() && !indexFile.canWrite()) || (subtitleFile.exists() && !subtitleFile.canWrite())) {
                 throw new CoreException("Target file '" + outputFile + "' is write protected.");
             }
 

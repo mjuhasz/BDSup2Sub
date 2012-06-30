@@ -84,6 +84,7 @@ public final class Configuration {
 
     private Configuration() {
         configFilePath = workOutConfigFilePath();
+        props = new Props();
     }
 
     public void load() {
@@ -92,7 +93,7 @@ public final class Configuration {
     }
 
     private void readConfigFile() {
-        props = new Props();
+        props.clear();
         props.setHeader(APP_NAME_AND_VERSION + " settings - don't modify manually");
         props.load(configFilePath);
     }
@@ -114,7 +115,10 @@ public final class Configuration {
     }
 
     public void storeConfig() {
-        props.save(configFilePath);
+        System.out.println("climode" + cliMode);
+        if (!cliMode) {
+            props.save(configFilePath);
+        }
     }
 
     private void loadRecentFiles() {
