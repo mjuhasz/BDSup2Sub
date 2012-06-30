@@ -220,6 +220,7 @@ public class BDSup2Sub {
     private static void setupGUI() {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            applyGtkThemeWorkarounds();
         } catch (Exception e) {
             // ignore
         }

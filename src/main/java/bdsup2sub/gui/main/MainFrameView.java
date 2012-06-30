@@ -16,6 +16,7 @@
 package bdsup2sub.gui.main;
 
 import bdsup2sub.core.*;
+import bdsup2sub.gui.support.ActionMenu;
 import bdsup2sub.gui.support.EditPane;
 
 import javax.swing.*;
@@ -52,25 +53,25 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
     private JTextArea console;
 
     private JMenuBar jMenuBar;
-    private JMenu jMenuFile;
+    private ActionMenu jMenuFile;
     private JMenuItem jMenuItemLoad;
     private JMenu jMenuRecentFiles;
     private JMenuItem jMenuItemSave;
     private JMenuItem jMenuItemClose;
     private JMenuItem jMenuItemQuit;
-    private JMenu jMenuEdit;
+    private ActionMenu jMenuEdit;
     private JMenuItem jMenuItemEditFrame;
     private JMenuItem jMenuItemEditDefaultDvdPalette;
     private JMenuItem jMenuItemEditImportedDvdPalette;
     private JMenuItem jMenuItemEditDvdFramePalette;
     private JMenuItem jMenuItemMoveAll;
     private JMenuItem jMenuItemResetCropOffset;
-    private JMenu jMenuSettings;
+    private ActionMenu jMenuSettings;
     private JMenuItem jMenuItemConversionSettings;
     private JCheckBoxMenuItem jMenuItemSwapCrCb;
     private JCheckBoxMenuItem jMenuItemFixInvisibleFrames;
     private JCheckBoxMenuItem jMenuItemVerbatimOutput;
-    private JMenu jMenuHelp;
+    private ActionMenu jMenuHelp;
     private JMenuItem jMenuItemHelp;
 
     private JComboBox jComboBoxSubNum;
@@ -92,7 +93,7 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
     private ActionListener recentFilesMenuActionListener;
     
     private final MainFrameModel model;
-    
+
     public MainFrameView(MainFrameModel model) {
         super(APP_NAME_AND_VERSION);
         this.model = model;
@@ -144,7 +145,7 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
 
     private JMenu getJMenuFile() {
         if (jMenuFile == null) {
-            jMenuFile = new JMenu();
+            jMenuFile = new ActionMenu();
             jMenuFile.setName("");
             jMenuFile.setMnemonic('f');
             jMenuFile.setText("File");
@@ -257,7 +258,7 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
 
     private JMenu getJMenuEdit() {
         if (jMenuEdit == null) {
-            jMenuEdit = new JMenu();
+            jMenuEdit = new ActionMenu();
             jMenuEdit.setText("Edit");
             jMenuEdit.setMnemonic('e');
             jMenuEdit.add(getJMenuItemEditFrame());
@@ -356,7 +357,7 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
 
     private JMenu getJMenuPrefs() {
         if (jMenuSettings == null) {
-            jMenuSettings = new JMenu();
+            jMenuSettings = new ActionMenu();
             jMenuSettings.setText("Settings");
             jMenuSettings.setMnemonic('s');
             jMenuSettings.add(getJMenuItemConversionSettings());
@@ -436,7 +437,7 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
 
     private JMenu getJMenuHelp() {
         if (jMenuHelp == null) {
-            jMenuHelp = new JMenu();
+            jMenuHelp = new ActionMenu();
             jMenuHelp.setText("Help");
             jMenuHelp.setMnemonic('h');
             jMenuHelp.add(getJMenuItemHelp());
