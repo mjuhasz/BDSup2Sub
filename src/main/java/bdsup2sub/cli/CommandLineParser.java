@@ -23,6 +23,7 @@ import bdsup2sub.utils.ToolBox;
 import org.apache.commons.cli.*;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Comparator;
 
 import static bdsup2sub.cli.CommandLineOptions.*;
@@ -418,8 +419,7 @@ public class CommandLineParser {
             if (!paletteFile.exists()) {
                 throw new ParseException("Palette file not found: " + value);
             } else {
-                byte id[] = ToolBox.getFileID(value, 4);
-                if (id == null || id[0] != 0x23 || id[1] != 0x43 || id[2] != 0x4F || id[3] != 0x4C) { //#COL
+                if (!Arrays.equals("#COL".getBytes(), ToolBox.getFileID(value, 4))) {
                     throw new ParseException("Invalid palette file: " + value);
                 }
             }

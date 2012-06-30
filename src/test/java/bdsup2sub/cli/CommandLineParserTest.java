@@ -18,13 +18,13 @@ package bdsup2sub.cli;
 import bdsup2sub.core.*;
 import org.apache.commons.cli.ParseException;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.FileOutputStream;
 
-import static bdsup2sub.core.Configuration.*;
+import static bdsup2sub.core.Configuration.MAX_FREE_SCALE_FACTOR;
+import static bdsup2sub.core.Configuration.MIN_FREE_SCALE_FACTOR;
 import static org.junit.Assert.*;
 
 public class CommandLineParserTest {
@@ -765,7 +765,7 @@ public class CommandLineParserTest {
         paletteFile.deleteOnExit();
 
         FileOutputStream fos = new FileOutputStream(paletteFile);
-        fos.write(new byte[] { 0x23, 0x43, 0x4F, 0x4C });
+        fos.write("#COL".getBytes());
         fos.close();
 
         subject.parse("--palettefile", paletteFile.getAbsolutePath());
