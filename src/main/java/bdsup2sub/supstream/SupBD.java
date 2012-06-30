@@ -271,7 +271,6 @@ public class SupBD implements SubtitleStream {
                                 so[0] = null;
                                 // store state to be able to revert to it
                                 picTmp = subPictureBD.deepCopy();
-                                picTmp.endTime = ptsPCS;
                                 // create new subPictureBD
                                 parsePCS(segment, subPictureBD, so);
                             }
