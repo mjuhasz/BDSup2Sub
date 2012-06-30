@@ -16,6 +16,8 @@
 package bdsup2sub.cli;
 
 import bdsup2sub.core.*;
+import bdsup2sub.utils.FilenameUtils;
+import bdsup2sub.utils.optional.Optional;
 import bdsup2sub.utils.SubtitleUtils;
 import bdsup2sub.utils.ToolBox;
 import org.apache.commons.cli.*;
@@ -30,35 +32,40 @@ public class CommandLineParser {
 
     private boolean printHelpMode;
     private boolean printVersionMode;
-    private Resolution resolution;
-    private Double sourceFrameRate;
-    private Double targetFrameRate;
-    private double delay = DEFAULT_PTS_DELAY;
-    private ScalingFilter scalingFilter = ScalingFilter.BILINEAR;
-    private PaletteMode paletteMode = PaletteMode.CREATE_NEW;
-    private Double minimumDisplayTime;
-    private double maximumTimeDifference = DEFAULT_MERGE_PTS_DIFF / 90.0;
-    private CaptionMoveModeY moveModeY = CaptionMoveModeY.KEEP_POSITION;
-    private int moveYOffset = DEFAULT_MOVE_Y_OFFSET;
-    private CaptionMoveModeX moveModeX = CaptionMoveModeX.KEEP_POSITION;
-    private Double screenRatio;
-    private int moveXOffset = DEFAULT_MOVE_X_OFFSET;
-    private int cropLines = DEFAULT_CROP_LINE_COUNT;
-    private int alphaCropThreshold = DEFAULT_ALPHA_CROP_THRESHOLD;
-    private double scaleX = DEFAULT_FREE_SCALE_FACTOR_X;
-    private double scaleY = DEFAULT_FREE_SCALE_FACTOR_Y;
-    private boolean exportPalette;
-    private boolean exportForcedSubtitlesOnly;
-    private ForcedFlagState forcedFlagState = ForcedFlagState.KEEP;
-    private boolean swapCrCb;
-    private boolean fixInvisibleFrames;
-    private boolean verbose;
-    private int alphaThreshold = DEFAULT_ALPHA_THRESHOLD;
-    private int lumLowMidThreshold = DEFAULT_LUMINANCE_LOW_MID_THRESHOLD;
-    private int lumMidHighThreshold =  DEFAULT_LUMINANCE_MID_HIGH_THRESHOLD;
-    private int languageIndex;
-    private File paletteFile;
+    private boolean cliMode;
+    private File inputFile;
+    private File outputFile;
+    private Optional<OutputMode> outputMode = Optional.absent();
+    private boolean loadSettings;
+    private Optional<Resolution> resolution = Optional.absent();
+    private Optional<Double> sourceFrameRate = Optional.absent();
+    private Optional<Double> targetFrameRate = Optional.absent();
+    private Optional<Double> delay = Optional.absent();
+    private Optional<ScalingFilter> scalingFilter = Optional.absent();
+    private Optional<PaletteMode> paletteMode = Optional.absent();
+    private Optional<Double> minimumDisplayTime = Optional.absent();
+    private Optional<Double> maximumTimeDifference = Optional.absent();
+    private Optional<CaptionMoveModeY> moveModeY = Optional.absent();
+    private double screenRatio;
+    private int moveYOffset;
+    private Optional<CaptionMoveModeX> moveModeX = Optional.absent();
+    private Optional<Integer> moveXOffset = Optional.absent();
+    private Optional<Integer> cropLines = Optional.absent();
+    private Optional<Integer> alphaCropThreshold = Optional.absent();
+    private Optional<Double> scaleX = Optional.absent();
+    private Optional<Double> scaleY = Optional.absent();
+    private Optional<Boolean> exportPalette = Optional.absent();
+    private Optional<Boolean> exportForcedSubtitlesOnly = Optional.absent();
+    private Optional<ForcedFlagState> forcedFlagState = Optional.absent();
+    private Optional<Boolean> swapCrCb = Optional.absent();
+    private Optional<Boolean> fixInvisibleFrames = Optional.absent();
+    private Optional<Boolean> verbose = Optional.absent();
+    private Optional<Integer> alphaThreshold = Optional.absent();
+    private Optional<Integer> lumLowMidThreshold  = Optional.absent();
+    private Optional<Integer> lumMidHighThreshold = Optional.absent();
+    private Optional<Integer> languageIndex = Optional.absent();
 
+    private File paletteFile;
     private Options options;
 
     public CommandLineParser() {
@@ -73,20 +80,52 @@ public class CommandLineParser {
         } else if (line.hasOption(VERSION)) {
             printVersionMode = true;
         } else {
+            if (line.getArgList().isEmpty() && line.hasOption(OUTPUT_FILE)) {
+                throw new ParseException("Missing input file.");
+            } else if (line.getArgList().size() > 1) {
+                throw new ParseException("Too many input files.");
+            } else if (line.getArgList().size() == 1) {
+                inputFile = new File(line.getArgList().get(0).toString());
+                if (!inputFile.exists()) {
+                    throw new ParseException("Input file not found: " + inputFile.getAbsolutePath());
+                }
+            }
+            if (line.hasOption(OUTPUT_FILE)) {
+                String value = line.getOptionValue(OUTPUT_FILE);
+                outputFile = new File(value);
+
+                String extension = FilenameUtils.getExtension(value);
+                if (extension.isEmpty()) {
+                    throw new ParseException("No extension given for output " + outputFile);
+                }
+                if (extension.equalsIgnoreCase("sup")) {
+                    outputMode = Optional.of(OutputMode.BDSUP);
+                } else if (extension.equalsIgnoreCase("sub") || extension.equals("idx")) {
+                    outputMode = Optional.of(OutputMode.VOBSUB);
+                } else if (extension.equalsIgnoreCase("xml")) {
+                    outputMode = Optional.of(OutputMode.XML);
+                } else if (extension.equalsIgnoreCase("ifo")) {
+                    outputMode = Optional.of(OutputMode.SUPIFO);
+                } else {
+                    throw new ParseException("Unknown extension of output " + outputFile);
+                }
+            }
+            cliMode = line.hasOption(OUTPUT_FILE);
+            loadSettings = line.hasOption(LOAD_SETTINGS) || !cliMode;
             if (line.hasOption(RESOLUTION)) {
                 String value = line.getOptionValue(RESOLUTION);
                 if (value.equalsIgnoreCase("keep")) {
-                    resolution = null;
+                    // keep undefined
                 } else if (value.equalsIgnoreCase("pal") || value.equalsIgnoreCase("576")) {
-                    resolution = Resolution.PAL;
+                    resolution = Optional.of(Resolution.PAL);
                 } else if (value.equalsIgnoreCase("ntsc") || value.equalsIgnoreCase("480")) {
-                    resolution = Resolution.NTSC;
+                    resolution = Optional.of(Resolution.NTSC);
                 } else if (value.equalsIgnoreCase("720p") || value.equalsIgnoreCase("720")) {
-                    resolution = Resolution.HD_720;
+                    resolution = Optional.of(Resolution.HD_720);
                 } else if (value.equalsIgnoreCase("1440x1080")) {
-                    resolution = Resolution.HD_1440x1080;
+                    resolution = Optional.of(Resolution.HD_1440x1080);
                 } else if (value.equalsIgnoreCase("1080p") || value.equalsIgnoreCase("1080")) {
-                    resolution = Resolution.HD_1080;
+                    resolution = Optional.of(Resolution.HD_1080);
                 } else {
                     throw new ParseException("Illegal resolution: " + value);
                 }
@@ -98,16 +137,16 @@ public class CommandLineParser {
                 }
                 String value = line.getOptionValues(CONVERT_FRAMERATE)[0];
                 if (value.equalsIgnoreCase("auto")) {
-                    sourceFrameRate = null;
+                    // keep undefined
                 } else {
-                    sourceFrameRate = SubtitleUtils.getFps(value);
-                    if (sourceFrameRate <= 0) {
+                    sourceFrameRate = Optional.of(SubtitleUtils.getFps(value));
+                    if (sourceFrameRate.get() <= 0) {
                         throw new ParseException("Invalid source framerate: " + value);
                     }
                 }
                 value = line.getOptionValues(CONVERT_FRAMERATE)[1];
-                targetFrameRate = SubtitleUtils.getFps(value);
-                if (targetFrameRate <= 0) {
+                targetFrameRate = Optional.of(SubtitleUtils.getFps(value));
+                if (targetFrameRate.get() <= 0) {
                     throw new ParseException("Invalid target framerate: " + value);
                 }
             }
@@ -115,7 +154,7 @@ public class CommandLineParser {
             if (line.hasOption(DELAY)) {
                 String value = line.getOptionValue(DELAY);
                 try {
-                    delay = Double.parseDouble(value.trim());
+                    delay = Optional.of(Double.parseDouble(value.trim()));
                 } catch (NumberFormatException ex) {
                     throw new ParseException("Illegal delay value: " + value);
                 }
@@ -126,7 +165,7 @@ public class CommandLineParser {
                 boolean found = false;
                 for (ScalingFilter f : ScalingFilter.values()) {
                     if (f.toString().equalsIgnoreCase(value)) {
-                        scalingFilter = f;
+                        scalingFilter = Optional.of(f);
                         found = true;
                         break;
                     }
@@ -139,11 +178,11 @@ public class CommandLineParser {
             if (line.hasOption(PALETTE_MODE)) {
                 String value = line.getOptionValue(PALETTE_MODE);
                 if (value.equalsIgnoreCase("keep")) {
-                    paletteMode = PaletteMode.KEEP_EXISTING;
+                    paletteMode = Optional.of(PaletteMode.KEEP_EXISTING);
                 } else if (value.equalsIgnoreCase("create")) {
-                    paletteMode = PaletteMode.CREATE_NEW;
+                    paletteMode = Optional.of(PaletteMode.CREATE_NEW);
                 } else if (value.equalsIgnoreCase("dither")) {
-                    paletteMode = PaletteMode.CREATE_DITHERED;
+                    paletteMode = Optional.of(PaletteMode.CREATE_DITHERED);
                 } else {
                     throw new ParseException("Invalid palette mode: " + value);
                 }
@@ -151,22 +190,22 @@ public class CommandLineParser {
             if (line.hasOption(MIN_DISPLAY_TIME)) {
                 String value = line.getOptionValue(MIN_DISPLAY_TIME);
                 try {
-                    minimumDisplayTime = Double.parseDouble(value.trim());
+                    minimumDisplayTime = Optional.of(Double.parseDouble(value.trim()));
                 } catch (NumberFormatException ex) {
                     throw new ParseException("Illegal minimum display time value: " + value);
                 }
-                if (minimumDisplayTime <= 0) {
+                if (minimumDisplayTime.get() <= 0) {
                     throw new ParseException("Illegal minimum display time value: " + value);
                 }
             }
             if (line.hasOption(MAX_TIME_DIFF)) {
                 String value = line.getOptionValue(MAX_TIME_DIFF);
                 try {
-                    maximumTimeDifference = Double.parseDouble(value.trim());
+                    maximumTimeDifference = Optional.of(Double.parseDouble(value.trim()));
                 } catch (NumberFormatException ex) {
                     throw new ParseException("Illegal maximum merge time difference value: " + value);
                 }
-                if (maximumTimeDifference < 0) {
+                if (maximumTimeDifference.get() < 0) {
                     throw new ParseException("Illegal maximum merge time difference value: " + value);
                 }
             }
@@ -174,7 +213,7 @@ public class CommandLineParser {
                 throw new ParseException("Incompatible options: " + MOVE_IN + ", " + MOVE_OUT);
             }
             if (line.hasOption(MOVE_IN) || line.hasOption(MOVE_OUT)) {
-                moveModeY = line.hasOption(MOVE_IN) ? CaptionMoveModeY.MOVE_INSIDE_BOUNDS : CaptionMoveModeY.MOVE_OUTSIDE_BOUNDS;
+                moveModeY = line.hasOption(MOVE_IN) ? Optional.of(CaptionMoveModeY.MOVE_INSIDE_BOUNDS) : Optional.of(CaptionMoveModeY.MOVE_OUTSIDE_BOUNDS);
                 String option = line.hasOption(MOVE_IN) ? MOVE_IN : MOVE_OUT;
                 if (line.getOptionValues(option).length != 2) {
                     throw new ParseException("2 arguments needed for moving captions.");
@@ -194,34 +233,34 @@ public class CommandLineParser {
                 }
                 String value = line.getOptionValues(MOVE_X)[0];
                 if (value.equalsIgnoreCase("left")) {
-                    moveModeX = CaptionMoveModeX.LEFT;
+                    moveModeX = Optional.of(CaptionMoveModeX.LEFT);
                 } else if (value.equalsIgnoreCase("center")) {
-                    moveModeX = CaptionMoveModeX.CENTER;
+                    moveModeX = Optional.of(CaptionMoveModeX.CENTER);
                 } else if (value.equalsIgnoreCase("right")) {
-                    moveModeX = CaptionMoveModeX.RIGHT;
+                    moveModeX = Optional.of(CaptionMoveModeX.RIGHT);
                 } else {
                     throw new ParseException("Invalid move mode: " + value);
                 }
 
-                if ((moveModeX == CaptionMoveModeX.LEFT || moveModeX == CaptionMoveModeX.RIGHT) && line.getOptionValues(MOVE_X).length > 1) {
+                if ((moveModeX.get() == CaptionMoveModeX.LEFT || moveModeX.get() == CaptionMoveModeX.RIGHT) && line.getOptionValues(MOVE_X).length > 1) {
                     value = line.getOptionValues(MOVE_X)[1];
-                    moveXOffset = ToolBox.getInt(value);
-                    if (moveXOffset < 0) {
+                    moveXOffset = Optional.of(ToolBox.getInt(value));
+                    if (moveXOffset.get() < 0) {
                         throw new ParseException("Invalid pixel offset: " + value);
                     }
                 }
             }
             if (line.hasOption(CROP_LINES)) {
                 String value = line.getOptionValue(CROP_LINES);
-                cropLines = ToolBox.getInt(value.trim());
-                if (cropLines < 0) {
+                cropLines = Optional.of(ToolBox.getInt(value.trim()));
+                if (cropLines.get() < 0) {
                     throw new ParseException("Invalid crop lines value: " + value);
                 }
             }
             if (line.hasOption(ALPHA_CROP_THRESHOLD)) {
                 String value = line.getOptionValue(ALPHA_CROP_THRESHOLD);
-                alphaCropThreshold = ToolBox.getInt(value.trim());
-                if (alphaCropThreshold < 0 || alphaCropThreshold > 255) {
+                alphaCropThreshold = Optional.of(ToolBox.getInt(value.trim()));
+                if (alphaCropThreshold.get() < 0 || alphaCropThreshold.get() > 255) {
                     throw new ParseException("Illegal number range for alpha cropping threshold: " + value);
                 }
             }
@@ -230,64 +269,68 @@ public class CommandLineParser {
                     throw new ParseException("2 arguments needed for scaling.");
                 }
                 String value = line.getOptionValues(SCALE)[0];
-                scaleX = ToolBox.getDouble(value);
-                if (scaleX < MIN_FREE_SCALE_FACTOR || scaleX > MAX_FREE_SCALE_FACTOR) {
+                scaleX = Optional.of(ToolBox.getDouble(value));
+                if (scaleX.get() < MIN_FREE_SCALE_FACTOR || scaleX.get() > MAX_FREE_SCALE_FACTOR) {
                     throw new ParseException("Invalid x scaling factor: " + value);
                 }
                 value = line.getOptionValues(SCALE)[1];
-                scaleY = ToolBox.getDouble(value);
-                if (scaleY < MIN_FREE_SCALE_FACTOR || scaleY > MAX_FREE_SCALE_FACTOR) {
+                scaleY = Optional.of(ToolBox.getDouble(value));
+                if (scaleY.get() < MIN_FREE_SCALE_FACTOR || scaleY.get() > MAX_FREE_SCALE_FACTOR) {
                     throw new ParseException("Invalid y scaling factor: " + value);
                 }
             }
-            exportPalette = line.hasOption(EXPORT_PALETTE);
-            exportForcedSubtitlesOnly = line.hasOption(EXPORT_FORCED_SUBTITLES_ONLY);
+            exportPalette = line.hasOption(EXPORT_PALETTE) ? Optional.of(Boolean.TRUE) : Optional.<Boolean>absent();
+            exportForcedSubtitlesOnly = line.hasOption(EXPORT_FORCED_SUBTITLES_ONLY) ? Optional.of(Boolean.TRUE) : Optional.<Boolean>absent();
 
             if (line.hasOption(FORCED_FLAG)) {
                 String value = line.getOptionValue(FORCED_FLAG);
                 if (value.equalsIgnoreCase("keep")) {
-                    forcedFlagState = ForcedFlagState.KEEP;
+                    forcedFlagState = Optional.of(ForcedFlagState.KEEP);
                 } else if (value.equalsIgnoreCase("set")) {
-                    forcedFlagState = ForcedFlagState.SET;
+                    forcedFlagState = Optional.of(ForcedFlagState.SET);
                 } else if (value.equalsIgnoreCase("clear")) {
-                    forcedFlagState = ForcedFlagState.CLEAR;
+                    forcedFlagState = Optional.of(ForcedFlagState.CLEAR);
                 } else {
                     throw new ParseException("Invalid forced flag state: " + value);
                 }
             }
-            swapCrCb = line.hasOption(SWAP_CR_CB);
-            fixInvisibleFrames = line.hasOption(FIX_INVISIBLE_FRAMES); // TODO: accept only for SUB/IDX or SUP/IFO as target
-            verbose = line.hasOption(VERBOSE);
+            swapCrCb = line.hasOption(SWAP_CR_CB) ? Optional.of(Boolean.TRUE) : Optional.<Boolean>absent();
+            fixInvisibleFrames = line.hasOption(FIX_INVISIBLE_FRAMES) ? Optional.of(Boolean.TRUE) : Optional.<Boolean>absent(); // TODO: accept only for SUB/IDX or SUP/IFO as target
+            verbose = line.hasOption(VERBOSE) ? Optional.of(Boolean.TRUE) : Optional.<Boolean>absent();
             if (line.hasOption(ALPHA_THRESHOLD)) { // TODO: accept only for SUB/IDX or SUP/IFO as target
                 String value = line.getOptionValue(ALPHA_THRESHOLD);
-                alphaThreshold = ToolBox.getInt(value.trim());
-                if (alphaThreshold < 0 || alphaThreshold > 255) {
+                alphaThreshold = Optional.of(ToolBox.getInt(value.trim()));
+                if (alphaThreshold.get() < 0 || alphaThreshold.get() > 255) {
                     throw new ParseException("Illegal number range for alpha threshold: " + value);
                 }
             }
             if (line.hasOption(LUM_LOW_MID_THRESHOLD)) { // TODO: accept only for SUB/IDX or SUP/IFO as target
                 String value = line.getOptionValue(LUM_LOW_MID_THRESHOLD);
-                lumLowMidThreshold = ToolBox.getInt(value.trim());
-                if (lumLowMidThreshold < 0 || lumLowMidThreshold > 255) {
+                lumLowMidThreshold = Optional.of(ToolBox.getInt(value.trim()));
+                if (lumLowMidThreshold.get() < 0 || lumLowMidThreshold.get() > 255) {
                     throw new ParseException("Illegal number range for luminance threshold: " + value);
                 }
             }
             if (line.hasOption(LUM_MID_HIGH_THRESHOLD)) { // TODO: accept only for SUB/IDX or SUP/IFO as target
                 String value = line.getOptionValue(LUM_MID_HIGH_THRESHOLD);
-                lumMidHighThreshold = ToolBox.getInt(value.trim());
-                if (lumMidHighThreshold < 0 || lumMidHighThreshold > 255) {
+                lumMidHighThreshold = Optional.of(ToolBox.getInt(value.trim()));
+                if (lumMidHighThreshold.get() < 0 || lumMidHighThreshold.get() > 255) {
                     throw new ParseException("Illegal number range for luminance threshold: " + value);
                 }
             }
-            if (lumLowMidThreshold > lumMidHighThreshold) {
-                throw new ParseException("Invalid luminance threshold values: " + lumLowMidThreshold + ", " + lumMidHighThreshold);
+            if (lumLowMidThreshold.isPresent() || lumMidHighThreshold.isPresent()) {
+                int lowMid = lumLowMidThreshold.isPresent() ? lumLowMidThreshold.get() : DEFAULT_LUMINANCE_LOW_MID_THRESHOLD;
+                int midHigh = lumMidHighThreshold.isPresent() ? lumMidHighThreshold.get() : DEFAULT_LUMINANCE_MID_HIGH_THRESHOLD;
+                if (lowMid > midHigh) {
+                    throw new ParseException("Invalid luminance threshold values: " + lumLowMidThreshold + ", " + lumMidHighThreshold);
+                }
             }
             if (line.hasOption(LANGUAGE_CODE)) { //TODO: only sub/idx
                 String value = line.getOptionValue(LANGUAGE_CODE);
                 boolean found = false;
                 for (int i = 0; i < LANGUAGES.length; i++)
                     if (LANGUAGES[i][1].equalsIgnoreCase(value)) {
-                        languageIndex = i;
+                        languageIndex = Optional.of(i);
                         found = true;
                         break;
                     }
@@ -324,39 +367,59 @@ public class CommandLineParser {
         return printVersionMode;
     }
 
-    public Resolution getResolution() {
+    public boolean isCliMode() {
+        return cliMode;
+    }
+
+    public File getInputFile() {
+        return inputFile;
+    }
+
+    public File getOutputFile() {
+        return outputFile;
+    }
+
+    public Optional<OutputMode> getOutputMode() {
+        return outputMode;
+    }
+
+    public boolean isLoadSettings() {
+        return loadSettings;
+    }
+
+    public Optional<Resolution> getResolution() {
         return resolution;
     }
 
-    public Double getSourceFrameRate() {
+    public Optional<Double> getSourceFrameRate() {
         return sourceFrameRate;
     }
 
-    public Double getTargetFrameRate() {
+    public Optional<Double> getTargetFrameRate() {
         return targetFrameRate;
     }
 
-    public double getDelay() {
+    public Optional<Double> getDelay() {
         return delay;
     }
 
-    public ScalingFilter getScalingFilter() {
+    public Optional<ScalingFilter> getScalingFilter() {
         return scalingFilter;
     }
 
-    public PaletteMode getPaletteMode() {
+    public Optional<PaletteMode> getPaletteMode() {
         return paletteMode;
     }
 
-    public Double getMinimumDisplayTime() {
+    public Optional<Double> getMinimumDisplayTime() {
         return minimumDisplayTime;
     }
 
-    public double getMaximumTimeDifference() {
+    public Optional<Double> getMaximumTimeDifference() {
         return maximumTimeDifference;
     }
 
-    public CaptionMoveModeY getMoveModeY() {
+    public Optional<CaptionMoveModeY> getMoveModeY() {
         return moveModeY;
     }
 
@@ -364,71 +427,71 @@ public class CommandLineParser {
         return moveYOffset;
     }
 
-    public CaptionMoveModeX getMoveModeX() {
+    public Optional<CaptionMoveModeX> getMoveModeX() {
         return moveModeX;
     }
 
-    public int getMoveXOffset() {
+    public Optional<Integer> getMoveXOffset() {
         return moveXOffset;
     }
 
-    public Double getScreenRatio() {
+    public double getScreenRatio() {
         return screenRatio;
     }
 
-    public int getCropLines() {
+    public Optional<Integer> getCropLines() {
         return cropLines;
     }
 
-    public int getAlphaCropThreshold() {
+    public Optional<Integer> getAlphaCropThreshold() {
         return alphaCropThreshold;
     }
 
-    public double getScaleX() {
+    public Optional<Double> getScaleX() {
         return scaleX;
     }
 
-    public double getScaleY() {
+    public Optional<Double> getScaleY() {
         return scaleY;
     }
 
-    public boolean isExportPalette() {
+    public Optional<Boolean> isExportPalette() {
         return exportPalette;
     }
 
-    public boolean isExportForcedSubtitlesOnly() {
+    public Optional<Boolean> isExportForcedSubtitlesOnly() {
         return exportForcedSubtitlesOnly;
     }
 
-    public ForcedFlagState getForcedFlagState() {
+    public Optional<ForcedFlagState> getForcedFlagState() {
         return forcedFlagState;
     }
 
-    public boolean isSwapCrCb() {
+    public Optional<Boolean> isSwapCrCb() {
         return swapCrCb;
     }
 
-    public boolean isFixInvisibleFrames() {
+    public Optional<Boolean> isFixInvisibleFrames() {
         return fixInvisibleFrames;
     }
 
-    public boolean isVerbose() {
+    public Optional<Boolean> isVerbose() {
         return verbose;
     }
 
-    public int getAlphaThreshold() {
+    public Optional<Integer> getAlphaThreshold() {
         return alphaThreshold;
     }
 
-    public int getLumLowMidThreshold() {
+    public Optional<Integer> getLumLowMidThreshold() {
         return lumLowMidThreshold;
     }
 
-    public int getLumMidHighThreshold() {
+    public Optional<Integer> getLumMidHighThreshold() {
         return lumMidHighThreshold;
     }
 
-    public int getLanguageIndex() {
+    public Optional<Integer> getLanguageIndex() {
         return languageIndex;
     }
 

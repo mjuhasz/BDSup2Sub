@@ -51,10 +51,28 @@ public class CommandLineOptionsTest {
     }
 
     @Test
+    public void shouldHaveOutputOption() {
+        String option = "o";
+        assertTrue(options.hasOption(option));
+        assertEquals("output", options.getOption(option).getLongOpt());
+        assertFalse(options.getOption(option).isRequired());
+        assertTrue(options.getOption(option).hasArg());
+    }
+
+    @Test
     public void shouldHaveVerboseOption() {
         String option = "v";
         assertTrue(options.hasOption(option));
         assertEquals("verbose", options.getOption(option).getLongOpt());
+        assertFalse(options.getOption(option).isRequired());
+        assertFalse(options.getOption(option).hasArg());
+    }
+
+    @Test
+    public void shouldHaveLoadSettingsOption() {
+        String option = "load-settings";
+        assertTrue(options.hasOption(option));
+        assertNull(options.getOption(option).getOpt());
         assertFalse(options.getOption(option).isRequired());
         assertFalse(options.getOption(option).hasArg());
     }

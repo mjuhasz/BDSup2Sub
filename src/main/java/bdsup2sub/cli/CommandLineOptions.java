@@ -21,7 +21,9 @@ public class CommandLineOptions {
 
     static final String HELP = "h";
     static final String VERSION = "V";
+    static final String OUTPUT_FILE = "o";
     static final String VERBOSE = "v";
+    static final String LOAD_SETTINGS = "load-settings";
 
     static final String RESOLUTION = "r";
     static final String CONVERT_FRAMERATE = "convertfps";
@@ -71,11 +73,23 @@ public class CommandLineOptions {
                 .hasArg(false).create(VERSION);
         options.addOption(version);
 
+        Option output = OptionBuilder
+                .withLongOpt("output")
+                .withDescription("Specify output file.")
+                .hasArg().create(OUTPUT_FILE);
+        options.addOption(output);
+
         Option verbose = OptionBuilder
                 .withLongOpt("verbose")
                 .withDescription("verbose console output mode")
                 .hasArg(false).create(VERBOSE);
         options.addOption(verbose);
+
+        Option loadSettings = OptionBuilder
+                .withLongOpt(LOAD_SETTINGS)
+                .withDescription("Load settings stored in INI file.")
+                .hasArg(false).create();
+        options.addOption(loadSettings);
 
         Option resolution = OptionBuilder
                 .withArgName("resolution")

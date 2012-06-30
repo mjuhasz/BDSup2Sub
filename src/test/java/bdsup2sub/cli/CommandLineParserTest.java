@@ -38,7 +38,7 @@ public class CommandLineParserTest {
 
     @Test
     public void shouldParseEmptyArgList() throws Exception {
-        subject.parse("");
+        subject.parse();
     }
 
     @Test(expected = ParseException.class)
@@ -69,7 +69,71 @@ public class CommandLineParserTest {
     public void shouldPrintVersionIfVersionIsDefinedBesidesOtherArgs() throws Exception {
         subject.parse("--version", "--verbose");
         assertTrue(subject.isPrintVersionMode());
-        assertFalse(subject.isVerbose());
+        assertFalse(subject.isVerbose().isPresent());
+    }
+
+    @Test(expected = ParseException.class)
+    public void shouldRejectNonExistentInputFileArg() throws Exception {
+        subject.parse("in.sub");
+        assertEquals(new File("in.sub"), subject.getInputFile());
+    }
+
+    @Test
+    public void shouldParseInputFileArg() throws Exception {
+        File infile = File.createTempFile("input", null);
+        infile.deleteOnExit();
+        subject.parse(infile.getAbsolutePath());
+        assertEquals(infile, subject.getInputFile());
+    }
+
+    @Test(expected = ParseException.class)
+    public void shouldRejectIfMissingOutputFileArg() throws Exception {
+        File infile = File.createTempFile("input", null);
+        infile.deleteOnExit();
+        subject.parse("--output", infile.getAbsolutePath());
+    }
+
+    @Test
+    public void shouldParseOutputFileArg() throws Exception {
+        File infile = File.createTempFile("input", null);
+        infile.deleteOnExit();
+        subject.parse("--output", "out.sup", infile.getAbsolutePath());
+        assertEquals(new File("out.sup"), subject.getOutputFile());
+        assertEquals(OutputMode.BDSUP, subject.getOutputMode().orNull());
+    }
+
+    @Test(expected = ParseException.class)
+    public void shouldRejectUnknownOutputFileMode() throws Exception {
+        File infile = File.createTempFile("input", null);
+        infile.deleteOnExit();
+        subject.parse("--output", "out.foobar", infile.getAbsolutePath());
+    }
+
+    @Test
+    public void shouldOutputFileModeDefaultToVobSub() throws Exception {
+        File infile = File.createTempFile("input", null);
+        infile.deleteOnExit();
+        subject.parse(infile.getAbsolutePath());
+        assertFalse(subject.getOutputMode().isPresent());
+    }
+
+    @Test(expected = ParseException.class)
+    public void shouldRequireInoutFileIfOutputFileGiven() throws Exception {
+        File infile = File.createTempFile("input", null);
+        infile.deleteOnExit();
+        subject.parse("--output", "out.sub");
+    }
+
+    @Test
+    public void shouldLoadSettingsDefaultToFalse() throws Exception {
+        subject.parse("--version");
+        assertFalse(subject.isLoadSettings());
+    }
+
+    @Test
+    public void shouldLoadSettingsIfNotDefinedAndNotInCliMode() throws Exception {
+        subject.parse();
+        assertTrue(subject.isLoadSettings());
     }
 
     @Test(expected = ParseException.class)
@@ -85,79 +149,79 @@ public class CommandLineParserTest {
     @Test
     public void shouldParseNtscResolutionWithNumericArg() throws Exception {
         subject.parse("--resolution", "480");
-        assertEquals(Resolution.NTSC, subject.getResolution());
+        assertEquals(Resolution.NTSC, subject.getResolution().get());
     }
 
     @Test
     public void shouldParseNtscResolutionWithTextArg() throws Exception {
         subject.parse("--resolution", "ntsc");
-        assertEquals(Resolution.NTSC, subject.getResolution());
+        assertEquals(Resolution.NTSC, subject.getResolution().get());
     }
 
     @Test
     public void shouldParsePalResolutionWithNumericArg() throws Exception {
         subject.parse("--resolution", "576");
-        assertEquals(Resolution.PAL, subject.getResolution());
+        assertEquals(Resolution.PAL, subject.getResolution().get());
     }
 
     @Test
     public void shouldParsePalResolutionWithTextArg() throws Exception {
         subject.parse("--resolution", "pal");
-        assertEquals(Resolution.PAL, subject.getResolution());
+        assertEquals(Resolution.PAL, subject.getResolution().get());
     }
 
     @Test
     public void shouldParse720ResolutionArg() throws Exception {
         subject.parse("--resolution", "720");
-        assertEquals(Resolution.HD_720, subject.getResolution());
+        assertEquals(Resolution.HD_720, subject.getResolution().get());
     }
 
     @Test
     public void shouldParse720pResolutionArg() throws Exception {
         subject.parse("--resolution", "720p");
-        assertEquals(Resolution.HD_720, subject.getResolution());
+        assertEquals(Resolution.HD_720, subject.getResolution().get());
     }
 
     @Test
     public void shouldParse1080ResolutionArg() throws Exception {
         subject.parse("--resolution", "1080");
-        assertEquals(Resolution.HD_1080, subject.getResolution());
+        assertEquals(Resolution.HD_1080, subject.getResolution().get());
     }
 
     @Test
     public void shouldParse1080pResolutionArg() throws Exception {
         subject.parse("--resolution", "1080p");
-        assertEquals(Resolution.HD_1080, subject.getResolution());
+        assertEquals(Resolution.HD_1080, subject.getResolution().get());
     }
 
     @Test
     public void shouldParse1440x1080ResolutionArg() throws Exception {
         subject.parse("--resolution", "1440x1080");
-        assertEquals(Resolution.HD_1440x1080, subject.getResolution());
+        assertEquals(Resolution.HD_1440x1080, subject.getResolution().get());
     }
 
     @Test
     public void shouldParseKeepResolutionArg() throws Exception {
         subject.parse("--resolution", "keep");
-        assertNull(subject.getResolution());
+        assertFalse(subject.getResolution().isPresent());
     }
 
     @Test
-    public void shouldResolutionDefaultToKeep() throws Exception {
+    public void shouldResolutionDefaultToAbsent() throws Exception {
         subject.parse("--version");
-        assertNull(subject.getResolution());
+        assertFalse(subject.getResolution().isPresent());
     }
 
     @Test
-    public void shouldTargetFrameRateDefaultToKeep() throws Exception {
+    public void shouldTargetFrameRateDefaultToAbsent() throws Exception {
         subject.parse("--version");
-        assertNull(subject.getTargetFrameRate());
+        assertFalse(subject.getTargetFrameRate().isPresent());
     }
 
     @Test
-    public void shouldSourceFrameRateDefaultToAuto() throws Exception {
+    public void shouldSourceFrameRateDefaultToAbsent() throws Exception {
         subject.parse("--version");
-        assertNull(subject.getSourceFrameRate());
+        assertFalse(subject.getSourceFrameRate().isPresent());
     }
 
     @Test(expected = ParseException.class)
@@ -178,15 +242,15 @@ public class CommandLineParserTest {
     @Test
     public void shouldAcceptValidConvertFramerateArgs() throws Exception {
         subject.parse("--convertfps", "15, 25");
-        assertEquals(15, subject.getSourceFrameRate().doubleValue(), 0);
-        assertEquals(25, subject.getTargetFrameRate().doubleValue(), 0);
+        assertEquals(15, subject.getSourceFrameRate().get().intValue());
+        assertEquals(25, subject.getTargetFrameRate().get().intValue());
     }
 
     @Test
     public void shouldAcceptAutoAsSourceForConvertFramerateArgs() throws Exception {
         subject.parse("--convertfps", "auto, 25");
-        assertNull(subject.getSourceFrameRate());
-        assertEquals(25, subject.getTargetFrameRate().doubleValue(), 0);
+        assertFalse(subject.getSourceFrameRate().isPresent());
+        assertEquals(25, subject.getTargetFrameRate().get().intValue());
     }
 
     @Test(expected = ParseException.class)
@@ -205,15 +269,15 @@ public class CommandLineParserTest {
     }
 
     @Test
-    public void shouldDelayDefaultToZero() throws Exception {
-        subject.parse("--version");
-        assertEquals(0, subject.getDelay(), 0);
+    public void shouldAcceptValidDelayArg() throws Exception {
+        subject.parse("--delay", "-200");
+        assertEquals(-200, subject.getDelay().get().intValue());
     }
 
     @Test
-    public void shouldAcceptValidDelayArg() throws Exception {
-        subject.parse("--delay", "-200");
-        assertEquals(-200, subject.getDelay(), 0);
+    public void shouldDelayDefaultToAbsent() throws Exception {
+        subject.parse("--version");
+        assertFalse(subject.getDelay().isPresent());
     }
 
     @Test(expected = ParseException.class)
@@ -232,15 +296,15 @@ public class CommandLineParserTest {
     }
 
     @Test
-    public void shouldFilterDefaultToBilinear() throws Exception {
+    public void shouldFilterDefaultToAbsent() throws Exception {
         subject.parse("--version");
-        assertEquals(ScalingFilter.BILINEAR, subject.getScalingFilter());
+        assertFalse(subject.getScalingFilter().isPresent());
     }
 
     @Test
     public void shouldParseFilterWithValidName() throws Exception {
         subject.parse("--filter", "Bicubic-Spline");
-        assertEquals(ScalingFilter.BICUBIC_SPLINE, subject.getScalingFilter());
+        assertEquals(ScalingFilter.BICUBIC_SPLINE, subject.getScalingFilter().get());
     }
 
     @Test(expected = ParseException.class)
@@ -254,15 +318,15 @@ public class CommandLineParserTest {
     }
 
     @Test
-    public void shouldPaletteModeDefaultToCreateNew() throws Exception {
+    public void shouldPaletteModeDefaultToAbsent() throws Exception {
         subject.parse("--version");
-        assertEquals(PaletteMode.CREATE_NEW, subject.getPaletteMode());
+        assertFalse(subject.getPaletteMode().isPresent());
     }
 
     @Test
     public void shouldParsePaletteModeWithValidArg() throws Exception {
         subject.parse("--palettemode", "keep");
-        assertEquals(PaletteMode.KEEP_EXISTING, subject.getPaletteMode());
+        assertEquals(PaletteMode.KEEP_EXISTING, subject.getPaletteMode().get());
     }
 
     @Test(expected = ParseException.class)
@@ -276,15 +340,15 @@ public class CommandLineParserTest {
     }
 
     @Test
-    public void shouldMinimumDisplayTimeDefaultToNull() throws Exception {
+    public void shouldMinimumDisplayTimeDefaultToAbsent() throws Exception {
         subject.parse("--version");
-        assertNull(subject.getMinimumDisplayTime());
+        assertFalse(subject.getMinimumDisplayTime().isPresent());
     }
 
     @Test
     public void shouldAcceptValidMinimumDisplayTimeArg() throws Exception {
         subject.parse("--mindisptime", "900");
-        assertEquals(900, subject.getMinimumDisplayTime().doubleValue(), 0);
+        assertEquals(900, subject.getMinimumDisplayTime().get().intValue());
     }
 
     @Test(expected = ParseException.class)
@@ -303,15 +367,15 @@ public class CommandLineParserTest {
     }
 
     @Test
-    public void shouldMaximumMergeTimeDifferenceDefaultTo200ms() throws Exception {
+    public void shouldMaximumMergeTimeDifferenceDefaultToAbsent() throws Exception {
         subject.parse("--version");
-        assertEquals(200, subject.getMaximumTimeDifference(), 0);
+        assertFalse(subject.getMaximumTimeDifference().isPresent());
     }
 
     @Test
     public void shouldAcceptValidMaximumMergeTimeDifferenceArg() throws Exception {
         subject.parse("--maxtimediff", "900");
-        assertEquals(900, subject.getMaximumTimeDifference(), 0);
+        assertEquals(900, subject.getMaximumTimeDifference().get().intValue());
     }
 
     @Test(expected = ParseException.class)
@@ -366,13 +430,13 @@ public class CommandLineParserTest {
     @Test
     public void shouldBeInMoveInModeIfMoveInArgIsDefined() throws Exception {
         subject.parse("--movein", "2,12");
-        assertEquals(CaptionMoveModeY.MOVE_INSIDE_BOUNDS, subject.getMoveModeY());
+        assertEquals(CaptionMoveModeY.MOVE_INSIDE_BOUNDS, subject.getMoveModeY().get());
     }
 
     @Test
     public void shouldBeInMoveOutModeIfMoveOutArgIsDefined() throws Exception {
         subject.parse("--moveout", "2,12");
-        assertEquals(CaptionMoveModeY.MOVE_OUTSIDE_BOUNDS, subject.getMoveModeY());
+        assertEquals(CaptionMoveModeY.MOVE_OUTSIDE_BOUNDS, subject.getMoveModeY().get());
     }
 
     @Test(expected = ParseException.class)
@@ -391,10 +455,9 @@ public class CommandLineParserTest {
     }
 
     @Test
-    public void shouldMoveYModeDefaultToKeep() throws Exception {
+    public void shouldMoveYModeDefaultToAbsent() throws Exception {
         subject.parse("--version");
-        assertEquals(CaptionMoveModeY.KEEP_POSITION, subject.getMoveModeY());
-        assertEquals(10, subject.getMoveYOffset(), 0);
+        assertFalse(subject.getMoveModeY().isPresent());
     }
 
     @Test(expected = ParseException.class)
@@ -410,14 +473,14 @@ public class CommandLineParserTest {
     @Test
     public void shouldParseMoveXModeWithValidArgs() throws Exception {
         subject.parse("--movex", "left,12");
-        assertEquals(CaptionMoveModeX.LEFT, subject.getMoveModeX());
-        assertEquals(12, subject.getMoveXOffset(), 0);
+        assertEquals(CaptionMoveModeX.LEFT, subject.getMoveModeX().get());
+        assertEquals(12, subject.getMoveXOffset().get().intValue());
     }
 
     @Test
     public void shouldParseMoveXModeWithoutOffset() throws Exception {
         subject.parse("--movex", "right");
-        assertEquals(CaptionMoveModeX.RIGHT, subject.getMoveModeX());
+        assertEquals(CaptionMoveModeX.RIGHT, subject.getMoveModeX().get());
     }
 
     @Test(expected = ParseException.class)
@@ -426,10 +489,10 @@ public class CommandLineParserTest {
     }
 
     @Test
-    public void shouldMoveXModeDefaultToKeep() throws Exception {
+    public void shouldMoveXModeDefaultToAbsent() throws Exception {
         subject.parse("--version");
-        assertEquals(CaptionMoveModeX.KEEP_POSITION, subject.getMoveModeX());
-        assertEquals(10, subject.getMoveXOffset(), 0);
+        assertFalse(subject.getMoveModeX().isPresent());
+        assertFalse(subject.getMoveXOffset().isPresent());
     }
 
     @Test(expected = ParseException.class)
@@ -438,15 +501,15 @@ public class CommandLineParserTest {
     }
 
     @Test
-    public void shouldCropLinesDefaultToZero() throws Exception {
+    public void shouldCropLinesDefaultToAbsent() throws Exception {
         subject.parse("--version");
-        assertEquals(0, subject.getCropLines());
+        assertFalse(subject.getCropLines().isPresent());
     }
 
     @Test
     public void shouldAcceptValidCropLinesArg() throws Exception {
         subject.parse("--croplines", "75");
-        assertEquals(75, subject.getCropLines());
+        assertEquals(75, subject.getCropLines().get().intValue());
     }
 
     @Test(expected = ParseException.class)
@@ -460,15 +523,15 @@ public class CommandLineParserTest {
     }
 
     @Test
-    public void shouldAlphaThresholdDefaultTo14() throws Exception {
+    public void shouldAlphaCropThresholdDefaultToAbsent() throws Exception {
         subject.parse("--version");
-        assertEquals(DEFAULT_ALPHA_CROP_THRESHOLD, subject.getAlphaCropThreshold());
+        assertFalse(subject.getAlphaCropThreshold().isPresent());
     }
 
     @Test
     public void shouldAcceptValidAlphaCropThresholdArg() throws Exception {
         subject.parse("--alphacropthr", "75");
-        assertEquals(75, subject.getAlphaCropThreshold());
+        assertEquals(75, subject.getAlphaCropThreshold().get().intValue());
     }
 
     @Test(expected = ParseException.class)
@@ -502,49 +565,49 @@ public class CommandLineParserTest {
     }
 
     @Test
-    public void shouldScaleHaveDefault() throws Exception {
+    public void shouldScaleDefaultToAbsent() throws Exception {
         subject.parse("--version");
-        assertEquals(DEFAULT_FREE_SCALE_FACTOR_X, subject.getScaleX(), 0);
-        assertEquals(DEFAULT_FREE_SCALE_FACTOR_Y, subject.getScaleY(), 0);
+        assertFalse(subject.getScaleX().isPresent());
+        assertFalse(subject.getScaleY().isPresent());
     }
 
     @Test
     public void shouldParseExportPalette() throws Exception {
         subject.parse("--exppal");
-        assertTrue(subject.isExportPalette());
+        assertTrue(subject.isExportPalette().get());
     }
 
     @Test
-    public void shouldExportPaletteDefaultToFalse() throws Exception {
+    public void shouldExportPaletteDefaultToAbsent() throws Exception {
         subject.parse("--version");
-        assertFalse(subject.isExportPalette());
+        assertFalse(subject.isExportPalette().isPresent());
     }
 
     @Test
     public void shouldParseExportForcedSubtitlesOnly() throws Exception {
         subject.parse("--forcedonly");
-        assertTrue(subject.isExportForcedSubtitlesOnly());
+        assertTrue(subject.isExportForcedSubtitlesOnly().get());
     }
 
     @Test
-    public void shouldExportForcedSubtitlesOnlyDefaultToFalse() throws Exception {
+    public void shouldExportForcedSubtitlesOnlyDefaultToAbsent() throws Exception {
         subject.parse("--version");
-        assertFalse(subject.isExportForcedSubtitlesOnly());
+        assertFalse(subject.isExportForcedSubtitlesOnly().isPresent());
     }
 
     @Test
     public void shouldParseForceAllArg() throws Exception {
         subject.parse("--forcedflag", "set");
-        assertEquals(ForcedFlagState.SET, subject.getForcedFlagState());
+        assertEquals(ForcedFlagState.SET, subject.getForcedFlagState().get());
 
         subject.parse("--forcedflag", "clear");
-        assertEquals(ForcedFlagState.CLEAR, subject.getForcedFlagState());
+        assertEquals(ForcedFlagState.CLEAR, subject.getForcedFlagState().get());
     }
 
     @Test
-    public void shouldForceAllDefaultToKeep() throws Exception {
+    public void shouldForceAllDefaultToAbsent() throws Exception {
         subject.parse("--version");
-        assertEquals(ForcedFlagState.KEEP, subject.getForcedFlagState());
+        assertFalse(subject.getForcedFlagState().isPresent());
     }
 
     @Test(expected = ParseException.class)
@@ -560,37 +623,37 @@ public class CommandLineParserTest {
     @Test
     public void shouldParseSwapCrCbArg() throws Exception {
         subject.parse("--swap");
-        assertTrue(subject.isSwapCrCb());
+        assertTrue(subject.isSwapCrCb().get());
     }
 
     @Test
-    public void shouldSwapCrCbDefaultToFalse() throws Exception {
+    public void shouldSwapCrCbDefaultToAbsent() throws Exception {
         subject.parse("--version");
-        assertFalse(subject.isSwapCrCb());
+        assertFalse(subject.isSwapCrCb().isPresent());
     }
 
     @Test
     public void shouldParseFixInvisibleArg() throws Exception {
         subject.parse("--fixinv");
-        assertTrue(subject.isFixInvisibleFrames());
+        assertTrue(subject.isFixInvisibleFrames().get());
     }
 
     @Test
-    public void shouldFixInvisibleDefaultToFalse() throws Exception {
+    public void shouldFixInvisibleDefaultToAbsent() throws Exception {
         subject.parse("--version");
-        assertFalse(subject.isFixInvisibleFrames());
+        assertFalse(subject.isFixInvisibleFrames().isPresent());
     }
 
     @Test
     public void shouldParseVerboseArg() throws Exception {
         subject.parse("--verbose");
-        assertTrue(subject.isVerbose());
+        assertTrue(subject.isVerbose().get());
     }
 
     @Test
-    public void shouldVerboseDefaultToFalse() throws Exception {
+    public void shouldVerboseDefaultToAbsent() throws Exception {
         subject.parse("--version");
-        assertFalse(subject.isVerbose());
+        assertFalse(subject.isVerbose().isPresent());
     }
 
     @Test(expected = ParseException.class)
@@ -609,15 +672,15 @@ public class CommandLineParserTest {
     }
 
     @Test
-    public void shouldAlphaThresholdDefaultTo80() throws Exception {
+    public void shouldAlphaThresholdDefaultToAbsent() throws Exception {
         subject.parse("--version");
-        assertEquals(DEFAULT_ALPHA_THRESHOLD, subject.getAlphaThreshold());
+        assertFalse(subject.getAlphaThreshold().isPresent());
     }
 
     @Test
     public void shouldAcceptValidAlphaThresholdArg() throws Exception {
         subject.parse("--alphathr", "75");
-        assertEquals(75, subject.getAlphaThreshold());
+        assertEquals(75, subject.getAlphaThreshold().get().intValue());
     }
 
     @Test(expected = ParseException.class)
@@ -641,27 +704,27 @@ public class CommandLineParserTest {
     }
 
     @Test
-    public void shouldLuminanceLowMidThresholdDefaultTo160() throws Exception {
+    public void shouldLuminanceLowMidThresholdDefaultToAbsent() throws Exception {
         subject.parse("--version");
-        assertEquals(DEFAULT_LUMINANCE_LOW_MID_THRESHOLD, subject.getLumLowMidThreshold());
+        assertFalse(subject.getLumLowMidThreshold().isPresent());
     }
 
     @Test
-    public void shouldLuminanceMidHighThresholdDefaultTo210() throws Exception {
+    public void shouldLuminanceMidHighThresholdDefaultToAbsent() throws Exception {
         subject.parse("--version");
-        assertEquals(DEFAULT_LUMINANCE_MID_HIGH_THRESHOLD, subject.getLumMidHighThreshold());
+        assertFalse(subject.getLumMidHighThreshold().isPresent());
     }
 
     @Test
     public void shouldAcceptValidLuminanceLowMidThresholdArg() throws Exception {
         subject.parse("--lumlowmidthr", "75");
-        assertEquals(75, subject.getLumLowMidThreshold());
+        assertEquals(75, subject.getLumLowMidThreshold().get().intValue());
     }
 
     @Test
     public void shouldAcceptValidLuminanceMidHighThresholdArg() throws Exception {
         subject.parse("--lummidhighthr", "230");
-        assertEquals(230, subject.getLumMidHighThreshold());
+        assertEquals(230, subject.getLumMidHighThreshold().get().intValue());
     }
 
     @Test(expected = ParseException.class)
@@ -677,14 +740,13 @@ public class CommandLineParserTest {
     @Test
     public void shouldParseLanguageCodeArg() throws Exception {
         subject.parse("--langcode", "de");
-        assertTrue(subject.getLanguageIndex() > 0 && subject.getLanguageIndex() < Constants.LANGUAGES.length - 1);
+        assertTrue(subject.getLanguageIndex().get() > 0 && subject.getLanguageIndex().get() < Constants.LANGUAGES.length - 1);
     }
 
     @Test
-    public void shouldLanguageCodeDefaultToEnglish() throws Exception {
+    public void shouldLanguageCodeDefaultToAbsent() throws Exception {
         subject.parse("--version");
-        assertEquals(0, subject.getLanguageIndex());
-        assertEquals("en", Constants.LANGUAGES[0][1]);
+        assertFalse(subject.getLanguageIndex().isPresent());
     }
 
     @Test(expected = ParseException.class)
