@@ -42,9 +42,9 @@ public final class Configuration {
     public static final double DEFAULT_FREE_SCALE_FACTOR_Y = 1.0;
     public static final double MIN_FREE_SCALE_FACTOR = 0.5;
     public static final double MAX_FREE_SCALE_FACTOR = 2.0;
-    public static final double DEFAULT_SOURCE_FRAMERATE = Framerate.FPS_23_976.getValue();
-    public static final double DEFAULT_TARGET_FRAMERATE = Framerate.PAL.getValue();
-    public static final Resolution DEFAULT_TARGET_RESOLUTION = Resolution.PAL;
+    public static final double DEFAULT_SOURCE_FRAMERATE = Framerate.FPS_23_976.getValue();  //TODO: dumb default
+    public static final double DEFAULT_TARGET_FRAMERATE = Framerate.PAL.getValue(); //TODO: dumb default
+    public static final Resolution DEFAULT_TARGET_RESOLUTION = Resolution.PAL; //TODO: dumb default
     public static final int DEFAULT_ALPHA_CROP_THRESHOLD = 14;
     public static final int DEFAULT_ALPHA_THRESHOLD = 80;
     public static final int DEFAULT_LUMINANCE_MID_HIGH_THRESHOLD = 210;
@@ -54,6 +54,7 @@ public final class Configuration {
     public static final int DEFAULT_CROP_LINE_COUNT = 0;
     //Two equal captions are merged of they are closer than 200ms (0.2*90000 = 18000)
     public static final int DEFAULT_MERGE_PTS_DIFF = 18000;
+    public static final OutputMode DEFAULT_OUTPUT_MODE = OutputMode.VOBSUB;
 
     private boolean convertResolution = CONVERT_RESOLUTION_BY_DEFAULT;
     private boolean convertFPS = CONVERT_FRAMERATE_BY_DEFAULT;
@@ -83,6 +84,9 @@ public final class Configuration {
 
     private Configuration() {
         configFilePath = workOutConfigFilePath();
+    }
+
+    public void load() {
         readConfigFile();
         loadConfig();
     }
@@ -242,11 +246,10 @@ public final class Configuration {
     }
 
     public OutputMode getOutputMode() {
-        OutputMode defaultOutputMode = OutputMode.VOBSUB;
         try {
-            return OutputMode.valueOf(props.get("outputMode", defaultOutputMode.name()));
+            return OutputMode.valueOf(props.get("outputMode", DEFAULT_OUTPUT_MODE.name()));
         } catch (IllegalArgumentException ex) {
-            return defaultOutputMode;
+            return DEFAULT_OUTPUT_MODE;
         }
     }
     

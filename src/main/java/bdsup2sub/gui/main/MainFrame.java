@@ -15,16 +15,18 @@
  */
 package bdsup2sub.gui.main;
 
+import java.io.File;
+
 public class MainFrame {
 
     private final MainFrameModel model;
     private final MainFrameView view;
     private final MainFrameController controller;
 
-    public MainFrame(String sourceFile) {
+    public MainFrame(File inputFile) {
         model = new MainFrameModel();
-        if (sourceFile != null) {
-            model.setLoadPath(sourceFile);
+        if (inputFile != null) {
+            model.setLoadPath(inputFile.getAbsolutePath());
             model.setSourceFileSpecifiedOnCmdLine(true);
         }
         view = new MainFrameView(model);
