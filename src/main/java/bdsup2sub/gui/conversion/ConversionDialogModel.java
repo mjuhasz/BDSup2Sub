@@ -54,7 +54,7 @@ class ConversionDialogModel {
             outputResolution = configuration.getOutputResolution();
         }
 
-        moveCaptions = Core.getMoveCaptions();
+        moveCaptions = configuration.getMoveCaptions();
 
         delayPTS = configuration.getDelayPTS();
         minTimePTS = (int) SubtitleUtils.syncTimePTS(configuration.getMinTimePTS(), configuration.getFpsTrg(), configuration.getFpsTrg());
@@ -66,7 +66,7 @@ class ConversionDialogModel {
         freeScaleFactorX = configuration.getFreeScaleFactorX();
         freeScaleFactorY = configuration.getFreeScaleFactorY();
         fpsSrcCertain = configuration.isFpsSrcCertain();
-        forcedState = Core.getForceAll();
+        forcedState = configuration.getForceAll();
     }
 
     public void storeConfig() {
@@ -85,11 +85,11 @@ class ConversionDialogModel {
         configuration.setOutputResolution(outputResolution);
     }
 
-    public Resolution loadOutputResolution() {
-        return configuration.loadOutputResolution();
+    public void loadOutputResolution() {
+        outputResolution = configuration.loadOutputResolution();
     }
 
-    public void storeOutputResolution(Resolution outputResolution) {
+    public void storeOutputResolution() {
         configuration.storeOutputResolution(outputResolution);
     }
 
@@ -105,11 +105,11 @@ class ConversionDialogModel {
         configuration.setDelayPTS(delayPTS);
     }
 
-    public int loadDelayPTS() {
-        return configuration.loadDelayPTS();
+    public void loadDelayPTS() {
+        delayPTS = configuration.loadDelayPTS();
     }
 
-    public void storeDelayPTS(int delayPTS) {
+    public void storeDelayPTS() {
         configuration.storeDelayPTS(delayPTS);
     }
 
@@ -125,11 +125,11 @@ class ConversionDialogModel {
         configuration.setMinTimePTS(minTimePTS);
     }
 
-    public int loadMinTimePTS() {
-        return configuration.loadMinTimePTS();
+    public void loadMinTimePTS() {
+        minTimePTS = configuration.loadMinTimePTS();
     }
 
-    public void storeMinTimePTS(int minTimePTS) {
+    public void storeMinTimePTS() {
         configuration.storeMinTimePTS(minTimePTS);
     }
 
@@ -145,11 +145,11 @@ class ConversionDialogModel {
         configuration.setConvertFPS(convertFPS);
     }
 
-    public boolean loadConvertFPS() {
-        return configuration.loadConvertFPS();
+    public void loadConvertFPS() {
+        convertFPS = configuration.loadConvertFPS();
     }
 
-    public void storeConvertFPS(boolean convertFPS) {
+    public void storeConvertFPS() {
         configuration.storeConvertFPS(convertFPS);
     }
 
@@ -165,8 +165,8 @@ class ConversionDialogModel {
         configuration.setConvertResolution(convertResolution);
     }
 
-    public boolean loadConvertResolution() {
-        return configuration.loadConvertResolution();
+    public void loadConvertResolution() {
+        convertResolution = configuration.loadConvertResolution();
     }
 
     public void storeConvertResolution() {
@@ -185,11 +185,11 @@ class ConversionDialogModel {
         configuration.setFixShortFrames(fixShortFrames);
     }
 
-    public boolean loadFixShortFrames() {
-        return configuration.loadFixShortFrames();
+    public void loadFixShortFrames() {
+        fixShortFrames = configuration.loadFixShortFrames();
     }
 
-    public void storeFixShortFrames(boolean fixShortFrames) {
+    public void storeFixShortFrames() {
         configuration.storeFixShortFrames(fixShortFrames);
     }
 
@@ -205,11 +205,11 @@ class ConversionDialogModel {
         configuration.setFpsSrc(fpsSrc);
     }
 
-    public double loadFpsSrc() {
-        return configuration.loadFpsSrc();
+    public void loadFpsSrc() {
+        fpsSrc = configuration.loadFpsSrc();
     }
 
-    public void storeFPSSrc(double fpsSrc) {
+    public void storeFPSSrc() {
         configuration.storeFPSSrc(fpsSrc);
     }
 
@@ -229,11 +229,11 @@ class ConversionDialogModel {
         configuration.setFpsTrg(fpsTrg);
     }
 
-    public double loadFpsTrg() {
-        return configuration.loadFpsTrg();
+    public void loadFpsTrg() {
+        fpsTrg = configuration.loadFpsTrg();
     }
 
-    public void storeFpsTrg(double fpsTrg) {
+    public void storeFpsTrg() {
         configuration.storeFpsTrg(fpsTrg);
     }
 
@@ -249,11 +249,11 @@ class ConversionDialogModel {
         configuration.setApplyFreeScale(applyFreeScale);
     }
 
-    public boolean loadApplyFreeScale() {
-        return configuration.loadApplyFreeScale();
+    public void loadApplyFreeScale() {
+        applyFreeScale = configuration.loadApplyFreeScale();
     }
 
-    public void storeApplyFreeScale(boolean applyFreeScale) {
+    public void storeApplyFreeScale() {
         configuration.storeApplyFreeScale(applyFreeScale);
     }
 
@@ -277,16 +277,16 @@ class ConversionDialogModel {
         configuration.setFreeScaleFactor(x, y);
     }
 
-    public double loadFreeScaleFactorX() {
-        return configuration.loadFreeScaleFactorX();
+    public void loadFreeScaleFactorX() {
+        freeScaleFactorX = configuration.loadFreeScaleFactorX();
     }
 
-    public double loadFreeScaleFactorY() {
-        return configuration.loadFreeScaleFactorY();
+    public void loadFreeScaleFactorY() {
+        freeScaleFactorY = configuration.loadFreeScaleFactorY();
     }
 
-    public void storeFreeScaleFactor(double x, double y) {
-        configuration.storeFreeScaleFactor(x, y);
+    public void storeFreeScaleFactor() {
+        configuration.storeFreeScaleFactor(freeScaleFactorX, freeScaleFactorY);
     }
 
     public boolean isFpsSrcCertain() {
@@ -305,12 +305,20 @@ class ConversionDialogModel {
         this.forcedState = forcedState;
     }
 
+    public void loadForcedState() {
+        forcedState = configuration.getForceAll();
+    }
+
     public boolean getMoveCaptions() {
         return moveCaptions;
     }
 
     public void setMoveCaptions(boolean moveCaptions) {
         this.moveCaptions = moveCaptions;
+    }
+
+    public void storeMoveCaptions() {
+        configuration.setMoveCaptions(moveCaptions);
     }
 
     public boolean wasCanceled() {

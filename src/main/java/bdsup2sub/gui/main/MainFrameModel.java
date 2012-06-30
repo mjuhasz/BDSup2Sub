@@ -184,4 +184,20 @@ class MainFrameModel {
     public void setLuminanceThreshold(int[] luminanceThreshold) {
         configuration.setLuminanceThreshold(luminanceThreshold);
     }
+
+    public int getCropOffsetY() {
+        return configuration.getCropOffsetY();
+    }
+
+    public void setCropOffsetY(int cropOffsetY) {
+        configuration.setCropOffsetY(cropOffsetY);
+    }
+
+    public void setSwapCrCb(boolean swapCrCb) {
+        configuration.setSwapCrCb(swapCrCb);
+    }
+
+    public boolean getMoveCaptions() {
+        return configuration.getMoveCaptions();
+    }
 }

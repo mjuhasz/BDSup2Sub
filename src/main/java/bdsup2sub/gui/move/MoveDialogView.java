@@ -502,12 +502,12 @@ class MoveDialogView extends JDialog {
             jButtonOk.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    Core.setCropOfsY(model.getCropOfsY());
-                    Core.setMoveModeX(model.getMoveModeX());
-                    Core.setMoveModeY(model.getMoveModeY());
-                    Core.setMoveOffsetX(model.getOffsetX());
-                    Core.setMoveOffsetY(model.getOffsetY());
-                    Core.setCineBarFactor(model.getCinemascopeBarFactor());
+                    model.storeCropOfsY();
+                    model.storeMoveModeX();
+                    model.storeMoveModeY();
+                    model.storeMoveOffsetX();
+                    model.storeMoveOffsetY();
+                    model.storeCinemascopeBarFactor();
                     // moving is done in MainFrame
                     dispose();
                 }

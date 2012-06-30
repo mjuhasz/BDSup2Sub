@@ -44,7 +44,7 @@ import static com.mortennobel.imagescaling.ResampleFilters.*;
  * This class contains the core functionality of BDSup2Sub.<br>
  * It's meant to be used from the command line as well as from the GUI.
  */
-public class Core  extends Thread {
+public class Core extends Thread {
 
     private static final Configuration configuration = Configuration.getInstance();
 
@@ -118,32 +118,11 @@ public class Core  extends Thread {
     /** Input mode used for last import */
     private static InputMode inMode = InputMode.VOBSUB;
 
-    /** State that defined whether to set/clear the forced flag for all captions */
-    private static ForcedFlagState forceAll = ForcedFlagState.KEEP;
-    /** Flag that defines whether to swap Cr/Cb components when loading a SUP */
-    private static boolean swapCrCb;
-    /** Y coordinate crop offset - when exporting, the Y position will be decreased by this value */
-    private static int cropOfsY = DEFAULT_CROP_LINE_COUNT;
     /** Use BT.601 color model instead of BT.709 */
     private static boolean useBT601;
     /** Use src fps for trg if possible */
     private static boolean keepFps;
 
-    /** Factor to calculate height of one cinemascope bar from screen height */
-    private static double cineBarFactor = 5.0/42;
-    /** Additional y offset to consider when moving */
-    private static int moveOffsetY = DEFAULT_MOVE_Y_OFFSET;
-    /** Additional x offset to consider when moving */
-    private static int moveOffsetX = DEFAULT_MOVE_X_OFFSET;
-    /** Move move in Y direction */
-    private static CaptionMoveModeY moveModeY = CaptionMoveModeY.KEEP_POSITION;
-    /** Move move in X direction */
-    private static CaptionMoveModeX moveModeX = CaptionMoveModeX.KEEP_POSITION;
-    /** Flag: move subtitle */
-    private static boolean moveCaptions;
-
-    /** Current input stream ID */
-    private static StreamID currentStreamID = StreamID.UNKNOWN;
     /** Full filename of current source SUP (needed for thread) */
     private static String fileName;
 
@@ -250,33 +229,6 @@ public class Core  extends Thread {
     }
 
     /**
-     * Identifies a stream by examining the first two bytes.
-     * @param id Byte array holding four bytes at minimum
-     * @return StreamID
-     */
-    public static StreamID getStreamID(byte id[]) {
-        StreamID sid;
-
-        if (id[0]==0x50 && id[1]==0x47) {
-            sid = StreamID.BDSUP;
-        } else if (id[0]==0x53 && id[1]==0x50) {
-            sid = StreamID.SUP;
-        } else if (id[0]==0x00 && id[1]==0x00 && id[2]==0x01 && id[3]==(byte)0xba) {
-            sid = StreamID.DVDSUB;
-        } else if (id[0]==0x23 && id[1]==0x20 && id[2]==0x56 && id[3]==0x6f) {
-            sid = StreamID.IDX;
-        } else if (id[0]==0x3c && id[1]==0x3f && id[2]==0x78 && id[3]==0x6d) {
-            sid = StreamID.XML;
-        } else if (id[0]==0x44 && id[1]==0x56 && id[2]==0x44 && id[3]==0x56) {
-            sid = StreamID.IFO;
-        } else {
-            sid = StreamID.UNKNOWN;
-        }
-
-        return sid;
-    }
-
-    /**
      * Read a subtitle stream in a thread and display the progress dialog.
      * @param fname		File name of subtitle stream to read
      * @param parent	Parent frame (needed for progress dialog)
@@ -309,7 +261,7 @@ public class Core  extends Thread {
             }
 		}
 
-        currentStreamID = sid;
+        configuration.setCurrentStreamID(sid);
 
         // start thread
         Thread t = new Thread(new Core());
@@ -535,7 +487,6 @@ public class Core  extends Thread {
             subtitleStream.close();
         }
 
-
         supXml = new SupXml(fname);
         subtitleStream = supXml;
 
@@ -613,7 +564,7 @@ public class Core  extends Thread {
 
         if (isVobSub) {
             // SUB/IDX
-            if (currentStreamID == StreamID.DVDSUB) {
+            if (configuration.getCurrentStreamID() == StreamID.DVDSUB) {
                 fnS = fname;
                 fnI = FilenameUtils.removeExtension(fname) + ".idx";
             } else {
@@ -841,7 +792,7 @@ public class Core  extends Thread {
     public static void setForceAll() {
         if (subPictures != null) {
             for (SubPicture subPicture : subPictures) {
-                switch (forceAll) {
+                switch (configuration.getForceAll()) {
                     case SET:
                         subPicture.isforced = true;
                         break;
@@ -900,7 +851,7 @@ public class Core  extends Thread {
 
             // set forced flag
             SubPicture picTrg = subPictures[i];
-            switch (forceAll) {
+            switch (configuration.getForceAll()) {
                 case SET:
                     picTrg.isforced = true;
                     break;
@@ -1040,7 +991,7 @@ public class Core  extends Thread {
             subPictures[i] = picOld.copy();
 
             // set forced flag
-            switch (forceAll) {
+            switch (configuration.getForceAll()) {
                 case SET:
                     subPictures[i].isforced = true;
                     break;
@@ -1308,7 +1259,7 @@ public class Core  extends Thread {
         }
 
         if (configuration.isCliMode()) {
-            moveToBounds(picTrg, displayNum, cineBarFactor, moveOffsetX, moveOffsetY, moveModeX, moveModeY, cropOfsY);
+            moveToBounds(picTrg, displayNum, configuration.getCineBarFactor(), configuration.getMoveOffsetX(), configuration.getMoveOffsetY(), configuration.getMoveModeX(), configuration.getMoveModeY(), configuration.getCropOffsetY());
         }
     }
 
@@ -1516,7 +1467,7 @@ public class Core  extends Thread {
      */
     public static void moveAllToBounds() throws CoreException {
         String sy = null;
-        switch (moveModeY) {
+        switch (configuration.getMoveModeY()) {
             case MOVE_INSIDE_BOUNDS:
                 sy = "inside";
                 break;
@@ -1525,7 +1476,7 @@ public class Core  extends Thread {
                 break;
         }
         String sx = null;
-        switch (moveModeX) {
+        switch (configuration.getMoveModeX()) {
             case CENTER:
                 sx = "center vertically";
                 break;
@@ -1553,7 +1504,7 @@ public class Core  extends Thread {
                 if (!subPictures[idx].wasDecoded) {
                     convertSup(idx, idx+1, subPictures.length, true);
                 }
-                moveToBounds(subPictures[idx], idx+1, cineBarFactor, moveOffsetX, moveOffsetY, moveModeX, moveModeY, cropOfsY);
+                moveToBounds(subPictures[idx], idx+1, configuration.getCineBarFactor(), configuration.getMoveOffsetX(), configuration.getMoveOffsetY(), configuration.getMoveModeX(), configuration.getMoveModeY(), configuration.getCropOffsetY());
             }
         }
     }
@@ -1812,22 +1763,6 @@ public class Core  extends Thread {
      */
     public static CoreThreadState getStatus() {
         return state;
-    }
-
-    /**
-     * Request setting of forced flag for all captions
-     * @return current state
-     */
-    public static ForcedFlagState getForceAll() {
-        return forceAll;
-    }
-
-    /**
-     * Request setting of forced flag for all captions
-     * @param f state to set
-     */
-    public static void setForceAll(ForcedFlagState f) {
-        forceAll = f;
     }
 
     /**
@@ -2136,38 +2071,6 @@ public class Core  extends Thread {
     }
 
     /**
-     * Get flag that defines whether to swap Cr/Cb components when loading a SUP.
-     * @return True: swap cr/cb
-     */
-    public static boolean getSwapCrCb() {
-        return swapCrCb;
-    }
-
-    /**
-     * Set flag that defines whether to swap Cr/Cb components when loading a SUP.
-     * @param b True: swap cr/cb
-     */
-    public static void setSwapCrCb(boolean b) {
-        swapCrCb = b;
-    }
-
-    /**
-     * Set Y coordinate cropping offset.
-     * @param ofs Cropping Offset (number of lines to crop symmetrically from bottom and top)
-     */
-    public static void setCropOfsY(int ofs) {
-        cropOfsY = ofs;
-    }
-
-    /**
-     * Get Y coordinate cropping offset.
-     * @return Current cropping Offset (number of lines to crop symmetrically from bottom and top)
-     */
-    public static int getCropOfsY() {
-        return cropOfsY;
-    }
-
-    /**
      * Get: use of BT.601 color model instead of BT.709.
      * @return True if BT.601 is used
      */
@@ -2197,112 +2100,6 @@ public class Core  extends Thread {
      */
     public static void setKeepFps(boolean e) {
         keepFps = e;
-    }
-
-    /**
-     * Set: move mode in Y direction
-     * @param m Move mode
-     */
-    public static void setMoveModeY(CaptionMoveModeY m) {
-        moveModeY = m;
-        moveCaptions = (moveModeY != CaptionMoveModeY.KEEP_POSITION) || (moveModeX != CaptionMoveModeX.KEEP_POSITION);
-    }
-
-    /**
-     * Get: move mode in Y direction
-     * @return Move mode
-     */
-    public static CaptionMoveModeY getMoveModeY() {
-        return moveModeY;
-    }
-
-    /**
-     * Set: move mode in X direction
-     * @param m Move mode
-     */
-    public static void setMoveModeX(CaptionMoveModeX m) {
-        moveModeX = m;
-        moveCaptions = (moveModeY != CaptionMoveModeY.KEEP_POSITION) || (moveModeX != CaptionMoveModeX.KEEP_POSITION);
-    }
-
-    /**
-     * Get: move mode in X direction
-     * @return Move mode
-     */
-    public static CaptionMoveModeX getMoveModeX() {
-        return moveModeX;
-    }
-
-    /**
-     * Set: factor of cinemascope bars (needed for moving after cropping).
-     * @param f Factor of cinemascope bars
-     */
-    public static void setCineBarFactor(double f) {
-        cineBarFactor = f;
-    }
-
-    /**
-     * Set: Additional y offset to consider when moving
-     * @param ofs Y offset
-     */
-    public static void setMoveOffsetY(int ofs) {
-        moveOffsetY = ofs;
-    }
-
-    /**
-     * Get: Additional y offset to consider when moving
-     * @return Y offset
-     */
-    public static int getMoveOffsetY() {
-        return moveOffsetY;
-    }
-
-    /**
-     * Set: Additional x offset to consider when moving
-     * @param ofs Y offset
-     */
-    public static void setMoveOffsetX(int ofs) {
-        moveOffsetX = ofs;
-    }
-
-    /**
-     * Get: Additional x offset to consider when moving
-     * @return X offset
-     */
-    public static int getMoveOffsetX() {
-        return moveOffsetX;
-    }
-
-    /**
-     * Get: keep move settings after loading a new stream
-     * @return true: keep settings, false: ignore settings
-     */
-    public static boolean getMoveCaptions() {
-        return moveCaptions;
-    }
-
-    /**
-     * Set: keep move settings after loading a new stream
-     * @param m true: keep settings, false; ignore settings
-     */
-    public static void setMoveCaptions(boolean m) {
-        moveCaptions = m;
-    }
-
-    /**
-     * Get current input stream ID.
-     * @return Stream ID
-     */
-    public static StreamID getCurrentStreamID() {
-        return currentStreamID;
-    }
-
-    /**
-     * Set current input stream ID.
-     * @param sid Stream ID
-     */
-    public static void setCurrentStreamID(StreamID sid) {
-        currentStreamID = sid;
     }
 
     /**

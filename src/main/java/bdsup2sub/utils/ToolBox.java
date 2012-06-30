@@ -15,6 +15,7 @@
  */
 package bdsup2sub.utils;
 
+import bdsup2sub.core.StreamID;
 import bdsup2sub.tools.JFileFilter;
 
 import javax.swing.*;

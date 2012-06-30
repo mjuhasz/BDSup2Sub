@@ -72,6 +72,18 @@ public final class Configuration {
     private int languageIdx;
     private boolean exportForced;
 
+    private int cropOffsetY = DEFAULT_CROP_LINE_COUNT;
+    private ForcedFlagState forceAll = ForcedFlagState.KEEP;
+    private boolean swapCrCb;
+    private CaptionMoveModeX moveModeX = CaptionMoveModeX.KEEP_POSITION;
+    private CaptionMoveModeY moveModeY = CaptionMoveModeY.KEEP_POSITION;
+    private int moveOffsetX = DEFAULT_MOVE_X_OFFSET;
+    private int moveOffsetY = DEFAULT_MOVE_Y_OFFSET;
+    private boolean moveCaptions;
+    /** Factor to calculate height of one cinemascope bar from screen height */
+    private double cineBarFactor = 5.0/42;
+    private StreamID currentStreamID = StreamID.UNKNOWN;
+
     private static final int RECENT_FILE_COUNT = 5;
     private static final String CONFIG_FILE = "bdsup2sup.ini";
     private static final Configuration INSTANCE = new Configuration();
@@ -115,7 +127,6 @@ public final class Configuration {
     }
 
     public void storeConfig() {
-        System.out.println("climode" + cliMode);
         if (!cliMode) {
             props.save(configFilePath);
         }
@@ -572,5 +583,95 @@ public final class Configuration {
 
     public void setExportForced(boolean exportForced) {
         this.exportForced = exportForced;
+    }
+
+    public int getCropOffsetY() {
+        return cropOffsetY;
+    }
+
+    public void setCropOffsetY(int cropOffsetY) {
+        this.cropOffsetY = cropOffsetY;
+    }
+
+    public ForcedFlagState getForceAll() {
+        return forceAll;
+    }
+
+    public void setForceAll(ForcedFlagState forceAll) {
+        this.forceAll = forceAll;
+    }
+
+    public boolean isSwapCrCb() {
+        return swapCrCb;
+    }
+
+    public void setSwapCrCb(boolean swapCrCb) {
+        this.swapCrCb = swapCrCb;
+    }
+
+    public void setMoveModeY(CaptionMoveModeY moveModeY) {
+        this.moveModeY = moveModeY;
+        this.moveCaptions = (moveModeY != CaptionMoveModeY.KEEP_POSITION) || (moveModeX != CaptionMoveModeX.KEEP_POSITION);
+    }
+
+    public CaptionMoveModeY getMoveModeY() {
+        return moveModeY;
+    }
+
+    public void setMoveModeX(CaptionMoveModeX moveModeX) {
+        this.moveModeX = moveModeX;
+        this.moveCaptions = (moveModeY != CaptionMoveModeY.KEEP_POSITION) || (moveModeX != CaptionMoveModeX.KEEP_POSITION);
+    }
+
+    public CaptionMoveModeX getMoveModeX() {
+        return moveModeX;
+    }
+
+    public void setMoveOffsetY(int moveOffsetY) {
+        this.moveOffsetY = moveOffsetY;
+    }
+
+    public int getMoveOffsetY() {
+        return moveOffsetY;
+    }
+
+    public void setMoveOffsetX(int moveOffsetX) {
+        this.moveOffsetX = moveOffsetX;
+    }
+
+    public int getMoveOffsetX() {
+        return moveOffsetX;
+    }
+
+    /**
+     * Get: keep move settings after loading a new stream
+     * @return true: keep settings, false: ignore settings
+     */
+    public boolean getMoveCaptions() {
+        return moveCaptions;
+    }
+
+    /**
+     * Set: keep move settings after loading a new stream
+     * @param moveCaptions true: keep settings, false; ignore settings
+     */
+    public void setMoveCaptions(boolean moveCaptions) {
+        this.moveCaptions = moveCaptions;
+    }
+
+    public double getCineBarFactor() {
+        return cineBarFactor;
+    }
+
+    public void setCineBarFactor(double cineBarFactor) {
+        this.cineBarFactor = cineBarFactor;
+    }
+
+    public StreamID getCurrentStreamID() {
+        return currentStreamID;
+    }
+
+    public void setCurrentStreamID(StreamID currentStreamID) {
+        this.currentStreamID = currentStreamID;
     }
 }

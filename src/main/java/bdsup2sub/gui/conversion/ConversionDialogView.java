@@ -834,37 +834,37 @@ class ConversionDialogView extends JDialog {
                 public void actionPerformed(ActionEvent e) {
                     if (model.isReady()) {
                         // fps source
-                        model.storeConvertFPS(model.getConvertFPS());
+                        model.storeConvertFPS();
                         if (model.getConvertFPS()) {
                             double fpsSrc  = SubtitleUtils.getFps((String) jComboBoxFpsSrc.getSelectedItem());
                             if (fpsSrc > 0) {
                                 model.setFpsSrc(fpsSrc);
-                                model.storeFPSSrc(fpsSrc);
+                                model.storeFPSSrc();
                             }
                         }
                         // fps target
                         double fpsTrg = SubtitleUtils.getFps((String) jComboBoxFpsTrg.getSelectedItem());
                         if (fpsTrg > 0) {
                             model.setFpsTrg(fpsTrg);
-                            model.storeFpsTrg(fpsTrg);
+                            model.storeFpsTrg();
                         }
                         // delay
                         try {
                             model.setDelayPTS((int)SubtitleUtils.syncTimePTS((long)(Double.parseDouble(jTextFieldDelay.getText()) * 90), model.getFpsTrg(), model.getFpsTrgConf()));
-                            model.storeDelayPTS(model.getDelayPTS());
+                            model.storeDelayPTS();
                         } catch (NumberFormatException ex) {
                         }
                         // min time
-                        model.storeFixShortFrames(model.getFixShortFrames());
+                        model.storeFixShortFrames();
                         try {
                             model.setMinTimePTS((int)SubtitleUtils.syncTimePTS((long)(Double.parseDouble(jTextFieldMinTime.getText()) * 90), model.getFpsTrg(), model.getFpsTrgConf()));
-                            model.storeMinTimePTS(model.getMinTimePTS());
+                            model.storeMinTimePTS();
                         } catch (NumberFormatException ex) {
                         }
                         // exit
                         model.storeConvertResolution();
                         if (model.getConvertResolution()) {
-                            model.storeOutputResolution(model.getOutputResolution());
+                            model.storeOutputResolution();
                         }
                         // scaleX
                         double scaleX = ToolBox.getDouble(jTextFieldScaleX.getText());
@@ -887,9 +887,9 @@ class ConversionDialogView extends JDialog {
                             model.setFreeScaleFactorY(scaleY);
                         }
                         // set scale X/Y
-                        model.storeApplyFreeScale(model.getApplyFreeScale());
+                        model.storeApplyFreeScale();
                         if (model.getApplyFreeScale()) {
-                            model.storeFreeScaleFactor(model.getFreeScaleFactorX(), model.getFreeScaleFactorY());
+                            model.storeFreeScaleFactor();
                         }
                         // forceAll is not stored
                         model.storeConfig();
@@ -908,25 +908,24 @@ class ConversionDialogView extends JDialog {
             jButtonRestore.setMnemonic('e');
             jButtonRestore.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
-                    boolean convertResolution = model.loadConvertResolution();
-                    model.setConvertResolution(convertResolution);
-                    if (convertResolution) {
-                        model.setOutputResolution(model.loadOutputResolution());
+                    model.loadConvertResolution();
+                    if (model.getConvertResolution()) {
+                        model.loadOutputResolution();
                     }
-                    model.setConvertFPS(model.loadConvertFPS());
+                    model.loadConvertFPS();
                     if (model.getConvertFPS() && !model.isFpsSrcCertain()) {
-                        model.setFpsSrc(model.loadFpsSrc());
+                        model.loadFpsSrc();
                     }
-                    model.setFpsTrg(model.loadFpsTrg());
-                    model.setDelayPTS(model.loadDelayPTS());
-                    model.setFixShortFrames(model.loadFixShortFrames());
-                    model.setMinTimePTS(model.loadMinTimePTS());
-                    model.setApplyFreeScale(model.loadApplyFreeScale());
+                    model.loadFpsTrg();
+                    model.loadDelayPTS();
+                    model.loadFixShortFrames();
+                    model.loadMinTimePTS();
+                    model.loadApplyFreeScale();
                     if (model.getApplyFreeScale()) {
-                        model.setFreeScaleFactorX(model.loadFreeScaleFactorX());
-                        model.setFreeScaleFactorY(model.loadFreeScaleFactorY());
+                        model.loadFreeScaleFactorX();
+                        model.loadFreeScaleFactorY();
                     }
-                    model.setForcedState(Core.getForceAll());
+                    model.loadForcedState();
                     fillDialog();
                 }
             });
@@ -1140,10 +1139,10 @@ class ConversionDialogView extends JDialog {
                         }
                         model.setCancel(false);
                         // forced state
-                        Core.setForceAll(model.getForcedState());
+                        Core.setForceAll();
                         // keep move settings
                         if (jCheckBoxMove.isEnabled()) {
-                            Core.setMoveCaptions(model.getMoveCaptions());
+                            model.storeMoveCaptions();
                         }
                         //
                         dispose();

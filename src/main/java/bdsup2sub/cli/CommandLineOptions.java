@@ -221,7 +221,7 @@ public class CommandLineOptions {
 
         Option swapCrCb = OptionBuilder
                 .withLongOpt("swap")
-                .withDescription("Swap Cr/Cb components.")
+                .withDescription("Swap Cr/Cb components when loading a BD/HD-DVD sup file.")
                 .hasArg(false).create(SWAP_CR_CB);
         options.addOption(swapCrCb);
 

@@ -354,11 +354,11 @@ public class SubDvd implements DvdSubtitleStream {
         controlHeader[1+11] = (byte)(((pic.getOfsX() & 0xf)<<4) | ((tmp>>8)&0xf) );
         controlHeader[1+12] = (byte)(tmp&0xff);
 
-        int yOfs = pic.getOfsY() - Core.getCropOfsY();
+        int yOfs = pic.getOfsY() - configuration.getCropOffsetY();
         if (yOfs < 0) {
             yOfs = 0;
         } else {
-            int yMax = pic.height - pic.getImageHeight() - 2*Core.getCropOfsY();
+            int yMax = pic.height - pic.getImageHeight() - 2 * configuration.getCropOffsetY();
             if (yOfs > yMax) {
                 yOfs = yMax;
             }
@@ -1195,7 +1195,7 @@ public class SubDvd implements DvdSubtitleStream {
             out.write("# Created by " + APP_NAME_AND_VERSION); out.newLine();
             out.newLine();
             out.write("# Frame size"); out.newLine();
-            out.write("size: " + pic.width + "x" + (pic.height-2 * Core.getCropOfsY())); out.newLine();
+            out.write("size: " + pic.width + "x" + (pic.height-2 * configuration.getCropOffsetY())); out.newLine();
             out.newLine();
             out.write("# Origin - upper-left corner"); out.newLine();
             out.write("org: 0, 0"); out.newLine();

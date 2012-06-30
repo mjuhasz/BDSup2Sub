@@ -574,17 +574,17 @@ public class SupBD implements SubtitleStream {
         size += (2 + palSize * 5) /* PDS */;
         size += rleBuf.length;
 
-        int yOfs = pic.getOfsY() - Core.getCropOfsY();
+        int yOfs = pic.getOfsY() - configuration.getCropOffsetY();
         if (yOfs < 0) {
             yOfs = 0;
         } else {
-            int yMax = pic.height - pic.getImageHeight() - 2*Core.getCropOfsY();
+            int yMax = pic.height - pic.getImageHeight() - 2 * configuration.getCropOffsetY();
             if (yOfs > yMax) {
                 yOfs = yMax;
             }
         }
 
-        int h = pic.height-2 * Core.getCropOfsY();
+        int h = pic.height-2 * configuration.getCropOffsetY();
 
         byte buf[] = new byte[size];
         int index = 0;
@@ -1113,7 +1113,7 @@ public class SupBD implements SubtitleStream {
                     palIndex = buffer.getByte(index);
                     int y = buffer.getByte(++index);
                     int cr, cb;
-                    if (Core.getSwapCrCb()) {
+                    if (configuration.isSwapCrCb()) {
                         cb = buffer.getByte(++index);
                         cr = buffer.getByte(++index);
                     } else {

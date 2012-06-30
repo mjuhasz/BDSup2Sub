@@ -17,12 +17,15 @@ package bdsup2sub.gui.move;
 
 import bdsup2sub.core.CaptionMoveModeX;
 import bdsup2sub.core.CaptionMoveModeY;
+import bdsup2sub.core.Configuration;
 import bdsup2sub.core.Core;
 import bdsup2sub.supstream.SubPicture;
 
 import java.awt.image.BufferedImage;
 
 class MoveDialogModel {
+
+    private final Configuration configuration = Configuration.getInstance();
 
     private BufferedImage image;
     private CaptionMoveModeX moveModeX = CaptionMoveModeX.KEEP_POSITION;
@@ -34,15 +37,17 @@ class MoveDialogModel {
     private int offsetY;
     private int offsetX;
     private double cinemascopeBarFactor = 5.0/42;
-    private int cropOfsY = Core.getCropOfsY();
+    private int cropOfsY;
     private double targetScreenAspectRatio = 21.0/9;
     private volatile boolean isReady = false;
 
     public MoveDialogModel() {
-        offsetX = Core.getMoveOffsetX();
-        offsetY = Core.getMoveOffsetY();
-        moveModeX = Core.getMoveModeX();
-        moveModeY = Core.getMoveModeY();
+        cropOfsY = configuration.getCropOffsetY();
+
+        offsetX = configuration.getMoveOffsetX();
+        offsetY = configuration.getMoveOffsetY();
+        moveModeX = configuration.getMoveModeX();
+        moveModeY = configuration.getMoveModeY();
     }
 
     public BufferedImage getImage() {
@@ -61,12 +66,20 @@ class MoveDialogModel {
         this.moveModeX = moveModeX;
     }
 
+    public void storeMoveModeX() {
+        configuration.setMoveModeX(moveModeX);
+    }
+
     public CaptionMoveModeY getMoveModeY() {
         return moveModeY;
     }
 
     public void setMoveModeY(CaptionMoveModeY moveModeY) {
         this.moveModeY = moveModeY;
+    }
+
+    public void storeMoveModeY() {
+        configuration.setMoveModeY(moveModeY);
     }
 
     public int getOriginalX() {
@@ -109,12 +122,20 @@ class MoveDialogModel {
         this.offsetY = offsetY;
     }
 
+    public void storeMoveOffsetY() {
+        configuration.setMoveOffsetY(offsetY);
+    }
+
     public int getOffsetX() {
         return offsetX;
     }
 
     public void setOffsetX(int offsetX) {
         this.offsetX = offsetX;
+    }
+
+    public void storeMoveOffsetX() {
+        configuration.setMoveOffsetX(offsetX);
     }
 
     public double getCinemascopeBarFactor() {
@@ -125,12 +146,20 @@ class MoveDialogModel {
         this.cinemascopeBarFactor = cinemascopeBarFactor;
     }
 
+    public void storeCinemascopeBarFactor() {
+        configuration.setCineBarFactor(cinemascopeBarFactor);
+    }
+
     public int getCropOfsY() {
         return cropOfsY;
     }
 
     public void setCropOfsY(int cropOfsY) {
         this.cropOfsY = cropOfsY;
+    }
+
+    public void storeCropOfsY() {
+        configuration.setCropOffsetY(cropOfsY);
     }
 
     public boolean isReady() {

@@ -25,6 +25,7 @@ import bdsup2sub.gui.edit.EditDialog;
 import bdsup2sub.gui.export.ExportDialog;
 import bdsup2sub.gui.palette.FramePaletteDialog;
 import bdsup2sub.utils.FilenameUtils;
+import bdsup2sub.utils.StreamUtils;
 import bdsup2sub.utils.ToolBox;
 
 import javax.swing.*;
@@ -268,7 +269,7 @@ class MainFrameController {
                     boolean idx = FilenameUtils.getExtension(fname).equalsIgnoreCase("idx");
                     boolean ifo = FilenameUtils.getExtension(fname).equalsIgnoreCase("ifo");
                     byte id[] = ToolBox.getFileID(fname, 4);
-                    StreamID sid = (id == null) ? StreamID.UNKNOWN : Core.getStreamID(id);
+                    StreamID sid = (id == null) ? StreamID.UNKNOWN : StreamUtils.getStreamID(id);
                     if (idx || xml || ifo || sid != StreamID.UNKNOWN) {
                         view.setTitle(APP_NAME_AND_VERSION + " - " + fname);
                         model.setSubIndex(0);
@@ -286,19 +287,19 @@ class MainFrameController {
                             view.initSubNumComboBox(num);
                             view.initAlphaThresholdComboBoxSelectedIndices();
                             //
-                            if (Core.getCropOfsY() > 0) {
+                            if (model.getCropOffsetY() > 0) {
                                 if (JOptionPane.showConfirmDialog(view, "Reset Crop Offset?",
                                         "", JOptionPane.YES_NO_OPTION) == 0) {
-                                    Core.setCropOfsY(0);
+                                    model.setCropOffsetY(0);
                                 }
                             }
 
                             ConversionDialog conversionDialog = new ConversionDialog(view);
-                            conversionDialog.enableOptionMove(Core.getMoveCaptions());
+                            conversionDialog.enableOptionMove(model.getMoveCaptions());
                             conversionDialog.setVisible(true);
                             if (!conversionDialog.wasCanceled()) {
                                 Core.scanSubtitles();
-                                if (Core.getMoveCaptions()) {
+                                if (model.getMoveCaptions()) {
                                     Core.moveAllThreaded(view);
                                 }
                                 int subIndex = model.getSubIndex();
@@ -507,7 +508,7 @@ class MainFrameController {
                 MoveDialog moveDialog = new MoveDialog(view);
                 moveDialog.setCurrentSubtitleIndex(model.getSubIndex());
                 moveDialog.setVisible(true);
-                if (Core.getMoveCaptions()) {
+                if (model.getMoveCaptions()) {
                     try {
                         Core.moveAllThreaded(view);
                     } catch (CoreException ex) {
@@ -545,8 +546,8 @@ class MainFrameController {
     private class ResetCropOffsetMenuItemActionListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent event) {
-            Core.setCropOfsY(0);
-            view.setLayoutPaneCropOffsetY(Core.getCropOfsY());
+            model.setCropOffsetY(0);
+            view.setLayoutPaneCropOffsetY(model.getCropOffsetY());
             view.repaintLayoutPane();
         }
     }
@@ -602,7 +603,7 @@ class MainFrameController {
         @Override
         public void actionPerformed(ActionEvent event) {
             boolean selected = view.isSwapCrCbSelected();
-            Core.setSwapCrCb(selected);
+            model.setSwapCrCb(selected);
             // create and show image
             (new Thread() {
                 @Override

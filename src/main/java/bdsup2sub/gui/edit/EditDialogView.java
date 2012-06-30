@@ -1028,7 +1028,7 @@ class EditDialogView extends JDialog {
 
             jPanelPreview.setSubtitleOffsets(subPic.getOfsX(), subPic.getOfsY());
             jPanelPreview.setScreenDimension(subPic.width, subPic.height);
-            jPanelPreview.setCropOffsetY(Core.getCropOfsY());
+            jPanelPreview.setCropOffsetY(model.getCropOffsetY());
             jPanelPreview.setImage(model.getImage(), subPic.getImageWidth(), subPic.getImageHeight());
             jPanelPreview.repaint();
             jPanelPreview.setExcluded(subPic.exclude);

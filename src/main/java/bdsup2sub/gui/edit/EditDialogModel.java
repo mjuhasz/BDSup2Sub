@@ -138,4 +138,8 @@ class EditDialogModel {
     public void setEdited(boolean edited) {
         this.edited = edited;
     }
+
+    public int getCropOffsetY() {
+        return configuration.getCropOffsetY();
+    }
 }

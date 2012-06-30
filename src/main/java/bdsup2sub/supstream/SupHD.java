@@ -356,7 +356,7 @@ public class SupHD implements SubtitleStream {
                 // each palette entry consists of 3 bytes
                 int y = buffer.getByte(ofs++);
                 int cr,cb;
-                if (Core.getSwapCrCb()) {
+                if (configuration.isSwapCrCb()) {
                     cb = buffer.getByte(ofs++);
                     cr = buffer.getByte(ofs++);
                 } else {

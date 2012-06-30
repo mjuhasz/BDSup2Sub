@@ -20,6 +20,7 @@ import bdsup2sub.core.*;
 import bdsup2sub.gui.main.MainFrame;
 import bdsup2sub.tools.Props;
 import bdsup2sub.utils.FilenameUtils;
+import bdsup2sub.utils.StreamUtils;
 import bdsup2sub.utils.SubtitleUtils;
 import bdsup2sub.utils.ToolBox;
 import org.apache.commons.cli.ParseException;
@@ -90,7 +91,7 @@ public class BDSup2Sub {
         }
         processMoveMode();
         if (options.getCropLines().isPresent()) {
-            Core.setCropOfsY(options.getCropLines().get());
+            configuration.setCropOffsetY(options.getCropLines().get());
         }
         if (options.getAlphaCropThreshold().isPresent()) {
             configuration.setAlphaCrop(options.getAlphaCropThreshold().get());
@@ -105,10 +106,10 @@ public class BDSup2Sub {
             configuration.setExportForced(options.isExportForcedSubtitlesOnly().get());
         }
         if (options.getForcedFlagState().isPresent()) {
-            Core.setForceAll(options.getForcedFlagState().get());
+            configuration.setForceAll(options.getForcedFlagState().get());
         }
         if (options.isSwapCrCb().isPresent()) {
-            Core.setSwapCrCb(options.isSwapCrCb().get());
+            configuration.setSwapCrCb(options.isSwapCrCb().get());
         }
         if (options.isFixInvisibleFrames().isPresent()) {
             configuration.setFixZeroAlpha(options.isFixInvisibleFrames().get());
@@ -158,13 +159,13 @@ public class BDSup2Sub {
 
     private void processMoveMode() {
         if (options.getMoveModeY().isPresent()) {
-            Core.setMoveModeY(options.getMoveModeY().get());
-            Core.setMoveOffsetY(options.getMoveYOffset());
+            configuration.setMoveModeY(options.getMoveModeY().get());
+            configuration.setMoveOffsetY(options.getMoveYOffset());
         }
         if (options.getMoveModeX().isPresent()) {
-            Core.setMoveModeX(options.getMoveModeX().get());
+            configuration.setMoveModeX(options.getMoveModeX().get());
             if (options.getMoveXOffset().isPresent()) {
-                Core.setMoveOffsetX(options.getMoveXOffset().get());
+                configuration.setMoveOffsetX(options.getMoveXOffset().get());
             }
         }
     }
@@ -235,11 +236,11 @@ public class BDSup2Sub {
             boolean idx = FilenameUtils.getExtension(inputFile).equalsIgnoreCase("idx");
             boolean ifo = FilenameUtils.getExtension(inputFile).equalsIgnoreCase("ifo");
             byte id[] = ToolBox.getFileID(inputFile, 4);
-            StreamID sid = (id == null) ? StreamID.UNKNOWN : Core.getStreamID(id);
+            StreamID sid = (id == null) ? StreamID.UNKNOWN : StreamUtils.getStreamID(id);
             if (!idx && !xml && !ifo && sid == StreamID.UNKNOWN) {
                 throw new CoreException("File '" + inputFile + "' is not a supported subtitle stream.");
             }
-            Core.setCurrentStreamID(sid);
+            configuration.setCurrentStreamID(sid);
 
             // check output file(s)
             File indexFile, subtitleFile;
@@ -268,8 +269,8 @@ public class BDSup2Sub {
             Core.scanSubtitles();
             printWarnings();
             // move captions
-            if (Core.getMoveModeX() != CaptionMoveModeX.KEEP_POSITION || Core.getMoveModeY() != CaptionMoveModeY.KEEP_POSITION) {
-                Core.setCineBarFactor((1.0 - (16.0/9)/options.getScreenRatio())/2.0);
+            if (configuration.getMoveModeX() != CaptionMoveModeX.KEEP_POSITION || configuration.getMoveModeY() != CaptionMoveModeY.KEEP_POSITION) {
+                configuration.setCineBarFactor((1.0 - (16.0 / 9) / options.getScreenRatio()) / 2.0);
                 Core.moveAllToBounds();
             }
             // set some values
@@ -290,11 +291,6 @@ public class BDSup2Sub {
 
         System.out.println("\nConversion finished.");
         System.exit(0);
-    }
-
-    private static void exit(int c) {
-        Core.exit();
-        System.exit(c);
     }
 
     private static void fatalError(String e) {

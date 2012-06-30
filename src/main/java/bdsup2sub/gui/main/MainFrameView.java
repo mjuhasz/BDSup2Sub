@@ -1262,7 +1262,7 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
             public void run() {
                 jLayoutPane.setScreenDimension(Core.getTrgWidth(index), Core.getTrgHeight(index));
                 jLayoutPane.setSubtitleOffsets(Core.getTrgOfsX(index), Core.getTrgOfsY(index));
-                jLayoutPane.setCropOffsetY(Core.getCropOfsY());
+                jLayoutPane.setCropOffsetY(model.getCropOffsetY());
                 jLayoutPane.setImage(Core.getTrgImage(), Core.getTrgImgWidth(index), Core.getTrgImgHeight(index));
                 jLayoutPane.setExcluded(Core.getTrgExcluded(index));
                 jPanelTarget.setImage(Core.getTrgImage());

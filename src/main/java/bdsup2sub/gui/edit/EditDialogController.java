@@ -135,10 +135,10 @@ public class EditDialogController {
                 SubPicture subPic = model.getSubPic();
                 int y = subPic.height - view.getVerticalSliderValue();
 
-                if (y < Core.getCropOfsY()) {
-                    y = Core.getCropOfsY();
-                } else if (y > subPic.height - subPic.getImageHeight() - Core.getCropOfsY()) {
-                    y = subPic.height - subPic.getImageHeight() - Core.getCropOfsY();
+                if (y < model.getCropOffsetY()) {
+                    y = model.getCropOffsetY();
+                } else if (y > subPic.height - subPic.getImageHeight() - model.getCropOffsetY()) {
+                    y = subPic.height - subPic.getImageHeight() - model.getCropOffsetY();
                 }
 
                 if (y != subPic.getOfsY()) {
@@ -267,10 +267,10 @@ public class EditDialogController {
             int y = ToolBox.getInt(view.getYTextFieldText());
             if (y == -1) {
                 y = subPic.getOfsY(); // invalid value -> keep old one
-            } else if (y < Core.getCropOfsY()) {
-                y = Core.getCropOfsY();
-            } else if (y > subPic.height - subPic.getImageHeight() - Core.getCropOfsY()) {
-                y = subPic.height - subPic.getImageHeight() - Core.getCropOfsY();
+            } else if (y < model.getCropOffsetY()) {
+                y = model.getCropOffsetY();
+            } else if (y > subPic.height - subPic.getImageHeight() - model.getCropOffsetY()) {
+                y = subPic.height - subPic.getImageHeight() - model.getCropOffsetY();
             }
             if (y != subPic.getOfsY()) {
                 model.setEnableSliders(false);
@@ -306,7 +306,7 @@ public class EditDialogController {
             if (model.isReady()) {
                 SubPicture subPic = model.getSubPic();
                 int y = ToolBox.getInt(view.getYTextFieldText());
-                if (y < Core.getCropOfsY() || y > subPic.height - subPic.getImageHeight() - Core.getCropOfsY()) {
+                if (y < model.getCropOffsetY() || y > subPic.height - subPic.getImageHeight() - model.getCropOffsetY()) {
                     view.setYTextFieldBackground(ERROR_BACKGROUND);
                 } else {
                     if (y != subPic.getOfsY()) {
@@ -585,8 +585,8 @@ public class EditDialogController {
             if (y < 10) {
                 y = 10;
             }
-            if (y < Core.getCropOfsY()) {
-                y = Core.getCropOfsY();
+            if (y < model.getCropOffsetY()) {
+                y = model.getCropOffsetY();
             }
             model.setEnableSliders(false);
             subPic.setOfsY(y);
@@ -605,7 +605,7 @@ public class EditDialogController {
             SubPicture subPic = model.getSubPic();
             int cineH = subPic.height*5/42;
             int y = subPic.height-cineH;
-            if (y+subPic.getImageHeight() > subPic.height - Core.getCropOfsY()) {
+            if (y+subPic.getImageHeight() > subPic.height - model.getCropOffsetY()) {
                 y = subPic.height - subPic.getImageHeight() - 10;
             }
             model.setEnableSliders(false);

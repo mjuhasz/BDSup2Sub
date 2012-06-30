@@ -191,11 +191,11 @@ public class SupDvd implements DvdSubtitleStream {
         controlHeader[1+11] = (byte)(((pic.getOfsX() & 0xf)<<4) | ((tmp>>8)&0xf) );
         controlHeader[1+12] = (byte)(tmp&0xff);
 
-        int yOfs = pic.getOfsY() - Core.getCropOfsY();
+        int yOfs = pic.getOfsY() - configuration.getCropOffsetY();
         if (yOfs < 0) {
             yOfs = 0;
         } else {
-            int yMax = pic.height - pic.getImageHeight() - 2 * Core.getCropOfsY();
+            int yMax = pic.height - pic.getImageHeight() - 2 * configuration.getCropOffsetY();
             if (yOfs > yMax) {
                 yOfs = yMax;
             }
