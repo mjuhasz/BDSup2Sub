@@ -32,9 +32,9 @@ public class CommandLineOptions {
     static final String PALETTE_MODE = "p";
     static final String MIN_DISPLAY_TIME = "m";
     static final String MAX_TIME_DIFF = "x";
-    static final String MOVE_IN = "movein";
-    static final String MOVE_OUT = "moveout";
-    static final String MOVE_X = "movex";
+    static final String MOVE_IN = "I";
+    static final String MOVE_OUT = "O";
+    static final String MOVE_X = "X";
     static final String CROP_LINES = "c";
     static final String ALPHA_CROP_THRESHOLD = "a";
     static final String SCALE = "scale";
@@ -141,28 +141,31 @@ public class CommandLineOptions {
                 .hasArg().create(MAX_TIME_DIFF);
         options.addOption(maxTimeDiff);
 
+        OptionGroup moveGroup = new OptionGroup();
         Option moveIn = OptionBuilder
                 .withArgName("ratio, offset")
-                .withLongOpt(MOVE_IN)
+                .withLongOpt("movein")
                 .withDescription("move captions inside screen ratio <ratio>, +/- offset <offset>")
                 .withValueSeparator(',')
-                .hasArgs(2).create();
-        options.addOption(moveIn);
+                .hasArgs(2).create(MOVE_IN);
+        moveGroup.addOption(moveIn);
 
         Option moveOut = OptionBuilder
                 .withArgName("ratio, offset")
-                .withLongOpt(MOVE_OUT)
+                .withLongOpt("moveout")
                 .withDescription("move captions outside screen ratio <ratio>, +/- offset <offset>")
                 .withValueSeparator(',')
-                .hasArgs(2).create();
-        options.addOption(moveOut);
+                .hasArgs(2).create(MOVE_OUT);
+        moveGroup.addOption(moveOut);
+
+        options.addOptionGroup(moveGroup);
 
         Option moveX = OptionBuilder
                 .withArgName("pos[, offset]")
-                .withLongOpt(MOVE_X)
+                .withLongOpt("movex")
                 .withDescription("move captions horizontally\n<pos> may be left, right, center\n+/- optional offset <offset> (only if moving left or right)")
                 .withValueSeparator(',')
-                .hasOptionalArgs(2).create();
+                .hasOptionalArgs(2).create(MOVE_X);
         options.addOption(moveX);
 
         Option cropLines = OptionBuilder

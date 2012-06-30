@@ -15,6 +15,7 @@
  */
 package bdsup2sub.cli;
 
+import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.junit.Before;
 import org.junit.Test;
@@ -157,9 +158,9 @@ public class CommandLineOptionsTest {
 
     @Test
     public void shouldHaveMoveInOption() {
-        String option = "movein";
+        String option = "I";
         assertTrue(options.hasOption(option));
-        assertNull(options.getOption(option).getOpt());
+        assertEquals("movein", options.getOption(option).getLongOpt());
         assertFalse(options.getOption(option).isRequired());
         assertEquals(2, options.getOption(option).getArgs());
         assertFalse(options.getOption(option).hasOptionalArg());
@@ -169,20 +170,29 @@ public class CommandLineOptionsTest {
 
     @Test
     public void shouldHaveMoveOutOption() {
-        String option = "moveout";
+        String option = "O";
         assertTrue(options.hasOption(option));
-        assertNull(options.getOption(option).getOpt());
+        assertEquals("moveout", options.getOption(option).getLongOpt());
         assertFalse(options.getOption(option).isRequired());
         assertEquals(2, options.getOption(option).getArgs());
         assertFalse(options.getOption(option).hasOptionalArg());
         assertEquals(',', options.getOption(option).getValueSeparator());
         assertEquals("ratio, offset", options.getOption(option).getArgName());
     }
+
+    @Test
+    public void shouldHaveMoveOptionGroup() {
+        OptionGroup optionGroup = options.getOptionGroup(options.getOption("I"));
+        assertNotNull(optionGroup);
+        assertTrue(optionGroup.getOptions().contains(options.getOption("I")));
+        assertTrue(optionGroup.getOptions().contains(options.getOption("O")));
+    }
+
     @Test
     public void shouldHaveMoveHorizontallyOption() {
-        String option = "movex";
+        String option = "X";
         assertTrue(options.hasOption(option));
-        assertNull(options.getOption(option).getOpt());
+        assertEquals("movex", options.getOption(option).getLongOpt());
         assertFalse(options.getOption(option).isRequired());
         assertEquals(2, options.getOption(option).getArgs());
         assertTrue(options.getOption(option).hasOptionalArg());

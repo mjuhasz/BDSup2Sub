@@ -209,9 +209,6 @@ public class CommandLineParser {
                     throw new ParseException("Illegal maximum merge time difference value: " + value);
                 }
             }
-            if (line.hasOption(MOVE_IN) && line.hasOption(MOVE_OUT)) {
-                throw new ParseException("Incompatible options: " + MOVE_IN + ", " + MOVE_OUT);
-            }
             if (line.hasOption(MOVE_IN) || line.hasOption(MOVE_OUT)) {
                 moveModeY = line.hasOption(MOVE_IN) ? Optional.of(CaptionMoveModeY.MOVE_INSIDE_BOUNDS) : Optional.of(CaptionMoveModeY.MOVE_OUTSIDE_BOUNDS);
                 String option = line.hasOption(MOVE_IN) ? MOVE_IN : MOVE_OUT;
@@ -281,7 +278,6 @@ public class CommandLineParser {
             }
             exportPalette = line.hasOption(EXPORT_PALETTE) ? Optional.of(Boolean.TRUE) : Optional.<Boolean>absent();
             exportForcedSubtitlesOnly = line.hasOption(EXPORT_FORCED_SUBTITLES_ONLY) ? Optional.of(Boolean.TRUE) : Optional.<Boolean>absent();
-
             if (line.hasOption(FORCED_FLAG)) {
                 String value = line.getOptionValue(FORCED_FLAG);
                 if (value.equalsIgnoreCase("keep")) {
