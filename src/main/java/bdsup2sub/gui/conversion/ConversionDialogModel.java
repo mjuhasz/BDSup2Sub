@@ -49,7 +49,7 @@ class ConversionDialogModel {
         // fix output resolution in case that it should not be changed
         // change target resolution to source resolution if no conversion is needed
         if (!convertResolution && Core.getNumFrames() > 0) {
-            outputResolution = Core.getResolution(Core.getSubPictureSrc(0).width, Core.getSubPictureSrc(0).height);
+            outputResolution = SubtitleUtils.getResolutionForDimension(Core.getSubPictureSrc(0).width, Core.getSubPictureSrc(0).height);
         } else {
             outputResolution = configuration.getOutputResolution();
         }
@@ -335,5 +335,9 @@ class ConversionDialogModel {
 
     public void setReady(boolean ready) {
         isReady = ready;
+    }
+
+    public boolean isKeepFps() {
+        return configuration.isKeepFps();
     }
 }

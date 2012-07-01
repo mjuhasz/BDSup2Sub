@@ -16,6 +16,7 @@
 package bdsup2sub.utils;
 
 import bdsup2sub.core.Framerate;
+import bdsup2sub.core.Resolution;
 
 public final class SubtitleUtils {
 
@@ -97,5 +98,34 @@ public final class SubtitleUtils {
             retval = (long)((long)(timeStamp/tpf)*tpf+0.5);
         }
         return retval;
+    }
+
+    public static double getDefaultFramerateForResolution(Resolution resolution) {
+        double fps;
+        switch (resolution.getDimensions()[1]) {
+            case 480:
+                fps = Framerate.NTSC.getValue();
+                break;
+            case 576:
+                fps = Framerate.PAL.getValue();
+                break;
+            default:
+                fps = Framerate.FPS_23_976.getValue();
+        }
+        return fps;
+    }
+
+    public static Resolution getResolutionForDimension(int width, int height) {
+        if (width <= Resolution.NTSC.getDimensions()[0] && height <= Resolution.NTSC.getDimensions()[1]) {
+            return Resolution.NTSC;
+        } else if (width <= Resolution.PAL.getDimensions()[0] && height <= Resolution.PAL.getDimensions()[1]) {
+            return Resolution.PAL;
+        } else if (width <= Resolution.HD_720.getDimensions()[0] && height <= Resolution.HD_720.getDimensions()[1]) {
+            return Resolution.HD_720;
+        } else if (width <= Resolution.HD_1440x1080.getDimensions()[0] && height <= Resolution.HD_1440x1080.getDimensions()[1]) {
+            return Resolution.HD_1440x1080;
+        } else {
+            return Resolution.HD_1080;
+        }
     }
 }

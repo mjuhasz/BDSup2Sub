@@ -128,7 +128,7 @@ public class BDSup2Sub {
     }
 
     private void processFrameRate() {
-        boolean defineFPStrg = false;
+        boolean targetFramerateDefined = false;
         if (options.isConvertFpsMode()) {
             if (!options.getSourceFrameRate().isPresent()) { // was set to "auto"
                 // leave default value
@@ -138,18 +138,18 @@ public class BDSup2Sub {
             }
             // convert framerate from <auto>/fpssrc to fpstrg
             configuration.setConvertFPS(true);
-            defineFPStrg = true;
+            targetFramerateDefined = true;
         } else if (options.isSynchronizeFpsMode()) {
             if (!options.getTargetFrameRate().isPresent()) { // was set to "keep"
-                Core.setKeepFps(true);
+                configuration.setKeepFps(true);
                 // use source fps as target fps
             } else {
                 // synchronize target framerate to fpstrg
                 configuration.setFpsTrg(options.getTargetFrameRate().get());
-                defineFPStrg = true;
+                targetFramerateDefined = true;
             }
         }
-        if (!defineFPStrg && options.getResolution().isPresent()) {
+        if (!targetFramerateDefined && options.getResolution().isPresent()) {
             switch(options.getResolution().get()) {
                 case PAL: configuration.setFpsTrg(Framerate.PAL.getValue()); break;
                 case NTSC: configuration.setFpsTrg(Framerate.NTSC.getValue()); break;
@@ -158,8 +158,8 @@ public class BDSup2Sub {
                 case HD_1080: configuration.setFpsTrg(Framerate.FPS_23_976.getValue()); break;
             }
         }
-        if (!Core.getKeepFps() && !defineFPStrg) {
-            configuration.setFpsTrg(Core.getDefaultFPS(configuration.getOutputResolution()));
+        if (!configuration.isKeepFps() && !targetFramerateDefined) {
+            configuration.setFpsTrg(SubtitleUtils.getDefaultFramerateForResolution(configuration.getOutputResolution()));
         }
     }
 

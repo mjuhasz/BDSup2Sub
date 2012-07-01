@@ -244,7 +244,7 @@ public class SupXml implements SubtitleStream {
             out.newLine();
             out.write("    <Language Code=\"" + LANGUAGES[configuration.getLanguageIdx()][2] + "\"/>");
             out.newLine();
-            String res = Core.getResolutionNameXml(configuration.getOutputResolution());
+            String res = configuration.getOutputResolution().getResolutionNameForXml();
             out.write("    <Format VideoFormat=\"" + res + "\" FrameRate=\"" + ToolBox.formatDouble(fps) + "\" DropFrame=\"False\"/>");
             out.newLine();
             t = pics[0].startTime;
@@ -483,9 +483,9 @@ public class SupXml implements SubtitleStream {
                             if (res.length() == 4 && res.charAt(0) != '7') { // hack to rename 480p/576p to 480i/576i
                                 res = res.replace('p', 'i');
                             }
-                            if (Core.getResolutionNameXml(r).equalsIgnoreCase(res)) {
+                            if (r.getResolutionNameForXml().equalsIgnoreCase(res)) {
                                 resolution = r;
-                                Core.print("Language: " + Core.getResolutionNameXml(r) + "\n");
+                                Core.print("Language: " + r.getResolutionNameForXml() + "\n");
                                 break;
                             }
                         }
@@ -532,7 +532,7 @@ public class SupXml implements SubtitleStream {
                     if (pic.isforced) {
                         numForcedFrames++;
                     }
-                    int dim[] = Core.getResolution(resolution);
+                    int dim[] = resolution.getDimensions();
                     pic.width  = dim[0];
                     pic.height = dim[1];
                     break;

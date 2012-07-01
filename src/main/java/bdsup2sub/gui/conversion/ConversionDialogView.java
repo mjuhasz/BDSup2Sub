@@ -542,8 +542,8 @@ class ConversionDialogView extends JDialog {
                         for (Resolution resolution : Resolution.values()) {
                             if (idx == resolution.ordinal()) {
                                 model.setOutputResolution(resolution);
-                                if (!Core.getKeepFps()) {
-                                    model.setFpsTrg(Core.getDefaultFPS(resolution));
+                                if (!model.isKeepFps()) {
+                                    model.setFpsTrg(SubtitleUtils.getDefaultFramerateForResolution(resolution));
                                 }
                                 jComboBoxFpsTrg.setSelectedItem(ToolBox.formatDouble(model.getFpsTrg()));
                                 break;

@@ -37,6 +37,7 @@ import static bdsup2sub.core.Configuration.DEFAULT_CROP_LINE_COUNT;
 import static bdsup2sub.core.Configuration.DEFAULT_MOVE_X_OFFSET;
 import static bdsup2sub.core.Configuration.DEFAULT_MOVE_Y_OFFSET;
 import static bdsup2sub.core.Constants.*;
+import static bdsup2sub.utils.SubtitleUtils.getResolutionForDimension;
 import static bdsup2sub.utils.TimeUtils.ptsToTimeStr;
 import static com.mortennobel.imagescaling.ResampleFilters.*;
 
@@ -120,8 +121,6 @@ public class Core extends Thread {
 
     /** Use BT.601 color model instead of BT.709 */
     private static boolean useBT601;
-    /** Use src fps for trg if possible */
-    private static boolean keepFps;
 
     /** Full filename of current source SUP (needed for thread) */
     private static String fileName;
@@ -461,7 +460,7 @@ public class Core extends Thread {
         if (subtitleStream == supBD) {
             configuration.setFpsSrc(supBD.getFps(0));
             configuration.setFpsSrcCertain(true);
-            if (Core.keepFps) {
+            if (configuration.isKeepFps()) {
                 configuration.setFpsTrg(configuration.getFPSSrc());
             }
         } else {
@@ -519,7 +518,7 @@ public class Core extends Thread {
         // set frame rate
         configuration.setFpsSrc(supXml.getFps());
         configuration.setFpsSrcCertain(true);
-        if (Core.keepFps) {
+        if (configuration.isKeepFps()) {
             configuration.setFpsTrg(configuration.getFPSSrc());
         }
     }
@@ -816,7 +815,7 @@ public class Core extends Thread {
 
         // change target resolution to source resolution if no conversion is needed
         if (!configuration.getConvertResolution() && getNumFrames() > 0) {
-            configuration.setOutputResolution(getResolution(getSubPictureSrc(0).width, getSubPictureSrc(0).height));
+            configuration.setOutputResolution(getResolutionForDimension(getSubPictureSrc(0).width, getSubPictureSrc(0).height));
         }
 
         double fx;
@@ -865,8 +864,8 @@ public class Core extends Thread {
             if (configuration.getConvertResolution()) {
                 // adjust image sizes and offsets
                 // determine scaling factors
-                picTrg.width = getResolution(configuration.getOutputResolution())[0];
-                picTrg.height = getResolution(configuration.getOutputResolution())[1];
+                picTrg.width = configuration.getOutputResolution().getDimensions()[0];
+                picTrg.height = configuration.getOutputResolution().getDimensions()[1];
                 scaleX = (double)picTrg.width/picSrc.width;
                 scaleY = (double)picTrg.height/picSrc.height;
             } else {
@@ -971,12 +970,12 @@ public class Core extends Thread {
 
         // change target resolution to source resolution if no conversion is needed
         if (!configuration.getConvertResolution() && getNumFrames() > 0) {
-            configuration.setOutputResolution(getResolution(getSubPictureSrc(0).width, getSubPictureSrc(0).height));
+            configuration.setOutputResolution(getResolutionForDimension(getSubPictureSrc(0).width, getSubPictureSrc(0).height));
         }
 
         if (resOld != configuration.getOutputResolution()) {
-            int rOld[] = getResolution(resOld);
-            int rNew[] = getResolution(configuration.getOutputResolution());
+            int rOld[] = resOld.getDimensions();
+            int rNew[] = configuration.getOutputResolution().getDimensions();
             factX = (double)rNew[0]/(double)rOld[0];
             factY = (double)rNew[1]/(double)rOld[1];
         } else {
@@ -1019,8 +1018,8 @@ public class Core extends Thread {
             double scaleX;
             double scaleY;
             if (configuration.getConvertResolution()) {
-                subPictures[i].width = getResolution(configuration.getOutputResolution())[0];
-                subPictures[i].height = getResolution(configuration.getOutputResolution())[1];
+                subPictures[i].width = configuration.getOutputResolution().getDimensions()[0];
+                subPictures[i].height = configuration.getOutputResolution().getDimensions()[1];
                 scaleX = (double)subPictures[i].width/picSrc.width;
                 scaleY = (double)subPictures[i].height/picSrc.height;
             } else {
@@ -1413,26 +1412,6 @@ public class Core extends Thread {
     }
 
     /**
-     * Get default frame rate for given resolution.
-     * @param r Output resolution
-     * @return Default frame rate for resolution r
-     */
-    public static double getDefaultFPS(Resolution r) {
-        double fps;
-        switch (getResolution(r)[1]) {
-            case 480:
-                fps = Framerate.NTSC.getValue();
-                break;
-            case 576:
-                fps = Framerate.PAL.getValue();
-                break;
-            default:
-                fps = Framerate.FPS_23_976.getValue();
-        }
-        return fps;
-    }
-
-    /**
      * Move all subpictures into or outside given bounds in a thread and display the progress dialog.
      * @param parent	Parent frame (needed for progress dialog)
      * @throws Exception
@@ -1723,26 +1702,6 @@ public class Core extends Thread {
     }
 
     /**
-     * Find the most fitting resolution for the given width and height
-     * @param width screen width
-     * @param height screen height
-     * @return most fitting resolution
-     */
-    public static Resolution getResolution(int width, int height) {
-        if (width <= Resolution.NTSC.getDimensions()[0] && height <= Resolution.NTSC.getDimensions()[1]) {
-            return Resolution.NTSC;
-        } else if (width <= Resolution.PAL.getDimensions()[0] && height <= Resolution.PAL.getDimensions()[1]) {
-            return Resolution.PAL;
-        } else if (width <= Resolution.HD_720.getDimensions()[0] && height <= Resolution.HD_720.getDimensions()[1]) {
-            return Resolution.HD_720;
-        } else if (width <= Resolution.HD_1440x1080.getDimensions()[0] && height <= Resolution.HD_1440x1080.getDimensions()[1]) {
-            return Resolution.HD_1440x1080;
-        } else {
-            return Resolution.HD_1080;
-        }
-    }
-
-    /**
      *  Force Core to cancel current operation.
      */
     public static void cancel() {
@@ -2014,25 +1973,6 @@ public class Core extends Thread {
     }
 
     /**
-     * Get width and height for given resolution.
-     * @param r Resolution
-     * @return Integer array containing width [0] and height [1]
-     */
-    public static int[] getResolution(Resolution r) {
-        return r.getDimensions();
-    }
-
-    /**
-     * Get Xml string representation of resolution.
-     * @param r Resolution
-     * @return String representation of resolution
-     */
-    public static String getResolutionNameXml(Resolution r) {
-        return r.getResolutionNameForXml();
-    }
-
-
-    /**
      * Get current DVD palette.
      * @return DVD palette
      */
@@ -2084,22 +2024,6 @@ public class Core extends Thread {
      */
     public static void setProgressMax(int max) {
         progressMax = max;
-    }
-
-    /**
-     * Get: use source fps for target fps if possible.
-     * @return True if source fps should be used for target
-     */
-    public static boolean getKeepFps() {
-        return keepFps;
-    }
-
-    /**
-     * Set: use source fps for target fps if possible.
-     * @param e True if source fps should be used for target
-     */
-    public static void setKeepFps(boolean e) {
-        keepFps = e;
     }
 
     /**

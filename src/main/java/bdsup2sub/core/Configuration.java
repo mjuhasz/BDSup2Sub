@@ -83,6 +83,7 @@ public final class Configuration {
     /** Factor to calculate height of one cinemascope bar from screen height */
     private double cineBarFactor = 5.0/42;
     private StreamID currentStreamID = StreamID.UNKNOWN;
+    private boolean keepFps;
 
     private static final int RECENT_FILE_COUNT = 5;
     private static final String CONFIG_FILE = "bdsup2sup.ini";
@@ -673,5 +674,13 @@ public final class Configuration {
 
     public void setCurrentStreamID(StreamID currentStreamID) {
         this.currentStreamID = currentStreamID;
+    }
+
+    public boolean isKeepFps() {
+        return keepFps;
+    }
+
+    public void setKeepFps(boolean keepFps) {
+        this.keepFps = keepFps;
     }
 }
