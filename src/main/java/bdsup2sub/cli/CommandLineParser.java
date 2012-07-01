@@ -65,8 +65,8 @@ public class CommandLineParser {
     private Optional<Boolean> fixInvisibleFrames = Optional.absent();
     private Optional<Boolean> verbose = Optional.absent();
     private Optional<Integer> alphaThreshold = Optional.absent();
-    private Optional<Integer> lumLowMidThreshold  = Optional.absent();
-    private Optional<Integer> lumMidHighThreshold = Optional.absent();
+    private Optional<Integer> lumLowMedThreshold  = Optional.absent();
+    private Optional<Integer> lumMedHighThreshold = Optional.absent();
     private Optional<Integer> languageIndex = Optional.absent();
 
     private File paletteFile;
@@ -386,25 +386,25 @@ public class CommandLineParser {
     }
 
     private void parseLuminanceThresholdOption(CommandLine line) throws ParseException {
-        if (line.hasOption(LUM_LOW_MID_THRESHOLD)) { // TODO: accept only for SUB/IDX or SUP/IFO as target
-            String value = line.getOptionValue(LUM_LOW_MID_THRESHOLD);
-            lumLowMidThreshold = Optional.of(ToolBox.getInt(value.trim()));
-            if (lumLowMidThreshold.get() < 0 || lumLowMidThreshold.get() > 255) {
+        if (line.hasOption(LUM_LOW_MED_THRESHOLD)) { // TODO: accept only for SUB/IDX or SUP/IFO as target
+            String value = line.getOptionValue(LUM_LOW_MED_THRESHOLD);
+            lumLowMedThreshold = Optional.of(ToolBox.getInt(value.trim()));
+            if (lumLowMedThreshold.get() < 0 || lumLowMedThreshold.get() > 255) {
                 throw new ParseException("Illegal number range for luminance threshold: " + value);
             }
         }
-        if (line.hasOption(LUM_MID_HIGH_THRESHOLD)) { // TODO: accept only for SUB/IDX or SUP/IFO as target
-            String value = line.getOptionValue(LUM_MID_HIGH_THRESHOLD);
-            lumMidHighThreshold = Optional.of(ToolBox.getInt(value.trim()));
-            if (lumMidHighThreshold.get() < 0 || lumMidHighThreshold.get() > 255) {
+        if (line.hasOption(LUM_MED_HIGH_THRESHOLD)) { // TODO: accept only for SUB/IDX or SUP/IFO as target
+            String value = line.getOptionValue(LUM_MED_HIGH_THRESHOLD);
+            lumMedHighThreshold = Optional.of(ToolBox.getInt(value.trim()));
+            if (lumMedHighThreshold.get() < 0 || lumMedHighThreshold.get() > 255) {
                 throw new ParseException("Illegal number range for luminance threshold: " + value);
             }
         }
-        if (lumLowMidThreshold.isPresent() || lumMidHighThreshold.isPresent()) {
-            int lowMid = lumLowMidThreshold.isPresent() ? lumLowMidThreshold.get() : DEFAULT_LUMINANCE_LOW_MID_THRESHOLD;
-            int midHigh = lumMidHighThreshold.isPresent() ? lumMidHighThreshold.get() : DEFAULT_LUMINANCE_MID_HIGH_THRESHOLD;
-            if (lowMid > midHigh) {
-                throw new ParseException("Invalid luminance threshold values: " + lumLowMidThreshold + ", " + lumMidHighThreshold);
+        if (lumLowMedThreshold.isPresent() || lumMedHighThreshold.isPresent()) {
+            int lowMed = lumLowMedThreshold.isPresent() ? lumLowMedThreshold.get() : DEFAULT_LUMINANCE_LOW_MED_THRESHOLD;
+            int medHigh = lumMedHighThreshold.isPresent() ? lumMedHighThreshold.get() : DEFAULT_LUMINANCE_MED_HIGH_THRESHOLD;
+            if (lowMed > medHigh) {
+                throw new ParseException("Invalid luminance threshold values: " + lumLowMedThreshold + ", " + lumMedHighThreshold);
             }
         }
     }
@@ -577,12 +577,12 @@ public class CommandLineParser {
         return alphaThreshold;
     }
 
-    public Optional<Integer> getLumLowMidThreshold() {
-        return lumLowMidThreshold;
+    public Optional<Integer> getLumLowMedThreshold() {
+        return lumLowMedThreshold;
     }
 
-    public Optional<Integer> getLumMidHighThreshold() {
-        return lumMidHighThreshold;
+    public Optional<Integer> getLumMedHighThreshold() {
+        return lumMedHighThreshold;
     }
 
     public Optional<Integer> getLanguageIndex() {

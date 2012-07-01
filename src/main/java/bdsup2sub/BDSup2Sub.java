@@ -186,11 +186,11 @@ public class BDSup2Sub {
 
     private void processLuminanceThreshold() {
         int lt[] = configuration.getLuminanceThreshold();
-        if (options.getLumLowMidThreshold().isPresent()) {
-            lt[1] = options.getLumLowMidThreshold().get();
+        if (options.getLumLowMedThreshold().isPresent()) {
+            lt[1] = options.getLumLowMedThreshold().get();
         }
-        if (options.getLumMidHighThreshold().isPresent()) {
-            lt[0] = options.getLumMidHighThreshold().get();
+        if (options.getLumMedHighThreshold().isPresent()) {
+            lt[0] = options.getLumMedHighThreshold().get();
         }
         configuration.setLuminanceThreshold(lt);
     }

@@ -226,12 +226,12 @@ public class CommandLineParserTest {
 
     @Test(expected = ParseException.class)
     public void shouldRejectMissingTargetFramerate() throws Exception {
-        subject.parse("--targetfps");
+        subject.parse("--fps-target");
     }
 
     @Test
     public void shouldParseTargetFramerate() throws Exception {
-        subject.parse("--targetfps", "24");
+        subject.parse("--fps-target", "24");
         assertEquals(24, subject.getTargetFrameRate().get().intValue());
         assertFalse(subject.isConvertFpsMode());
         assertTrue(subject.isSynchronizeFpsMode());
@@ -239,7 +239,7 @@ public class CommandLineParserTest {
 
     @Test
     public void shouldParseKeepTargetFramerateArg() throws Exception {
-        subject.parse("--targetfps", "keep");
+        subject.parse("--fps-target", "keep");
         assertFalse(subject.getTargetFrameRate().isPresent());
         assertFalse(subject.isConvertFpsMode());
         assertTrue(subject.isSynchronizeFpsMode());
@@ -247,22 +247,22 @@ public class CommandLineParserTest {
 
     @Test(expected = ParseException.class)
     public void shouldRejectConvertAndTargetFramerateAtTheSameTime() throws Exception {
-        subject.parse("--convertfps", "15, 25", "--targetfps", "24");
+        subject.parse("--convert-fps", "15, 25", "--fps-target", "24");
     }
 
     @Test(expected = ParseException.class)
     public void shouldRejectConvertFramerateIfTargetFramerateIsMissing() throws Exception {
-        subject.parse("--convertfps", "15");
+        subject.parse("--convert-fps", "15");
     }
 
     @Test(expected = ParseException.class)
     public void shouldRejectIfMissingConvertFramerateArgs() throws Exception {
-        subject.parse("--convertfps");
+        subject.parse("--convert-fps");
     }
 
     @Test
     public void shouldAcceptValidConvertFramerateArgs() throws Exception {
-        subject.parse("--convertfps", "15, 25");
+        subject.parse("--convert-fps", "15, 25");
         assertEquals(15, subject.getSourceFrameRate().get().intValue());
         assertEquals(25, subject.getTargetFrameRate().get().intValue());
         assertTrue(subject.isConvertFpsMode());
@@ -271,7 +271,7 @@ public class CommandLineParserTest {
 
     @Test
     public void shouldAcceptAutoAsSourceForConvertFramerateArgs() throws Exception {
-        subject.parse("--convertfps", "auto, 25");
+        subject.parse("--convert-fps", "auto, 25");
         assertFalse(subject.getSourceFrameRate().isPresent());
         assertEquals(25, subject.getTargetFrameRate().get().intValue());
         assertTrue(subject.isConvertFpsMode());
@@ -280,12 +280,12 @@ public class CommandLineParserTest {
 
     @Test(expected = ParseException.class)
     public void shouldRejectInvalidSourceFramerateForConvertFramerateArgs() throws Exception {
-        subject.parse("--convertfps", "-1, 25");
+        subject.parse("--convert-fps", "-1, 25");
     }
 
     @Test(expected = ParseException.class)
     public void shouldRejectInvalidTargetFramerateForConvertFramerateArgs() throws Exception {
-        subject.parse("--convertfps", "15, -1");
+        subject.parse("--convert-fps", "15, -1");
     }
 
     @Test(expected = ParseException.class)
@@ -334,12 +334,12 @@ public class CommandLineParserTest {
 
     @Test(expected = ParseException.class)
     public void shouldRejectIfMissingPaletteModeArg() throws Exception {
-        subject.parse("--palettemode");
+        subject.parse("--palette-mode");
     }
 
     @Test(expected = ParseException.class)
     public void shouldRejectInvalidPaletteModeArg() throws Exception {
-        subject.parse("--palettemode", "foo");
+        subject.parse("--palette-mode", "foo");
     }
 
     @Test
@@ -350,18 +350,18 @@ public class CommandLineParserTest {
 
     @Test
     public void shouldParsePaletteModeWithValidArg() throws Exception {
-        subject.parse("--palettemode", "keep");
+        subject.parse("--palette-mode", "keep");
         assertEquals(PaletteMode.KEEP_EXISTING, subject.getPaletteMode().get());
     }
 
     @Test(expected = ParseException.class)
     public void shouldRejectInvalidMinimumDisplayTimeArg() throws Exception {
-        subject.parse("--mindisptime", "foo");
+        subject.parse("--minimum-time", "foo");
     }
 
     @Test(expected = ParseException.class)
     public void shouldRejectMinimumDisplayTimeIfNotPositive() throws Exception {
-        subject.parse("--mindisptime", "-100");
+        subject.parse("--minimum-time", "-100");
     }
 
     @Test
@@ -372,23 +372,23 @@ public class CommandLineParserTest {
 
     @Test
     public void shouldAcceptValidMinimumDisplayTimeArg() throws Exception {
-        subject.parse("--mindisptime", "900");
+        subject.parse("--minimum-time", "900");
         assertEquals(900, subject.getMinimumDisplayTime().get().intValue());
     }
 
     @Test(expected = ParseException.class)
     public void shouldRejectIfMissingMinimumDisplayTimeArg() throws Exception {
-        subject.parse("--mindisptime");
+        subject.parse("--minimum-time");
     }
 
     @Test(expected = ParseException.class)
     public void shouldRejectInvalidMaximumMergeTimeDifferenceArg() throws Exception {
-        subject.parse("--maxtimediff", "foo");
+        subject.parse("--merge-time", "foo");
     }
 
     @Test(expected = ParseException.class)
     public void shouldRejectMaximumMergeTimeDifferenceIfNegative() throws Exception {
-        subject.parse("--maxtimediff", "-100");
+        subject.parse("--merge-time", "-100");
     }
 
     @Test
@@ -399,84 +399,84 @@ public class CommandLineParserTest {
 
     @Test
     public void shouldAcceptValidMaximumMergeTimeDifferenceArg() throws Exception {
-        subject.parse("--maxtimediff", "900");
+        subject.parse("--merge-time", "900");
         assertEquals(900, subject.getMaximumTimeDifference().get().intValue());
     }
 
     @Test(expected = ParseException.class)
     public void shouldRejectIfMissingMaximumMergeTimeDifferenceArg() throws Exception {
-        subject.parse("--maxtimediff");
+        subject.parse("--merge-time");
     }
 
     @Test(expected = ParseException.class)
     public void shouldRejectMoveInAndMoveOutArgsAtTheSameTime() throws Exception {
-        subject.parse("--movein", "12,2", "--moveout", "13,2");
+        subject.parse("--move-in", "12,2", "--move-out", "13,2");
     }
 
     @Test(expected = ParseException.class)
     public void shouldRejectInvalidMoveInArg() throws Exception {
-        subject.parse("--movein", "foo,2");
+        subject.parse("--move-in", "foo,2");
     }
 
     @Test(expected = ParseException.class)
     public void shouldRejectInvalidMoveOutArg() throws Exception {
-        subject.parse("--moveout", "foo,2");
+        subject.parse("--move-out", "foo,2");
     }
 
     @Test(expected = ParseException.class)
     public void shouldRejectInvalidMoveInOffsetArg() throws Exception {
-        subject.parse("--movein", "2,foo");
+        subject.parse("--move-in", "2,foo");
     }
 
     @Test(expected = ParseException.class)
     public void shouldRejectInvalidMoveOutOffsetArg() throws Exception {
-        subject.parse("--moveout", "2,foo");
+        subject.parse("--move-out", "2,foo");
     }
 
     @Test(expected = ParseException.class)
     public void shouldRejectIfMissingMoveInArg() throws Exception {
-        subject.parse("--movein");
+        subject.parse("--move-in");
     }
 
     @Test(expected = ParseException.class)
     public void shouldRejectIfMissingMoveOutArg() throws Exception {
-        subject.parse("--moveout");
+        subject.parse("--move-out");
     }
 
     @Test(expected = ParseException.class)
     public void shouldRejectMoveInArgIfMissingOffsetArg() throws Exception {
-        subject.parse("--movein", "20");
+        subject.parse("--move-in", "20");
     }
     @Test(expected = ParseException.class)
     public void shouldRejectMoveOutArgIfMissingOffsetArg() throws Exception {
-        subject.parse("--moveout", "20");
+        subject.parse("--move-out", "20");
     }
 
     @Test
     public void shouldBeInMoveInModeIfMoveInArgIsDefined() throws Exception {
-        subject.parse("--movein", "2,12");
+        subject.parse("--move-in", "2,12");
         assertEquals(CaptionMoveModeY.MOVE_INSIDE_BOUNDS, subject.getMoveModeY().get());
     }
 
     @Test
     public void shouldBeInMoveOutModeIfMoveOutArgIsDefined() throws Exception {
-        subject.parse("--moveout", "2,12");
+        subject.parse("--move-out", "2,12");
         assertEquals(CaptionMoveModeY.MOVE_OUTSIDE_BOUNDS, subject.getMoveModeY().get());
     }
 
     @Test(expected = ParseException.class)
     public void shouldRejectOutOfRangeMoveInArg() throws Exception {
-        subject.parse("--movein", "1,2");
+        subject.parse("--move-in", "1,2");
     }
 
     @Test(expected = ParseException.class)
     public void shouldRejectOutOfRangeMoveOutArg() throws Exception {
-        subject.parse("--moveout", "1,2");
+        subject.parse("--move-out", "1,2");
     }
 
     @Test(expected = ParseException.class)
     public void shouldRejectInvalidMoveXArg() throws Exception {
-        subject.parse("--movex", "foo,2");
+        subject.parse("--move-x", "foo,2");
     }
 
     @Test
@@ -487,30 +487,30 @@ public class CommandLineParserTest {
 
     @Test(expected = ParseException.class)
     public void shouldRejectInvalidMoveXOffsetArg() throws Exception {
-        subject.parse("--movex", "2,foo");
+        subject.parse("--move-x", "2,foo");
     }
 
     @Test(expected = ParseException.class)
     public void shouldRejectIfMissingMoveXArg() throws Exception {
-        subject.parse("--movex");
+        subject.parse("--move-x");
     }
 
     @Test
     public void shouldParseMoveXModeWithValidArgs() throws Exception {
-        subject.parse("--movex", "left,12");
+        subject.parse("--move-x", "left,12");
         assertEquals(CaptionMoveModeX.LEFT, subject.getMoveModeX().get());
         assertEquals(12, subject.getMoveXOffset().get().intValue());
     }
 
     @Test
     public void shouldParseMoveXModeWithoutOffset() throws Exception {
-        subject.parse("--movex", "right");
+        subject.parse("--move-x", "right");
         assertEquals(CaptionMoveModeX.RIGHT, subject.getMoveModeX().get());
     }
 
     @Test(expected = ParseException.class)
     public void shouldRejectOutOfRangeMoveXOffset() throws Exception {
-        subject.parse("--movein", "right,-2");
+        subject.parse("--move-in", "right,-2");
     }
 
     @Test
@@ -522,7 +522,7 @@ public class CommandLineParserTest {
 
     @Test(expected = ParseException.class)
     public void shouldRejectInvalidCropLinesArg() throws Exception {
-        subject.parse("--croplines", "-1");
+        subject.parse("--crop-y", "-1");
     }
 
     @Test
@@ -533,18 +533,18 @@ public class CommandLineParserTest {
 
     @Test
     public void shouldAcceptValidCropLinesArg() throws Exception {
-        subject.parse("--croplines", "75");
+        subject.parse("--crop-y", "75");
         assertEquals(75, subject.getCropLines().get().intValue());
     }
 
     @Test(expected = ParseException.class)
     public void shouldRejectNegativeAlphaCropThresholdArg() throws Exception {
-        subject.parse("--alphacropthr", "-1");
+        subject.parse("--alpha-crop", "-1");
     }
 
     @Test(expected = ParseException.class)
     public void shouldRejectOutOfRangeAlphaCropThresholdArg() throws Exception {
-        subject.parse("--alphacropthr", "256");
+        subject.parse("--alpha-crop", "256");
     }
 
     @Test
@@ -555,7 +555,7 @@ public class CommandLineParserTest {
 
     @Test
     public void shouldAcceptValidAlphaCropThresholdArg() throws Exception {
-        subject.parse("--alphacropthr", "75");
+        subject.parse("--alpha-crop", "75");
         assertEquals(75, subject.getAlphaCropThreshold().get().intValue());
     }
 
@@ -598,7 +598,7 @@ public class CommandLineParserTest {
 
     @Test
     public void shouldParseExportPalette() throws Exception {
-        subject.parse("--exppal");
+        subject.parse("--export-palette");
         assertTrue(subject.isExportPalette().get());
     }
 
@@ -610,7 +610,7 @@ public class CommandLineParserTest {
 
     @Test
     public void shouldParseExportForcedSubtitlesOnly() throws Exception {
-        subject.parse("--forcedonly");
+        subject.parse("--forced-only");
         assertTrue(subject.isExportForcedSubtitlesOnly().get());
     }
 
@@ -622,10 +622,10 @@ public class CommandLineParserTest {
 
     @Test
     public void shouldParseForceAllArg() throws Exception {
-        subject.parse("--forcedflag", "set");
+        subject.parse("--force-all", "set");
         assertEquals(ForcedFlagState.SET, subject.getForcedFlagState().get());
 
-        subject.parse("--forcedflag", "clear");
+        subject.parse("--force-all", "clear");
         assertEquals(ForcedFlagState.CLEAR, subject.getForcedFlagState().get());
     }
 
@@ -637,12 +637,12 @@ public class CommandLineParserTest {
 
     @Test(expected = ParseException.class)
     public void shouldRejectInvalidForcedFlagArg() throws Exception {
-        subject.parse("--forcedflag", "foo");
+        subject.parse("--force-all", "foo");
     }
 
     @Test(expected = ParseException.class)
     public void shouldRejectIfMissingForcedFlagArg() throws Exception {
-        subject.parse("--forcedflag");
+        subject.parse("--force-all");
     }
 
     @Test
@@ -659,7 +659,7 @@ public class CommandLineParserTest {
 
     @Test
     public void shouldParseFixInvisibleArg() throws Exception {
-        subject.parse("--fixinv");
+        subject.parse("--fix-invisible");
         assertTrue(subject.isFixInvisibleFrames().get());
     }
 
@@ -683,17 +683,17 @@ public class CommandLineParserTest {
 
     @Test(expected = ParseException.class)
     public void shouldRejectIfMissingAlphaThresholdArg() throws Exception {
-        subject.parse("--alphathr");
+        subject.parse("--alpha-thr");
     }
 
     @Test(expected = ParseException.class)
     public void shouldRejectNegativeAlphaThresholdArg() throws Exception {
-        subject.parse("--alphathr", "-1");
+        subject.parse("--alpha-thr", "-1");
     }
 
     @Test(expected = ParseException.class)
     public void shouldRejectOutOfRangeAlphaThresholdArg() throws Exception {
-        subject.parse("--alphathr", "256");
+        subject.parse("--alpha-thr", "256");
     }
 
     @Test
@@ -704,67 +704,67 @@ public class CommandLineParserTest {
 
     @Test
     public void shouldAcceptValidAlphaThresholdArg() throws Exception {
-        subject.parse("--alphathr", "75");
+        subject.parse("--alpha-thr", "75");
         assertEquals(75, subject.getAlphaThreshold().get().intValue());
     }
 
     @Test(expected = ParseException.class)
-    public void shouldRejectNegativeLuminanceLowMidThresholdArg() throws Exception {
-        subject.parse("--lumlowmidthr", "-1");
+    public void shouldRejectNegativeLuminanceLowMedThresholdArg() throws Exception {
+        subject.parse("--lum-low-med-thr", "-1");
     }
 
     @Test(expected = ParseException.class)
-    public void shouldRejectNegativeLuminanceMidHighThresholdArg() throws Exception {
-        subject.parse("--lummidhighthr", "-1");
+    public void shouldRejectNegativeLuminanceMedHighThresholdArg() throws Exception {
+        subject.parse("--lum-med-hi-thr", "-1");
     }
 
     @Test(expected = ParseException.class)
-    public void shouldRejectOutOfRangeLuminanceLowMidThresholdArg() throws Exception {
-        subject.parse("--lumlowmidthr", "256");
+    public void shouldRejectOutOfRangeLuminanceLowMedThresholdArg() throws Exception {
+        subject.parse("--lum-low-med-thr", "256");
     }
 
     @Test(expected = ParseException.class)
-    public void shouldRejectOutOfRangeLuminanceMidHighThresholdArg() throws Exception {
-        subject.parse("--lummidhighthr", "256");
+    public void shouldRejectOutOfRangeLuminanceMedHighThresholdArg() throws Exception {
+        subject.parse("--lum-med-hi-thr", "256");
     }
 
     @Test
-    public void shouldLuminanceLowMidThresholdDefaultToAbsent() throws Exception {
+    public void shouldLuminanceLowMedThresholdDefaultToAbsent() throws Exception {
         subject.parse("--version");
-        assertFalse(subject.getLumLowMidThreshold().isPresent());
+        assertFalse(subject.getLumLowMedThreshold().isPresent());
     }
 
     @Test
-    public void shouldLuminanceMidHighThresholdDefaultToAbsent() throws Exception {
+    public void shouldLuminanceMedHighThresholdDefaultToAbsent() throws Exception {
         subject.parse("--version");
-        assertFalse(subject.getLumMidHighThreshold().isPresent());
+        assertFalse(subject.getLumMedHighThreshold().isPresent());
     }
 
     @Test
-    public void shouldAcceptValidLuminanceLowMidThresholdArg() throws Exception {
-        subject.parse("--lumlowmidthr", "75");
-        assertEquals(75, subject.getLumLowMidThreshold().get().intValue());
+    public void shouldAcceptValidLuminanceLowMedThresholdArg() throws Exception {
+        subject.parse("--lum-low-med-thr", "75");
+        assertEquals(75, subject.getLumLowMedThreshold().get().intValue());
     }
 
     @Test
-    public void shouldAcceptValidLuminanceMidHighThresholdArg() throws Exception {
-        subject.parse("--lummidhighthr", "230");
-        assertEquals(230, subject.getLumMidHighThreshold().get().intValue());
+    public void shouldAcceptValidLuminanceMedHighThresholdArg() throws Exception {
+        subject.parse("--lum-med-hi-thr", "230");
+        assertEquals(230, subject.getLumMedHighThreshold().get().intValue());
     }
 
     @Test(expected = ParseException.class)
-    public void shouldRejectLuminanceLowMidBeingGreaterThanMidHigh() throws Exception {
-        subject.parse("--lumlowmidthr", "75", "--lummidhighthr", "50");
+    public void shouldRejectLuminanceLowMedBeingGreaterThanMedHigh() throws Exception {
+        subject.parse("--lum-low-med-thr", "75", "--lum-med-hi-thr", "50");
     }
 
     @Test(expected = ParseException.class)
     public void shouldRejectMissingLanguageCodeArg() throws Exception {
-        subject.parse("--langcode");
+        subject.parse("--language");
     }
 
     @Test
     public void shouldParseLanguageCodeArg() throws Exception {
-        subject.parse("--langcode", "de");
+        subject.parse("--language", "de");
         assertTrue(subject.getLanguageIndex().get() > 0 && subject.getLanguageIndex().get() < Constants.LANGUAGES.length - 1);
     }
 
@@ -776,12 +776,12 @@ public class CommandLineParserTest {
 
     @Test(expected = ParseException.class)
     public void shouldRejectNonExistentPaletteFileArg() throws Exception {
-        subject.parse("--palettefile", "foo");
+        subject.parse("--palette-file", "foo");
     }
 
     @Test(expected = ParseException.class)
     public void shouldRejectIfMissingPaletteFileArg() throws Exception {
-        subject.parse("--palettefile");
+        subject.parse("--palette-file");
     }
 
     @Test
@@ -793,7 +793,7 @@ public class CommandLineParserTest {
         fos.write("#COL".getBytes());
         fos.close();
 
-        subject.parse("--palettefile", paletteFile.getAbsolutePath());
+        subject.parse("--palette-file", paletteFile.getAbsolutePath());
 
         assertEquals(paletteFile, subject.getPaletteFile());
     }

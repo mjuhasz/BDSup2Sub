@@ -47,8 +47,8 @@ public final class Configuration {
     public static final Resolution DEFAULT_TARGET_RESOLUTION = Resolution.PAL; //TODO: dumb default
     public static final int DEFAULT_ALPHA_CROP_THRESHOLD = 14;
     public static final int DEFAULT_ALPHA_THRESHOLD = 80;
-    public static final int DEFAULT_LUMINANCE_MID_HIGH_THRESHOLD = 210;
-    public static final int DEFAULT_LUMINANCE_LOW_MID_THRESHOLD = 160;
+    public static final int DEFAULT_LUMINANCE_MED_HIGH_THRESHOLD = 210;
+    public static final int DEFAULT_LUMINANCE_LOW_MED_THRESHOLD = 160;
     public static final int DEFAULT_MOVE_Y_OFFSET = 10;
     public static final int DEFAULT_MOVE_X_OFFSET = 10;
     public static final int DEFAULT_CROP_LINE_COUNT = 0;
@@ -90,7 +90,7 @@ public final class Configuration {
     private static final Configuration INSTANCE = new Configuration();
     private final String configFilePath;
     private List<String> recentFiles;
-    private int[] luminanceThreshold = { DEFAULT_LUMINANCE_MID_HIGH_THRESHOLD, DEFAULT_LUMINANCE_LOW_MID_THRESHOLD };
+    private int[] luminanceThreshold = {DEFAULT_LUMINANCE_MED_HIGH_THRESHOLD, DEFAULT_LUMINANCE_LOW_MED_THRESHOLD};
     private int alphaThreshold = DEFAULT_ALPHA_THRESHOLD;
 
     private Props props;
