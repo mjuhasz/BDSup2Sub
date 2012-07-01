@@ -42,6 +42,8 @@ public class CommandLineParser {
     private Optional<Resolution> resolution = Optional.absent();
     private Optional<Double> sourceFrameRate = Optional.absent();
     private Optional<Double> targetFrameRate = Optional.absent();
+    private boolean convertFpsMode;
+    private boolean synchronizeFpsMode;
     private Optional<Double> delay = Optional.absent();
     private Optional<ScalingFilter> scalingFilter = Optional.absent();
     private Optional<PaletteMode> paletteMode = Optional.absent();
@@ -87,6 +89,7 @@ public class CommandLineParser {
             cliMode = line.hasOption(OUTPUT_FILE);
             loadSettings = line.hasOption(LOAD_SETTINGS) || !cliMode;
             parseResolutionOption(line);
+            parseTargetFramerateOption(line);
             parseConvertFramerateOption(line);
             parseDelayOption(line);
             parseScalingFilterOption(line);
@@ -168,8 +171,24 @@ public class CommandLineParser {
         }
     }
 
+    private void parseTargetFramerateOption(CommandLine line) throws ParseException {
+        if (line.hasOption(TARGET_FRAMERATE)) {
+            synchronizeFpsMode = true;
+            String value = line.getOptionValue(TARGET_FRAMERATE);
+            if (value.equalsIgnoreCase("keep")) {
+                // keep undefined
+            } else {
+                targetFrameRate = Optional.of(SubtitleUtils.getFps(value));
+                if (targetFrameRate.get() <= 0) {
+                    throw new ParseException("Invalid target framerate: " + value);
+                }
+            }
+        }
+    }
+
     private void parseConvertFramerateOption(CommandLine line) throws ParseException {
         if (line.hasOption(CONVERT_FRAMERATE)) {
+            convertFpsMode = true;
             if (line.getOptionValues(CONVERT_FRAMERATE).length != 2) {
                 throw new ParseException("2 arguments needed for framerate conversion.");
             }
@@ -464,6 +483,14 @@ public class CommandLineParser {
 
     public Optional<Double> getTargetFrameRate() {
         return targetFrameRate;
+    }
+
+    public boolean isConvertFpsMode() {
+        return convertFpsMode;
+    }
+
+    public boolean isSynchronizeFpsMode() {
+        return synchronizeFpsMode;
     }
 
     public Optional<Double> getDelay() {

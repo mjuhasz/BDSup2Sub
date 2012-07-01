@@ -90,6 +90,17 @@ public class CommandLineOptionsTest {
     }
 
     @Test
+    public void shouldHaveTargetFramerateOption() {
+        String option = "T";
+        assertTrue(options.hasOption(option));
+        assertEquals("targetfps", options.getOption(option).getLongOpt());
+        assertFalse(options.getOption(option).isRequired());
+        assertTrue(options.getOption(option).hasArg());
+        assertFalse(options.getOption(option).hasOptionalArg());
+        assertEquals("fps", options.getOption(option).getArgName());
+    }
+
+    @Test
     public void shouldHaveConvertFramerateOption() {
         String option = "C";
         assertTrue(options.hasOption(option));
@@ -99,6 +110,14 @@ public class CommandLineOptionsTest {
         assertFalse(options.getOption(option).hasOptionalArg());
         assertEquals(',', options.getOption(option).getValueSeparator());
         assertEquals("src>, <trg", options.getOption(option).getArgName());
+    }
+
+    @Test
+    public void shouldHaveFramerateOptionGroup() {
+        OptionGroup optionGroup = options.getOptionGroup(options.getOption("T"));
+        assertNotNull(optionGroup);
+        assertTrue(optionGroup.getOptions().contains(options.getOption("T")));
+        assertTrue(optionGroup.getOptions().contains(options.getOption("C")));
     }
 
     @Test

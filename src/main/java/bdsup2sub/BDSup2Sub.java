@@ -128,17 +128,28 @@ public class BDSup2Sub {
     }
 
     private void processFrameRate() {
-        if (options.getTargetFrameRate().isPresent() && !options.getSourceFrameRate().equals(options.getTargetFrameRate())) {
+        boolean defineFPStrg = false;
+        if (options.isConvertFpsMode()) {
+            if (!options.getSourceFrameRate().isPresent()) { // was set to "auto"
+                // leave default value
+            } else {
+                configuration.setFpsSrc(options.getSourceFrameRate().get());
+                configuration.setFpsTrg(options.getTargetFrameRate().get());
+            }
+            // convert framerate from <auto>/fpssrc to fpstrg
             configuration.setConvertFPS(true);
-        } else {
-            Core.setKeepFps(true);
+            defineFPStrg = true;
+        } else if (options.isSynchronizeFpsMode()) {
+            if (!options.getTargetFrameRate().isPresent()) { // was set to "keep"
+                Core.setKeepFps(true);
+                // use source fps as target fps
+            } else {
+                // synchronize target framerate to fpstrg
+                configuration.setFpsTrg(options.getTargetFrameRate().get());
+                defineFPStrg = true;
+            }
         }
-        if (options.getSourceFrameRate().isPresent()) {
-            configuration.setFpsSrc(options.getSourceFrameRate().get());
-        }
-        if (options.getTargetFrameRate().isPresent()) {
-            configuration.setFpsTrg(options.getTargetFrameRate().get());
-        } else if (options.getResolution().isPresent()) {
+        if (!defineFPStrg && options.getResolution().isPresent()) {
             switch(options.getResolution().get()) {
                 case PAL: configuration.setFpsTrg(Framerate.PAL.getValue()); break;
                 case NTSC: configuration.setFpsTrg(Framerate.NTSC.getValue()); break;
@@ -146,6 +157,9 @@ public class BDSup2Sub {
                 case HD_1440x1080: configuration.setFpsTrg(Framerate.FPS_23_976.getValue()); break;
                 case HD_1080: configuration.setFpsTrg(Framerate.FPS_23_976.getValue()); break;
             }
+        }
+        if (!Core.getKeepFps() && !defineFPStrg) {
+            configuration.setFpsTrg(Core.getDefaultFPS(configuration.getOutputResolution()));
         }
     }
 

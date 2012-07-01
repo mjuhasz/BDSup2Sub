@@ -225,6 +225,27 @@ public class CommandLineParserTest {
     }
 
     @Test(expected = ParseException.class)
+    public void shouldRejectMissingTargetFramerate() throws Exception {
+        subject.parse("--targetfps");
+    }
+
+    @Test
+    public void shouldParseTargetFramerate() throws Exception {
+        subject.parse("--targetfps", "24");
+        assertEquals(24, subject.getTargetFrameRate().get().intValue());
+        assertFalse(subject.isConvertFpsMode());
+        assertTrue(subject.isSynchronizeFpsMode());
+    }
+
+    @Test
+    public void shouldParseKeepTargetFramerateArg() throws Exception {
+        subject.parse("--targetfps", "keep");
+        assertFalse(subject.getTargetFrameRate().isPresent());
+        assertFalse(subject.isConvertFpsMode());
+        assertTrue(subject.isSynchronizeFpsMode());
+    }
+
+    @Test(expected = ParseException.class)
     public void shouldRejectConvertAndTargetFramerateAtTheSameTime() throws Exception {
         subject.parse("--convertfps", "15, 25", "--targetfps", "24");
     }
@@ -244,6 +265,8 @@ public class CommandLineParserTest {
         subject.parse("--convertfps", "15, 25");
         assertEquals(15, subject.getSourceFrameRate().get().intValue());
         assertEquals(25, subject.getTargetFrameRate().get().intValue());
+        assertTrue(subject.isConvertFpsMode());
+        assertFalse(subject.isSynchronizeFpsMode());
     }
 
     @Test
@@ -251,6 +274,8 @@ public class CommandLineParserTest {
         subject.parse("--convertfps", "auto, 25");
         assertFalse(subject.getSourceFrameRate().isPresent());
         assertEquals(25, subject.getTargetFrameRate().get().intValue());
+        assertTrue(subject.isConvertFpsMode());
+        assertFalse(subject.isSynchronizeFpsMode());
     }
 
     @Test(expected = ParseException.class)

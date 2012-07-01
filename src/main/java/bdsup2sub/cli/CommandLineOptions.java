@@ -30,6 +30,7 @@ public class CommandLineOptions {
     static final String LOAD_SETTINGS = "L";
 
     static final String RESOLUTION = "r";
+    static final String TARGET_FRAMERATE = "T";
     static final String CONVERT_FRAMERATE = "C";
     static final String DELAY = "d";
     static final String SCALING_FILTER = "f";
@@ -54,9 +55,9 @@ public class CommandLineOptions {
     static final String LANGUAGE_CODE = "l";
     static final String PALETTE_FILE = "t";
 
-    static final List<String> OPTION_ORDER = Arrays.asList(HELP, LOAD_SETTINGS, RESOLUTION, CONVERT_FRAMERATE, DELAY,
-            SCALING_FILTER, PALETTE_MODE, MIN_DISPLAY_TIME, MAX_TIME_DIFF, MOVE_IN, MOVE_OUT, MOVE_X,
-            CROP_LINES, ALPHA_CROP_THRESHOLD, SCALE, EXPORT_PALETTE, EXPORT_FORCED_SUBTITLES_ONLY, FORCED_FLAG,
+    static final List<String> OPTION_ORDER = Arrays.asList(HELP, LOAD_SETTINGS, RESOLUTION, TARGET_FRAMERATE,
+            CONVERT_FRAMERATE, DELAY, SCALING_FILTER, PALETTE_MODE, MIN_DISPLAY_TIME, MAX_TIME_DIFF, MOVE_IN, MOVE_OUT,
+            MOVE_X, CROP_LINES, ALPHA_CROP_THRESHOLD, SCALE, EXPORT_PALETTE, EXPORT_FORCED_SUBTITLES_ONLY, FORCED_FLAG,
             SWAP_CR_CB, FIX_INVISIBLE_FRAMES, ALPHA_THRESHOLD, LUM_LOW_MID_THRESHOLD, LUM_MID_HIGH_THRESHOLD,
             LANGUAGE_CODE, PALETTE_FILE, OUTPUT_FILE, VERBOSE, VERSION);
 
@@ -108,13 +109,23 @@ public class CommandLineOptions {
                 .hasArg().create(RESOLUTION);
         options.addOption(resolution);
 
-        Option sourceFrameRate = OptionBuilder
+        OptionGroup framerateGroup = new OptionGroup();
+        Option targetFrameRate = OptionBuilder
+                .withArgName("fps")
+                .withLongOpt("targetfps")
+                .withDescription("Synchronize target frame rate to <fps>.\nPredefined values: 24p=23.976, pal or 25p=25, ntsc or 30p=29.967, keep (preserves the source fps for BD&XML, else default)\nDefault: automatic (dumb!).")
+                .hasArg().create(TARGET_FRAMERATE);
+        framerateGroup.addOption(targetFrameRate);
+
+        Option convertFrameRate = OptionBuilder
                 .withArgName("src>, <trg")
                 .withLongOpt("convertfps")
                 .withDescription("Convert frame rate from <src> to <trg>\nSupported values: 24p=23.976, 25p=25, 30p=29.970\nauto,<trg> detects source frame rate.")
                 .withValueSeparator(',')
                 .hasArgs(2).create(CONVERT_FRAMERATE);
-        options.addOption(sourceFrameRate);
+        framerateGroup.addOption(convertFrameRate);
+
+        options.addOptionGroup(framerateGroup);
 
         Option delay = OptionBuilder
                 .withArgName("delay")
