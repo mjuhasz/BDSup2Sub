@@ -275,7 +275,7 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
         if (jMenuItemEditFrame == null) {
             jMenuItemEditFrame = new JMenuItem();
             jMenuItemEditFrame.setText("Edit Frame");
-            jMenuItemEditFrame.setMnemonic('e');
+            jMenuItemEditFrame.setMnemonic('f');
             jMenuItemEditFrame.setEnabled(false);
         }
         return jMenuItemEditFrame;
@@ -288,9 +288,10 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
     private JMenuItem getJMenuItemEditDefaultDvdPalette() {
         if (jMenuItemEditDefaultDvdPalette == null) {
             jMenuItemEditDefaultDvdPalette = new JMenuItem();
-            jMenuItemEditDefaultDvdPalette.setText("Edit default DVD Palette");
+            String text = "Edit default DVD Palette";
+            jMenuItemEditDefaultDvdPalette.setText(text);
             jMenuItemEditDefaultDvdPalette.setMnemonic('d');
-            jMenuItemEditDefaultDvdPalette.setDisplayedMnemonicIndex(5);
+            jMenuItemEditDefaultDvdPalette.setDisplayedMnemonicIndex(text.indexOf("DVD"));
         }
         return jMenuItemEditDefaultDvdPalette;
     }
@@ -303,9 +304,10 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
         if (jMenuItemEditImportedDvdPalette == null) {
             jMenuItemEditImportedDvdPalette = new JMenuItem();
             jMenuItemEditImportedDvdPalette.setEnabled(false);
-            jMenuItemEditImportedDvdPalette.setText("Edit imported DVD Palette");
+            String text = "Edit imported DVD Palette";
+            jMenuItemEditImportedDvdPalette.setText(text);
             jMenuItemEditImportedDvdPalette.setMnemonic('i');
-            jMenuItemEditImportedDvdPalette.setDisplayedMnemonicIndex(5);
+            jMenuItemEditImportedDvdPalette.setDisplayedMnemonicIndex(text.indexOf("imported"));
         }
         return jMenuItemEditImportedDvdPalette;
     }
@@ -319,7 +321,7 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
             jMenuItemEditDvdFramePalette = new JMenuItem();
             jMenuItemEditDvdFramePalette.setEnabled(false);
             jMenuItemEditDvdFramePalette.setText("Edit DVD Frame Palette");
-            jMenuItemEditDvdFramePalette.setMnemonic('f');
+            jMenuItemEditDvdFramePalette.setMnemonic('p');
         }
         return jMenuItemEditDvdFramePalette;
     }

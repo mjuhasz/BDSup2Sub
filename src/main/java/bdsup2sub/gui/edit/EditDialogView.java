@@ -18,6 +18,7 @@ package bdsup2sub.gui.edit;
 import bdsup2sub.core.Core;
 import bdsup2sub.core.CoreException;
 import bdsup2sub.gui.support.EditPane;
+import bdsup2sub.gui.support.RequestFocusListener;
 import bdsup2sub.supstream.SubPicture;
 import bdsup2sub.utils.ToolBox;
 
@@ -597,6 +598,7 @@ class EditDialogView extends JDialog {
             jButtonOk.setText("  Ok  ");
             jButtonOk.setMnemonic('o');
             jButtonOk.setToolTipText("Save changes and return");
+            jButtonOk.addAncestorListener(new RequestFocusListener());
         }
         return jButtonOk;
     }
@@ -669,7 +671,7 @@ class EditDialogView extends JDialog {
         if (jButtonCenter == null) {
             jButtonCenter = new JButton();
             jButtonCenter.setText("Center");
-            jButtonCenter.setMnemonic('c');
+            jButtonCenter.setMnemonic('r');
             jButtonCenter.setToolTipText("Center subpicture horizontally");
         }
         return jButtonCenter;

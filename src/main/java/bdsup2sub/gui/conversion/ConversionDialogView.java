@@ -18,6 +18,7 @@ package bdsup2sub.gui.conversion;
 import bdsup2sub.core.Core;
 import bdsup2sub.core.ForcedFlagState;
 import bdsup2sub.core.Resolution;
+import bdsup2sub.gui.support.RequestFocusListener;
 import bdsup2sub.utils.SubtitleUtils;
 import bdsup2sub.utils.ToolBox;
 
@@ -581,9 +582,10 @@ class ConversionDialogView extends JDialog {
         if (jCheckBoxResolution == null) {
             jCheckBoxResolution = new JCheckBox();
             jCheckBoxResolution.setToolTipText("Convert resolution");
-            jCheckBoxResolution.setText("Convert resolution");
+            String text = "Convert resolution";
+            jCheckBoxResolution.setText(text);
             jCheckBoxResolution.setMnemonic('r');
-            jCheckBoxResolution.setDisplayedMnemonicIndex(8);
+            jCheckBoxResolution.setDisplayedMnemonicIndex(text.indexOf("resolution"));
             jCheckBoxResolution.setFocusable(false);
             jCheckBoxResolution.setIconTextGap(10);
             jCheckBoxResolution.addActionListener(new ActionListener() {
@@ -604,8 +606,7 @@ class ConversionDialogView extends JDialog {
             jCheckBoxMove = new JCheckBox();
             jCheckBoxMove.setToolTipText("Apply settings for moving captions");
             jCheckBoxMove.setText("Apply 'move all' settings");
-            jCheckBoxMove.setMnemonic('k');
-            jCheckBoxMove.setDisplayedMnemonicIndex(8);
+            jCheckBoxMove.setMnemonic('v');
             jCheckBoxMove.setFocusable(false);
             jCheckBoxMove.setIconTextGap(10);
             jCheckBoxMove.setEnabled(false);
@@ -829,7 +830,7 @@ class ConversionDialogView extends JDialog {
             jButtonStore = new JButton();
             jButtonStore.setText("Store");
             jButtonStore.setToolTipText("Store current settings as default");
-            jButtonStore.setMnemonic('o');
+            jButtonStore.setMnemonic('s');
             jButtonStore.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     if (model.isReady()) {
@@ -998,7 +999,7 @@ class ConversionDialogView extends JDialog {
             jCheckBoxFixMinTime = new JCheckBox();
             jCheckBoxFixMinTime.setToolTipText("Force a minimum display duration of 'Min Time'");
             jCheckBoxFixMinTime.setText("Fix too short frames");
-            jCheckBoxFixMinTime.setMnemonic('s');
+            jCheckBoxFixMinTime.setMnemonic('x');
             jCheckBoxFixMinTime.setFocusable(false);
             jCheckBoxFixMinTime.setIconTextGap(10);
             jCheckBoxFixMinTime.addItemListener(new ItemListener() {
@@ -1095,14 +1096,14 @@ class ConversionDialogView extends JDialog {
                         }
                         // delay
                         try {
-                            model.setDelayPTS((int)SubtitleUtils.syncTimePTS((long)(Double.parseDouble(jTextFieldDelay.getText()) * 90), model.getFpsTrg(), model.getFpsTrgConf()));
+                            model.setDelayPTS((int) SubtitleUtils.syncTimePTS((long) (Double.parseDouble(jTextFieldDelay.getText()) * 90), model.getFpsTrg(), model.getFpsTrgConf()));
                             model.setDelayPTSConf(model.getDelayPTS());
                         } catch (NumberFormatException ex) {
                         }
                         // min time
                         model.setFixShortFramesConf(model.getFixShortFrames());
                         try {
-                            model.setMinTimePTS((int)SubtitleUtils.syncTimePTS((long)(Double.parseDouble(jTextFieldMinTime.getText()) * 90), model.getFpsTrg(), model.getFpsTrgConf()));
+                            model.setMinTimePTS((int) SubtitleUtils.syncTimePTS((long) (Double.parseDouble(jTextFieldMinTime.getText()) * 90), model.getFpsTrg(), model.getFpsTrgConf()));
                             model.setMinTimePTSConf(model.getMinTimePTS());
                         } catch (NumberFormatException ex) {
                         }
@@ -1149,6 +1150,7 @@ class ConversionDialogView extends JDialog {
                     }
                 }
             });
+            jButtonOk.addAncestorListener(new RequestFocusListener());
         }
         return jButtonOk;
     }

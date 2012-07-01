@@ -15,6 +15,8 @@
  */
 package bdsup2sub.gui.palette;
 
+import bdsup2sub.gui.support.RequestFocusListener;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
@@ -77,6 +79,7 @@ class DvdPaletteDialogView extends JDialog {
             jButtonOk.setText("OK");
             jButtonOk.setToolTipText("Apply changes and return");
             jButtonOk.setMnemonic('o');
+            jButtonOk.addAncestorListener(new RequestFocusListener());
         }
         return jButtonOk;
     }

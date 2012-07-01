@@ -17,6 +17,7 @@ package bdsup2sub.gui.palette;
 
 import bdsup2sub.bitmap.Palette;
 import bdsup2sub.core.Core;
+import bdsup2sub.gui.support.RequestFocusListener;
 import bdsup2sub.utils.ToolBox;
 
 import javax.swing.*;
@@ -257,6 +258,7 @@ class FramePaletteDialogView extends JDialog {
             jButtonOk.setText("Ok");
             jButtonOk.setToolTipText("Use current settings and return");
             jButtonOk.setMnemonic('o');
+            jButtonOk.addAncestorListener(new RequestFocusListener());
         }
         return jButtonOk;
     }

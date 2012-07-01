@@ -20,6 +20,7 @@ import bdsup2sub.core.CaptionMoveModeY;
 import bdsup2sub.core.Core;
 import bdsup2sub.core.CoreException;
 import bdsup2sub.gui.support.EditPane;
+import bdsup2sub.gui.support.RequestFocusListener;
 import bdsup2sub.supstream.SubPicture;
 import bdsup2sub.utils.ToolBox;
 
@@ -512,6 +513,7 @@ class MoveDialogView extends JDialog {
                     dispose();
                 }
             });
+            jButtonOk.addAncestorListener(new RequestFocusListener());
         }
         return jButtonOk;
     }
@@ -751,7 +753,6 @@ class MoveDialogView extends JDialog {
             jRadioButtonOutside.setText("move outside bounds");
             jRadioButtonOutside.setToolTipText("Move the subtitles outside the inner frame as much as possible");
             jRadioButtonOutside.setMnemonic('o');
-            jRadioButtonOutside.setDisplayedMnemonicIndex(5);
             jRadioButtonOutside.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -902,7 +903,7 @@ class MoveDialogView extends JDialog {
             jButtonCropBars.setToolTipText("Set crop offsets to cinemascope bars");
             jButtonCropBars.setText("Crop Bars");
             jButtonCropBars.setPreferredSize(new Dimension(79, 23));
-            jButtonCropBars.setMnemonic('c');
+            jButtonCropBars.setMnemonic('b');
             jButtonCropBars.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -974,7 +975,7 @@ class MoveDialogView extends JDialog {
             jRadioButtonCenter = new JRadioButton();
             jRadioButtonCenter.setText("move to center");
             jRadioButtonCenter.setToolTipText("Move to center");
-            jRadioButtonCenter.setMnemonic('c');
+            jRadioButtonCenter.setMnemonic('e');
             jRadioButtonCenter.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {

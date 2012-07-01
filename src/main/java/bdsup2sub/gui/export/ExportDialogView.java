@@ -17,6 +17,7 @@ package bdsup2sub.gui.export;
 
 import bdsup2sub.core.Core;
 import bdsup2sub.core.OutputMode;
+import bdsup2sub.gui.support.RequestFocusListener;
 
 import javax.swing.*;
 import java.awt.*;
@@ -207,6 +208,7 @@ class ExportDialogView extends JDialog {
             jButtonSave.setText("Save");
             jButtonSave.setToolTipText("Start creation of export stream");
             jButtonSave.setMnemonic('s');
+            jButtonSave.addAncestorListener(new RequestFocusListener());
         }
         return jButtonSave;
     }
@@ -242,9 +244,10 @@ class ExportDialogView extends JDialog {
         if (jCheckBoxWritePGCPalette == null) {
             jCheckBoxWritePGCPalette = new JCheckBox();
             jCheckBoxWritePGCPalette.setToolTipText("Export palette in PGCEdit text format (RGB, 0..255)");
-            jCheckBoxWritePGCPalette.setText("Export palette in PGCEdit text format");
+            String text = "Export palette in PGCEdit text format";
+            jCheckBoxWritePGCPalette.setText(text);
             jCheckBoxWritePGCPalette.setMnemonic('p');
-            jCheckBoxWritePGCPalette.setDisplayedMnemonicIndex(24);
+            jCheckBoxWritePGCPalette.setDisplayedMnemonicIndex(text.indexOf("PGCEdit"));
             if (model.getOutputMode() == OutputMode.VOBSUB || model.getOutputMode() == OutputMode.SUPIFO) {
                 jCheckBoxWritePGCPalette.setEnabled(true);
                 jCheckBoxWritePGCPalette.setSelected(model.getWritePGCPalette());
