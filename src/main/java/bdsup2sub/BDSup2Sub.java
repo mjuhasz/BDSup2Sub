@@ -216,7 +216,7 @@ public class BDSup2Sub {
         if (options.isPrintHelpMode()) {
             options.printHelp();
         } else if (options.isPrintVersionMode()) {
-            System.out.println(Constants.APP_NAME_AND_VERSION);
+            System.out.println(Constants.APP_NAME + " " + Constants.APP_VERSION);
         } else {
             if (!options.isCliMode()) {
                 setupGUI();

@@ -32,9 +32,6 @@ import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
 import java.util.List;
 
-import static bdsup2sub.core.Constants.APP_NAME_AND_VERSION;
-import static bdsup2sub.core.Constants.DEVELOPERS_AND_DATE;
-
 public class MainFrameView extends JFrame implements ClipboardOwner {
 
     private JPanel jContentPane;
@@ -71,8 +68,9 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
     private JCheckBoxMenuItem jMenuItemSwapCrCb;
     private JCheckBoxMenuItem jMenuItemFixInvisibleFrames;
     private JCheckBoxMenuItem jMenuItemVerbatimOutput;
-    private ActionMenu jMenuHelp;
+    private ActionMenu jMenuAbout;
     private JMenuItem jMenuItemHelp;
+    private JMenuItem jMenuItemAbout;
 
     private JComboBox jComboBoxSubNum;
     private JComboBox jComboBoxAlphaThreshold;
@@ -95,15 +93,15 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
     private final MainFrameModel model;
 
     public MainFrameView(MainFrameModel model) {
-        super(APP_NAME_AND_VERSION);
+        super(Constants.APP_NAME + " " + Constants.APP_VERSION);
         this.model = model;
 
         initialize();
 
         Core.setMainFrame(this);
 
-        printToConsole(APP_NAME_AND_VERSION + " - a converter from Blu-Ray/HD-DVD SUP to DVD SUB/IDX and more\n");
-        printToConsole(DEVELOPERS_AND_DATE + "\n");
+        printToConsole(Constants.APP_NAME + " " + Constants.APP_VERSION + " - a converter from Blu-Ray/HD-DVD SUP to DVD SUB/IDX and more\n");
+        printToConsole("Created by " + Constants.DEVELOPERS + "\n");
         printToConsole("Official thread at Doom9: http://forum.doom9.org/showthread.php?t=145277\n\n");
         flushConsole();
     }
@@ -138,7 +136,7 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
             jMenuBar.add(getJMenuFile());
             jMenuBar.add(getJMenuEdit());
             jMenuBar.add(getJMenuPrefs());
-            jMenuBar.add(getJMenuHelp());
+            jMenuBar.add(getJMenuAbout());
         }
         return jMenuBar;
     }
@@ -437,20 +435,22 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
         return jMenuItemVerbatimOutput.isSelected();
     }
 
-    private JMenu getJMenuHelp() {
-        if (jMenuHelp == null) {
-            jMenuHelp = new ActionMenu();
-            jMenuHelp.setText("Help");
-            jMenuHelp.setMnemonic('h');
-            jMenuHelp.add(getJMenuItemHelp());
+    private JMenu getJMenuAbout() {
+        if (jMenuAbout == null) {
+            jMenuAbout = new ActionMenu();
+            jMenuAbout.setText("About");
+            jMenuAbout.setMnemonic('a');
+            jMenuAbout.add(getJMenuItemHelp());
+            jMenuAbout.addSeparator();
+            jMenuAbout.add(getJMenuItemAbout());
         }
-        return jMenuHelp;
+        return jMenuAbout;
     }
 
     private JMenuItem getJMenuItemHelp() {
         if (jMenuItemHelp == null) {
             jMenuItemHelp = new JMenuItem();
-            jMenuItemHelp.setText("Help");
+            jMenuItemHelp.setText("Get Help Online...");
             jMenuItemHelp.setMnemonic('h');
         }
         return jMenuItemHelp;
@@ -458,6 +458,19 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
 
     void addHelpMenuItemActionListener(ActionListener actionListener) {
         jMenuItemHelp.addActionListener(actionListener);
+    }
+
+    private JMenuItem getJMenuItemAbout() {
+        if (jMenuItemAbout == null) {
+            jMenuItemAbout = new JMenuItem();
+            jMenuItemAbout.setText("About");
+            jMenuItemAbout.setMnemonic('a');
+        }
+        return jMenuItemAbout;
+    }
+
+    void addAboutMenuItemActionListener(ActionListener actionListener) {
+        jMenuItemAbout.addActionListener(actionListener);
     }
 
     private JPanel getJContentPane() {

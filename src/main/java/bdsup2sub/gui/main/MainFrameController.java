@@ -15,10 +15,10 @@
  */
 package bdsup2sub.gui.main;
 
+import bdsup2sub.BDSup2Sub;
 import bdsup2sub.bitmap.Palette;
 import bdsup2sub.core.*;
 import bdsup2sub.gui.conversion.ConversionDialog;
-import bdsup2sub.gui.help.Help;
 import bdsup2sub.gui.move.MoveDialog;
 import bdsup2sub.gui.palette.DvdPaletteDialog;
 import bdsup2sub.gui.edit.EditDialog;
@@ -36,10 +36,10 @@ import java.awt.datatransfer.*;
 import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.util.List;
 
 import static bdsup2sub.core.Configuration.*;
-import static bdsup2sub.core.Constants.APP_NAME_AND_VERSION;
 import static bdsup2sub.core.Constants.DEFAULT_DVD_PALETTE;
 
 class MainFrameController {
@@ -58,7 +58,7 @@ class MainFrameController {
         addFileMenuActionListeners();
         addEditMenuActionListeners();
         addSettingsMenuActionListeners();
-        addHelpMenuActionListeners();
+        addAboutMenuActionListeners();
 
         addComboBoxActionListeners();
         addComboBoxDocumentListeners();
@@ -98,8 +98,9 @@ class MainFrameController {
         view.addVerbatimOutputMenuItemActionListener(new VerbatimOutputMenuItemActionListener());
     }
 
-    private void addHelpMenuActionListeners() {
+    private void addAboutMenuActionListeners() {
         view.addHelpMenuItemActionListener(new HelpMenuItemActionListener());
+        view.addAboutMenuItemActionListener(new AboutMenuItemActionListener());
     }
 
     private void addComboBoxActionListeners() {
@@ -271,7 +272,7 @@ class MainFrameController {
                     byte id[] = ToolBox.getFileID(fname, 4);
                     StreamID sid = (id == null) ? StreamID.UNKNOWN : StreamUtils.getStreamID(id);
                     if (idx || xml || ifo || sid != StreamID.UNKNOWN) {
-                        view.setTitle(APP_NAME_AND_VERSION + " - " + fname);
+                        view.setTitle(Constants.APP_NAME + " " + Constants.APP_VERSION + " - " + fname);
                         model.setSubIndex(0);
                         model.setLoadPath(fname);
                         String loadPath = model.getLoadPath();
@@ -648,7 +649,26 @@ class MainFrameController {
     private class HelpMenuItemActionListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent event) {
-            new Help(view).setVisible(true);
+            try {
+                Desktop.getDesktop().browse(URI.create("http://github.com/mjuhasz/BDSup2Sub/wiki"));
+            } catch (IOException e) {
+                // ignore
+            }
+        }
+    }
+
+    private class AboutMenuItemActionListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent event) {
+            JOptionPane.showMessageDialog(view,
+                    Constants.APP_NAME + " v" + Constants.APP_VERSION + "\n"
+                    + "Created by " + Constants.DEVELOPERS + "\n"
+                    + "\n"
+                    + "Built on " + Constants.BUILD_DATE + "\n"
+                    + "Copyright © 2009 Volker Oth, 2011-2012 Miklos Juhasz",
+                    Constants.APP_NAME,
+                    JOptionPane.INFORMATION_MESSAGE,
+                    new ImageIcon(getClass().getClassLoader().getResource("icon_32.png")));
         }
     }
 

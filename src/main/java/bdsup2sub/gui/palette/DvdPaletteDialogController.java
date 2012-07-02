@@ -15,6 +15,7 @@
  */
 package bdsup2sub.gui.palette;
 
+import bdsup2sub.core.Constants;
 import bdsup2sub.core.CoreException;
 import bdsup2sub.tools.Props;
 import bdsup2sub.utils.FilenameUtils;
@@ -24,8 +25,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
-
-import static bdsup2sub.core.Constants.APP_NAME_AND_VERSION;
 
 class DvdPaletteDialogController {
 
@@ -109,7 +108,7 @@ class DvdPaletteDialogController {
                     }
                     model.setColorProfilePath(filename);
                     Props colProps = new Props();
-                    colProps.setHeader("COL - created by " + APP_NAME_AND_VERSION);
+                    colProps.setHeader("COL - created by " + Constants.APP_NAME + " " + Constants.APP_VERSION);
                     for (int i=0; i<  model.getSelectedColors().length; i++) {
                         String s = String.valueOf(model.getSelectedColors()[i].getRed()) + "," +  model.getSelectedColors()[i].getGreen() + "," + model.getSelectedColors()[i].getBlue();
                         colProps.set("Color_" + i, s);

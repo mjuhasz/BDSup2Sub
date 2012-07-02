@@ -19,6 +19,7 @@ import bdsup2sub.bitmap.Bitmap;
 import bdsup2sub.bitmap.BitmapBounds;
 import bdsup2sub.bitmap.Palette;
 import bdsup2sub.core.Configuration;
+import bdsup2sub.core.Constants;
 import bdsup2sub.core.Core;
 import bdsup2sub.core.CoreException;
 import bdsup2sub.tools.FileBuffer;
@@ -1192,7 +1193,7 @@ public class SubDvd implements DvdSubtitleStream {
             out = new BufferedWriter(new FileWriter(fname));
 
             out.write("# VobSub index file, v7 (do not modify this line!)"); out.newLine();
-            out.write("# Created by " + APP_NAME_AND_VERSION); out.newLine();
+            out.write("# Created by " + Constants.APP_NAME + " " + Constants.APP_VERSION); out.newLine();
             out.newLine();
             out.write("# Frame size"); out.newLine();
             out.write("size: " + pic.width + "x" + (pic.height-2 * configuration.getCropOffsetY())); out.newLine();

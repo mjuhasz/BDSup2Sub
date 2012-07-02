@@ -20,11 +20,9 @@ import bdsup2sub.bitmap.Palette;
 public class Constants {
 
     public static final String APP_NAME = ApplicationAttributes.getInstance().getName();
-    private static final String APP_VERSION = ApplicationAttributes.getInstance().getVersion();
-    public static final String APP_NAME_AND_VERSION = APP_NAME + " " + APP_VERSION;
-    private static final String BUILD_DATE = ApplicationAttributes.getInstance().getBuildDate();
-    private static final String DEVELOPERS = "0xdeadbeef, mjuhasz";
-    public static final String DEVELOPERS_AND_DATE = DEVELOPERS + " " + BUILD_DATE;
+    public static final String APP_VERSION = ApplicationAttributes.getInstance().getVersion();
+    public static final String BUILD_DATE = ApplicationAttributes.getInstance().getBuildDate();
+    public static final String DEVELOPERS = "Volker Oth, Miklos Juhasz";
 
     /** RED components of default DVD palette */
     public static final byte DEFAULT_PALETTE_RED[] = {

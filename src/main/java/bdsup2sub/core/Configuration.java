@@ -24,7 +24,6 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 
-import static bdsup2sub.core.Constants.APP_NAME_AND_VERSION;
 
 public final class Configuration {
 
@@ -107,7 +106,7 @@ public final class Configuration {
 
     private void readConfigFile() {
         props.clear();
-        props.setHeader(APP_NAME_AND_VERSION + " settings - don't modify manually");
+        props.setHeader(Constants.APP_NAME + " " + Constants.APP_VERSION + " settings - don't modify manually");
         props.load(configFilePath);
     }
 
