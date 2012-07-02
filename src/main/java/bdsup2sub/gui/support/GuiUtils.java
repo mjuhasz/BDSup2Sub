@@ -62,32 +62,55 @@ public final class GuiUtils {
         if (!isUnderGTKLookAndFeel()) {
             return;
         }
-
         final SynthStyleFactory original = SynthLookAndFeel.getStyleFactory();
         SynthLookAndFeel.setStyleFactory(new SynthStyleFactory() {
             @Override
             public SynthStyle getStyle(final JComponent c, final Region id) {
                 final SynthStyle style = original.getStyle(c, id);
                 if (id == Region.POPUP_MENU) {
-                    try {
-                        Field f = style.getClass().getDeclaredField("xThickness");
-                        f.setAccessible(true);
-                        final Object x = f.get(style);
-                        if (x instanceof Integer && (Integer)x == 0) {
-                            f.set(style, 1);
-                            f = style.getClass().getDeclaredField("yThickness");
-                            f.setAccessible(true);
-                            f.set(style, 3);
-                        }
-                    }
-                    catch (Exception ignore) {
-                        // ignore
-                    }
+                    fixPopupMenuStyle(style);
+                } else if (id == Region.POPUP_MENU_SEPARATOR) {
+                    fixPopupMenuSeparatorStyle(style);
                 }
                 return style;
             }
+
+            private void fixPopupMenuStyle(SynthStyle style) {
+                try {
+                    Field f = getAccessibleFieldFromStyle(style, "xThickness");
+                    final Object x = f.get(style);
+                    if (x instanceof Integer && (Integer)x == 0) {
+                        f.set(style, 1);
+                        f = getAccessibleFieldFromStyle(style, "yThickness");
+                        f.set(style, 3);
+                    }
+                } catch (Exception ignore) {
+                    // ignore
+                }
+            }
+
+            private void fixPopupMenuSeparatorStyle(SynthStyle style) {
+                try {
+                    Field f = getAccessibleFieldFromStyle(style, "yThickness");
+                    final Object y = f.get(style);
+                    if (y instanceof Integer && (Integer)y == 0) {
+                        f.set(style, 2);
+                    }
+                } catch (Exception ignore) {
+                    // ignore
+                }
+            }
+
+            private Field getAccessibleFieldFromStyle(SynthStyle style, String fieldName) throws IllegalAccessException, NoSuchFieldException {
+                Field f = style.getClass().getDeclaredField(fieldName);
+                f.setAccessible(true);
+                return f;
+            }
         });
+
         new JPopupMenu();  // invokes updateUI() -> updateStyle()
+        new JPopupMenu.Separator(); // invokes updateUI() -> updateStyle()
+
         SynthLookAndFeel.setStyleFactory(original);
     }
 
