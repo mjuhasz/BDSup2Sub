@@ -28,9 +28,13 @@ import bdsup2sub.utils.ToolBox;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-public class SupDvdUtils {
+public final class SupDvdUtil {
 
     private static final Configuration configuration = Configuration.getInstance();
+
+
+    private SupDvdUtil() {
+    }
 
     /**
      * Compress bitmap to RLE buffer
@@ -212,7 +216,7 @@ public class SupDvdUtils {
      * @param width image width of encoded caption
      * @param maxPixels maximum number of pixels in caption
      */
-    private static void decodeLine(byte src[], int srcOfs, int srcLen, byte trg[], int trgOfs, int width, int maxPixels) {
+    private static void decodeLine(byte[] src, int srcOfs, int srcLen, byte[] trg, int trgOfs, int width, int maxPixels) {
         // to make access to nibbles easier, copy bytes to a nibble array
         byte nibbles[] = new byte[srcLen * 2];
         int b;

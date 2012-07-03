@@ -45,14 +45,14 @@ public class SubDvd implements DvdSubtitleStream {
 
     private static final Configuration configuration = Configuration.getInstance();
 
-    private static final byte PACK_HEADER[] = {
+    public static final byte[] PACK_HEADER = {
         0x00, 0x00, 0x01, (byte)0xba,							// 0:  0x000001ba - packet ID
         0x44, 0x02, (byte)0xc4, (byte)0x82, 0x04, (byte)0xa9,	// 4:  system clock reference
         0x01 , (byte)0x89, (byte)0xc3,							// 10: multiplexer rate
         (byte)0xf8,												// 13: stuffing info
     };
 
-    private static byte headerFirst[] = {						// header only in first packet
+    public static final byte[] HEADER_FIRST = {						// header only in first packet
         0x00, 0x00, 0x01, (byte)0xbd,							// 0: 0x000001bd - sub ID
         0x00, 0x00,												// 4: packet length
         (byte)0x81, (byte)0x80, 								// 6:  packet type
@@ -63,7 +63,7 @@ public class SubDvd implements DvdSubtitleStream {
         0x00, 0x00,												// 17: offset to control header
     };
 
-    private static byte headerNext[] = {						// header in following packets
+    public static final byte[] HEADER_NEXT = {						// header in following packets
         0x00, 0x00, 0x01, (byte)0xbd,							// 0: 0x000001bd - sub ID
         0x00, 0x00,												// 4: packet length
         (byte)0x81, (byte)0x00, 								// 6: packet type
@@ -71,7 +71,7 @@ public class SubDvd implements DvdSubtitleStream {
         0x20													// 9: Stream ID
     };
 
-    private static byte controlHeader[] = {
+    public static final byte[] CONTROL_HEADER = {
         0x00,													//  dummy byte (for shifting when forced)
         0x00, 0x00,												//  0: offset to end sequence
         0x01,													//  2: CMD 1: start displaying
@@ -98,13 +98,13 @@ public class SubDvd implements DvdSubtitleStream {
     /** screen height of imported VobSub  */
     private int screenHeight = 576;
     /** global x offset  */
-    private int ofsXglob;
+    private int globalXOffset;
     /** global y offset */
-    private int ofsYglob;
+    private int globalYOffset;
     /** global delay  */
-    private int delayGlob;
+    private int globalDelay;
     /** index of language read from IDX */
-    private int languageIdx;
+    private int languageIndex;
     /** stream ID */
     private int streamID;
     /** FileBuffer for reading SUB */
@@ -112,29 +112,23 @@ public class SubDvd implements DvdSubtitleStream {
     /** index of dominant color for the current caption */
     private int primaryColorIndex;
     /** number of forced captions in the current file  */
-    private int numForcedFrames;
+    private int forcedFrameCount;
     /** store last alpha values for invisible workaround */
-    private static int lastAlpha[] = {0, 0xf, 0xf, 0xf};
+    private static int[] lastAlpha = {0, 0xf, 0xf, 0xf};
 
 
-    /**
-     * Constructor
-     * @param fnSub file name of SUB file
-     * @param fnIdx file name of IDX file
-     * @throws CoreException
-     */
-    public SubDvd(String fnSub, String fnIdx) throws CoreException {
-        readIdx(fnIdx);
+    public SubDvd(String subFile, String idxFile) throws CoreException {
+        readIdx(idxFile);
         Core.setProgressMax(subPictures.size());
         try {
-            buffer = new FileBuffer(fnSub);
+            buffer = new FileBuffer(subFile);
         } catch (FileBufferException e) {
             throw new CoreException(e.getMessage());
         }
         for (int i=0; i < subPictures.size(); i++) {
             Core.setProgress(i);
             Core.printX("# " + (i+1) + "\n");
-            Core.print("Ofs: " + ToolBox.toHexLeftZeroPadded(subPictures.get(i).getOffset(),8) + "\n");
+            Core.print("Offset: " + ToolBox.toHexLeftZeroPadded(subPictures.get(i).getOffset(),8) + "\n");
             long nextOfs;
             if (i < subPictures.size() - 1) {
                 nextOfs = subPictures.get(i+1).getOffset();
@@ -143,275 +137,18 @@ public class SubDvd implements DvdSubtitleStream {
             }
             readSubFrame(subPictures.get(i), nextOfs, buffer);
         }
-
-        Core.printX("\nDetected " + numForcedFrames + " forced captions.\n");
+        Core.printX("\nDetected " + forcedFrameCount + " forced captions.\n");
     }
 
-    /**
-     * Create the binary stream representation of one caption
-     * @param pic SubPicture object containing caption info
-     * @param bm bitmap
-     * @return byte buffer containing the binary stream representation of one caption
-     */
-    public static byte[] createSubFrame(SubPictureDVD pic, Bitmap bm) {
-        /* create RLE buffers */
-        byte even[] = SupDvdUtils.encodeLines(bm, true);
-        byte odd[]  = SupDvdUtils.encodeLines(bm, false);
-        int tmp;
-
-        int forcedOfs;
-        int controlHeaderLen;
-        if (pic.isForced()) {
-            forcedOfs = 0;
-            controlHeader[2] = 0x01; // display
-            controlHeader[3] = 0x00; // forced
-            controlHeaderLen = controlHeader.length;
-        } else {
-            forcedOfs = 1;
-            controlHeader[2] = 0x00; // part of offset
-            controlHeader[3] = 0x01; // display
-            controlHeaderLen = controlHeader.length-1;
-        }
-
-        // fill out all info but the offets (determined later)
-
-        /* header - contains PTM */
-        int ptm = (int) pic.getStartTime(); // should be end time, but STC writes start time?
-        headerFirst[9]  = (byte)(((ptm >> 29) & 0x0E) | 0x21);
-        headerFirst[10] = (byte)(ptm >> 22);
-        headerFirst[11] = (byte)((ptm >> 14) | 1);
-        headerFirst[12] = (byte)(ptm >> 7);
-        headerFirst[13] = (byte)(ptm * 2 + 1);
-
-        /* control header */
-        /* palette (store reversed) */
-        controlHeader[1+4] = (byte)(((pic.getPal()[3]&0xf)<<4) | (pic.getPal()[2]&0x0f));
-        controlHeader[1+5] = (byte)(((pic.getPal()[1]&0xf)<<4) | (pic.getPal()[0]&0x0f));
-        /* alpha (store reversed) */
-        controlHeader[1+7] = (byte)(((pic.getAlpha()[3]&0xf)<<4) | (pic.getAlpha()[2]&0x0f));
-        controlHeader[1+8] = (byte)(((pic.getAlpha()[1]&0xf)<<4) | (pic.getAlpha()[0]&0x0f));
-
-        /* coordinates of subtitle */
-        controlHeader[1+10] = (byte)((pic.getXOffset() >> 4) & 0xff);
-        tmp = pic.getXOffset()+bm.getWidth()-1;
-        controlHeader[1+11] = (byte)(((pic.getXOffset() & 0xf)<<4) | ((tmp>>8)&0xf) );
-        controlHeader[1+12] = (byte)(tmp&0xff);
-
-        int yOfs = pic.getYOffset() - configuration.getCropOffsetY();
-        if (yOfs < 0) {
-            yOfs = 0;
-        } else {
-            int yMax = pic.getHeight() - pic.getImageHeight() - 2 * configuration.getCropOffsetY();
-            if (yOfs > yMax) {
-                yOfs = yMax;
-            }
-        }
-
-        controlHeader[1+13] = (byte)((yOfs >> 4) & 0xff);
-        tmp = yOfs + bm.getHeight()-1;
-        controlHeader[1+14] = (byte)(((yOfs & 0xf)<<4) | ((tmp>>8)&0xf) );
-        controlHeader[1+15] = (byte)(tmp&0xff);
-
-        /* offset to even lines in rle buffer */
-        controlHeader[1+17] = 0x00; /* 2 bytes subpicture size and 2 bytes control header ofs */
-        controlHeader[1+18] = 0x04; /* note: SubtitleCreator uses 6 and adds 0x0000 in between */
-
-        /* offset to odd lines in rle buffer */
-        tmp = even.length + controlHeader[1+18];
-        controlHeader[1+19] = (byte)((tmp >> 8)&0xff);
-        controlHeader[1+20] = (byte)(tmp&0xff);
-
-        /* display duration in frames */
-        tmp = (int)((pic.getEndTime() - pic.getStartTime())/1024); // 11.378ms resolution????
-        controlHeader[1+22] = (byte)((tmp >> 8)&0xff);
-        controlHeader[1+23] = (byte)(tmp&0xff);
-
-        /* offset to end sequence - 22 is the offset of the end sequence */
-        tmp = even.length + odd.length + 22 + (pic.isForced() ?1:0) + 4;
-        controlHeader[forcedOfs+0] = (byte)((tmp >> 8)&0xff);
-        controlHeader[forcedOfs+1] = (byte)(tmp&0xff);
-        controlHeader[1+24] = (byte)((tmp >> 8)&0xff);
-        controlHeader[1+25] = (byte)(tmp&0xff);
-
-        // subpicture size
-        tmp = even.length + odd.length + 4 + controlHeaderLen;
-        headerFirst[15] = (byte)(tmp >> 8);
-        headerFirst[16] = (byte)tmp;
-
-        /* offset to control buffer - 2 is the size of the offset */
-        tmp = even.length + odd.length + 2;
-        headerFirst[17] = (byte)(tmp >> 8);
-        headerFirst[18] = (byte)tmp;
-
-        // in the SUB format only 0x800 bytes can be written per packet. If a packet
-        // is larger, it has to be split into fragments <= 0x800 bytes
-        // which follow one after the other.
-
-        int sizeRLE = even.length + odd.length;
-        int bufSize = PACK_HEADER.length + headerFirst.length + controlHeaderLen + sizeRLE;
-        int numAdditionalPackets = 0;
-        if (bufSize > 0x800) {
-            // determine how many additional headers we will need
-            // considering that each additional header also adds to the size
-            // due to its own headers
-            numAdditionalPackets = 1;
-            int remainingRLEsize = sizeRLE  - (0x800 - PACK_HEADER.length - headerFirst.length); // size - 0x7df
-            while (remainingRLEsize > (0x800 - PACK_HEADER.length - headerNext.length - controlHeaderLen)) {
-                remainingRLEsize -= (0x800 - PACK_HEADER.length-headerNext.length);
-                bufSize += PACK_HEADER.length + headerNext.length;
-                numAdditionalPackets++;
-            }
-            // packet length of the 1st packet should be the maximum size
-            tmp = 0x800 - PACK_HEADER.length - 6;
-        } else {
-            tmp = (bufSize - PACK_HEADER.length - 6);
-        }
-
-        // allocate and fill buffer
-        byte buf[] = new byte[(1 + numAdditionalPackets) * 0x800];
-
-        int stuffingBytes;
-        int diff = buf.length - bufSize;
-        if (diff > 0 && diff < 6) {
-            stuffingBytes = diff;
-        } else {
-            stuffingBytes = 0;
-        }
-
-        int ofs = 0;
-        for (byte packHeader : PACK_HEADER) {
-            buf[ofs++] = packHeader;
-        }
-
-        // set packet length
-        tmp += stuffingBytes;
-        headerFirst[4] = (byte)(tmp >> 8);
-        headerFirst[5] = (byte)tmp;
-
-        // set pts length
-        headerFirst[8] = (byte)(5 + stuffingBytes);
-
-        // write header and use pts for stuffing bytes (if needed)
-        for (int i=0; i<14; i++) {
-            buf[ofs++] = headerFirst[i];
-        }
-        for (int i=0; i<stuffingBytes; i++) {
-            buf[ofs++] = (byte)0xff;
-        }
-        for (int i=14; i<headerFirst.length; i++) {
-            buf[ofs++] = headerFirst[i];
-        }
-
-        // write (first part of) RLE buffer
-        tmp = sizeRLE;
-        if (numAdditionalPackets > 0) {
-            tmp = (0x800-PACK_HEADER.length-stuffingBytes-headerFirst.length);
-            if (tmp > sizeRLE) { // can only happen in 1st buffer
-                tmp = sizeRLE;
-            }
-        }
-        for (int i=0; i<tmp; i++) {
-            if (i<even.length) {
-                buf[ofs++] = even[i];
-            } else {
-                buf[ofs++] = odd[i-even.length];
-            }
-        }
-        int ofsRLE=tmp;
-
-        // fill gap in first packet with (parts of) control header
-        // only if the control header is split over two packets
-        int controlHeaderWritten = 0;
-        if (numAdditionalPackets == 1 && ofs < 0x800) {
-            for (; ofs<0x800; ofs++) {
-                buf[ofs] = controlHeader[forcedOfs+(controlHeaderWritten++)];
-            }
-        }
-
-        // write additional packets
-        for (int p=0; p < numAdditionalPackets; p++) {
-            int rleSizeLeft;
-            if (p==numAdditionalPackets-1) {
-                // last loop
-                rleSizeLeft = sizeRLE-ofsRLE;
-                tmp = headerNext.length + (controlHeaderLen-controlHeaderWritten) + (sizeRLE-ofsRLE) - 6;
-            } else {
-                tmp = 0x800 - PACK_HEADER.length - 6;
-                rleSizeLeft = (0x800 - PACK_HEADER.length - headerNext.length);
-                // now, again, it could happen that the RLE buffer runs out before the last package
-                if (rleSizeLeft > (sizeRLE-ofsRLE)) {
-                    rleSizeLeft = sizeRLE-ofsRLE;
-                }
-            }
-            // copy packet headers
-            PACK_HEADER[13] = (byte)(0xf8);
-            for (byte packHeader : PACK_HEADER) {
-                buf[ofs++] = packHeader;
-            }
-
-            // set packet length
-            headerNext[4] = (byte)(tmp >> 8);
-            headerNext[5] = (byte)tmp;
-            for (byte b : headerNext) {
-                buf[ofs++] = b;
-            }
-
-            // copy RLE buffer
-            for (int i=ofsRLE; i<ofsRLE+rleSizeLeft; i++) {
-                if (i<even.length) {
-                    buf[ofs++] = even[i];
-                } else {
-                    buf[ofs++] = odd[i-even.length];
-                }
-            }
-            ofsRLE += rleSizeLeft;
-            // fill possible gap in all but last package with (parts of) control header
-            // only if the control header is split over two packets
-            // this can only happen in the package before the last one though
-            if (p != numAdditionalPackets-1) {
-                for (; ofs<(p+2)*0x800; ofs++) {
-                    buf[ofs] = controlHeader[forcedOfs + (controlHeaderWritten++)];
-                }
-            }
-        }
-
-        // write (rest of) control header
-        for (int i=controlHeaderWritten; i < controlHeaderLen; i++) {
-            buf[ofs++] = controlHeader[forcedOfs + i];
-        }
-
-        // fill rest of last packet with padding bytes
-        diff = buf.length - ofs;
-        if (diff >= 6) {
-            diff -= 6;
-            buf[ofs++] = 0x00;
-            buf[ofs++] = 0x00;
-            buf[ofs++] = 0x01;
-            buf[ofs++] = (byte)0xbe;
-            buf[ofs++] = (byte)(diff >> 8);
-            buf[ofs++] = (byte)diff;
-            for (; ofs<buf.length; ofs++) {
-                buf[ofs] = (byte)0xff;
-            }
-        } // else should never happen due to stuffing bytes
-
-        return buf;
-    }
-
-    /**
-     * Read and parse IDX file
-     * @param fname file name
-     * @throws CoreException
-     */
-    void readIdx(String fname) throws CoreException {
+    private void readIdx(String idxFile) throws CoreException {
         BufferedReader in = null;
         try {
-            in = new BufferedReader(new FileReader(fname));
+            in = new BufferedReader(new FileReader(idxFile));
             String s;
             int v;
             int langIdx = 0;
             boolean ignore = false;
-            while ( (s = in.readLine()) != null ) {
+            while ((s = in.readLine()) != null) {
                 s = s.trim();
                 if (s.length() < 1 || s.charAt(0) == '#') {
                     continue;
@@ -453,12 +190,12 @@ public class SubDvd implements DvdSubtitleStream {
                     if (v < 0) {
                         throw new CoreException("Illegal x origin: " + v);
                     }
-                    ofsXglob = v;
+                    globalXOffset = v;
                     v = ToolBox.getInt(val.substring(pos+1));
                     if (v < 0) {
                         throw new CoreException("Illegal y origin: " + v);
                     }
-                    ofsYglob = v;
+                    globalYOffset = v;
                     continue;
                 }
 
@@ -501,7 +238,7 @@ public class SubDvd implements DvdSubtitleStream {
                     if (v < 0) {
                         throw new CoreException("Illegal time offset: " + v);
                     }
-                    delayGlob = v * 90; // ms -> 90kHz
+                    globalDelay = v * 90; // ms -> 90kHz
                     continue;
                 }
 
@@ -564,7 +301,7 @@ public class SubDvd implements DvdSubtitleStream {
                     boolean found = false;
                     for (int i=0; i < LANGUAGES.length; i++) {
                         if (id.equalsIgnoreCase(LANGUAGES[i][1])) {
-                            languageIdx = i;
+                            languageIndex = i;
                             found = true;
                             break;
                         }
@@ -625,12 +362,11 @@ public class SubDvd implements DvdSubtitleStream {
                         pic.setOffset(l);
                         pic.setWidth(screenWidth);
                         pic.setHeight(screenHeight);
-                        pic.setStartTime(t + delayGlob);
+                        pic.setStartTime(t + globalDelay);
                         subPictures.add(pic);
                     }
                 }
             }
-
         } catch (IOException ex) {
             throw new CoreException(ex.getMessage());
         } finally {
@@ -650,7 +386,7 @@ public class SubDvd implements DvdSubtitleStream {
      * @param buffer File Buffer to read from
      * @throws CoreException
      */
-    void readSubFrame(SubPictureDVD pic, long endOfs, FileBuffer buffer) throws CoreException  {
+    private void readSubFrame(SubPictureDVD pic, long endOfs, FileBuffer buffer) throws CoreException  {
         long ofs = pic.getOffset();
         long ctrlOfs = -1;
         long nextOfs;
@@ -799,7 +535,7 @@ public class SubDvd implements DvdSubtitleStream {
                 switch (cmd) {
                     case 0: // forced (?)
                         pic.setForced(true);
-                        numForcedFrames++;
+                        forcedFrameCount++;
                         break;
                     case 1: // start display
                         break;
@@ -826,10 +562,10 @@ public class SubDvd implements DvdSubtitleStream {
                         break;
                     case 5: // coordinates
                         int xOfs = (getByte(ctrlHeader, index)<<4) | (getByte(ctrlHeader, index+1)>>4);
-                        pic.setOfsX(ofsXglob+xOfs);
+                        pic.setOfsX(globalXOffset +xOfs);
                         pic.setImageWidth((((getByte(ctrlHeader, index+1)&0xf)<<8) | (getByte(ctrlHeader, index+2))) - xOfs + 1);
                         int yOfs = (getByte(ctrlHeader, index+3)<<4) | (getByte(ctrlHeader, index+4)>>4);
-                        pic.setOfsY(ofsYglob+yOfs);
+                        pic.setOfsY(globalYOffset +yOfs);
                         pic.setImageHeight((((getByte(ctrlHeader, index+4)&0xf)<<8) | (getByte(ctrlHeader, index+5))) - yOfs + 1);
                         Core.print("Area info:"+" ("
                                 +pic.getXOffset()+", "+pic.getYOffset()+") - ("+(pic.getXOffset()+pic.getImageWidth()-1)+", "
@@ -924,98 +660,17 @@ public class SubDvd implements DvdSubtitleStream {
         }
     }
 
-    /**
-     * Create VobSub IDX file
-     * @param fname file name
-     * @param pic a SubPicture object used to read screen width and height
-     * @param offsets array of offsets (one for each caption)
-     * @param timestamps array of PTS time stamps (one for each caption)
-     * @param pal 16 color main Palette
-     * @throws CoreException
-     */
-    public static void writeIdx(String fname, SubPicture pic, int offsets[], int timestamps[], Palette pal) throws CoreException {
-        BufferedWriter out = null;
-        try {
-            out = new BufferedWriter(new FileWriter(fname));
-
-            out.write("# VobSub index file, v7 (do not modify this line!)"); out.newLine();
-            out.write("# Created by " + Constants.APP_NAME + " " + Constants.APP_VERSION); out.newLine();
-            out.newLine();
-            out.write("# Frame size"); out.newLine();
-            out.write("size: " + pic.getWidth() + "x" + (pic.getHeight() -2 * configuration.getCropOffsetY())); out.newLine();
-            out.newLine();
-            out.write("# Origin - upper-left corner"); out.newLine();
-            out.write("org: 0, 0"); out.newLine();
-            out.newLine();
-            out.write("# Scaling"); out.newLine();
-            out.write("scale: 100%, 100%"); out.newLine();
-            out.newLine();
-            out.write("# Alpha blending"); out.newLine();
-            out.write("alpha: 100%"); out.newLine();
-            out.newLine();
-            out.write("# Smoothing"); out.newLine();
-            out.write("smooth: OFF"); out.newLine();
-            out.newLine();
-            out.write("# Fade in/out in milliseconds"); out.newLine();
-            out.write("fadein/out: 0, 0"); out.newLine();
-            out.newLine();
-            out.write("# Force subtitle placement relative to (org.x, org.y)"); out.newLine();
-            out.write("align: OFF at LEFT TOP"); out.newLine();
-            out.newLine();
-            out.write("# For correcting non-progressive desync. (in millisecs or hh:mm:ss:ms)"); out.newLine();
-            out.write("time offset: 0"); out.newLine();
-            out.newLine();
-            out.write("# ON: displays only forced subtitles, OFF: shows everything"); out.newLine();
-            out.write("forced subs: OFF"); out.newLine();
-            out.newLine();
-            out.write("# The palette of the generated file"); out.newLine();
-            out.write("palette: ");
-            //Palette pal = Core.getCurrentDVDPalette();
-            for (int i=0; i < pal.getSize(); i++) {
-                int rbg[] = pal.getRGB(i);
-                int val = (rbg[0]<<16) | (rbg[1]<<8) | rbg[2];
-                out.write(ToolBox.toHexLeftZeroPadded(val, 6).substring(2));
-                if (i != pal.getSize()-1) {
-                    out.write(", ");
-                }
-            }
-            out.newLine();out.newLine();
-            out.write("# Custom colors (transp idxs and the four colors)"); out.newLine();
-            out.write("custom colors: OFF, tridx: 1000, colors: 000000, 444444, 888888, cccccc"); out.newLine();
-            out.newLine();
-            out.write("# Language index in use"); out.newLine();
-            out.write("langidx: 0"); out.newLine();
-            out.newLine();
-            out.write("# " + LANGUAGES[configuration.getLanguageIdx()][0]); out.newLine();
-            out.write("id: " + LANGUAGES[configuration.getLanguageIdx()][1] + ", index: 0"); out.newLine();
-            out.write("# Decomment next line to activate alternative name in DirectVobSub / Windows Media Player 6.x"); out.newLine();
-            out.write("# alt: " + LANGUAGES[configuration.getLanguageIdx()][0]); out.newLine();
-            out.write("# Vob/Cell ID: 1, 1 (PTS: 0)"); out.newLine();
-            for (int i=0; i<timestamps.length; i++) {
-                out.write("timestamp: "+ptsToTimeStrIdx(timestamps[i]));
-                out.write(", filepos: "+ToolBox.toHexLeftZeroPadded(offsets[i], 9).substring(2));
-                out.newLine();
-            }
-        } catch (IOException ex) {
-            throw new CoreException(ex.getMessage());
-        } finally {
-            try {
-                if (out != null) {
-                    out.close();
-                }
-            } catch (IOException ex) {
-            }
+    public void decode(int index) throws CoreException {
+        if (index < subPictures.size()) {
+            decode(subPictures.get(index));
+        } else {
+            throw new CoreException("Index " + index + " out of bounds\n");
         }
     }
 
-    /**
-     * decode given picture
-     * @param pic SubPicture object containing info about caption
-     * @throws CoreException
-     */
     private void decode(SubPictureDVD pic)  throws CoreException {
-        palette = SupDvdUtils.decodePalette(pic, srcPalette);
-        bitmap  = SupDvdUtils.decodeImage(pic, buffer, palette.getIndexOfMostTransparentPaletteEntry());
+        palette = SupDvdUtil.decodePalette(pic, srcPalette);
+        bitmap  = SupDvdUtil.decodeImage(pic, buffer, palette.getIndexOfMostTransparentPaletteEntry());
 
         // crop
         BitmapBounds bounds = bitmap.getCroppingBounds(palette.getAlpha(), configuration.getAlphaCrop());
@@ -1039,165 +694,83 @@ public class SubDvd implements DvdSubtitleStream {
         primaryColorIndex = bitmap.getPrimaryColorIndex(palette.getAlpha(), configuration.getAlphaThreshold(), palette.getY());
     }
 
-    /* (non-Javadoc)
-     * @see SubtitleStream#decode(int)
-     */
-    public void decode(int index) throws CoreException {
-        if (index < subPictures.size()) {
-            decode(subPictures.get(index));
-        } else {
-            throw new CoreException("Index "+index+" out of bounds\n");
-        }
-    }
-
-    /**
-     * Return frame palette
-     * @param index index of caption
-     * @return int array with 4 entries representing frame palette
-     */
     public int[] getFramePalette(int index) {
         return subPictures.get(index).getPal();
     }
 
-    /**
-     * Return original frame palette
-     * @param index index of caption
-     * @return int array with 4 entries representing frame palette
-     */
     public int[] getOriginalFramePalette(int index) {
         return subPictures.get(index).getOriginalPal();
     }
 
-    /**
-     * Return frame alpha
-     * @param index index of caption
-     * @return int array with 4 entries representing frame alphas
-     */
     public int[] getFrameAlpha(int index) {
         return subPictures.get(index).getAlpha();
     }
 
-    /**
-     * Return original frame alpha
-     * @param index index of caption
-     * @return int array with 4 entries representing frame alphas
-     */
     public int[] getOriginalFrameAlpha(int index) {
         return subPictures.get(index).getOriginalAlpha();
     }
 
-    /* (non-Javadoc)
-     * @see SubtitleStream#getImage(Bitmap)
-     */
     public BufferedImage getImage(Bitmap bm) {
         return bm.getImage(palette.getColorModel());
     }
 
-    /* (non-Javadoc)
-     * @see SubtitleStream#getPalette()
-     */
     public Palette getPalette() {
         return palette;
     }
 
-    /* (non-Javadoc)
-     * @see SubtitleStream#getBitmap()
-     */
     public Bitmap getBitmap() {
         return bitmap;
     }
 
-    /* (non-Javadoc)
-     * @see SubtitleStream#getImage()
-     */
     public BufferedImage getImage() {
         return bitmap.getImage(palette.getColorModel());
     }
 
-    /* (non-Javadoc)
-     * @see SubtitleStream#getPrimaryColorIndex()
-     */
     public int getPrimaryColorIndex() {
         return primaryColorIndex;
     }
 
-    /* (non-Javadoc)
-     * @see SubtitleStream#getSubPicture(int)
-     */
     public SubPicture getSubPicture(int index) {
         return subPictures.get(index);
     }
 
-    /* (non-Javadoc)
-     * @see SubtitleStream#getNumFrames()
-     */
     public int getFrameCount() {
         return subPictures.size();
     }
 
-    /* (non-Javadoc)
-     * @see SubtitleStream#getNumForcedFrames()
-     */
     public int getForcedFrameCount() {
-        return numForcedFrames;
+        return forcedFrameCount;
     }
 
-    /* (non-Javadoc)
-     * @see SubtitleStream#isForced(int)
-     */
     public boolean isForced(int index) {
         return subPictures.get(index).isForced();
     }
 
-    /* (non-Javadoc)
-     * @see SubtitleStream#close()
-     */
     public void close() {
         if (buffer!=null)
             buffer.close();
     }
 
-    /* (non-Javadoc)
-     * @see SubtitleStream#getEndTime(int)
-     */
     public long getEndTime(int index) {
         return subPictures.get(index).getEndTime();
     }
 
-    /* (non-Javadoc)
-     * @see SubtitleStream#getStartTime(int)
-     */
     public long getStartTime(int index) {
         return subPictures.get(index).getStartTime();
     }
 
-    /* (non-Javadoc)
-     * @see SubtitleStream#getStartOffset(int)
-     */
     public long getStartOffset(int index) {
         return subPictures.get(index).getOffset();
     }
 
-    /**
-     * get language index read from Ids
-     * @return language as String
-     */
-    public int getLanguageIdx() {
-        return languageIdx;
+    public int getLanguageIndex() {
+        return languageIndex;
     }
 
-    /**
-     * get imported palette
-     * @return imported palette
-     */
     public Palette getSrcPalette() {
         return srcPalette;
     }
 
-    /**
-     * set imported palette
-     * @param pal new palette
-     */
     public void setSrcPalette(Palette pal) {
         srcPalette = pal;
     }

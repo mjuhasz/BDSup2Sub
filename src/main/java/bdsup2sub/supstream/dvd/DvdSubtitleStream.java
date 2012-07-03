@@ -67,5 +67,5 @@ public interface DvdSubtitleStream extends SubtitleStream {
      * Get language index read from Idx.
      * @return language index.
      */
-    int getLanguageIdx();
+    int getLanguageIndex();
 }

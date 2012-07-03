@@ -37,8 +37,8 @@ public final class SupDvdWriter {
      */
     public static byte[] createSupFrame(SubPictureDVD pic, Bitmap bm) {
         /* create RLE buffers */
-        byte[] even = SupDvdUtils.encodeLines(bm, true);
-        byte[] odd = SupDvdUtils.encodeLines(bm, false);
+        byte[] even = SupDvdUtil.encodeLines(bm, true);
+        byte[] odd = SupDvdUtil.encodeLines(bm, false);
         int tmp;
 
         int forcedOfs;

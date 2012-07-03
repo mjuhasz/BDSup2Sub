@@ -370,7 +370,7 @@ public class Core extends Thread {
             subVobTrg.setAlpha(DEFAULT_ALPHA);
             subVobTrg.setPal(palFrame);
 
-            trgPal = SupDvdUtils.decodePalette(subVobTrg, trgPallete);
+            trgPal = SupDvdUtil.decodePalette(subVobTrg, trgPallete);
         } else {
             // use palette from loaded VobSub or SUP/IFO
             Palette miniPal = new Palette(4, true);
@@ -618,7 +618,7 @@ public class Core extends Thread {
             luminanceThreshold[1] = 160;
         }
 
-        configuration.setLanguageIdx(substreamDvd.getLanguageIdx());
+        configuration.setLanguageIdx(substreamDvd.getLanguageIndex());
 
         // set frame rate
         int h = subtitleStream.getSubPicture(0).getHeight(); //subtitleStream.getBitmap().getHeight();
@@ -1320,7 +1320,7 @@ public class Core extends Thread {
                         offsets.add(offset);
                         convertSup(i, frameNum/2+1, maxNum);
                         subVobTrg.copyInfo(subPictures[i]);
-                        byte buf[] = SubDvd.createSubFrame(subVobTrg, trgBitmap);
+                        byte buf[] = SubDvdWriter.createSubFrame(subVobTrg, trgBitmap);
                         out.write(buf);
                         offset += buf.length;
                         timestamps.add((int) subPictures[i].getStartTime());
@@ -1385,7 +1385,7 @@ public class Core extends Thread {
             } else {
                 trgPallete = currentSourceDVDPalette;
             }
-            SubDvd.writeIdx(fname, subPictures[0], ofs, ts, trgPallete);
+            SubDvdWriter.writeIdx(fname, subPictures[0], ofs, ts, trgPallete);
         } else if (outputMode == OutputMode.XML) {
             // XML - write ML
             printX("\nWriting "+fname+"\n");

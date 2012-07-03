@@ -73,7 +73,7 @@ public class SupDvd implements DvdSubtitleStream {
     private int numForcedFrames;
 
     /** store last alpha values for invisible workaround */
-    private static int lastAlpha[] = { 0, 0xf, 0xf, 0xf };
+    private static int[] lastAlpha = { 0, 0xf, 0xf, 0xf };
 
 
     public SupDvd(String supFile, String ifoFile) throws CoreException {
@@ -318,8 +318,8 @@ public class SupDvd implements DvdSubtitleStream {
     }
 
     private void decode(SubPictureDVD pic) throws CoreException {
-        palette = SupDvdUtils.decodePalette(pic, srcPalette);
-        bitmap  = SupDvdUtils.decodeImage(pic, fileBuffer, palette.getIndexOfMostTransparentPaletteEntry());
+        palette = SupDvdUtil.decodePalette(pic, srcPalette);
+        bitmap  = SupDvdUtil.decodeImage(pic, fileBuffer, palette.getIndexOfMostTransparentPaletteEntry());
 
         // crop
         BitmapBounds bounds = bitmap.getCroppingBounds(palette.getAlpha(), configuration.getAlphaCrop());
@@ -395,7 +395,7 @@ public class SupDvd implements DvdSubtitleStream {
     }
 
     public void close() {
-        if (fileBuffer !=null) {
+        if (fileBuffer != null) {
             fileBuffer.close();
         }
     }
@@ -412,7 +412,7 @@ public class SupDvd implements DvdSubtitleStream {
         return subPictures.get(index).getOffset();
     }
 
-    public int getLanguageIdx() {
+    public int getLanguageIndex() {
         return languageIdx;
     }
 

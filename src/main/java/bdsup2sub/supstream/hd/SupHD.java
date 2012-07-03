@@ -50,14 +50,10 @@ public class SupHD implements SubtitleStream {
     /** index of dominant color for the current caption  */
     private int primaryColorIndex;
 
-    /**
-     * Constructor
-     * @param fname file name of SUP file to read
-     * @throws CoreException
-     */
-    public SupHD(String fname) throws CoreException {
+
+    public SupHD(String supFile) throws CoreException {
         try {
-            buffer = new FileBuffer(fname);
+            buffer = new FileBuffer(supFile);
         } catch (FileBufferException ex) {
             throw new CoreException(ex.getMessage());
         }
