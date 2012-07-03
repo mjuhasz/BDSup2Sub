@@ -13,13 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package bdsup2sub.supstream;
+package bdsup2sub.supstream.hd;
 
 import bdsup2sub.bitmap.Bitmap;
 import bdsup2sub.bitmap.Palette;
 import bdsup2sub.core.Configuration;
 import bdsup2sub.core.Core;
 import bdsup2sub.core.CoreException;
+import bdsup2sub.supstream.SubPicture;
+import bdsup2sub.supstream.SubtitleStream;
 import bdsup2sub.tools.BitStream;
 import bdsup2sub.tools.FileBuffer;
 import bdsup2sub.tools.FileBufferException;

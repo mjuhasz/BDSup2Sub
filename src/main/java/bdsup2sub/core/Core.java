@@ -22,6 +22,10 @@ import bdsup2sub.bitmap.Palette;
 import bdsup2sub.gui.main.MainFrameView;
 import bdsup2sub.gui.support.Progress;
 import bdsup2sub.supstream.*;
+import bdsup2sub.supstream.bd.SupBD;
+import bdsup2sub.supstream.bdnxml.SupXml;
+import bdsup2sub.supstream.dvd.*;
+import bdsup2sub.supstream.hd.SupHD;
 import bdsup2sub.tools.EnhancedPngEncoder;
 import bdsup2sub.utils.FilenameUtils;
 import bdsup2sub.utils.SubtitleUtils;
@@ -33,9 +37,6 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.ArrayList;
 
-import static bdsup2sub.core.Configuration.DEFAULT_CROP_LINE_COUNT;
-import static bdsup2sub.core.Configuration.DEFAULT_MOVE_X_OFFSET;
-import static bdsup2sub.core.Configuration.DEFAULT_MOVE_Y_OFFSET;
 import static bdsup2sub.core.Constants.*;
 import static bdsup2sub.utils.SubtitleUtils.getResolutionForDimension;
 import static bdsup2sub.utils.TimeUtils.ptsToTimeStr;
@@ -369,7 +370,7 @@ public class Core extends Thread {
             subVobTrg.alpha = DEFAULT_ALPHA;
             subVobTrg.pal = palFrame;
 
-            trgPal = SubDvd.decodePalette(subVobTrg, trgPallete);
+            trgPal = SupDvdUtils.decodePalette(subVobTrg, trgPallete);
         } else {
             // use palette from loaded VobSub or SUP/IFO
             Palette miniPal = new Palette(4, true);
@@ -1326,7 +1327,7 @@ public class Core extends Thread {
                     } else if (outputMode == OutputMode.SUPIFO) {
                         convertSup(i, frameNum/2+1, maxNum);
                         subVobTrg.copyInfo(subPictures[i]);
-                        byte buf[] = SupDvd.createSupFrame(subVobTrg, trgBitmap);
+                        byte buf[] = SupDvdWriter.createSupFrame(subVobTrg, trgBitmap);
                         out.write(buf);
                     } else if (outputMode == OutputMode.BDSUP) {
                         subPictures[i].compNum = frameNum;
@@ -1398,7 +1399,7 @@ public class Core extends Thread {
             }
             fname = FilenameUtils.removeExtension(fname) + ".ifo";
             printX("\nWriting "+fname+"\n");
-            SupDvd.writeIFO(fname, subPictures[0], trgPallete);
+            IfoWriter.writeIFO(fname, subPictures[0].height, trgPallete);
         }
 
         // only possible for SUB/IDX and SUP/IFO (else there is no public palette)

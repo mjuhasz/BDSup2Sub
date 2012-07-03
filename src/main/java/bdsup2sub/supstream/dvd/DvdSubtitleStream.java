@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package bdsup2sub.supstream;
+package bdsup2sub.supstream.dvd;
 
 import bdsup2sub.bitmap.Palette;
+import bdsup2sub.supstream.SubtitleStream;
 
 /**
  * Interface fot SUB/IDX and SUP/IFO handling.

@@ -13,7 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package bdsup2sub.supstream;
+package bdsup2sub.supstream.dvd;
+
+import bdsup2sub.supstream.ImageObjectFragment;
+import bdsup2sub.supstream.SubPicture;
+import bdsup2sub.supstream.hd.SubPictureHD;
 
 import java.util.ArrayList;
 
@@ -23,19 +27,19 @@ import java.util.ArrayList;
 public class SubPictureDVD extends SubPicture implements Cloneable {
 
     /** offset to information in SUB file */
-    long offset;
+    public long offset;
     /** size of RLE buffer */
-    int rleSize;
+    public int rleSize;
     /** even line offset (inside RLE buffer) */
-    int evenOfs;
+    public int evenOfs;
     /** odd line offset (inside RLE buffer) */
-    int oddOfs;
+    public int oddOfs;
     /** list of RLE fragments */
-    ArrayList<ImageObjectFragment> rleFragments;
+    public ArrayList<ImageObjectFragment> rleFragments;
     /** uncropped bitmap width */
-    int originalWidth;
+    public int originalWidth;
     /** uncropped bitmap height */
-    int originalHeight;
+    public int originalHeight;
     /** original x offset of uncropped bitmap */
     int originalX;
     /** original y offset of uncropped bitmap */

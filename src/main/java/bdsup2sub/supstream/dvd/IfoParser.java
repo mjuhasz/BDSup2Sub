@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package bdsup2sub.supstream;
+package bdsup2sub.supstream.dvd;
 
 import bdsup2sub.bitmap.Palette;
 import bdsup2sub.core.Core;
@@ -27,7 +27,7 @@ import java.util.Arrays;
 import static bdsup2sub.core.Constants.DEFAULT_DVD_PALETTE;
 import static bdsup2sub.core.Constants.LANGUAGES;
 
-public class IfoFileAttributes {
+public class IfoParser {
 
     private static byte[] IFOheader = "DVDVIDEO-VTS".getBytes();
 
@@ -39,7 +39,7 @@ public class IfoFileAttributes {
     private Palette srcPalette = new Palette(DEFAULT_DVD_PALETTE);
 
 
-    public IfoFileAttributes(String filename) throws CoreException {
+    public IfoParser(String filename) throws CoreException {
         try {
             this.fileBuffer = new FileBuffer(filename);
             processIFO();

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package bdsup2sub.supstream;
+package bdsup2sub.supstream.bd;
 
 import bdsup2sub.bitmap.Bitmap;
 import bdsup2sub.bitmap.Palette;
@@ -21,6 +21,7 @@ import bdsup2sub.core.Configuration;
 import bdsup2sub.core.Core;
 import bdsup2sub.core.CoreException;
 import bdsup2sub.core.Framerate;
+import bdsup2sub.supstream.*;
 import bdsup2sub.tools.FileBuffer;
 import bdsup2sub.tools.FileBufferException;
 import bdsup2sub.tools.QuantizeFilter;
@@ -394,7 +395,7 @@ public class SupBD implements SubtitleStream {
             ImageObject ao = a.getImgObj();
             ImageObject bo = b.getImgObj();
             if (ao != null && bo != null)
-                if (ao.bufferSize == bo.bufferSize && ao.width == bo.width && ao.height == bo.height) {
+                if (ao.getBufferSize() == bo.getBufferSize() && ao.getWidth() == bo.getWidth() && ao.getHeight() == bo.getHeight()) {
                     eq = true;
                 }
             }
@@ -866,7 +867,7 @@ public class SupBD implements SubtitleStream {
                     } else {
                         imgObj = pic.getImgObj(objID);
                     }
-                    imgObj.paletteID = palID;
+                    imgObj.setPaletteID(palID);
                     pic.objectID = objID;
 
                     // skipped:  8bit  window_id_ref
@@ -876,8 +877,8 @@ public class SupBD implements SubtitleStream {
                         int forcedCropped = buffer.getByte(index+14);
                         pic.compNum = num;
                         pic.isforced = ( (forcedCropped & 0x40) == 0x40);
-                        imgObj.xOfs  = buffer.getWord(index+15);	// composition_object_horizontal_position
-                        imgObj.yOfs = buffer.getWord(index+17);		// composition_object_vertical_position
+                        imgObj.setxOfs(buffer.getWord(index+15));   // composition_object_horizontal_position
+                        imgObj.setyOfs(buffer.getWord(index+17));   // composition_object_vertical_position
                         // if (object_cropped_flag==1)
                         // 		16bit object_cropping_horizontal_position
                         //		16bit object_cropping_vertical_position
@@ -926,8 +927,8 @@ public class SupBD implements SubtitleStream {
         int w = pic.getImageWidth();
         int h = pic.getImageHeight();
         // always decode image obj 0, start with first entry in fragment list
-        ImageObjectFragment info = pic.getImgObj().fragmentList.get(0);
-        long startOfs = info.imageBufferOfs;
+        ImageObjectFragment info = pic.getImgObj().getFragmentList().get(0);
+        long startOfs = info.getImageBufferOfs();
 
         if (w > pic.width || h > pic.height) {
             throw new CoreException("Subpicture too large: " + w + "x" + h + " at offset " + ToolBox.toHexLeftZeroPadded(startOfs, 8));
@@ -943,15 +944,15 @@ public class SupBD implements SubtitleStream {
 
         try {
             // just for multi-packet support, copy all of the image data in one common buffer
-            byte buf[] = new byte[pic.getImgObj().bufferSize];
+            byte buf[] = new byte[pic.getImgObj().getBufferSize()];
             index = 0;
-            for (int p = 0; p < pic.getImgObj().fragmentList.size(); p++) {
+            for (int p = 0; p < pic.getImgObj().getFragmentList().size(); p++) {
                 // copy data of all packet to one common buffer
-                info = pic.getImgObj().fragmentList.get(p);
-                for (int i=0; i < info.imagePacketSize; i++) {
-                    buf[index+i] = (byte)buffer.getByte(info.imageBufferOfs+i);
+                info = pic.getImgObj().getFragmentList().get(p);
+                for (int i=0; i < info.getImagePacketSize(); i++) {
+                    buf[index+i] = (byte)buffer.getByte(info.getImageBufferOfs()+i);
                 }
-                index += info.imagePacketSize;
+                index += info.getImagePacketSize();
             }
 
             index = 0;
@@ -1044,21 +1045,21 @@ public class SupBD implements SubtitleStream {
                 imgObj = pic.getImgObj(objID);
             }
 
-            if (imgObj.fragmentList == null || first) {			// 8bit  object_version_number
+            if (imgObj.getFragmentList() == null || first) {			// 8bit  object_version_number
                 // skipped:
                 //  24bit object_data_length - full RLE buffer length (including 4 bytes size info)
                 int width  = buffer.getWord(index+7);		// object_width
                 int height = buffer.getWord(index+9);		// object_height
 
                 if (width <= pic.width && height <= pic.height) {
-                    imgObj.fragmentList = new ArrayList<ImageObjectFragment>();
+                    imgObj.setFragmentList(new ArrayList<ImageObjectFragment>());
                     info = new ImageObjectFragment();
-                    info.imageBufferOfs = index+11;
-                    info.imagePacketSize = segment.segmentSize - (index+11-segment.offset);
-                    imgObj.fragmentList.add(info);
-                    imgObj.bufferSize = info.imagePacketSize;
-                    imgObj.height = height;
-                    imgObj.width  = width;
+                    info.setImageBufferOfs(index+11);
+                    info.setImagePacketSize(segment.segmentSize - (index+11-segment.offset));
+                    imgObj.getFragmentList().add(info);
+                    imgObj.setBufferSize(info.getImagePacketSize());
+                    imgObj.setHeight(height);
+                    imgObj.setWidth(width);
                     msg[0] = "ID: " + objID + ", update: " + objVer + ", seq: " + (first ? "first" : "")
                         + ((first && last) ? "/" : "") + (last ? "" + "last" : "");
                     return true;
@@ -1073,10 +1074,10 @@ public class SupBD implements SubtitleStream {
                 //  8bit  object_version_number
                 //  8bit  first_in_sequence (0x80), last_in_sequence (0x40), 6bits reserved
                 info = new ImageObjectFragment();
-                info.imageBufferOfs = index+4;
-                info.imagePacketSize = segment.segmentSize - (index+4-segment.offset);
-                imgObj.fragmentList.add(info);
-                imgObj.bufferSize += info.imagePacketSize;
+                info.setImageBufferOfs(index+4);
+                info.setImagePacketSize(segment.segmentSize - (index+4-segment.offset));
+                imgObj.getFragmentList().add(info);
+                imgObj.setBufferSize(imgObj.getBufferSize() + info.getImagePacketSize());
                 msg[0] = "ID: " + objID + ", update: " + objVer + ", seq: " + (first ? "first" : "")
                     + ((first && last) ? "/" : "") + (last ? "" + "last" : "");
                 return false;
@@ -1095,7 +1096,7 @@ public class SupBD implements SubtitleStream {
     private Palette decodePalette(SubPictureBD pic) throws CoreException {
         boolean fadeOut = false;
         int palIndex;
-        ArrayList<PaletteInfo> pl = pic.palettes.get(pic.getImgObj().paletteID);
+        ArrayList<PaletteInfo> pl = pic.palettes.get(pic.getImgObj().getPaletteID());
         if (pl == null) {
             throw new CoreException("Palette ID out of bounds.");
         }
@@ -1106,8 +1107,8 @@ public class SupBD implements SubtitleStream {
 
         try {
             for (PaletteInfo p : pl) {
-                int index = p.paletteOfs;
-                for (int i = 0; i < p.paletteSize; i++) {
+                int index = p.getPaletteOfs();
+                for (int i = 0; i < p.getPaletteSize(); i++) {
                     // each palette entry consists of 5 bytes
                     palIndex = buffer.getByte(index);
                     int y = buffer.getByte(++index);
@@ -1179,11 +1180,11 @@ public class SupBD implements SubtitleStream {
                 al = new ArrayList<PaletteInfo>();
             }
             PaletteInfo p = new PaletteInfo();
-            p.paletteSize = (segment.segmentSize-2)/5;
-            p.paletteOfs = index+2;
+            p.setPaletteSize((segment.segmentSize-2)/5);
+            p.setPaletteOfs(index+2);
             al.add(p);
-            msg[0] = "ID: " + paletteID + ", update: " + paletteUpdate + ", " + p.paletteSize + " entries";
-            return p.paletteSize;
+            msg[0] = "ID: " + paletteID + ", update: " + paletteUpdate + ", " + p.getPaletteSize() + " entries";
+            return p.getPaletteSize();
         } catch (FileBufferException ex) {
             throw new CoreException (ex.getMessage());
         }
@@ -1304,7 +1305,7 @@ public class SupBD implements SubtitleStream {
      */
     public long getStartOffset(int index) {
         SubPictureBD pic = subPictures.get(index);
-        return pic.getImgObj().fragmentList.get(0).imageBufferOfs;
+        return pic.getImgObj().getFragmentList().get(0).getImageBufferOfs();
     }
 
     /**

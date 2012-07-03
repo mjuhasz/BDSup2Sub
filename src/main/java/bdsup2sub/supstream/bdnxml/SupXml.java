@@ -13,12 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package bdsup2sub.supstream;
+package bdsup2sub.supstream.bdnxml;
 
 import bdsup2sub.bitmap.Bitmap;
 import bdsup2sub.bitmap.BitmapBounds;
 import bdsup2sub.bitmap.Palette;
 import bdsup2sub.core.*;
+import bdsup2sub.supstream.SubPicture;
+import bdsup2sub.supstream.SubtitleStream;
 import bdsup2sub.tools.QuantizeFilter;
 import bdsup2sub.utils.FilenameUtils;
 import bdsup2sub.utils.SubtitleUtils;
