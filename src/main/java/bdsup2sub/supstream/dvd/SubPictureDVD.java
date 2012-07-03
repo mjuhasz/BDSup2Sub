@@ -27,55 +27,47 @@ import java.util.ArrayList;
 public class SubPictureDVD extends SubPicture implements Cloneable {
 
     /** offset to information in SUB file */
-    public long offset;
+    private long offset;
     /** size of RLE buffer */
-    public int rleSize;
+    private int rleSize;
     /** even line offset (inside RLE buffer) */
-    public int evenOfs;
+    private int evenOffset;
     /** odd line offset (inside RLE buffer) */
-    public int oddOfs;
+    private int oddOffset;
     /** list of RLE fragments */
-    public ArrayList<ImageObjectFragment> rleFragments;
+    private ArrayList<ImageObjectFragment> rleFragments;
     /** uncropped bitmap width */
-    public int originalWidth;
+    private int originalWidth;
     /** uncropped bitmap height */
-    public int originalHeight;
+    private int originalHeight;
     /** original x offset of uncropped bitmap */
-    int originalX;
+    private int originalX;
     /** original y offset of uncropped bitmap */
-    int originalY;
+    private int originalY;
     /** 4 original alpha values */
-    int originalAlpha[];
+    private int[] originalAlpha;
     /** 4 original palette values*/
-    int originalPal[];
+    private int[] originalPal;
     /** 4 alpha values */
-    public int alpha[];
+    private int[] alpha;
     /** 4 palette values */
-    public int pal[];
+    private int[] pal;
 
-    /* (non-Javadoc)
-     * @see SubPicture#clone()
-     */
     @Override
     public SubPictureHD clone() {
         return (SubPictureHD)super.clone();
     }
 
-    /**
-     * store original sizes and offsets
-     */
-    void setOriginal() {
+    public void storeOriginal() {
         originalWidth = getImageWidth();
         originalHeight = getImageHeight();
-        originalX = getOfsX();
-        originalY = getOfsY();
+        originalX = getXOffset();
+        originalY = getYOffset();
 
         originalAlpha = new int[4];
         originalPal = new int[4];
-        for (int i=0; i < 4; i++) {
-            originalAlpha[i] = alpha[i];
-            originalPal[i] = pal[i];
-        }
+        System.arraycopy(alpha, 0, originalAlpha, 0, 4);
+        System.arraycopy(pal, 0, originalPal, 0, 4);
     }
 
     /**
@@ -83,16 +75,96 @@ public class SubPictureDVD extends SubPicture implements Cloneable {
      * Used to copy the edited info (position, forced flags etc. into a DVD SubPicture for writing
      * @param pic
      */
-    public void copyInfo(final SubPicture pic) {
-        width = pic.width;
-        height = pic.height;
-        startTime = pic.startTime;
-        endTime = pic.endTime;
-        isforced = pic.isforced;
-        compNum = pic.compNum;
+    public void copyInfo(SubPicture pic) {
+        setWidth(pic.getWidth());
+        setHeight(pic.getHeight());
+        setStartTime(pic.getStartTime());
+        setEndTime(pic.getEndTime());
+        setForced(pic.isForced());
+        setCompNum(pic.getCompNum());
         setImageWidth(pic.getImageWidth());
         setImageHeight(pic.getImageHeight());
-        setOfsX(pic.getOfsX());
-        setOfsY(pic.getOfsY());
+        setOfsX(pic.getXOffset());
+        setOfsY(pic.getYOffset());
+    }
+
+    public long getOffset() {
+        return offset;
+    }
+
+    public void setOffset(long offset) {
+        this.offset = offset;
+    }
+
+    public int getRleSize() {
+        return rleSize;
+    }
+
+    public void setRleSize(int rleSize) {
+        this.rleSize = rleSize;
+    }
+
+    public int getEvenOffset() {
+        return evenOffset;
+    }
+
+    public void setEvenOffset(int evenOffset) {
+        this.evenOffset = evenOffset;
+    }
+
+    public int getOddOffset() {
+        return oddOffset;
+    }
+
+    public void setOddOffset(int oddOffset) {
+        this.oddOffset = oddOffset;
+    }
+
+    public ArrayList<ImageObjectFragment> getRleFragments() {
+        return rleFragments;
+    }
+
+    public void setRleFragments(ArrayList<ImageObjectFragment> rleFragments) {
+        this.rleFragments = rleFragments;
+    }
+
+    public int getOriginalWidth() {
+        return originalWidth;
+    }
+
+    public int getOriginalHeight() {
+        return originalHeight;
+    }
+
+    public int getOriginalX() {
+        return originalX;
+    }
+
+    public int getOriginalY() {
+        return originalY;
+    }
+
+    public int[] getOriginalAlpha() {
+        return originalAlpha;
+    }
+
+    public int[] getOriginalPal() {
+        return originalPal;
+    }
+
+    public int[] getAlpha() {
+        return alpha;
+    }
+
+    public void setAlpha(int[] alpha) {
+        this.alpha = alpha;
+    }
+
+    public int[] getPal() {
+        return pal;
+    }
+
+    public void setPal(int[] pal) {
+        this.pal = pal;
     }
 }

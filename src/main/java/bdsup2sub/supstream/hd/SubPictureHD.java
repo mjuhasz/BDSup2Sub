@@ -23,23 +23,58 @@ import bdsup2sub.supstream.SubPicture;
 public class SubPictureHD extends SubPicture implements Cloneable {
 
     /** offset to palette info for this subpicture in SUP file */
-    int paletteOfs;
+    private int paletteOffset;
     /** offset to alpha info for this subpicture in SUP file */
-    int alphaOfs;
+    private int alphaOffset;
     /** size of RLE buffer (odd and even part)*/
-    int imageBufferSize;
+    private int imageBufferSize;
     /** offset to even part of RLE buffer in SUP file*/
-    int imageBufferOfsEven;
+    private int imageBufferOffsetEven;
     /** offset to odd part of RLE buffer in SUP file*/
-    int imageBufferOfsOdd;
+    private int imageBufferOffsetOdd;
 
-    /* member functions */
-
-    /* (non-Javadoc)
-     * @see SubPicture#clone()
-     */
     @Override
     public SubPictureHD clone() {
         return (SubPictureHD)super.clone();
+    }
+
+    public int getPaletteOffset() {
+        return paletteOffset;
+    }
+
+    public void setPaletteOffset(int paletteOffset) {
+        this.paletteOffset = paletteOffset;
+    }
+
+    public int getAlphaOffset() {
+        return alphaOffset;
+    }
+
+    public void setAlphaOffset(int alphaOffset) {
+        this.alphaOffset = alphaOffset;
+    }
+
+    public int getImageBufferSize() {
+        return imageBufferSize;
+    }
+
+    public void setImageBufferSize(int imageBufferSize) {
+        this.imageBufferSize = imageBufferSize;
+    }
+
+    public int getImageBufferOffsetEven() {
+        return imageBufferOffsetEven;
+    }
+
+    public void setImageBufferOffsetEven(int imageBufferOffsetEven) {
+        this.imageBufferOffsetEven = imageBufferOffsetEven;
+    }
+
+    public int getImageBufferOffsetOdd() {
+        return imageBufferOffsetOdd;
+    }
+
+    public void setImageBufferOffsetOdd(int imageBufferOffsetOdd) {
+        this.imageBufferOffsetOdd = imageBufferOffsetOdd;
     }
 }

@@ -16,7 +16,6 @@
 package bdsup2sub.gui.edit;
 
 import bdsup2sub.bitmap.ErasePatch;
-import bdsup2sub.core.Configuration;
 import bdsup2sub.core.Core;
 import bdsup2sub.supstream.SubPicture;
 import bdsup2sub.utils.SubtitleUtils;
@@ -92,13 +91,13 @@ public class EditDialogController {
     private void store() {
         SubPicture subPic = model.getSubPic();
         SubPicture s = Core.getSubPictureTrg(model.getIndex());
-        s.endTime = subPic.endTime;
-        s.startTime = subPic.startTime;
-        s.setOfsX(subPic.getOfsX());
-        s.setOfsY(subPic.getOfsY());
-        s.isforced = subPic.isforced;
-        s.exclude = subPic.exclude;
-        s.erasePatch = subPic.erasePatch;
+        s.setEndTime(subPic.getEndTime());
+        s.setStartTime(subPic.getStartTime());
+        s.setOfsX(subPic.getXOffset());
+        s.setOfsY(subPic.getYOffset());
+        s.setForced(subPic.isForced());
+        s.setExcluded(subPic.isExcluded());
+        s.setErasePatch(subPic.getErasePatch());
     }
 
     private class EditDialogWindowListener extends WindowAdapter {
@@ -133,18 +132,18 @@ public class EditDialogController {
         public void stateChanged(ChangeEvent event) {
             if (model.isEnableSliders()) {
                 SubPicture subPic = model.getSubPic();
-                int y = subPic.height - view.getVerticalSliderValue();
+                int y = subPic.getHeight() - view.getVerticalSliderValue();
 
                 if (y < model.getCropOffsetY()) {
                     y = model.getCropOffsetY();
-                } else if (y > subPic.height - subPic.getImageHeight() - model.getCropOffsetY()) {
-                    y = subPic.height - subPic.getImageHeight() - model.getCropOffsetY();
+                } else if (y > subPic.getHeight() - subPic.getImageHeight() - model.getCropOffsetY()) {
+                    y = subPic.getHeight() - subPic.getImageHeight() - model.getCropOffsetY();
                 }
 
-                if (y != subPic.getOfsY()) {
+                if (y != subPic.getYOffset()) {
                     subPic.setOfsY(y);
-                    view.setYTextFieldText(String.valueOf(subPic.getOfsY()));
-                    view.setPreviewPanelOffsets(subPic.getOfsX(), subPic.getOfsY());
+                    view.setYTextFieldText(String.valueOf(subPic.getYOffset()));
+                    view.setPreviewPanelOffsets(subPic.getXOffset(), subPic.getYOffset());
                     view.setPreviewPanelAspectRatio(21.0 / 9);
                     view.repaintPreviewPanel();
                     setEdited(true);
@@ -161,14 +160,14 @@ public class EditDialogController {
 
                 if (x < 0) {
                     x = 0;
-                } else if (x > subPic.width - subPic.getImageWidth()) {
-                    x = subPic.width - subPic.getImageWidth();
+                } else if (x > subPic.getWidth() - subPic.getImageWidth()) {
+                    x = subPic.getWidth() - subPic.getImageWidth();
                 }
 
-                if (x != subPic.getOfsX()) {
+                if (x != subPic.getXOffset()) {
                     subPic.setOfsX(x);
-                    view.setXTextFieldText(String.valueOf(subPic.getOfsX()));
-                    view.setPreviewPanelOffsets(subPic.getOfsX(), subPic.getOfsY());
+                    view.setXTextFieldText(String.valueOf(subPic.getXOffset()));
+                    view.setPreviewPanelOffsets(subPic.getXOffset(), subPic.getYOffset());
                     view.repaintPreviewPanel();
                     setEdited(true);
                 }
@@ -200,23 +199,23 @@ public class EditDialogController {
                 SubPicture subPic = model.getSubPic();
                 int x = ToolBox.getInt(view.getXTextFieldText());
                 if (x == -1) {
-                    x = subPic.getOfsX(); // invalid value -> keep old one
+                    x = subPic.getXOffset(); // invalid value -> keep old one
                 } else if (x < 0) {
                     x = 0;
-                } else if (x > subPic.width - subPic.getImageWidth()) {
-                    x = subPic.width - subPic.getImageWidth();
+                } else if (x > subPic.getWidth() - subPic.getImageWidth()) {
+                    x = subPic.getWidth() - subPic.getImageWidth();
                 }
 
-                if (x != subPic.getOfsX() ) {
+                if (x != subPic.getXOffset() ) {
                     model.setEnableSliders(false);
                     subPic.setOfsX(x);
-                    view.setHorizontalSliderValue(subPic.getOfsX());
-                    view.setPreviewPanelOffsets(subPic.getOfsX(), subPic.getOfsY());
+                    view.setHorizontalSliderValue(subPic.getXOffset());
+                    view.setPreviewPanelOffsets(subPic.getXOffset(), subPic.getYOffset());
                     view.repaintPreviewPanel();
                     setEdited(true);
                     model.setEnableSliders(true);
                 }
-                view.setXTextFieldText(String.valueOf(subPic.getOfsX()));
+                view.setXTextFieldText(String.valueOf(subPic.getXOffset()));
                 view.setXTextFieldBackground(OK_BACKGROUND);
             }
         }
@@ -242,14 +241,14 @@ public class EditDialogController {
             if (model.isReady()) {
                 SubPicture subPic = model.getSubPic();
                 int x = ToolBox.getInt(view.getXTextFieldText());
-                if (x < 0 || x > subPic.width - subPic.getImageWidth()) {
+                if (x < 0 || x > subPic.getWidth() - subPic.getImageWidth()) {
                     view.setXTextFieldBackground(ERROR_BACKGROUND);
                 } else {
-                    if (x != subPic.getOfsX() ) {
+                    if (x != subPic.getXOffset() ) {
                         model.setEnableSliders(false);
                         subPic.setOfsX(x);
-                        view.setHorizontalSliderValue(subPic.getOfsX());
-                        view.setPreviewPanelOffsets(subPic.getOfsX(), subPic.getOfsY());
+                        view.setHorizontalSliderValue(subPic.getXOffset());
+                        view.setPreviewPanelOffsets(subPic.getXOffset(), subPic.getYOffset());
                         view.repaintPreviewPanel();
                         setEdited(true);
                         model.setEnableSliders(true);
@@ -266,22 +265,22 @@ public class EditDialogController {
             SubPicture subPic = model.getSubPic();
             int y = ToolBox.getInt(view.getYTextFieldText());
             if (y == -1) {
-                y = subPic.getOfsY(); // invalid value -> keep old one
+                y = subPic.getYOffset(); // invalid value -> keep old one
             } else if (y < model.getCropOffsetY()) {
                 y = model.getCropOffsetY();
-            } else if (y > subPic.height - subPic.getImageHeight() - model.getCropOffsetY()) {
-                y = subPic.height - subPic.getImageHeight() - model.getCropOffsetY();
+            } else if (y > subPic.getHeight() - subPic.getImageHeight() - model.getCropOffsetY()) {
+                y = subPic.getHeight() - subPic.getImageHeight() - model.getCropOffsetY();
             }
-            if (y != subPic.getOfsY()) {
+            if (y != subPic.getYOffset()) {
                 model.setEnableSliders(false);
                 subPic.setOfsY(y);
-                view.setVerticalSliderValue(subPic.height - subPic.getOfsY());
-                view.setPreviewPanelOffsets(subPic.getOfsX(), subPic.getOfsY());
+                view.setVerticalSliderValue(subPic.getHeight() - subPic.getYOffset());
+                view.setPreviewPanelOffsets(subPic.getXOffset(), subPic.getYOffset());
                 view.repaintPreviewPanel();
                 setEdited(true);
                 model.setEnableSliders(true);
             }
-            view.setYTextFieldText(String.valueOf(subPic.getOfsY()));
+            view.setYTextFieldText(String.valueOf(subPic.getYOffset()));
             view.setYTextFieldBackground(OK_BACKGROUND);
         }
     }
@@ -306,14 +305,14 @@ public class EditDialogController {
             if (model.isReady()) {
                 SubPicture subPic = model.getSubPic();
                 int y = ToolBox.getInt(view.getYTextFieldText());
-                if (y < model.getCropOffsetY() || y > subPic.height - subPic.getImageHeight() - model.getCropOffsetY()) {
+                if (y < model.getCropOffsetY() || y > subPic.getHeight() - subPic.getImageHeight() - model.getCropOffsetY()) {
                     view.setYTextFieldBackground(ERROR_BACKGROUND);
                 } else {
-                    if (y != subPic.getOfsY()) {
+                    if (y != subPic.getYOffset()) {
                         model.setEnableSliders(false);
                         subPic.setOfsY(y);
-                        view.setVerticalSliderValue(subPic.height - subPic.getOfsY());
-                        view.setPreviewPanelOffsets(subPic.getOfsX(), subPic.getOfsY());
+                        view.setVerticalSliderValue(subPic.getHeight() - subPic.getYOffset());
+                        view.setPreviewPanelOffsets(subPic.getXOffset(), subPic.getYOffset());
                         view.repaintPreviewPanel();
                         setEdited(true);
                         model.setEnableSliders(true);
@@ -328,12 +327,12 @@ public class EditDialogController {
         @Override
         public void actionPerformed(ActionEvent event) {
             SubPicture subPic = model.getSubPic();
-            subPic.setOfsX((subPic.width-subPic.getImageWidth())/2);
+            subPic.setOfsX((subPic.getWidth() -subPic.getImageWidth())/2);
             model.setEnableSliders(false);
-            view.setHorizontalSliderValue(subPic.getOfsX());
-            view.setPreviewPanelOffsets(subPic.getOfsX(), subPic.getOfsY());
+            view.setHorizontalSliderValue(subPic.getXOffset());
+            view.setPreviewPanelOffsets(subPic.getXOffset(), subPic.getYOffset());
             view.repaintPreviewPanel();
-            view.setXTextFieldText(String.valueOf(subPic.getOfsX()));
+            view.setXTextFieldText(String.valueOf(subPic.getXOffset()));
             setEdited(true);
             model.setEnableSliders(true);
         }
@@ -346,19 +345,19 @@ public class EditDialogController {
                 model.setReady(false);
                 SubPicture subPic = model.getSubPic();
                 long t = SubtitleUtils.syncTimePTS(timeStrToPTS(view.getStartTextFieldText()), model.getFPSTrg(), model.getFPSTrg());
-                if (t >= subPic.endTime) {
-                    t = subPic.endTime-model.getFrameTime();
+                if (t >= subPic.getEndTime()) {
+                    t = subPic.getEndTime() -model.getFrameTime();
                 }
                 SubPicture subPicPrev = model.getSubPicPrev();
-                if (subPicPrev != null && subPicPrev.endTime > t) {
-                    t = subPicPrev.endTime+model.getFrameTime();
+                if (subPicPrev != null && subPicPrev.getEndTime() > t) {
+                    t = subPicPrev.getEndTime() +model.getFrameTime();
                 }
                 if (t >= 0) {
-                    subPic.startTime = SubtitleUtils.syncTimePTS(t, model.getFPSTrg(), model.getFPSTrg());
-                    view.setDurationTextFieldText(ToolBox.formatDouble((subPic.endTime - subPic.startTime) / 90.0));
+                    subPic.setStartTime(SubtitleUtils.syncTimePTS(t, model.getFPSTrg(), model.getFPSTrg()));
+                    view.setDurationTextFieldText(ToolBox.formatDouble((subPic.getEndTime() - subPic.getStartTime()) / 90.0));
                     setEdited(true);
                 }
-                view.setStartTextFieldText(ptsToTimeStr(subPic.startTime));
+                view.setStartTextFieldText(ptsToTimeStr(subPic.getStartTime()));
                 view.setStartTextFieldBackground(OK_BACKGROUND);
                 model.setReady(true);
             }
@@ -386,12 +385,12 @@ public class EditDialogController {
                 model.setReady(false);
                 SubPicture subPic = model.getSubPic();
                 long t = SubtitleUtils.syncTimePTS(timeStrToPTS(view.getStartTextFieldText()), model.getFPSTrg(), model.getFPSTrg());
-                if (t < 0 || t >= subPic.endTime || model.getSubPicPrev() != null && model.getSubPicPrev().endTime > t) {
+                if (t < 0 || t >= subPic.getEndTime() || model.getSubPicPrev() != null && model.getSubPicPrev().getEndTime() > t) {
                     view.setStartTextFieldBackground(ERROR_BACKGROUND);
                 } else {
-                    subPic.startTime = t;
-                    view.setDurationTextFieldText(ToolBox.formatDouble((subPic.endTime - subPic.startTime) / 90.0));
-                    if (!view.getStartTextFieldText().equalsIgnoreCase(ptsToTimeStr(subPic.startTime))) {
+                    subPic.setStartTime(t);
+                    view.setDurationTextFieldText(ToolBox.formatDouble((subPic.getEndTime() - subPic.getStartTime()) / 90.0));
+                    if (!view.getStartTextFieldText().equalsIgnoreCase(ptsToTimeStr(subPic.getStartTime()))) {
                         view.setStartTextFieldBackground(WARN_BACKGROUND);
                     } else {
                         view.setStartTextFieldBackground(OK_BACKGROUND);
@@ -410,20 +409,20 @@ public class EditDialogController {
                 model.setReady(false);
                 SubPicture subPic = model.getSubPic();
                 long t = SubtitleUtils.syncTimePTS(timeStrToPTS(view.getEndTextFieldText()), model.getFPSTrg(), model.getFPSTrg());
-                if (t <= subPic.startTime) {
-                    t = subPic.startTime + model.getFrameTime();
+                if (t <= subPic.getStartTime()) {
+                    t = subPic.getStartTime() + model.getFrameTime();
                 }
 
                 SubPicture subPicNext = model.getSubPicNext();
-                if (subPicNext != null && subPicNext.startTime < t) {
-                    t = subPicNext.startTime;
+                if (subPicNext != null && subPicNext.getStartTime() < t) {
+                    t = subPicNext.getStartTime();
                 }
                 if (t >= 0) {
-                    subPic.endTime = SubtitleUtils.syncTimePTS(t, model.getFPSTrg(), model.getFPSTrg());
-                    view.setDurationTextFieldText(ToolBox.formatDouble((subPic.endTime - subPic.startTime) / 90.0));
+                    subPic.setEndTime(SubtitleUtils.syncTimePTS(t, model.getFPSTrg(), model.getFPSTrg()));
+                    view.setDurationTextFieldText(ToolBox.formatDouble((subPic.getEndTime() - subPic.getStartTime()) / 90.0));
                     setEdited(true);
                 }
-                view.setEndTextFieldText(ptsToTimeStr(subPic.endTime));
+                view.setEndTextFieldText(ptsToTimeStr(subPic.getEndTime()));
                 view.setEndTextFieldBackground(OK_BACKGROUND);
                 model.setReady(true);
             }
@@ -451,12 +450,12 @@ public class EditDialogController {
                 model.setReady(false);
                 SubPicture subPic = model.getSubPic();
                 long t = SubtitleUtils.syncTimePTS(timeStrToPTS(view.getEndTextFieldText()), model.getFPSTrg(), model.getFPSTrg());
-                if (t < 0 || t <= subPic.startTime || model.getSubPicNext() != null && model.getSubPicNext().startTime < t) {
+                if (t < 0 || t <= subPic.getStartTime() || model.getSubPicNext() != null && model.getSubPicNext().getStartTime() < t) {
                     view.setEndTextFieldBackground(ERROR_BACKGROUND);
                 } else {
-                    subPic.endTime = t;
-                    view.setDurationTextFieldText(ToolBox.formatDouble((subPic.endTime - subPic.startTime) / 90.0));
-                    if (!view.getEndTextFieldText().equalsIgnoreCase(ptsToTimeStr(subPic.endTime))) {
+                    subPic.setEndTime(t);
+                    view.setDurationTextFieldText(ToolBox.formatDouble((subPic.getEndTime() - subPic.getStartTime()) / 90.0));
+                    if (!view.getEndTextFieldText().equalsIgnoreCase(ptsToTimeStr(subPic.getEndTime()))) {
                         view.setEndTextFieldBackground(WARN_BACKGROUND);
                     } else {
                         view.setEndTextFieldBackground(OK_BACKGROUND);
@@ -479,16 +478,16 @@ public class EditDialogController {
                 t = model.getFrameTime();
             }
             if (t > 0) {
-                t += subPic.startTime;
+                t += subPic.getStartTime();
                 SubPicture subPicNext = model.getSubPicNext();
-                if (subPicNext != null && subPicNext.startTime < t) {
-                    t = subPicNext.startTime;
+                if (subPicNext != null && subPicNext.getStartTime() < t) {
+                    t = subPicNext.getStartTime();
                 }
-                subPic.endTime = SubtitleUtils.syncTimePTS(t, model.getFPSTrg(), model.getFPSTrg());
-                view.setEndTextFieldText(ptsToTimeStr(subPic.endTime));
+                subPic.setEndTime(SubtitleUtils.syncTimePTS(t, model.getFPSTrg(), model.getFPSTrg()));
+                view.setEndTextFieldText(ptsToTimeStr(subPic.getEndTime()));
                 setEdited(true);
             }
-            view.setDurationTextFieldText(ToolBox.formatDouble((subPic.endTime - subPic.startTime) / 90.0));
+            view.setDurationTextFieldText(ToolBox.formatDouble((subPic.getEndTime() - subPic.getStartTime()) / 90.0));
             view.setDurationTextFieldBackground(OK_BACKGROUND);
             model.setReady(true);
             }
@@ -519,15 +518,15 @@ public class EditDialogController {
                     view.setDurationTextFieldBackground(ERROR_BACKGROUND);
                 } else {
                     SubPicture subPic = model.getSubPic();
-                    t += subPic.startTime;
+                    t += subPic.getStartTime();
                     SubPicture subPicNext = model.getSubPicNext();
-                    if (subPicNext != null && subPicNext.startTime < t) {
-                        t = subPicNext.startTime;
+                    if (subPicNext != null && subPicNext.getStartTime() < t) {
+                        t = subPicNext.getStartTime();
                     }
-                    subPic.endTime = SubtitleUtils.syncTimePTS(t, model.getFPSTrg(), model.getFPSTrg());
-                    view.setEndTextFieldText(ptsToTimeStr(subPic.endTime));
+                    subPic.setEndTime(SubtitleUtils.syncTimePTS(t, model.getFPSTrg(), model.getFPSTrg()));
+                    view.setEndTextFieldText(ptsToTimeStr(subPic.getEndTime()));
                     setEdited(true);
-                    if (!view.getDurationTextFieldText().equalsIgnoreCase(ToolBox.formatDouble((subPic.endTime - subPic.startTime) / 90.0))) {
+                    if (!view.getDurationTextFieldText().equalsIgnoreCase(ToolBox.formatDouble((subPic.getEndTime() - subPic.getStartTime()) / 90.0))) {
                         view.setDurationTextFieldBackground(WARN_BACKGROUND);
                     } else {
                         view.setDurationTextFieldBackground(OK_BACKGROUND);
@@ -545,16 +544,16 @@ public class EditDialogController {
             SubPicture subPic = model.getSubPic();
             long t = model.getMinTimePTS();
             if (t >= 0) {
-                t += subPic.startTime;
+                t += subPic.getStartTime();
                 SubPicture subPicNext = model.getSubPicNext();
-                if (subPicNext != null && subPicNext.startTime < t) {
-                    t = subPicNext.startTime;
+                if (subPicNext != null && subPicNext.getStartTime() < t) {
+                    t = subPicNext.getStartTime();
                 }
-                subPic.endTime = SubtitleUtils.syncTimePTS(t, model.getFPSTrg(), model.getFPSTrg());
-                view.setEndTextFieldText(ptsToTimeStr(subPic.endTime));
+                subPic.setEndTime(SubtitleUtils.syncTimePTS(t, model.getFPSTrg(), model.getFPSTrg()));
+                view.setEndTextFieldText(ptsToTimeStr(subPic.getEndTime()));
                 setEdited(true);
             }
-            view.setDurationTextFieldText(ToolBox.formatDouble((subPic.endTime - subPic.startTime) / 90.0));
+            view.setDurationTextFieldText(ToolBox.formatDouble((subPic.getEndTime() - subPic.getStartTime()) / 90.0));
         }
     }
 
@@ -565,13 +564,13 @@ public class EditDialogController {
             SubPicture subPicNext = model.getSubPicNext();
             long t;
             if (subPicNext != null) {
-                t = subPicNext.startTime;
+                t = subPicNext.getStartTime();
             } else {
-                t = subPic.endTime + 10000 * 90; // 10 seconds
+                t = subPic.getEndTime() + 10000 * 90; // 10 seconds
             }
-            subPic.endTime = SubtitleUtils.syncTimePTS(t, model.getFPSTrg(), model.getFPSTrg());
-            view.setEndTextFieldText(ptsToTimeStr(subPic.endTime));
-            view.setDurationTextFieldText(ToolBox.formatDouble((subPic.endTime - subPic.startTime) / 90.0));
+            subPic.setEndTime(SubtitleUtils.syncTimePTS(t, model.getFPSTrg(), model.getFPSTrg()));
+            view.setEndTextFieldText(ptsToTimeStr(subPic.getEndTime()));
+            view.setDurationTextFieldText(ToolBox.formatDouble((subPic.getEndTime() - subPic.getStartTime()) / 90.0));
             setEdited(true);
         }
     }
@@ -580,7 +579,7 @@ public class EditDialogController {
         @Override
         public void actionPerformed(ActionEvent event) {
             SubPicture subPic = model.getSubPic();
-            int cineH = subPic.height*5/42;
+            int cineH = subPic.getHeight() *5/42;
             int y = cineH-subPic.getImageHeight();
             if (y < 10) {
                 y = 10;
@@ -590,10 +589,10 @@ public class EditDialogController {
             }
             model.setEnableSliders(false);
             subPic.setOfsY(y);
-            view.setVerticalSliderValue(subPic.height - subPic.getOfsY());
-            view.setPreviewPanelOffsets(subPic.getOfsX(), subPic.getOfsY());
+            view.setVerticalSliderValue(subPic.getHeight() - subPic.getYOffset());
+            view.setPreviewPanelOffsets(subPic.getXOffset(), subPic.getYOffset());
             view.repaintPreviewPanel();
-            view.setYTextFieldText(String.valueOf(subPic.getOfsY()));
+            view.setYTextFieldText(String.valueOf(subPic.getYOffset()));
             setEdited(true);
             model.setEnableSliders(true);
         }
@@ -603,17 +602,17 @@ public class EditDialogController {
         @Override
         public void actionPerformed(ActionEvent event) {
             SubPicture subPic = model.getSubPic();
-            int cineH = subPic.height*5/42;
-            int y = subPic.height-cineH;
-            if (y+subPic.getImageHeight() > subPic.height - model.getCropOffsetY()) {
-                y = subPic.height - subPic.getImageHeight() - 10;
+            int cineH = subPic.getHeight() *5/42;
+            int y = subPic.getHeight() -cineH;
+            if (y+subPic.getImageHeight() > subPic.getHeight() - model.getCropOffsetY()) {
+                y = subPic.getHeight() - subPic.getImageHeight() - 10;
             }
             model.setEnableSliders(false);
             subPic.setOfsY(y);
-            view.setVerticalSliderValue(subPic.height - subPic.getOfsY());
-            view.setPreviewPanelOffsets(subPic.getOfsX(), subPic.getOfsY());
+            view.setVerticalSliderValue(subPic.getHeight() - subPic.getYOffset());
+            view.setPreviewPanelOffsets(subPic.getXOffset(), subPic.getYOffset());
             view.repaintPreviewPanel();
-            view.setYTextFieldText(String.valueOf(subPic.getOfsY()));
+            view.setYTextFieldText(String.valueOf(subPic.getYOffset()));
             setEdited(true);
             model.setEnableSliders(true);
         }
@@ -630,7 +629,7 @@ public class EditDialogController {
     private class ForcedCheckBoxActionListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent event) {
-            model.getSubPic().isforced = view.isForcedCheckBoxSelected();
+            model.getSubPic().setForced(view.isForcedCheckBoxSelected());
             setEdited(true);
         }
     }
@@ -639,8 +638,8 @@ public class EditDialogController {
         @Override
         public void actionPerformed(ActionEvent event) {
             SubPicture subPic = model.getSubPic();
-            subPic.exclude = view.isExcludeCheckBoxSelected();
-            view.setPreviewPanelExcluded(subPic.exclude);
+            subPic.setExcluded(view.isExcludeCheckBoxSelected());
+            view.setPreviewPanelExcluded(subPic.isExcluded());
             view.repaintPreviewPanel();
             setEdited(true);
         }
@@ -652,11 +651,11 @@ public class EditDialogController {
             SubPicture subPic = model.getSubPic();
             int sel[] = view.getPreviewPanelSelection();
             if (sel != null) {
-                if (subPic.erasePatch == null) {
-                    subPic.erasePatch = new ArrayList<ErasePatch>();
+                if (subPic.getErasePatch() == null) {
+                    subPic.setErasePatch(new ArrayList<ErasePatch>());
                 }
                 ErasePatch ep = new ErasePatch(sel[0], sel[1], sel[2]-sel[0]+1, sel[3]-sel[1]+1);
-                subPic.erasePatch.add(ep);
+                subPic.getErasePatch().add(ep);
 
                 view.setUndoPatchButtonEnabled(true);
                 view.setUndoAllPatchesButtonEnabled(true);
@@ -676,10 +675,10 @@ public class EditDialogController {
         @Override
         public void actionPerformed(ActionEvent event) {
             SubPicture subPic = model.getSubPic();
-            if (subPic.erasePatch != null && subPic.erasePatch.size() > 0) {
-                subPic.erasePatch.remove(subPic.erasePatch.size()-1);
-                if (subPic.erasePatch.size() == 0) {
-                    subPic.erasePatch = null;
+            if (subPic.getErasePatch() != null && subPic.getErasePatch().size() > 0) {
+                subPic.getErasePatch().remove(subPic.getErasePatch().size() - 1);
+                if (subPic.getErasePatch().size() == 0) {
+                    subPic.setErasePatch(null);
                     view.setUndoPatchButtonEnabled(false);
                     view.setUndoAllPatchesButtonEnabled(false);
                 }
@@ -695,9 +694,9 @@ public class EditDialogController {
         @Override
         public void actionPerformed(ActionEvent event) {
             SubPicture subPic = model.getSubPic();
-            if (subPic.erasePatch != null) {
-                subPic.erasePatch.clear();
-                subPic.erasePatch = null;
+            if (subPic.getErasePatch() != null) {
+                subPic.getErasePatch().clear();
+                subPic.setErasePatch(null);
                 model.setImage(Core.getTrgImagePatched(subPic));
                 view.setPreviewPanelImage(model.getImage(), subPic.getImageWidth(), subPic.getImageHeight());
                 view.repaintPreviewPanel();

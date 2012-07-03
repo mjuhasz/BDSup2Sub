@@ -134,10 +134,10 @@ public class SubDvd implements DvdSubtitleStream {
         for (int i=0; i < subPictures.size(); i++) {
             Core.setProgress(i);
             Core.printX("# " + (i+1) + "\n");
-            Core.print("Ofs: " + ToolBox.toHexLeftZeroPadded(subPictures.get(i).offset,8) + "\n");
+            Core.print("Ofs: " + ToolBox.toHexLeftZeroPadded(subPictures.get(i).getOffset(),8) + "\n");
             long nextOfs;
             if (i < subPictures.size() - 1) {
-                nextOfs =  subPictures.get(i+1).offset;
+                nextOfs = subPictures.get(i+1).getOffset();
             } else {
                 nextOfs = buffer.getSize();
             }
@@ -161,7 +161,7 @@ public class SubDvd implements DvdSubtitleStream {
 
         int forcedOfs;
         int controlHeaderLen;
-        if (pic.isforced) {
+        if (pic.isForced()) {
             forcedOfs = 0;
             controlHeader[2] = 0x01; // display
             controlHeader[3] = 0x00; // forced
@@ -176,7 +176,7 @@ public class SubDvd implements DvdSubtitleStream {
         // fill out all info but the offets (determined later)
 
         /* header - contains PTM */
-        int ptm = (int)pic.startTime; // should be end time, but STC writes start time?
+        int ptm = (int) pic.getStartTime(); // should be end time, but STC writes start time?
         headerFirst[9]  = (byte)(((ptm >> 29) & 0x0E) | 0x21);
         headerFirst[10] = (byte)(ptm >> 22);
         headerFirst[11] = (byte)((ptm >> 14) | 1);
@@ -185,23 +185,23 @@ public class SubDvd implements DvdSubtitleStream {
 
         /* control header */
         /* palette (store reversed) */
-        controlHeader[1+4] = (byte)(((pic.pal[3]&0xf)<<4) | (pic.pal[2]&0x0f));
-        controlHeader[1+5] = (byte)(((pic.pal[1]&0xf)<<4) | (pic.pal[0]&0x0f));
+        controlHeader[1+4] = (byte)(((pic.getPal()[3]&0xf)<<4) | (pic.getPal()[2]&0x0f));
+        controlHeader[1+5] = (byte)(((pic.getPal()[1]&0xf)<<4) | (pic.getPal()[0]&0x0f));
         /* alpha (store reversed) */
-        controlHeader[1+7] = (byte)(((pic.alpha[3]&0xf)<<4) | (pic.alpha[2]&0x0f));
-        controlHeader[1+8] = (byte)(((pic.alpha[1]&0xf)<<4) | (pic.alpha[0]&0x0f));
+        controlHeader[1+7] = (byte)(((pic.getAlpha()[3]&0xf)<<4) | (pic.getAlpha()[2]&0x0f));
+        controlHeader[1+8] = (byte)(((pic.getAlpha()[1]&0xf)<<4) | (pic.getAlpha()[0]&0x0f));
 
         /* coordinates of subtitle */
-        controlHeader[1+10] = (byte)((pic.getOfsX() >> 4) & 0xff);
-        tmp = pic.getOfsX()+bm.getWidth()-1;
-        controlHeader[1+11] = (byte)(((pic.getOfsX() & 0xf)<<4) | ((tmp>>8)&0xf) );
+        controlHeader[1+10] = (byte)((pic.getXOffset() >> 4) & 0xff);
+        tmp = pic.getXOffset()+bm.getWidth()-1;
+        controlHeader[1+11] = (byte)(((pic.getXOffset() & 0xf)<<4) | ((tmp>>8)&0xf) );
         controlHeader[1+12] = (byte)(tmp&0xff);
 
-        int yOfs = pic.getOfsY() - configuration.getCropOffsetY();
+        int yOfs = pic.getYOffset() - configuration.getCropOffsetY();
         if (yOfs < 0) {
             yOfs = 0;
         } else {
-            int yMax = pic.height - pic.getImageHeight() - 2 * configuration.getCropOffsetY();
+            int yMax = pic.getHeight() - pic.getImageHeight() - 2 * configuration.getCropOffsetY();
             if (yOfs > yMax) {
                 yOfs = yMax;
             }
@@ -222,12 +222,12 @@ public class SubDvd implements DvdSubtitleStream {
         controlHeader[1+20] = (byte)(tmp&0xff);
 
         /* display duration in frames */
-        tmp = (int)((pic.endTime-pic.startTime)/1024); // 11.378ms resolution????
+        tmp = (int)((pic.getEndTime() - pic.getStartTime())/1024); // 11.378ms resolution????
         controlHeader[1+22] = (byte)((tmp >> 8)&0xff);
         controlHeader[1+23] = (byte)(tmp&0xff);
 
         /* offset to end sequence - 22 is the offset of the end sequence */
-        tmp = even.length + odd.length + 22 + (pic.isforced?1:0) + 4;
+        tmp = even.length + odd.length + 22 + (pic.isForced() ?1:0) + 4;
         controlHeader[forcedOfs+0] = (byte)((tmp >> 8)&0xff);
         controlHeader[forcedOfs+1] = (byte)(tmp&0xff);
         controlHeader[1+24] = (byte)((tmp >> 8)&0xff);
@@ -622,10 +622,10 @@ public class SubDvd implements DvdSubtitleStream {
                             throw new CoreException("Illegal filepos: " + vs.substring(pos+8));
                         }
                         SubPictureDVD pic = new SubPictureDVD();
-                        pic.offset = l;
-                        pic.width = screenWidth;
-                        pic.height = screenHeight;
-                        pic.startTime = t + delayGlob;
+                        pic.setOffset(l);
+                        pic.setWidth(screenWidth);
+                        pic.setHeight(screenHeight);
+                        pic.setStartTime(t + delayGlob);
                         subPictures.add(pic);
                     }
                 }
@@ -651,7 +651,7 @@ public class SubDvd implements DvdSubtitleStream {
      * @throws CoreException
      */
     void readSubFrame(SubPictureDVD pic, long endOfs, FileBuffer buffer) throws CoreException  {
-        long ofs = pic.offset;
+        long ofs = pic.getOffset();
         long ctrlOfs = -1;
         long nextOfs;
         int  ctrlOfsRel = 0;
@@ -716,7 +716,7 @@ public class SubDvd implements DvdSubtitleStream {
                     ctrlOfs = ctrlOfsRel + ofs; // might have to be corrected for multiple packets
                     ofs += 2;
                     headerSize = (int)(ofs-startOfs);
-                    pic.rleFragments = new ArrayList<ImageObjectFragment>();
+                    pic.setRleFragments(new ArrayList<ImageObjectFragment>());
                     firstPackFound = true;
                 } else {
                     if (firstPackFound) {
@@ -743,7 +743,7 @@ public class SubDvd implements DvdSubtitleStream {
                 rleFrag = new ImageObjectFragment();
                 rleFrag.setImageBufferOfs(ofs);
                 rleFrag.setImagePacketSize((length - headerSize - diff + packHeaderSize));
-                pic.rleFragments.add(rleFrag);
+                pic.getRleFragments().add(rleFrag);
 
                 rleBufferFound += rleFrag.getImagePacketSize();
 
@@ -768,13 +768,13 @@ public class SubDvd implements DvdSubtitleStream {
                 Core.printWarn("RLE buffer size inconsistent.\n");
             }
 
-            pic.rleSize = rleBufferFound;
+            pic.setRleSize(rleBufferFound);
         } catch (FileBufferException ex) {
             throw new CoreException(ex.getMessage());
         }
 
-        pic.pal = new int[4];
-        pic.alpha = new int[4];
+        pic.setPal(new int[4]);
+        pic.setAlpha(new int[4]);
         int alphaSum = 0;
         int alphaUpdate[] = new int[4];
         int alphaUpdateSum;
@@ -798,31 +798,31 @@ public class SubDvd implements DvdSubtitleStream {
                 int cmd = getByte(ctrlHeader, index++);
                 switch (cmd) {
                     case 0: // forced (?)
-                        pic.isforced = true;
+                        pic.setForced(true);
                         numForcedFrames++;
                         break;
                     case 1: // start display
                         break;
                     case 3: // palette info
                         b = getByte(ctrlHeader, index++);
-                        pic.pal[3] = (b >> 4);
-                        pic.pal[2] = b & 0x0f;
+                        pic.getPal()[3] = (b >> 4);
+                        pic.getPal()[2] = b & 0x0f;
                         b = getByte(ctrlHeader, index++);
-                        pic.pal[1] = (b >> 4);
-                        pic.pal[0] = b & 0x0f;
-                        Core.print("Palette:   "+pic.pal[0]+", "+pic.pal[1]+", "+pic.pal[2]+", "+pic.pal[3]+"\n");
+                        pic.getPal()[1] = (b >> 4);
+                        pic.getPal()[0] = b & 0x0f;
+                        Core.print("Palette:   "+ pic.getPal()[0]+", "+ pic.getPal()[1]+", "+ pic.getPal()[2]+", "+ pic.getPal()[3]+"\n");
                         break;
                     case 4: // alpha info
                         b = getByte(ctrlHeader, index++);
-                        pic.alpha[3] = (b >> 4);
-                        pic.alpha[2] = b & 0x0f;
+                        pic.getAlpha()[3] = (b >> 4);
+                        pic.getAlpha()[2] = b & 0x0f;
                         b = getByte(ctrlHeader, index++);
-                        pic.alpha[1] = (b >> 4);
-                        pic.alpha[0] = b & 0x0f;
+                        pic.getAlpha()[1] = (b >> 4);
+                        pic.getAlpha()[0] = b & 0x0f;
                         for (int i = 0; i<4; i++) {
-                            alphaSum += pic.alpha[i] & 0xff;
+                            alphaSum += pic.getAlpha()[i] & 0xff;
                         }
-                        Core.print("Alpha:     "+pic.alpha[0]+", "+pic.alpha[1]+", "+pic.alpha[2]+", "+pic.alpha[3]+"\n");
+                        Core.print("Alpha:     "+ pic.getAlpha()[0]+", "+ pic.getAlpha()[1]+", "+ pic.getAlpha()[2]+", "+ pic.getAlpha()[3]+"\n");
                         break;
                     case 5: // coordinates
                         int xOfs = (getByte(ctrlHeader, index)<<4) | (getByte(ctrlHeader, index+1)>>4);
@@ -832,15 +832,15 @@ public class SubDvd implements DvdSubtitleStream {
                         pic.setOfsY(ofsYglob+yOfs);
                         pic.setImageHeight((((getByte(ctrlHeader, index+4)&0xf)<<8) | (getByte(ctrlHeader, index+5))) - yOfs + 1);
                         Core.print("Area info:"+" ("
-                                +pic.getOfsX()+", "+pic.getOfsY()+") - ("+(pic.getOfsX()+pic.getImageWidth()-1)+", "
-                                +(pic.getOfsY()+pic.getImageHeight()-1)+")\n");
+                                +pic.getXOffset()+", "+pic.getYOffset()+") - ("+(pic.getXOffset()+pic.getImageWidth()-1)+", "
+                                +(pic.getYOffset()+pic.getImageHeight()-1)+")\n");
                         index += 6;
                         break;
                     case 6: // offset to RLE buffer
-                        pic.evenOfs = getWord(ctrlHeader, index) - 4;
-                        pic.oddOfs  = getWord(ctrlHeader, index+2) - 4;
+                        pic.setEvenOffset(getWord(ctrlHeader, index) - 4);
+                        pic.setOddOffset(getWord(ctrlHeader, index + 2) - 4);
                         index += 4;
-                        Core.print("RLE ofs:   "+ToolBox.toHexLeftZeroPadded(pic.evenOfs, 4)+", "+ToolBox.toHexLeftZeroPadded(pic.oddOfs, 4)+"\n");
+                        Core.print("RLE ofs:   "+ToolBox.toHexLeftZeroPadded(pic.getEvenOffset(), 4)+", "+ToolBox.toHexLeftZeroPadded(pic.getOddOffset(), 4)+"\n");
                         break;
                     case 7: // color/alpha update
                         ColAlphaUpdate = true;
@@ -859,14 +859,14 @@ public class SubDvd implements DvdSubtitleStream {
                         // only use more opaque colors
                         if (alphaUpdateSum > alphaSum) {
                             alphaSum = alphaUpdateSum;
-                            System.arraycopy(alphaUpdate, 0, pic.alpha, 0, 4);
+                            System.arraycopy(alphaUpdate, 0, pic.getAlpha(), 0, 4);
                             // take over frame palette
                             b = getByte(ctrlHeader, index+8);
-                            pic.pal[3] = (b >> 4);
-                            pic.pal[2] = b & 0x0f;
+                            pic.getPal()[3] = (b >> 4);
+                            pic.getPal()[2] = b & 0x0f;
                             b = getByte(ctrlHeader, index+9);
-                            pic.pal[1] = (b >> 4);
-                            pic.pal[0] = b & 0x0f;
+                            pic.getPal()[1] = (b >> 4);
+                            pic.getPal()[0] = b & 0x0f;
                         }
                         // search end sequence
                         index = endSeqOfs;
@@ -899,9 +899,9 @@ public class SubDvd implements DvdSubtitleStream {
                 if (ctrlSeqCount > 2) {
                     Core.printWarn("Control sequence(s) ignored - result may be erratic.");
                 }
-                pic.endTime = pic.startTime + delay;
+                pic.setEndTime(pic.getStartTime() + delay);
             } else {
-                pic.endTime = pic.startTime;
+                pic.setEndTime(pic.getStartTime());
             }
 
             if (ColAlphaUpdate) {
@@ -910,15 +910,15 @@ public class SubDvd implements DvdSubtitleStream {
 
             if (alphaSum == 0) {
                 if (configuration.getFixZeroAlpha()) {
-                    System.arraycopy(lastAlpha, 0, pic.alpha, 0, 4);
+                    System.arraycopy(lastAlpha, 0, pic.getAlpha(), 0, 4);
                     Core.printWarn("Invisible caption due to zero alpha - used alpha info of last caption.\n");
                 } else {
                     Core.printWarn("Invisible caption due to zero alpha (not fixed due to user setting).\n");
                 }
             }
 
-            lastAlpha = pic.alpha;
-            pic.setOriginal();
+            lastAlpha = pic.getAlpha();
+            pic.storeOriginal();
         } catch (IndexOutOfBoundsException ex) {
             throw new CoreException("Index "+ex.getMessage() + " out of bounds in control header.");
         }
@@ -942,7 +942,7 @@ public class SubDvd implements DvdSubtitleStream {
             out.write("# Created by " + Constants.APP_NAME + " " + Constants.APP_VERSION); out.newLine();
             out.newLine();
             out.write("# Frame size"); out.newLine();
-            out.write("size: " + pic.width + "x" + (pic.height-2 * configuration.getCropOffsetY())); out.newLine();
+            out.write("size: " + pic.getWidth() + "x" + (pic.getHeight() -2 * configuration.getCropOffsetY())); out.newLine();
             out.newLine();
             out.write("# Origin - upper-left corner"); out.newLine();
             out.write("org: 0, 0"); out.newLine();
@@ -1032,8 +1032,8 @@ public class SubDvd implements DvdSubtitleStream {
             // update picture
             pic.setImageWidth(w);
             pic.setImageHeight(h);
-            pic.setOfsX(pic.originalX + bounds.xMin);
-            pic.setOfsY(pic.originalY + bounds.yMin);
+            pic.setOfsX(pic.getOriginalX() + bounds.xMin);
+            pic.setOfsY(pic.getOriginalY() + bounds.yMin);
         }
 
         primaryColorIndex = bitmap.getPrimaryColorIndex(palette.getAlpha(), configuration.getAlphaThreshold(), palette.getY());
@@ -1056,7 +1056,7 @@ public class SubDvd implements DvdSubtitleStream {
      * @return int array with 4 entries representing frame palette
      */
     public int[] getFramePalette(int index) {
-        return subPictures.get(index).pal;
+        return subPictures.get(index).getPal();
     }
 
     /**
@@ -1065,7 +1065,7 @@ public class SubDvd implements DvdSubtitleStream {
      * @return int array with 4 entries representing frame palette
      */
     public int[] getOriginalFramePalette(int index) {
-        return subPictures.get(index).originalPal;
+        return subPictures.get(index).getOriginalPal();
     }
 
     /**
@@ -1074,7 +1074,7 @@ public class SubDvd implements DvdSubtitleStream {
      * @return int array with 4 entries representing frame alphas
      */
     public int[] getFrameAlpha(int index) {
-        return subPictures.get(index).alpha;
+        return subPictures.get(index).getAlpha();
     }
 
     /**
@@ -1083,7 +1083,7 @@ public class SubDvd implements DvdSubtitleStream {
      * @return int array with 4 entries representing frame alphas
      */
     public int[] getOriginalFrameAlpha(int index) {
-        return subPictures.get(index).originalAlpha;
+        return subPictures.get(index).getOriginalAlpha();
     }
 
     /* (non-Javadoc)
@@ -1146,7 +1146,7 @@ public class SubDvd implements DvdSubtitleStream {
      * @see SubtitleStream#isForced(int)
      */
     public boolean isForced(int index) {
-        return subPictures.get(index).isforced;
+        return subPictures.get(index).isForced();
     }
 
     /* (non-Javadoc)
@@ -1161,21 +1161,21 @@ public class SubDvd implements DvdSubtitleStream {
      * @see SubtitleStream#getEndTime(int)
      */
     public long getEndTime(int index) {
-        return subPictures.get(index).endTime;
+        return subPictures.get(index).getEndTime();
     }
 
     /* (non-Javadoc)
      * @see SubtitleStream#getStartTime(int)
      */
     public long getStartTime(int index) {
-        return subPictures.get(index).startTime;
+        return subPictures.get(index).getStartTime();
     }
 
     /* (non-Javadoc)
      * @see SubtitleStream#getStartOffset(int)
      */
     public long getStartOffset(int index) {
-        return subPictures.get(index).offset;
+        return subPictures.get(index).getOffset();
     }
 
     /**

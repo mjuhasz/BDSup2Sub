@@ -17,30 +17,37 @@ package bdsup2sub.supstream.bdnxml;
 
 import bdsup2sub.supstream.SubPicture;
 
-/**
- * Extends SubPicture to store information read from Xml
- */
 public class SubPictureXml extends SubPicture implements Cloneable {
     /** original x offset of uncropped bitmap */
-    int originalX;
+    private int originalXOffset;
     /** original y offset of uncropped bitmap */
-    int originalY;
+    private int originalYOffset;
     /** file name of Xml file */
-    String fileName;
+    private String fileName;
 
-    /* (non-Javadoc)
-     * @see SubPicture#clone()
-     */
     @Override
     public SubPictureXml clone() {
         return (SubPictureXml)super.clone();
     }
 
-    /**
-     * store original offsets
-     */
-    void setOriginal() {
-        originalX = getOfsX();
-        originalY = getOfsY();
+    public void storeOriginalOffsets() {
+        originalXOffset = getXOffset();
+        originalYOffset = getYOffset();
+    }
+
+    public int getOriginalXOffset() {
+        return originalXOffset;
+    }
+
+    public int getOriginalYOffset() {
+        return originalYOffset;
+    }
+
+    public String getFileName() {
+        return fileName;
+    }
+
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
     }
 }

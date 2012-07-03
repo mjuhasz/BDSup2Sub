@@ -49,7 +49,7 @@ class ConversionDialogModel {
         // fix output resolution in case that it should not be changed
         // change target resolution to source resolution if no conversion is needed
         if (!convertResolution && Core.getNumFrames() > 0) {
-            outputResolution = SubtitleUtils.getResolutionForDimension(Core.getSubPictureSrc(0).width, Core.getSubPictureSrc(0).height);
+            outputResolution = SubtitleUtils.getResolutionForDimension(Core.getSubPictureSrc(0).getWidth(), Core.getSubPictureSrc(0).getHeight());
         } else {
             outputResolution = configuration.getOutputResolution();
         }

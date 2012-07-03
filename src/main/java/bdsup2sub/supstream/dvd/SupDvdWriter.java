@@ -43,7 +43,7 @@ public final class SupDvdWriter {
 
         int forcedOfs;
         int controlHeaderLen;
-        if (pic.isforced) {
+        if (pic.isForced()) {
             forcedOfs = 0;
             CONTROL_HEADER[2] = 0x01; // display
             CONTROL_HEADER[3] = 0x00; // forced
@@ -64,7 +64,7 @@ public final class SupDvdWriter {
         buf[0] = 0x53;
         buf[1] = 0x50;
         // write PTS (4 bytes of 8 bytes used) - little endian!
-        int pts = (int) pic.startTime;
+        int pts = (int) pic.getStartTime();
         buf[5] = (byte) (pts >> 24);
         buf[4] = (byte) (pts >> 16);
         buf[3] = (byte) (pts >> 8);
@@ -91,23 +91,23 @@ public final class SupDvdWriter {
 
         /* create control header */
         /* palette (store reversed) */
-        CONTROL_HEADER[1 + 4] = (byte) (((pic.pal[3] & 0xf) << 4) | (pic.pal[2] & 0x0f));
-        CONTROL_HEADER[1 + 5] = (byte) (((pic.pal[1] & 0xf) << 4) | (pic.pal[0] & 0x0f));
+        CONTROL_HEADER[1 + 4] = (byte) (((pic.getPal()[3] & 0xf) << 4) | (pic.getPal()[2] & 0x0f));
+        CONTROL_HEADER[1 + 5] = (byte) (((pic.getPal()[1] & 0xf) << 4) | (pic.getPal()[0] & 0x0f));
         /* alpha (store reversed) */
-        CONTROL_HEADER[1 + 7] = (byte) (((pic.alpha[3] & 0xf) << 4) | (pic.alpha[2] & 0x0f));
-        CONTROL_HEADER[1 + 8] = (byte) (((pic.alpha[1] & 0xf) << 4) | (pic.alpha[0] & 0x0f));
+        CONTROL_HEADER[1 + 7] = (byte) (((pic.getAlpha()[3] & 0xf) << 4) | (pic.getAlpha()[2] & 0x0f));
+        CONTROL_HEADER[1 + 8] = (byte) (((pic.getAlpha()[1] & 0xf) << 4) | (pic.getAlpha()[0] & 0x0f));
 
         /* coordinates of subtitle */
-        CONTROL_HEADER[1 + 10] = (byte) ((pic.getOfsX() >> 4) & 0xff);
-        tmp = pic.getOfsX() + bm.getWidth() - 1;
-        CONTROL_HEADER[1 + 11] = (byte) (((pic.getOfsX() & 0xf) << 4) | ((tmp >> 8) & 0xf));
+        CONTROL_HEADER[1 + 10] = (byte) ((pic.getXOffset() >> 4) & 0xff);
+        tmp = pic.getXOffset() + bm.getWidth() - 1;
+        CONTROL_HEADER[1 + 11] = (byte) (((pic.getXOffset() & 0xf) << 4) | ((tmp >> 8) & 0xf));
         CONTROL_HEADER[1 + 12] = (byte) (tmp & 0xff);
 
-        int yOfs = pic.getOfsY() - configuration.getCropOffsetY();
+        int yOfs = pic.getYOffset() - configuration.getCropOffsetY();
         if (yOfs < 0) {
             yOfs = 0;
         } else {
-            int yMax = pic.height - pic.getImageHeight() - 2 * configuration.getCropOffsetY();
+            int yMax = pic.getHeight() - pic.getImageHeight() - 2 * configuration.getCropOffsetY();
             if (yOfs > yMax) {
                 yOfs = yMax;
             }
@@ -128,12 +128,12 @@ public final class SupDvdWriter {
         CONTROL_HEADER[1 + 20] = (byte) (tmp & 0xff);
 
         /* display duration in frames */
-        tmp = (int) ((pic.endTime - pic.startTime) / 1024); // 11.378ms resolution????
+        tmp = (int) ((pic.getEndTime() - pic.getStartTime()) / 1024); // 11.378ms resolution????
         CONTROL_HEADER[1 + 22] = (byte) ((tmp >> 8) & 0xff);
         CONTROL_HEADER[1 + 23] = (byte) (tmp & 0xff);
 
         /* offset to end sequence - 22 is the offset of the end sequence */
-        tmp = sizeRLE + 22 + (pic.isforced ? 1 : 0) + 4;
+        tmp = sizeRLE + 22 + (pic.isForced() ? 1 : 0) + 4;
         CONTROL_HEADER[forcedOfs + 0] = (byte) ((tmp >> 8) & 0xff);
         CONTROL_HEADER[forcedOfs + 1] = (byte) (tmp & 0xff);
         CONTROL_HEADER[1 + 24] = (byte) ((tmp >> 8) & 0xff);

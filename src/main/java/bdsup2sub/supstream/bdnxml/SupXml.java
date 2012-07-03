@@ -139,9 +139,9 @@ public class SupXml implements SubtitleStream {
     @Override
     public void decode(int index) throws CoreException {
         try {
-            File f = new File(subPictures.get(index).fileName);
+            File f = new File(subPictures.get(index).getFileName());
             if (!f.exists()) {
-                throw new CoreException("file " + subPictures.get(index).fileName + " not found.");
+                throw new CoreException("file " + subPictures.get(index).getFileName() + " not found.");
             }
             BufferedImage img = ImageIO.read(f);
             int w = img.getWidth();
@@ -211,8 +211,8 @@ public class SupXml implements SubtitleStream {
                 SubPictureXml pic = subPictures.get(index);
                 pic.setImageWidth(w);
                 pic.setImageHeight(h);
-                pic.setOfsX(pic.originalX + bounds.xMin);
-                pic.setOfsY(pic.originalY + bounds.yMin);
+                pic.setOfsX(pic.getOriginalXOffset() + bounds.xMin);
+                pic.setOfsY(pic.getOriginalYOffset() + bounds.yMin);
             }
         } catch (IOException e) {
             throw new CoreException(e.getMessage());
@@ -249,12 +249,12 @@ public class SupXml implements SubtitleStream {
             String res = configuration.getOutputResolution().getResolutionNameForXml();
             out.write("    <Format VideoFormat=\"" + res + "\" FrameRate=\"" + ToolBox.formatDouble(fps) + "\" DropFrame=\"False\"/>");
             out.newLine();
-            t = pics[0].startTime;
+            t = pics[0].getStartTime();
             if (fps != fpsXml) {
                 t = (t * 2000 + 1001) / 2002;
             }
             String ts = ptsToTimeStrXml(t,fpsXml);
-            t = pics[pics.length-1].endTime;
+            t = pics[pics.length-1].getEndTime();
             if (fps != fpsXml) {
                 t = (t * 2000 + 1001) / 2002;
             }
@@ -267,23 +267,23 @@ public class SupXml implements SubtitleStream {
             out.newLine();
             for (int idx=0; idx < pics.length; idx++) {
                 SubPicture p = pics[idx];
-                t = p.startTime;
+                t = p.getStartTime();
                 if (fps != fpsXml) {
                     t = (t * 2000 + 1001) / 2002;
                 }
                 ts = ptsToTimeStrXml(t,fpsXml);
-                t = p.endTime;
+                t = p.getEndTime();
                 if (fps != fpsXml) {
                     t = (t * 2000 + 1001) / 2002;
                 }
                 te = ptsToTimeStrXml(t, fpsXml);
-                String forced = p.isforced? "True": "False";
+                String forced = p.isForced() ? "True": "False";
                 out.write("    <Event InTC=\"" + ts + "\" OutTC=\"" + te + "\" Forced=\"" + forced + "\">");
                 out.newLine();
 
                 String pname = getPNGname(name, idx+1);
                 out.write("      <Graphic Width=\"" + p.getImageWidth() + "\" Height=\"" + p.getImageHeight()
-                        + "\" X=\"" + p.getOfsX() + "\" Y=\"" + p.getOfsY() + "\">" + pname + "</Graphic>");
+                        + "\" X=\"" + p.getXOffset() + "\" Y=\"" + p.getYOffset() + "\">" + pname + "</Graphic>");
                 out.newLine();
                 out.write("    </Event>");
                 out.newLine();
@@ -372,21 +372,21 @@ public class SupXml implements SubtitleStream {
      * @see SubtitleStream#getEndTime(int)
      */
     public long getEndTime(int index) {
-        return subPictures.get(index).endTime;
+        return subPictures.get(index).getEndTime();
     }
 
     /* (non-Javadoc)
      * @see SubtitleStream#getStartTime(int)
      */
     public long getStartTime(final int index) {
-        return subPictures.get(index).startTime;
+        return subPictures.get(index).getStartTime();
     }
 
     /* (non-Javadoc)
      * @see SubtitleStream#isForced(int)
      */
     public boolean isForced(int index) {
-        return subPictures.get(index).isforced;
+        return subPictures.get(index).isForced();
     }
 
     /**
@@ -511,39 +511,39 @@ public class SupXml implements SubtitleStream {
                     Core.setProgress(num);
                     at = atts.getValue("InTC");
                     if (at != null) {
-                        pic.startTime = timeStrXmlToPTS(at, fpsXml);
-                        if (pic.startTime == -1) {
-                            pic.startTime = 0;
+                        pic.setStartTime(timeStrXmlToPTS(at, fpsXml));
+                        if (pic.getStartTime() == -1) {
+                            pic.setStartTime(0);
                             Core.printWarn("Invalid start time " + at + "\n");
                         }
                     }
                     at = atts.getValue("OutTC");
                     if (at != null) {
-                        pic.endTime = timeStrXmlToPTS(at, fpsXml);
-                        if (pic.endTime == -1) {
-                            pic.endTime = 0;
+                        pic.setEndTime(timeStrXmlToPTS(at, fpsXml));
+                        if (pic.getEndTime() == -1) {
+                            pic.setEndTime(0);
                             Core.printWarn("Invalid end time " + at + "\n");
                         }
                     }
                     if (fps != fpsXml) {
-                        pic.startTime = (pic.startTime * 1001 + 500) / 1000;
-                        pic.endTime   = (pic.endTime * 1001 + 500) / 1000;
+                        pic.setStartTime((pic.getStartTime() * 1001 + 500) / 1000);
+                        pic.setEndTime((pic.getEndTime() * 1001 + 500) / 1000);
                     }
                     at = atts.getValue("Forced");
-                    pic.isforced = at != null && at.equalsIgnoreCase("true");
-                    if (pic.isforced) {
+                    pic.setForced(at != null && at.equalsIgnoreCase("true"));
+                    if (pic.isForced()) {
                         numForcedFrames++;
                     }
                     int dim[] = resolution.getDimensions();
-                    pic.width  = dim[0];
-                    pic.height = dim[1];
+                    pic.setWidth(dim[0]);
+                    pic.setHeight(dim[1]);
                     break;
                 case GRAPHIC:
                     pic.setImageWidth(ToolBox.getInt(atts.getValue("Width")));
                     pic.setImageHeight(ToolBox.getInt(atts.getValue("Height")));
                     pic.setOfsX(ToolBox.getInt(atts.getValue("X")));
                     pic.setOfsY(ToolBox.getInt(atts.getValue("Y")));
-                    pic.setOriginal();
+                    pic.storeOriginalOffsets();
                     txt = new StringBuffer();
                     break;
             }
@@ -553,7 +553,7 @@ public class SupXml implements SubtitleStream {
         public void endElement(String namespaceURI, String localName, String qName ) {
             XmlState endState = findState(qName);
             if (state == XmlState.GRAPHIC && endState == XmlState.GRAPHIC) {
-                pic.fileName = pathName + txt.toString().trim();
+                pic.setFileName(pathName + txt.toString().trim());
             }
         }
 

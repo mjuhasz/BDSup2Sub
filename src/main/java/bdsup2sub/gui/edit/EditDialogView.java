@@ -1008,35 +1008,35 @@ class EditDialogView extends JDialog {
             SubPicture subPic = model.getSubPic();
             model.setImage(Core.getTrgImagePatched(subPic));
 
-            if (subPic.erasePatch != null && subPic.erasePatch.size() > 0) {
+            if (subPic.getErasePatch() != null && subPic.getErasePatch().size() > 0) {
                 jButtonUndoPatch.setEnabled(true);
                 jButtonUndoAllPatches.setEnabled(true);
             }
 
             model.setEnableSliders(false);
-            jSliderHorizontal.setMaximum(subPic.width);
-            jSliderHorizontal.setValue(subPic.getOfsX());
-            jSliderVertical.setMaximum(subPic.height);
-            jSliderVertical.setValue(subPic.height - subPic.getOfsY());
+            jSliderHorizontal.setMaximum(subPic.getWidth());
+            jSliderHorizontal.setValue(subPic.getXOffset());
+            jSliderVertical.setMaximum(subPic.getHeight());
+            jSliderVertical.setValue(subPic.getHeight() - subPic.getYOffset());
             model.setEnableSliders(true);
 
             jLabelInfo.setText("Frame " + (idx+1) + " of " + Core.getNumFrames());
-            jTextFieldStart.setText(ptsToTimeStr(subPic.startTime));
-            jTextFieldEnd.setText(ptsToTimeStr(subPic.endTime));
-            jTextFieldDuration.setText(ToolBox.formatDouble((subPic.endTime - subPic.startTime) / 90.0));
+            jTextFieldStart.setText(ptsToTimeStr(subPic.getStartTime()));
+            jTextFieldEnd.setText(ptsToTimeStr(subPic.getEndTime()));
+            jTextFieldDuration.setText(ToolBox.formatDouble((subPic.getEndTime() - subPic.getStartTime()) / 90.0));
 
-            jTextFieldX.setText(String.valueOf(subPic.getOfsX()));
-            jTextFieldY.setText(String.valueOf(subPic.getOfsY()));
+            jTextFieldX.setText(String.valueOf(subPic.getXOffset()));
+            jTextFieldY.setText(String.valueOf(subPic.getYOffset()));
 
-            jPanelPreview.setSubtitleOffsets(subPic.getOfsX(), subPic.getOfsY());
-            jPanelPreview.setScreenDimension(subPic.width, subPic.height);
+            jPanelPreview.setSubtitleOffsets(subPic.getXOffset(), subPic.getYOffset());
+            jPanelPreview.setScreenDimension(subPic.getWidth(), subPic.getHeight());
             jPanelPreview.setCropOffsetY(model.getCropOffsetY());
             jPanelPreview.setImage(model.getImage(), subPic.getImageWidth(), subPic.getImageHeight());
             jPanelPreview.repaint();
-            jPanelPreview.setExcluded(subPic.exclude);
+            jPanelPreview.setExcluded(subPic.isExcluded());
 
-            jCheckBoxExclude.setSelected(subPic.exclude);
-            jCheckBoxForced.setSelected(subPic.isforced);
+            jCheckBoxExclude.setSelected(subPic.isExcluded());
+            jCheckBoxForced.setSelected(subPic.isForced());
 
             model.setReady(true);
 

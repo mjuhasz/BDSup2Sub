@@ -19,17 +19,6 @@ import bdsup2sub.bitmap.ErasePatch;
 
 import java.util.ArrayList;
 
-/**
- * Stores information about one subpicture frame.
- *
- * Note: image related members are private and need getters to allow more complex access functions
- * for BD-SUPs. Indeed the class SubPictureBD doesn't access the image width/height and offsets of the
- * parent class at all. Only when the copy function is used to create a SubPicture copy from a
- * SubPictureBD instance, these members are filled correctly.<br>
- * This also means that the setter functions for these members are pretty much useless as they
- * only change the members of the parent class, but don't influence the values returned by the getters.
- * This is a little unclean but by design to not allow write access to the internal structures.
- */
 public class SubPicture implements Cloneable {
 
     /** with of subtitle image */
@@ -37,34 +26,32 @@ public class SubPicture implements Cloneable {
     /** height of subtitle image */
     private int imageHeight;
     /** upper left corner of subtitle x */
-    private int xOfs;
+    private int xOffset;
     /** upper left corner of subtitle y */
-    private int yOfs;
-
-    /* public */
+    private int yOffset;
 
     /** screen width */
-    public int width;
+    private int width;
     /** screen height */
-    public int height;
+    private int height;
     /** start time in milliseconds */
-    public long startTime;
+    private long startTime;
     /** end time in milliseconds */
-    public long endTime;
+    private long endTime;
     /** if true, this is a forced subtitle */
-    public boolean isforced;
+    private boolean forced;
     /** composition number - increased at start and end PCS */
-    public int compNum;
+    private int compNum;
     /** frame was already decoded */
-    public boolean wasDecoded;
+    private boolean wasDecoded;
 
     /* the following fields are really only needed for editing */
 
     /** exclude from export? */
-    public boolean exclude;
+    private boolean excluded;
 
     /** list of erase patches */
-    public ArrayList<ErasePatch> erasePatch;
+    private ArrayList<ErasePatch> erasePatch;
 
     /**
      * Allows to get a clone of the parent object even for SubPictureBD objects.
@@ -72,12 +59,12 @@ public class SubPicture implements Cloneable {
      */
     public SubPicture copy() {
         SubPicture sp = new SubPicture();
-        sp.width = width;
-        sp.height = height;
-        sp.startTime = startTime;
-        sp.endTime = endTime;
-        sp.isforced = isforced;
-        sp.compNum = compNum;
+        sp.setWidth(width);
+        sp.setHeight(height);
+        sp.setStartTime(startTime);
+        sp.setEndTime(endTime);
+        sp.setForced(forced);
+        sp.setCompNum(compNum);
 
         /* Note that by using the getter functions
          * the internal values of a SubPictureBD are
@@ -86,88 +73,53 @@ public class SubPicture implements Cloneable {
          */
         sp.setImageWidth(getImageWidth());
         sp.setImageHeight(getImageHeight());
-        sp.setOfsX(getOfsX());
-        sp.setOfsY(getOfsY());
+        sp.setOfsX(getXOffset());
+        sp.setOfsY(getYOffset());
 
-        sp.exclude = exclude;
-        sp.wasDecoded = wasDecoded;
-        if (erasePatch != null && erasePatch.size()>0) {
+        sp.setExcluded(excluded);
+        sp.setWasDecoded(wasDecoded);
+        if (erasePatch != null && erasePatch.size() > 0) {
             ArrayList<ErasePatch> epl = new ArrayList<ErasePatch>();
-            for (ErasePatch ep : erasePatch) {
+            for (ErasePatch ep : getErasePatch()) {
                 epl.add(ep);
             }
-            sp.erasePatch = epl;
+            sp.setErasePatch(epl);
         }
         return sp;
     }
 
-    /**
-     * get image width
-     * @return image width in pixels
-     */
     public int getImageWidth() {
         return imageWidth;
     }
 
-    /**
-     * get image height
-     * @return image height in pixels
-     */
     public int getImageHeight() {
         return imageHeight;
     }
 
-    /**
-     * get image x offset
-     * @return image x offset in pixels
-     */
-    public int getOfsX() {
-        return xOfs;
+    public int getXOffset() {
+        return xOffset;
     }
 
-    /**
-     * get image y offset
-     * @return image y offset in pixels
-     */
-    public int getOfsY() {
-        return yOfs;
+    public int getYOffset() {
+        return yOffset;
     }
 
-    /**
-     * Set image width
-     * @param w width in pixels
-     */
     public void setImageWidth(int w) {
         imageWidth = w;
     }
 
-    /**
-     * Set image height
-     * @param h height in pixels
-     */
     public void setImageHeight(int h) {
         imageHeight = h;
     }
 
-    /**
-     * Set image x offset
-     * @param ofs offset in pixels
-     */
     public void setOfsX(int ofs) {
-        xOfs = ofs;
+        xOffset = ofs;
     }
 
-    /**
-     * Set image y offset
-     * @param ofs offset in pixels
-     */
     public void setOfsY(int ofs) {
-        yOfs = ofs;
+        yOffset = ofs;
     }
 
-    /* (non-Javadoc)
-     * @see java.lang.Object#clone()
-     */
     @Override
     public SubPicture clone() {
         try {
@@ -175,5 +127,77 @@ public class SubPicture implements Cloneable {
         } catch (CloneNotSupportedException e) {
             return null;
         }
+    }
+
+    public int getWidth() {
+        return width;
+    }
+
+    public void setWidth(int width) {
+        this.width = width;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    public void setHeight(int height) {
+        this.height = height;
+    }
+
+    public long getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(long startTime) {
+        this.startTime = startTime;
+    }
+
+    public long getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(long endTime) {
+        this.endTime = endTime;
+    }
+
+    public boolean isForced() {
+        return forced;
+    }
+
+    public void setForced(boolean forced) {
+        this.forced = forced;
+    }
+
+    public int getCompNum() {
+        return compNum;
+    }
+
+    public void setCompNum(int compNum) {
+        this.compNum = compNum;
+    }
+
+    public boolean isWasDecoded() {
+        return wasDecoded;
+    }
+
+    public void setWasDecoded(boolean wasDecoded) {
+        this.wasDecoded = wasDecoded;
+    }
+
+    public boolean isExcluded() {
+        return excluded;
+    }
+
+    public void setExcluded(boolean excluded) {
+        this.excluded = excluded;
+    }
+
+    public ArrayList<ErasePatch> getErasePatch() {
+        return erasePatch;
+    }
+
+    public void setErasePatch(ArrayList<ErasePatch> erasePatch) {
+        this.erasePatch = erasePatch;
     }
 }

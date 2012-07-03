@@ -367,8 +367,8 @@ public class Core extends Thread {
             }
             palFrame[3] = 0;        // black - opaque
 
-            subVobTrg.alpha = DEFAULT_ALPHA;
-            subVobTrg.pal = palFrame;
+            subVobTrg.setAlpha(DEFAULT_ALPHA);
+            subVobTrg.setPal(palFrame);
 
             trgPal = SupDvdUtils.decodePalette(subVobTrg, trgPallete);
         } else {
@@ -396,8 +396,8 @@ public class Core extends Thread {
                     miniPal.setARGB(i, 0);
                 }
             }
-            subVobTrg.alpha = alpha;
-            subVobTrg.pal = palFrame;
+            subVobTrg.setAlpha(alpha);
+            subVobTrg.setPal(palFrame);
             trgPal = miniPal;
         }
     }
@@ -621,7 +621,7 @@ public class Core extends Thread {
         configuration.setLanguageIdx(substreamDvd.getLanguageIdx());
 
         // set frame rate
-        int h = subtitleStream.getSubPicture(0).height; //subtitleStream.getBitmap().getHeight();
+        int h = subtitleStream.getSubPicture(0).getHeight(); //subtitleStream.getBitmap().getHeight();
         switch (h) {
             case 480:
                 configuration.setFpsSrc(Framerate.NTSC.getValue());
@@ -650,8 +650,8 @@ public class Core extends Thread {
      */
     private static void validateTimes(int idx, SubPicture subPic, SubPicture subPicNext, SubPicture subPicPrev) {
         //long tpf = (long)(90000/fpsTrg); // time per frame
-        long ts =  subPic.startTime;     // start time
-        long te =  subPic.endTime;       // end time
+        long ts = subPic.getStartTime();     // start time
+        long te = subPic.getEndTime();       // end time
         long delay = 5000*90;            // default delay for missing end time (5 seconds)
 
         idx += 1; // only used for display
@@ -659,7 +659,7 @@ public class Core extends Thread {
         // get end time of last frame
         long te_last;
         if (subPicPrev != null) {
-            te_last = subPicPrev.endTime;
+            te_last = subPicPrev.getEndTime();
         } else {
             te_last = -1;
         }
@@ -672,7 +672,7 @@ public class Core extends Thread {
         // get start time of next frame
         long ts_next;
         if (subPicNext != null) {
-            ts_next = subPicNext.startTime;
+            ts_next = subPicNext.getStartTime();
         } else {
             ts_next = 0;
         }
@@ -715,11 +715,11 @@ public class Core extends Thread {
             }
         }
 
-        if (subPic.startTime != ts) {
-            subPic.startTime = SubtitleUtils.syncTimePTS(ts, configuration.getFpsTrg(), configuration.getFpsTrg());
+        if (subPic.getStartTime() != ts) {
+            subPic.setStartTime(SubtitleUtils.syncTimePTS(ts, configuration.getFpsTrg(), configuration.getFpsTrg()));
         }
-        if (subPic.endTime != te) {
-            subPic.endTime = SubtitleUtils.syncTimePTS(te, configuration.getFpsTrg(), configuration.getFpsTrg());
+        if (subPic.getEndTime() != te) {
+            subPic.setEndTime(SubtitleUtils.syncTimePTS(te, configuration.getFpsTrg(), configuration.getFpsTrg()));
         }
     }
 
@@ -732,8 +732,8 @@ public class Core extends Thread {
     private static boolean updateTrgPic(int index) {
         SubPicture picSrc = subtitleStream.getSubPicture(index);
         SubPicture picTrg = subPictures[index];
-        double scaleX = (double)picTrg.width/picSrc.width;
-        double scaleY = (double)picTrg.height/picSrc.height;
+        double scaleX = (double) picTrg.getWidth() / picSrc.getWidth();
+        double scaleY = (double) picTrg.getHeight() / picSrc.getHeight();
         double fx;
         double fy;
         if (configuration.getApplyFreeScale()) {
@@ -749,36 +749,36 @@ public class Core extends Thread {
         int wNew = (int)(picSrc.getImageWidth()  * scaleX * fx + 0.5);
         if (wNew < MIN_IMAGE_DIMENSION) {
             wNew = picSrc.getImageWidth();
-        } else if (wNew > picTrg.width) {
-            wNew = picTrg.width;
+        } else if (wNew > picTrg.getWidth()) {
+            wNew = picTrg.getWidth();
         }
         int hNew = (int)(picSrc.getImageHeight() * scaleY * fy + 0.5);
         if (hNew < MIN_IMAGE_DIMENSION) {
             hNew = picSrc.getImageHeight();
-        } else if (hNew > picTrg.height) {
-            hNew = picTrg.height;
+        } else if (hNew > picTrg.getHeight()) {
+            hNew = picTrg.getHeight();
         }
         picTrg.setImageWidth(wNew);
         picTrg.setImageHeight(hNew);
         if (wNew != wOld) {
-            int xOfs = (int)(picSrc.getOfsX() * scaleX + 0.5);
-            int spaceSrc = (int)((picSrc.width-picSrc.getImageWidth())*scaleX + 0.5);
-            int spaceTrg = picTrg.width - wNew;
+            int xOfs = (int)(picSrc.getXOffset() * scaleX + 0.5);
+            int spaceSrc = (int)((picSrc.getWidth() -picSrc.getImageWidth())*scaleX + 0.5);
+            int spaceTrg = picTrg.getWidth() - wNew;
             xOfs += (spaceTrg - spaceSrc) / 2;
             if (xOfs < 0) {
                 xOfs = 0;
-            } else if (xOfs+wNew > picTrg.width) {
-                xOfs = picTrg.width - wNew;
+            } else if (xOfs+wNew > picTrg.getWidth()) {
+                xOfs = picTrg.getWidth() - wNew;
             }
             picTrg.setOfsX(xOfs);
         }
         if (hNew != hOld) {
-            int yOfs = (int)(picSrc.getOfsY() * scaleY + 0.5);
-            int spaceSrc = (int)((picSrc.height-picSrc.getImageHeight())*scaleY + 0.5);
-            int spaceTrg = picTrg.height - hNew;
+            int yOfs = (int)(picSrc.getYOffset() * scaleY + 0.5);
+            int spaceSrc = (int)((picSrc.getHeight() -picSrc.getImageHeight())*scaleY + 0.5);
+            int spaceTrg = picTrg.getHeight() - hNew;
             yOfs += (spaceTrg - spaceSrc) / 2;
-            if (yOfs+hNew > picTrg.height) {
-                yOfs = picTrg.height - hNew;
+            if (yOfs+hNew > picTrg.getHeight()) {
+                yOfs = picTrg.getHeight() - hNew;
             }
             picTrg.setOfsY(yOfs);
         }
@@ -794,10 +794,10 @@ public class Core extends Thread {
             for (SubPicture subPicture : subPictures) {
                 switch (configuration.getForceAll()) {
                     case SET:
-                        subPicture.isforced = true;
+                        subPicture.setForced(true);
                         break;
                     case CLEAR:
-                        subPicture.isforced = false;
+                        subPicture.setForced(false);
                         break;
                 }
             }
@@ -816,7 +816,7 @@ public class Core extends Thread {
 
         // change target resolution to source resolution if no conversion is needed
         if (!configuration.getConvertResolution() && getNumFrames() > 0) {
-            configuration.setOutputResolution(getResolutionForDimension(getSubPictureSrc(0).width, getSubPictureSrc(0).height));
+            configuration.setOutputResolution(getResolutionForDimension(getSubPictureSrc(0).getWidth(), getSubPictureSrc(0).getHeight()));
         }
 
         double fx;
@@ -834,29 +834,29 @@ public class Core extends Thread {
         for (int i=0; i<subPictures.length; i++) {
             picSrc = subtitleStream.getSubPicture(i);
             subPictures[i] = picSrc.copy();
-            long ts = picSrc.startTime;
-            long te = picSrc.endTime;
+            long ts = picSrc.getStartTime();
+            long te = picSrc.getEndTime();
             // copy time stamps and apply speedup/speeddown
             int delayPTS = configuration.getDelayPTS();
             if (!convertFPS) {
-                subPictures[i].startTime = ts + delayPTS;
-                subPictures[i].endTime = te + delayPTS;
+                subPictures[i].setStartTime(ts + delayPTS);
+                subPictures[i].setEndTime(te + delayPTS);
             } else {
-                subPictures[i].startTime= (long)(ts * factTS + 0.5) + delayPTS;
-                subPictures[i].endTime = (long)(te * factTS + 0.5) + delayPTS;
+                subPictures[i].setStartTime((long)(ts * factTS + 0.5) + delayPTS);
+                subPictures[i].setEndTime((long)(te * factTS + 0.5) + delayPTS);
             }
             // synchronize to target frame rate
-            subPictures[i].startTime = SubtitleUtils.syncTimePTS(subPictures[i].startTime, configuration.getFpsTrg(), configuration.getFpsTrg());
-            subPictures[i].endTime = SubtitleUtils.syncTimePTS(subPictures[i].endTime, configuration.getFpsTrg(), configuration.getFpsTrg());
+            subPictures[i].setStartTime(SubtitleUtils.syncTimePTS(subPictures[i].getStartTime(), configuration.getFpsTrg(), configuration.getFpsTrg()));
+            subPictures[i].setEndTime(SubtitleUtils.syncTimePTS(subPictures[i].getEndTime(), configuration.getFpsTrg(), configuration.getFpsTrg()));
 
             // set forced flag
             SubPicture picTrg = subPictures[i];
             switch (configuration.getForceAll()) {
                 case SET:
-                    picTrg.isforced = true;
+                    picTrg.setForced(true);
                     break;
                 case CLEAR:
-                    picTrg.isforced = false;
+                    picTrg.setForced(false);
                     break;
             }
 
@@ -865,49 +865,49 @@ public class Core extends Thread {
             if (configuration.getConvertResolution()) {
                 // adjust image sizes and offsets
                 // determine scaling factors
-                picTrg.width = configuration.getOutputResolution().getDimensions()[0];
-                picTrg.height = configuration.getOutputResolution().getDimensions()[1];
-                scaleX = (double)picTrg.width/picSrc.width;
-                scaleY = (double)picTrg.height/picSrc.height;
+                picTrg.setWidth(configuration.getOutputResolution().getDimensions()[0]);
+                picTrg.setHeight(configuration.getOutputResolution().getDimensions()[1]);
+                scaleX = (double) picTrg.getWidth() / picSrc.getWidth();
+                scaleY = (double) picTrg.getHeight() / picSrc.getHeight();
             } else {
-                picTrg.width = picSrc.width;
-                picTrg.height = picSrc.height;
+                picTrg.setWidth(picSrc.getWidth());
+                picTrg.setHeight(picSrc.getHeight());
                 scaleX = 1.0;
                 scaleY = 1.0;
             }
             int w = (int)(picSrc.getImageWidth()  * scaleX * fx + 0.5);
             if (w < MIN_IMAGE_DIMENSION) {
                 w = picSrc.getImageWidth();
-            } else if (w > picTrg.width) {
-                w = picTrg.width;
+            } else if (w > picTrg.getWidth()) {
+                w = picTrg.getWidth();
             }
 
             int h = (int)(picSrc.getImageHeight() * scaleY * fy + 0.5);
             if (h < MIN_IMAGE_DIMENSION) {
                 h = picSrc.getImageHeight();
-            } else if (h > picTrg.height) {
-                h = picTrg.height;
+            } else if (h > picTrg.getHeight()) {
+                h = picTrg.getHeight();
             }
             picTrg.setImageWidth(w);
             picTrg.setImageHeight(h);
 
-            int xOfs = (int)(picSrc.getOfsX() * scaleX + 0.5);
-            int spaceSrc = (int)((picSrc.width-picSrc.getImageWidth())*scaleX + 0.5);
-            int spaceTrg = picTrg.width - w;
+            int xOfs = (int)(picSrc.getXOffset() * scaleX + 0.5);
+            int spaceSrc = (int)((picSrc.getWidth() -picSrc.getImageWidth())*scaleX + 0.5);
+            int spaceTrg = picTrg.getWidth() - w;
             xOfs += (spaceTrg - spaceSrc) / 2;
             if (xOfs < 0) {
                 xOfs = 0;
-            } else if (xOfs+w > picTrg.width) {
-                xOfs = picTrg.width - w;
+            } else if (xOfs+w > picTrg.getWidth()) {
+                xOfs = picTrg.getWidth() - w;
             }
             picTrg.setOfsX(xOfs);
 
-            int yOfs = (int)(picSrc.getOfsY() * scaleY + 0.5);
-            spaceSrc = (int)((picSrc.height-picSrc.getImageHeight())*scaleY + 0.5);
-            spaceTrg = picTrg.height - h;
+            int yOfs = (int)(picSrc.getYOffset() * scaleY + 0.5);
+            spaceSrc = (int)((picSrc.getHeight() -picSrc.getImageHeight())*scaleY + 0.5);
+            spaceTrg = picTrg.getHeight() - h;
             yOfs += (spaceTrg - spaceSrc) / 2;
-            if (yOfs+h > picTrg.height) {
-                yOfs = picTrg.height - h;
+            if (yOfs+h > picTrg.getHeight()) {
+                yOfs = picTrg.getHeight() - h;
             }
             picTrg.setOfsY(yOfs);
         }
@@ -971,7 +971,7 @@ public class Core extends Thread {
 
         // change target resolution to source resolution if no conversion is needed
         if (!configuration.getConvertResolution() && getNumFrames() > 0) {
-            configuration.setOutputResolution(getResolutionForDimension(getSubPictureSrc(0).width, getSubPictureSrc(0).height));
+            configuration.setOutputResolution(getResolutionForDimension(getSubPictureSrc(0).getWidth(), getSubPictureSrc(0).getHeight()));
         }
 
         if (resOld != configuration.getOutputResolution()) {
@@ -993,39 +993,39 @@ public class Core extends Thread {
             // set forced flag
             switch (configuration.getForceAll()) {
                 case SET:
-                    subPictures[i].isforced = true;
+                    subPictures[i].setForced(true);
                     break;
                 case CLEAR:
-                    subPictures[i].isforced = false;
+                    subPictures[i].setForced(false);
                     break;
             }
 
-            long ts = picOld.startTime;
-            long te = picOld.endTime;
+            long ts = picOld.getStartTime();
+            long te = picOld.getEndTime();
             // copy time stamps and apply speedup/speeddown
             int delayPTS = configuration.getDelayPTS();
             if (factTS == 1.0) {
-                subPictures[i].startTime = ts - delayOld + delayPTS;
-                subPictures[i].endTime = te - delayOld + delayPTS;
+                subPictures[i].setStartTime(ts - delayOld + delayPTS);
+                subPictures[i].setEndTime(te - delayOld + delayPTS);
             } else {
-                subPictures[i].startTime= (long)(ts * factTS + 0.5) - delayOld + delayPTS;
-                subPictures[i].endTime = (long)(te * factTS + 0.5) - delayOld + delayPTS;
+                subPictures[i].setStartTime((long)(ts * factTS + 0.5) - delayOld + delayPTS);
+                subPictures[i].setEndTime((long)(te * factTS + 0.5) - delayOld + delayPTS);
             }
             // synchronize to target frame rate
-            subPictures[i].startTime = SubtitleUtils.syncTimePTS(subPictures[i].startTime, fpsTrg, fpsTrg);
-            subPictures[i].endTime = SubtitleUtils.syncTimePTS(subPictures[i].endTime, fpsTrg, fpsTrg);
+            subPictures[i].setStartTime(SubtitleUtils.syncTimePTS(subPictures[i].getStartTime(), fpsTrg, fpsTrg));
+            subPictures[i].setEndTime(SubtitleUtils.syncTimePTS(subPictures[i].getEndTime(), fpsTrg, fpsTrg));
             // adjust image sizes and offsets
             // determine scaling factors
             double scaleX;
             double scaleY;
             if (configuration.getConvertResolution()) {
-                subPictures[i].width = configuration.getOutputResolution().getDimensions()[0];
-                subPictures[i].height = configuration.getOutputResolution().getDimensions()[1];
-                scaleX = (double)subPictures[i].width/picSrc.width;
-                scaleY = (double)subPictures[i].height/picSrc.height;
+                subPictures[i].setWidth(configuration.getOutputResolution().getDimensions()[0]);
+                subPictures[i].setHeight(configuration.getOutputResolution().getDimensions()[1]);
+                scaleX = (double) subPictures[i].getWidth() / picSrc.getWidth();
+                scaleY = (double) subPictures[i].getHeight() / picSrc.getHeight();
             } else {
-                subPictures[i].width = picSrc.width;
-                subPictures[i].height = picSrc.height;
+                subPictures[i].setWidth(picSrc.getWidth());
+                subPictures[i].setHeight(picSrc.getHeight());
                 scaleX = 1.0;
                 scaleY = 1.0;
             }
@@ -1033,15 +1033,15 @@ public class Core extends Thread {
             int w = (int)(picSrc.getImageWidth()  * scaleX * fsXNew + 0.5);
             if (w < MIN_IMAGE_DIMENSION) {
                 w = picSrc.getImageWidth();
-            } else if (w > subPictures[i].width) {
-                w = subPictures[i].width;
+            } else if (w > subPictures[i].getWidth()) {
+                w = subPictures[i].getWidth();
                 fsXNew = (double)w / (double)picSrc.getImageWidth() / scaleX;
             }
             int h = (int)(picSrc.getImageHeight() * scaleY * fsYNew + 0.5);
             if (h < MIN_IMAGE_DIMENSION) {
                 h = picSrc.getImageHeight();
-            } else if (h > subPictures[i].height) {
-                h = subPictures[i].height;
+            } else if (h > subPictures[i].getHeight()) {
+                h = subPictures[i].getHeight();
                 fsYNew = (double)h / (double)picSrc.getImageHeight() / scaleY;
             }
 
@@ -1049,37 +1049,37 @@ public class Core extends Thread {
             subPictures[i].setImageHeight(h);
 
             // correct ratio change
-            int xOfs = (int)(picOld.getOfsX()*factX + 0.5);
+            int xOfs = (int)(picOld.getXOffset()*factX + 0.5);
             if (fsXNew != fsXOld) {
-                int spaceTrgOld = (int)((picOld.width - picOld.getImageWidth())*factX + 0.5);
-                int spaceTrg    = subPictures[i].width - w;
+                int spaceTrgOld = (int)((picOld.getWidth() - picOld.getImageWidth())*factX + 0.5);
+                int spaceTrg    = subPictures[i].getWidth() - w;
                 xOfs += (spaceTrg - spaceTrgOld) / 2;
             }
             if (xOfs < 0) {
                 xOfs = 0;
-            } else if (xOfs+w > subPictures[i].width) {
-                xOfs = subPictures[i].width - w;
+            } else if (xOfs+w > subPictures[i].getWidth()) {
+                xOfs = subPictures[i].getWidth() - w;
             }
             subPictures[i].setOfsX(xOfs);
 
-            int yOfs = (int)(picOld.getOfsY()*factY + 0.5);
+            int yOfs = (int)(picOld.getYOffset()*factY + 0.5);
             if (fsYNew != fsYOld) {
-                int spaceTrgOld = (int)((picOld.height - picOld.getImageHeight())*factY + 0.5);
-                int spaceTrg = subPictures[i].height - h;
+                int spaceTrgOld = (int)((picOld.getHeight() - picOld.getImageHeight())*factY + 0.5);
+                int spaceTrg = subPictures[i].getHeight() - h;
                 yOfs += (spaceTrg - spaceTrgOld) / 2;
             }
             if (yOfs < 0) {
                 yOfs = 0;
             }
-            if (yOfs+h > subPictures[i].height) {
-                yOfs = subPictures[i].height - h;
+            if (yOfs+h > subPictures[i].getHeight()) {
+                yOfs = subPictures[i].getHeight() - h;
             }
             subPictures[i].setOfsY(yOfs);
 
             // fix erase patches
             double fx = factX * fsXNew / fsXOld;
             double fy = factY * fsYNew / fsYOld;
-            ArrayList<ErasePatch> erasePatches = subPictures[i].erasePatch;
+            ArrayList<ErasePatch> erasePatches = subPictures[i].getErasePatch();
             if (erasePatches != null) {
                 for (int j = 0; j < erasePatches.size(); j++) {
                     ErasePatch ep = erasePatches.get(j);
@@ -1146,7 +1146,7 @@ public class Core extends Thread {
             updateTrgPic(index);
         }
         SubPicture picTrg = subPictures[index];
-        picTrg.wasDecoded = true;
+        picTrg.setWasDecoded(true);
 
         int trgWidth = picTrg.getImageWidth();
         int trgHeight = picTrg.getImageHeight();
@@ -1244,10 +1244,10 @@ public class Core extends Thread {
                     }
                 }
             }
-            if (picTrg.erasePatch != null) {
+            if (picTrg.getErasePatch() != null) {
                 trgBitmapUnpatched = new Bitmap(tBm);
                 int col = tPal.getIndexOfMostTransparentPaletteEntry();
-                for (ErasePatch ep : picTrg.erasePatch) {
+                for (ErasePatch ep : picTrg.getErasePatch()) {
                     tBm.fillRectangularWithColorIndex(ep.x, ep.y, ep.width, ep.height, (byte)col);
                 }
             } else {
@@ -1315,7 +1315,7 @@ public class Core extends Thread {
                 // for threaded version (progress bar);
                 setProgress(i);
                 //
-                if (!subPictures[i].exclude && (!configuration.isExportForced() || subPictures[i].isforced )) {
+                if (!subPictures[i].isExcluded() && (!configuration.isExportForced() || subPictures[i].isForced())) {
                     if (outputMode == OutputMode.VOBSUB) {
                         offsets.add(offset);
                         convertSup(i, frameNum/2+1, maxNum);
@@ -1323,14 +1323,14 @@ public class Core extends Thread {
                         byte buf[] = SubDvd.createSubFrame(subVobTrg, trgBitmap);
                         out.write(buf);
                         offset += buf.length;
-                        timestamps.add((int)subPictures[i].startTime);
+                        timestamps.add((int) subPictures[i].getStartTime());
                     } else if (outputMode == OutputMode.SUPIFO) {
                         convertSup(i, frameNum/2+1, maxNum);
                         subVobTrg.copyInfo(subPictures[i]);
                         byte buf[] = SupDvdWriter.createSupFrame(subVobTrg, trgBitmap);
                         out.write(buf);
                     } else if (outputMode == OutputMode.BDSUP) {
-                        subPictures[i].compNum = frameNum;
+                        subPictures[i].setCompNum(frameNum);
                         convertSup(i, frameNum/2+1, maxNum);
                         byte buf[] = SupBD.createSupFrame(subPictures[i], trgBitmap, trgPal);
                         out.write(buf);
@@ -1399,7 +1399,7 @@ public class Core extends Thread {
             }
             fname = FilenameUtils.removeExtension(fname) + ".ifo";
             printX("\nWriting "+fname+"\n");
-            IfoWriter.writeIFO(fname, subPictures[0].height, trgPallete);
+            IfoWriter.writeIFO(fname, subPictures[0].getHeight(), trgPallete);
         }
 
         // only possible for SUB/IDX and SUP/IFO (else there is no public palette)
@@ -1481,7 +1481,7 @@ public class Core extends Thread {
             // in CLI mode, moving is done during export
             for (int idx=0; idx<subPictures.length; idx++) {
                 setProgress(idx);
-                if (!subPictures[idx].wasDecoded) {
+                if (!subPictures[idx].isWasDecoded()) {
                     convertSup(idx, idx+1, subPictures.length, true);
                 }
                 moveToBounds(subPictures[idx], idx+1, configuration.getCineBarFactor(), configuration.getMoveOffsetX(), configuration.getMoveOffsetY(), configuration.getMoveModeX(), configuration.getMoveModeY(), configuration.getCropOffsetY());
@@ -1503,10 +1503,10 @@ public class Core extends Thread {
     public static void moveToBounds(SubPicture pic, int idx, double barFactor, int offsetX, int offsetY,
             CaptionMoveModeX mmx, CaptionMoveModeY mmy, int cropOffsetY) {
 
-        int barHeight = (int)(pic.height * barFactor + 0.5);
-        int y1 = pic.getOfsY();
-        int h = pic.height;
-        int w = pic.width;
+        int barHeight = (int)(pic.getHeight() * barFactor + 0.5);
+        int y1 = pic.getYOffset();
+        int h = pic.getHeight();
+        int w = pic.getWidth();
         int hi = pic.getImageHeight();
         int wi = pic.getImageWidth();
         int y2 = y1 + hi;
@@ -1532,7 +1532,7 @@ public class Core extends Thread {
                         pic.setOfsY(barHeight+offsetY);
                     else
                         pic.setOfsY(offsetY);
-                    print("Caption "+idx+" moved to y position "+pic.getOfsY()+"\n");
+                    print("Caption "+idx+" moved to y position "+pic.getYOffset()+"\n");
                     break;
                 case DOWN:
                     if (mmy == CaptionMoveModeY.MOVE_INSIDE_BOUNDS) {
@@ -1540,14 +1540,14 @@ public class Core extends Thread {
                     } else {
                         pic.setOfsY(h-offsetY-hi);
                     }
-                    print("Caption "+idx+" moved to y position "+pic.getOfsY()+"\n");
+                    print("Caption "+idx+" moved to y position "+pic.getYOffset()+"\n");
                     break;
             }
-            if (pic.getOfsY() < cropOffsetY) {
-                pic.getOfsY();
+            if (pic.getYOffset() < cropOffsetY) {
+                pic.getYOffset();
             } else {
-                int yMax = pic.height - pic.getImageHeight() - cropOffsetY;
-                if (pic.getOfsY() > yMax) {
+                int yMax = pic.getHeight() - pic.getImageHeight() - cropOffsetY;
+                if (pic.getYOffset() > yMax) {
                     pic.setOfsY(yMax);
                 }
             }
@@ -1665,7 +1665,7 @@ public class Core extends Thread {
     private static int countForcedIncluded() {
         int n = 0;
         for (SubPicture pic : subPictures) {
-            if (pic.isforced && !pic.exclude) {
+            if (pic.isForced() && !pic.isExcluded()) {
                 n++;
             }
         }
@@ -1679,7 +1679,7 @@ public class Core extends Thread {
     private static int countIncluded() {
         int n = 0;
         for (SubPicture pic : subPictures) {
-            if (!pic.exclude) {
+            if (!pic.isExcluded()) {
                 n++;
             }
         }
@@ -1833,10 +1833,10 @@ public class Core extends Thread {
      */
     public static BufferedImage getTrgImagePatched(SubPicture pic) {
         synchronized (semaphore) {
-            if (pic.erasePatch != null) {
+            if (pic.getErasePatch() != null) {
                 Bitmap trgBitmapPatched = new Bitmap(trgBitmapUnpatched);
                 int col = trgPal.getIndexOfMostTransparentPaletteEntry();
-                for (ErasePatch ep : pic.erasePatch) {
+                for (ErasePatch ep : pic.getErasePatch()) {
                     trgBitmapPatched.fillRectangularWithColorIndex(ep.x, ep.y, ep.width, ep.height, (byte)col);
                 }
                 return trgBitmapPatched.getImage(trgPal.getColorModel());
@@ -1853,7 +1853,7 @@ public class Core extends Thread {
      */
     public static int getTrgWidth(int index) {
         synchronized (semaphore) {
-            return subPictures[index].width;
+            return subPictures[index].getWidth();
         }
     }
 
@@ -1864,7 +1864,7 @@ public class Core extends Thread {
      */
     public static int getTrgHeight(int index) {
         synchronized (semaphore) {
-            return subPictures[index].height;
+            return subPictures[index].getHeight();
         }
     }
 
@@ -1897,7 +1897,7 @@ public class Core extends Thread {
      */
     public static boolean getTrgExcluded(int index) {
         synchronized (semaphore) {
-            return subPictures[index].exclude;
+            return subPictures[index].isExcluded();
         }
     }
 
@@ -1908,7 +1908,7 @@ public class Core extends Thread {
      */
     public static int getTrgOfsX(int index) {
         synchronized (semaphore) {
-            return subPictures[index].getOfsX();
+            return subPictures[index].getXOffset();
         }
     }
 
@@ -1919,7 +1919,7 @@ public class Core extends Thread {
      */
     public static int getTrgOfsY(int index) {
         synchronized (semaphore) {
-            return subPictures[index].getOfsY();
+            return subPictures[index].getYOffset();
         }
     }
 
@@ -1948,10 +1948,10 @@ public class Core extends Thread {
         SubPicture pic = subPictures[index];
         String text = "screen size: "+getTrgWidth(index)+"x"+getTrgHeight(index)+"    ";
         text +=	"image size: "+getTrgImgWidth(index)+"x"+getTrgImgHeight(index)+"    ";
-        text += "pos: ("+pic.getOfsX()+","+pic.getOfsY()+") - ("+(pic.getOfsX()+getTrgImgWidth(index))+","+(pic.getOfsY()+getTrgImgHeight(index))+")    ";
-        text += "start: "+ptsToTimeStr(pic.startTime)+"    ";
-        text += "end: "+ptsToTimeStr(pic.endTime)+"    ";
-        text += "forced: "+((pic.isforced)?"yes":"no");
+        text += "pos: ("+pic.getXOffset()+","+pic.getYOffset()+") - ("+(pic.getXOffset()+getTrgImgWidth(index))+","+(pic.getYOffset()+getTrgImgHeight(index))+")    ";
+        text += "start: "+ptsToTimeStr(pic.getStartTime())+"    ";
+        text += "end: "+ptsToTimeStr(pic.getEndTime())+"    ";
+        text += "forced: "+((pic.isForced())?"yes":"no");
         return text;
     }
 
@@ -1964,12 +1964,12 @@ public class Core extends Thread {
         String text;
 
         SubPicture pic = subtitleStream.getSubPicture(index);
-        text  = "screen size: "+pic.width+"x"+pic.height+"    ";
+        text  = "screen size: "+ pic.getWidth() +"x"+ pic.getHeight() +"    ";
         text +=	"image size: "+pic.getImageWidth()+"x"+pic.getImageHeight()+"    ";
-        text += "pos: ("+pic.getOfsX()+","+pic.getOfsY()+") - ("+(pic.getOfsX()+pic.getImageWidth())+","+(pic.getOfsY()+pic.getImageHeight())+")    ";
-        text += "start: "+ptsToTimeStr(pic.startTime)+"    ";
-        text += "end: "+ptsToTimeStr(pic.endTime)+"    ";
-        text += "forced: "+((pic.isforced)?"yes":"no");
+        text += "pos: ("+pic.getXOffset()+","+pic.getYOffset()+") - ("+(pic.getXOffset()+pic.getImageWidth())+","+(pic.getYOffset()+pic.getImageHeight())+")    ";
+        text += "start: "+ptsToTimeStr(pic.getStartTime())+"    ";
+        text += "end: "+ptsToTimeStr(pic.getEndTime())+"    ";
+        text += "forced: "+((pic.isForced())?"yes":"no");
         return text;
     }
 

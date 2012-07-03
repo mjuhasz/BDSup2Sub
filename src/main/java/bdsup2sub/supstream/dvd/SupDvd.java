@@ -122,12 +122,12 @@ public class SupDvd implements DvdSubtitleStream {
             }
             // 8 bytes PTS:  system clock reference, but use only the first 4
             SubPictureDVD pic = new SubPictureDVD();
-            pic.offset = offset;
-            pic.width = screenWidth;
-            pic.height = screenHeight;
+            pic.setOffset(offset);
+            pic.setWidth(screenWidth);
+            pic.setHeight(screenHeight);
 
             int pts = buffer.getDWordLE(offset += 2);
-            pic.startTime = pts;
+            pic.setStartTime(pts);
             // 2 bytes:  packet length (number of bytes after this entry)
             length = buffer.getWord(offset += 8);
             // 2 bytes: offset to control buffer
@@ -139,15 +139,15 @@ public class SupDvd implements DvdSubtitleStream {
             }
             ctrlOffset = ctrlOfsRel + offset;   // absolute offset of control header
             offset += 2;
-            pic.rleFragments = new ArrayList<ImageObjectFragment>(1);
+            pic.setRleFragments(new ArrayList<ImageObjectFragment>(1));
             rleFrag = new ImageObjectFragment();
             rleFrag.setImageBufferOfs(offset);
             rleFrag.setImagePacketSize(rleSize);
-            pic.rleFragments.add(rleFrag);
-            pic.rleSize = rleSize;
+            pic.getRleFragments().add(rleFrag);
+            pic.setRleSize(rleSize);
 
-            pic.pal = new int[4];
-            pic.alpha = new int[4];
+            pic.setPal(new int[4]);
+            pic.setAlpha(new int[4]);
             int alphaSum = 0;
             int[] alphaUpdate = new int[4];
             int alphaUpdateSum;
@@ -177,31 +177,31 @@ public class SupDvd implements DvdSubtitleStream {
                     int cmd = getByte(ctrlHeader, index++);
                     switch (cmd) {
                         case 0: // forced (?)
-                            pic.isforced = true;
+                            pic.setForced(true);
                             numForcedFrames++;
                             break;
                         case 1: // start display
                             break;
                         case 3: // palette info
                             b = getByte(ctrlHeader, index++);
-                            pic.pal[3] = (b >> 4);
-                            pic.pal[2] = b & 0x0f;
+                            pic.getPal()[3] = (b >> 4);
+                            pic.getPal()[2] = b & 0x0f;
                             b = getByte(ctrlHeader, index++);
-                            pic.pal[1] = (b >> 4);
-                            pic.pal[0] = b & 0x0f;
-                            Core.print("Palette:   " + pic.pal[0] + ", " + pic.pal[1] + ", " + pic.pal[2] + ", " + pic.pal[3] + "\n");
+                            pic.getPal()[1] = (b >> 4);
+                            pic.getPal()[0] = b & 0x0f;
+                            Core.print("Palette:   " + pic.getPal()[0] + ", " + pic.getPal()[1] + ", " + pic.getPal()[2] + ", " + pic.getPal()[3] + "\n");
                             break;
                         case 4: // alpha info
                             b = getByte(ctrlHeader, index++);
-                            pic.alpha[3] = (b >> 4);
-                            pic.alpha[2] = b & 0x0f;
+                            pic.getAlpha()[3] = (b >> 4);
+                            pic.getAlpha()[2] = b & 0x0f;
                             b = getByte(ctrlHeader, index++);
-                            pic.alpha[1] = (b >> 4);
-                            pic.alpha[0] = b & 0x0f;
+                            pic.getAlpha()[1] = (b >> 4);
+                            pic.getAlpha()[0] = b & 0x0f;
                             for (int i = 0; i < 4; i++) {
-                                alphaSum += pic.alpha[i] & 0xff;
+                                alphaSum += pic.getAlpha()[i] & 0xff;
                             }
-                            Core.print("Alpha:     " + pic.alpha[0] + ", " + pic.alpha[1] + ", " + pic.alpha[2] + ", " + pic.alpha[3] + "\n");
+                            Core.print("Alpha:     " + pic.getAlpha()[0] + ", " + pic.getAlpha()[1] + ", " + pic.getAlpha()[2] + ", " + pic.getAlpha()[3] + "\n");
                             break;
                         case 5: // coordinates
                             int xOfs = (getByte(ctrlHeader, index) << 4) | (getByte(ctrlHeader, index+1) >> 4);
@@ -211,15 +211,15 @@ public class SupDvd implements DvdSubtitleStream {
                             pic.setOfsY(yOfs);
                             pic.setImageHeight((((getByte(ctrlHeader, index + 4) & 0xf) << 8) | (getByte(ctrlHeader, index + 5))) - yOfs + 1);
                             Core.print("Area info:" + " ("
-                                    + pic.getOfsX() + ", "+pic.getOfsY() + ") - (" + (pic.getOfsX() + pic.getImageWidth()-1) + ", "
-                                    + (pic.getOfsY() + pic.getImageHeight()-1) + ")\n");
+                                    + pic.getXOffset() + ", "+pic.getYOffset() + ") - (" + (pic.getXOffset() + pic.getImageWidth()-1) + ", "
+                                    + (pic.getYOffset() + pic.getImageHeight()-1) + ")\n");
                             index += 6;
                             break;
                         case 6: // offset to RLE buffer
-                            pic.evenOfs = getWord(ctrlHeader, index) - 4;
-                            pic.oddOfs  = getWord(ctrlHeader, index + 2) - 4;
+                            pic.setEvenOffset(getWord(ctrlHeader, index) - 4);
+                            pic.setOddOffset(getWord(ctrlHeader, index + 2) - 4);
                             index += 4;
-                            Core.print("RLE ofs:   " + ToolBox.toHexLeftZeroPadded(pic.evenOfs, 4) + ", " + ToolBox.toHexLeftZeroPadded(pic.oddOfs, 4) + "\n");
+                            Core.print("RLE ofs:   " + ToolBox.toHexLeftZeroPadded(pic.getEvenOffset(), 4) + ", " + ToolBox.toHexLeftZeroPadded(pic.getOddOffset(), 4) + "\n");
                             break;
                         case 7: // color/alpha update
                             colorAlphaUpdate = true;
@@ -238,14 +238,14 @@ public class SupDvd implements DvdSubtitleStream {
                             // only use more opaque colors
                             if (alphaUpdateSum > alphaSum) {
                                 alphaSum = alphaUpdateSum;
-                                System.arraycopy(alphaUpdate, 0, pic.alpha, 0, 4);
+                                System.arraycopy(alphaUpdate, 0, pic.getAlpha(), 0, 4);
                                 // take over frame palette
                                 b = getByte(ctrlHeader, index+8);
-                                pic.pal[3] = (b >> 4);
-                                pic.pal[2] = b & 0x0f;
+                                pic.getPal()[3] = (b >> 4);
+                                pic.getPal()[2] = b & 0x0f;
                                 b = getByte(ctrlHeader, index+9);
-                                pic.pal[1] = (b >> 4);
-                                pic.pal[0] = b & 0x0f;
+                                pic.getPal()[1] = (b >> 4);
+                                pic.getPal()[0] = b & 0x0f;
                             }
                             // search end sequence
                             index = endSeqOfs;
@@ -278,12 +278,12 @@ public class SupDvd implements DvdSubtitleStream {
                     if (ctrlSeqCount > 2) {
                         Core.printWarn("Control sequence(s) ignored - result may be erratic.");
                     }
-                    pic.endTime = pic.startTime + delay;
+                    pic.setEndTime(pic.getStartTime() + delay);
                 } else {
-                    pic.endTime = pic.startTime;
+                    pic.setEndTime(pic.getStartTime());
                 }
 
-                pic.setOriginal();
+                pic.storeOriginal();
 
                 if (colorAlphaUpdate) {
                     Core.printWarn("Palette update/alpha fading detected - result may be erratic.\n");
@@ -291,13 +291,13 @@ public class SupDvd implements DvdSubtitleStream {
 
                 if (alphaSum == 0) {
                     if (configuration.getFixZeroAlpha()) {
-                        System.arraycopy(lastAlpha, 0, pic.alpha, 0, 4);
+                        System.arraycopy(lastAlpha, 0, pic.getAlpha(), 0, 4);
                         Core.printWarn("Invisible caption due to zero alpha - used alpha info of last caption.\n");
                     } else {
                         Core.printWarn("Invisible caption due to zero alpha (not fixed due to user setting).\n");
                     }
                 }
-                lastAlpha = pic.alpha;
+                lastAlpha = pic.getAlpha();
             } catch (IndexOutOfBoundsException ex) {
                 throw new CoreException("Index " + ex.getMessage() + " out of bounds in control header.");
             }
@@ -336,26 +336,26 @@ public class SupDvd implements DvdSubtitleStream {
             // update picture
             pic.setImageWidth(width);
             pic.setImageHeight(height);
-            pic.setOfsX(pic.originalX + bounds.xMin);
-            pic.setOfsY(pic.originalY + bounds.yMin);
+            pic.setOfsX(pic.getOriginalX() + bounds.xMin);
+            pic.setOfsY(pic.getOriginalY() + bounds.yMin);
         }
         primaryColorIndex = bitmap.getPrimaryColorIndex(palette.getAlpha(), configuration.getAlphaThreshold(), palette.getY());
     }
 
     public int[] getFramePalette(int index) {
-        return subPictures.get(index).pal;
+        return subPictures.get(index).getPal();
     }
 
     public int[] getOriginalFramePalette(int index) {
-        return subPictures.get(index).originalPal;
+        return subPictures.get(index).getOriginalPal();
     }
 
     public int[] getFrameAlpha(int index) {
-        return subPictures.get(index).alpha;
+        return subPictures.get(index).getAlpha();
     }
 
     public int[] getOriginalFrameAlpha(int index) {
-        return subPictures.get(index).originalAlpha;
+        return subPictures.get(index).getOriginalAlpha();
     }
 
     public BufferedImage getImage(Bitmap bm) {
@@ -391,7 +391,7 @@ public class SupDvd implements DvdSubtitleStream {
     }
 
     public boolean isForced(int index) {
-        return subPictures.get(index).isforced;
+        return subPictures.get(index).isForced();
     }
 
     public void close() {
@@ -401,15 +401,15 @@ public class SupDvd implements DvdSubtitleStream {
     }
 
     public long getEndTime(int index) {
-        return subPictures.get(index).endTime;
+        return subPictures.get(index).getEndTime();
     }
 
     public long getStartTime(int index) {
-        return subPictures.get(index).startTime;
+        return subPictures.get(index).getStartTime();
     }
 
     public long getStartOffset(int index) {
-        return subPictures.get(index).offset;
+        return subPictures.get(index).getOffset();
     }
 
     public int getLanguageIdx() {

@@ -599,8 +599,8 @@ class MoveDialogView extends JDialog {
                             y = model.getOffsetY();  // invalid number -> keep old value
                         } else if (y < 0) {
                             y = 0;
-                        } else if (y > model.getSubPic().height/3) {
-                            y = model.getSubPic().height/3;
+                        } else if (y > model.getSubPic().getHeight() /3) {
+                            y = model.getSubPic().getHeight() /3;
                         }
 
                         if ( y != model.getOffsetY() ) {
@@ -616,7 +616,7 @@ class MoveDialogView extends JDialog {
                     if (model.isReady()) {
                         int y = ToolBox.getInt(jTextFieldOffsetY.getText());
 
-                        if ( y < 0 || y > model.getSubPic().height/3 ) {
+                        if ( y < 0 || y > model.getSubPic().getHeight() /3 ) {
                             jTextFieldOffsetY.setBackground(ERROR_BACKGROUND);
                         } else {
                             if (y != model.getOffsetY()) {
@@ -662,17 +662,17 @@ class MoveDialogView extends JDialog {
             model.setSubPic(subPic);
             model.setImage(Core.getTrgImagePatched(subPic));
 
-            model.setOriginalX(subPic.getOfsX());
-            model.setOriginalY(subPic.getOfsY());
+            model.setOriginalX(subPic.getXOffset());
+            model.setOriginalY(subPic.getYOffset());
 
             jLabelInfo.setText("Frame " + (idx+1) + " of " + Core.getNumFrames());
             move();
-            jPanelPreview.setSubtitleOffsets(subPic.getOfsX(), subPic.getOfsY());
-            jPanelPreview.setScreenDimension(subPic.width, subPic.height);
+            jPanelPreview.setSubtitleOffsets(subPic.getXOffset(), subPic.getYOffset());
+            jPanelPreview.setScreenDimension(subPic.getWidth(), subPic.getHeight());
             jPanelPreview.setImage(model.getImage(), subPic.getImageWidth(), subPic.getImageHeight());
             jPanelPreview.setAspectRatio(model.getTargetScreenAspectRatio());
             jPanelPreview.setCropOffsetY(model.getCropOfsY());
-            jPanelPreview.setExcluded(subPic.exclude);
+            jPanelPreview.setExcluded(subPic.isExcluded());
             jPanelPreview.repaint();
             model.setReady(true);
 
@@ -790,7 +790,7 @@ class MoveDialogView extends JDialog {
         model.setCinemascopeBarFactor((1.0 - SCREEN_ASPECT_RATIO / targetScreenAspectRatio) / 2.0);
         move();
         jPanelPreview.setAspectRatio(targetScreenAspectRatio);
-        jPanelPreview.setSubtitleOffsets(model.getSubPic().getOfsX(), model.getSubPic().getOfsY());
+        jPanelPreview.setSubtitleOffsets(model.getSubPic().getXOffset(), model.getSubPic().getYOffset());
         jPanelPreview.repaint();
     }
 
@@ -847,8 +847,8 @@ class MoveDialogView extends JDialog {
                             cropOffsetY = model.getCropOfsY();   // invalid number -> keep old value
                         } else if (cropOffsetY < 0) {
                             cropOffsetY = 0;
-                        } else if (cropOffsetY > model.getSubPic().height/3) {
-                            cropOffsetY = model.getSubPic().height/3;
+                        } else if (cropOffsetY > model.getSubPic().getHeight() /3) {
+                            cropOffsetY = model.getSubPic().getHeight() /3;
                         }
 
                         if (cropOffsetY != model.getCropOfsY()) {
@@ -865,7 +865,7 @@ class MoveDialogView extends JDialog {
                     if (model.isReady()) {
                         int cropOffsetY = ToolBox.getInt(jTextFieldCropOfsY.getText());
 
-                        if (cropOffsetY < 0 || cropOffsetY > model.getSubPic().height/3) {
+                        if (cropOffsetY < 0 || cropOffsetY > model.getSubPic().getHeight() /3) {
                             jTextFieldCropOfsY.setBackground(ERROR_BACKGROUND);
                         } else {
                             if (cropOffsetY != model.getCropOfsY()) {
@@ -907,7 +907,7 @@ class MoveDialogView extends JDialog {
             jButtonCropBars.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    int cropOffsetY = (int) (model.getSubPic().height * model.getCinemascopeBarFactor() + 0.5);
+                    int cropOffsetY = (int) (model.getSubPic().getHeight() * model.getCinemascopeBarFactor() + 0.5);
                     model.setCropOfsY(cropOffsetY); // height of one cinemascope bar in pixels
                     jPanelPreview.setCropOffsetY(cropOffsetY);
                     setRatio(model.getTargetScreenAspectRatio());
@@ -1005,8 +1005,8 @@ class MoveDialogView extends JDialog {
                             offsetX = model.getOffsetX();  // invalid number -> keep old value
                         } else if (offsetX < 0) {
                             offsetX = 0;
-                        } else if (offsetX > model.getSubPic().width / 3) {
-                            offsetX = model.getSubPic().width/3;
+                        } else if (offsetX > model.getSubPic().getWidth() / 3) {
+                            offsetX = model.getSubPic().getWidth() /3;
                         }
 
                         if ( offsetX != model.getOffsetX() ) {
@@ -1022,7 +1022,7 @@ class MoveDialogView extends JDialog {
                     if (model.isReady()) {
                         int offsetX = ToolBox.getInt(jTextFieldOffsetX.getText());
 
-                        if ( offsetX < 0 || offsetX > model.getSubPic().width/3 ) {
+                        if ( offsetX < 0 || offsetX > model.getSubPic().getWidth() /3 ) {
                             jTextFieldOffsetX.setBackground(ERROR_BACKGROUND);
                         } else {
                             if (offsetX != model.getOffsetX()) {

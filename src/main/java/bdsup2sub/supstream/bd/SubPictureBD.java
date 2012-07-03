@@ -21,31 +21,26 @@ import bdsup2sub.supstream.SubPicture;
 
 import java.util.ArrayList;
 
-/**
- * Extends SubPicture to store information read from BD SUP
- */
-class SubPictureBD extends SubPicture implements Cloneable {
+public class SubPictureBD extends SubPicture implements Cloneable {
 
     /** objectID used in decoded object */
-    int objectID;
+    private int objectID;
     /** list of ODS packets containing image info */
-    ArrayList<ImageObject> imageObjectList;
+    private ArrayList<ImageObject> imageObjectList;
     /** width of subtitle window (might be larger than image) */
-    int winWidth;
+    private int windowWidth;
     /** height of subtitle window (might be larger than image) */
-    int winHeight;
+    private int windowHeight;
     /** upper left corner of subtitle window x */
-    int xWinOfs;
+    private int xWindowOffset;
     /** upper left corner of subtitle window y */
-    int yWinOfs;
+    private int yWindowOffset;
     /** FPS type (e.g. 0x10 = 24p) */
-    int type;
+    private int type;
     /** list of (list of) palette info - there are up to 8 palettes per epoch, each can be updated several times */
-    ArrayList<ArrayList<PaletteInfo>> palettes;
+    private ArrayList<ArrayList<PaletteInfo>> palettes;
 
-    /* (non-Javadoc)
-     * @see SubPicture#clone()
-     */
+
     @Override
     public SubPictureBD clone() {
         return (SubPictureBD)super.clone();
@@ -81,42 +76,24 @@ class SubPictureBD extends SubPicture implements Cloneable {
         return c;
     }
 
-    /* setters / getters */
-
-    /**
-     * get image width
-     * @return image width in pixels
-     */
     @Override
     public int getImageWidth() {
         return imageObjectList.get(objectID).getWidth();
     }
 
-    /**
-     * get image height
-     * @return image height in pixels
-     */
     @Override
     public int getImageHeight() {
         return imageObjectList.get(objectID).getHeight();
     }
 
-    /**
-     * get image x offset
-     * @return image x offset in pixels
-     */
     @Override
-    public int getOfsX() {
-        return imageObjectList.get(objectID).getxOfs();
+    public int getXOffset() {
+        return imageObjectList.get(objectID).getXOffset();
     }
 
-    /**
-     * get image y offset
-     * @return image y offset in pixels
-     */
     @Override
-    public int getOfsY() {
-        return imageObjectList.get(objectID).getyOfs();
+    public int getYOffset() {
+        return imageObjectList.get(objectID).getYOffset();
     }
 
     /**
@@ -124,7 +101,7 @@ class SubPictureBD extends SubPicture implements Cloneable {
      * @param index index of subtitle
      * @return image object containing RLE data
      */
-    ImageObject getImgObj(int index) {
+    ImageObject getImageObject(int index) {
         return imageObjectList.get(index);
     }
 
@@ -132,7 +109,59 @@ class SubPictureBD extends SubPicture implements Cloneable {
      * Get image object containing RLE data
      * @return image object containing RLE data
      */
-    ImageObject getImgObj() {
+    ImageObject getImageObject() {
         return imageObjectList.get(objectID);
+    }
+
+    public void setObjectID(int objectID) {
+        this.objectID = objectID;
+    }
+
+    public ArrayList<ImageObject> getImageObjectList() {
+        return imageObjectList;
+    }
+
+    public void setImageObjectList(ArrayList<ImageObject> imageObjectList) {
+        this.imageObjectList = imageObjectList;
+    }
+
+    public int getWindowWidth() {
+        return windowWidth;
+    }
+
+    public void setWindowWidth(int windowWidth) {
+        this.windowWidth = windowWidth;
+    }
+
+    public int getWindowHeight() {
+        return windowHeight;
+    }
+
+    public void setWindowHeight(int windowHeight) {
+        this.windowHeight = windowHeight;
+    }
+
+    public void setXWindowOffset(int xWindowOffset) {
+        this.xWindowOffset = xWindowOffset;
+    }
+
+    public void setYWindowOffset(int yWindowOffset) {
+        this.yWindowOffset = yWindowOffset;
+    }
+
+    public int getType() {
+        return type;
+    }
+
+    public void setType(int type) {
+        this.type = type;
+    }
+
+    public ArrayList<ArrayList<PaletteInfo>> getPalettes() {
+        return palettes;
+    }
+
+    public void setPalettes(ArrayList<ArrayList<PaletteInfo>> palettes) {
+        this.palettes = palettes;
     }
 }

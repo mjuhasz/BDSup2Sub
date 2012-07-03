@@ -30,9 +30,9 @@ public class ImageObject implements Cloneable  {
     /** height of subtitle image */
     private int height;
     /** upper left corner of subtitle x */
-    private int xOfs;
+    private int xOffset;
     /** upper left corner of subtitle y */
-    private int yOfs;
+    private int yOffset;
 
     @Override
     public ImageObject clone() {
@@ -83,19 +83,19 @@ public class ImageObject implements Cloneable  {
         this.height = height;
     }
 
-    public int getxOfs() {
-        return xOfs;
+    public int getXOffset() {
+        return xOffset;
     }
 
-    public void setxOfs(int xOfs) {
-        this.xOfs = xOfs;
+    public void setXOffset(int xOffset) {
+        this.xOffset = xOffset;
     }
 
-    public int getyOfs() {
-        return yOfs;
+    public int getYOffset() {
+        return yOffset;
     }
 
-    public void setyOfs(int yOfs) {
-        this.yOfs = yOfs;
+    public void setYOffset(int yOffset) {
+        this.yOffset = yOffset;
     }
 }

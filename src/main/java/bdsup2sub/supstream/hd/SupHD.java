@@ -78,18 +78,18 @@ public class SupHD implements SubtitleStream {
                 int masterIndex = index + 10; //end of header
                 pic = new SubPictureHD();
                 // hard code size since it's not part of the format???
-                pic.width = 1920;
-                pic.height = 1080;
+                pic.setWidth(1920);
+                pic.setHeight(1080);
                 Core.printX("#" + (subPictures.size() + 1) + "\n");
-                pic.startTime = buffer.getDWordLE(index+=2); // read PTS
+                pic.setStartTime(buffer.getDWordLE(index+=2)); // read PTS
                 int packetSize = buffer.getDWord(index+=10);
                 // offset to command buffer
                 int ofsCmd = buffer.getDWord(index+=4) + masterIndex;
-                pic.imageBufferSize = ofsCmd - (index + 4);
+                pic.setImageBufferSize(ofsCmd - (index + 4));
                 index  = ofsCmd;
                 int dcsq = buffer.getWord(index);
-                pic.startTime += (dcsq * 1024);
-                Core.printX("DCSQ start    ofs: " + ToolBox.toHexLeftZeroPadded(index, 8) + "  (" + ptsToTimeStr(pic.startTime) + ")\n");
+                pic.setStartTime(pic.getStartTime() + (dcsq * 1024));
+                Core.printX("DCSQ start    ofs: " + ToolBox.toHexLeftZeroPadded(index, 8) + "  (" + ptsToTimeStr(pic.getStartTime()) + ")\n");
                 index += 2; // 2 bytes: dcsq
                 int nextIndex = buffer.getDWord(index) + masterIndex; // offset to next dcsq
                 index += 5;  // 4 bytes: offset, 1 byte: start
@@ -102,17 +102,17 @@ public class SupHD implements SubtitleStream {
                     cmd = buffer.getByte(index++);
                     switch (cmd) {
                         case 0x01:
-                            Core.printX("DCSQ start    ofs: " + ToolBox.toHexLeftZeroPadded(index, 8) + "  (" + ptsToTimeStr(pic.startTime+(dcsq*1024)) + ")\n");
+                            Core.printX("DCSQ start    ofs: " + ToolBox.toHexLeftZeroPadded(index, 8) + "  (" + ptsToTimeStr(pic.getStartTime() +(dcsq*1024)) + ")\n");
                             Core.printWarn("DCSQ start ignored due to missing DCSQ stop\n");
                             break;
                         case 0x02:
                             stopDisplay = true;
-                            pic.endTime = pic.startTime +(dcsq*1024);
-                            Core.printX("DCSQ stop     ofs: " + ToolBox.toHexLeftZeroPadded(index,8) + "  (" + ptsToTimeStr(pic.endTime) + ")\n");
+                            pic.setEndTime(pic.getStartTime() +(dcsq*1024));
+                            Core.printX("DCSQ stop     ofs: " + ToolBox.toHexLeftZeroPadded(index,8) + "  (" + ptsToTimeStr(pic.getEndTime()) + ")\n");
                             break;
                         case 0x83: // palette
                             Core.print("Palette info  ofs: " + ToolBox.toHexLeftZeroPadded(index, 8) + "\n");
-                            pic.paletteOfs = index;
+                            pic.setPaletteOffset(index);
                             index += 0x300;
                             break;
                         case 0x84: // alpha
@@ -122,7 +122,7 @@ public class SupHD implements SubtitleStream {
                                 alphaSum += buffer.getByte(i);
                             }
                             if (alphaSum < minAlphaSum) {
-                                pic.alphaOfs = index;
+                                pic.setAlphaOffset(index);
                                 minAlphaSum = alphaSum;
                             } else {
                                 Core.printWarn("Found faded alpha buffer -> alpha buffer skipped\n");
@@ -132,20 +132,20 @@ public class SupHD implements SubtitleStream {
                             break;
                         case 0x85: // area
                             pic.setOfsX((buffer.getByte(index)<<4) | (buffer.getByte(index+1)>>4));
-                            pic.setImageWidth((((buffer.getByte(index+1)&0xf)<<8) | (buffer.getByte(index+2))) - pic.getOfsX() + 1);
+                            pic.setImageWidth((((buffer.getByte(index+1)&0xf)<<8) | (buffer.getByte(index+2))) - pic.getXOffset() + 1);
                             pic.setOfsY((buffer.getByte(index+3)<<4) | (buffer.getByte(index+4)>>4));
-                            pic.setImageHeight((((buffer.getByte(index+4)&0xf)<<8) | (buffer.getByte(index+5))) - pic.getOfsY() + 1);
+                            pic.setImageHeight((((buffer.getByte(index+4)&0xf)<<8) | (buffer.getByte(index+5))) - pic.getYOffset() + 1);
                             Core.print("Area info     ofs: " + ToolBox.toHexLeftZeroPadded(index,8) + "  ("
-                                    + pic.getOfsX() + ", " + pic.getOfsY() + ") - (" + (pic.getOfsX() + pic.getImageWidth()) + ", "
-                                    + (pic.getOfsY() + pic.getImageHeight()) + ")\n");
+                                    + pic.getXOffset() + ", " + pic.getYOffset() + ") - (" + (pic.getXOffset() + pic.getImageWidth()) + ", "
+                                    + (pic.getYOffset() + pic.getImageHeight()) + ")\n");
                             index += 6;
                             break;
                         case 0x86: // even/odd offsets
-                            pic.imageBufferOfsEven = buffer.getDWord(index) + masterIndex;
-                            pic.imageBufferOfsOdd = buffer.getDWord(index+4) + masterIndex;
+                            pic.setImageBufferOffsetEven(buffer.getDWord(index) + masterIndex);
+                            pic.setImageBufferOffsetOdd(buffer.getDWord(index+4) + masterIndex);
                             Core.print("RLE buffers   ofs: " + ToolBox.toHexLeftZeroPadded(index, 8)
-                                    + "  (even: " + ToolBox.toHexLeftZeroPadded(pic.imageBufferOfsEven, 8)
-                                    + ", odd: " + ToolBox.toHexLeftZeroPadded(pic.imageBufferOfsOdd, 8) + "\n");
+                                    + "  (even: " + ToolBox.toHexLeftZeroPadded(pic.getImageBufferOffsetEven(), 8)
+                                    + ", odd: " + ToolBox.toHexLeftZeroPadded(pic.getImageBufferOffsetOdd(), 8) + "\n");
                             index += 8;
                             break;
                         case 0xff:
@@ -191,9 +191,6 @@ public class SupHD implements SubtitleStream {
         }
     }
 
-    /* (non-Javadoc)
-     * @see SubtitleStream#close()
-     */
     public void close() {
         if (buffer != null) {
             buffer.close();
@@ -285,14 +282,14 @@ public class SupHD implements SubtitleStream {
         int h = pic.getImageHeight();
         int warnings = 0;
 
-        if (w > pic.width || h > pic.height) {
-            throw new CoreException("Subpicture too large: " + w + "x" + h + " at offset " + ToolBox.toHexLeftZeroPadded(pic.imageBufferOfsEven, 8));
+        if (w > pic.getWidth() || h > pic.getHeight()) {
+            throw new CoreException("Subpicture too large: " + w + "x" + h + " at offset " + ToolBox.toHexLeftZeroPadded(pic.getImageBufferOffsetEven(), 8));
         }
 
         Bitmap bm = new Bitmap(w, h, (byte)transIdx);
 
-        int sizeEven = pic.imageBufferOfsOdd - pic.imageBufferOfsEven;
-        int sizeOdd = pic.imageBufferSize + pic.imageBufferOfsEven - pic.imageBufferOfsOdd;
+        int sizeEven = pic.getImageBufferOffsetOdd() - pic.getImageBufferOffsetEven();
+        int sizeOdd = pic.getImageBufferSize() + pic.getImageBufferOffsetEven() - pic.getImageBufferOffsetOdd();
 
         if (sizeEven <= 0 || sizeOdd <= 0) {
             throw new CoreException("Corrupt buffer offset information");
@@ -305,14 +302,14 @@ public class SupHD implements SubtitleStream {
             // copy buffers
             try {
                 for (int i=0; i < evenBuf.length; i++) {
-                    evenBuf[i] = (byte)buffer.getByte(pic.imageBufferOfsEven + i);
+                    evenBuf[i] = (byte)buffer.getByte(pic.getImageBufferOffsetEven() + i);
                 }
             } catch (ArrayIndexOutOfBoundsException ex) {
                 warnings++;
             }
             try {
                 for (int i=0; i < oddBuf.length; i++) {
-                    oddBuf[i]  = (byte)buffer.getByte(pic.imageBufferOfsOdd+i);
+                    oddBuf[i]  = (byte)buffer.getByte(pic.getImageBufferOffsetOdd() +i);
                 }
             } catch (ArrayIndexOutOfBoundsException ex) {
                 warnings++;
@@ -333,7 +330,7 @@ public class SupHD implements SubtitleStream {
             }
 
             if (warnings > 0) {
-                Core.printWarn("problems during RLE decoding of picture at offset " + ToolBox.toHexLeftZeroPadded(pic.imageBufferOfsEven, 8) + "\n");
+                Core.printWarn("problems during RLE decoding of picture at offset " + ToolBox.toHexLeftZeroPadded(pic.getImageBufferOffsetEven(), 8) + "\n");
             }
 
             return bm;
@@ -349,8 +346,8 @@ public class SupHD implements SubtitleStream {
      * @throws CoreException
      */
     private Palette decodePalette(final SubPictureHD pic) throws CoreException {
-        int ofs = pic.paletteOfs;
-        int alphaOfs = pic.alphaOfs;
+        int ofs = pic.getPaletteOffset();
+        int alphaOfs = pic.getAlphaOffset();
 
         Palette palette = new Palette(256);
         try {
@@ -391,9 +388,6 @@ public class SupHD implements SubtitleStream {
         primaryColorIndex = bitmap.getPrimaryColorIndex(palette.getAlpha(), configuration.getAlphaThreshold(), palette.getY());
     }
 
-    /* (non-Javadoc)
-     * @see SubtitleStream#decode(int)
-     */
     public void decode(int index) throws CoreException {
         if (index < subPictures.size()) {
             decode(subPictures.get(index));
@@ -402,87 +396,51 @@ public class SupHD implements SubtitleStream {
         }
     }
 
-    /* (non-Javadoc)
-     * @see SubtitleStream#getPalette()
-     */
     public Palette getPalette() {
         return palette;
     }
 
-    /* (non-Javadoc)
-     * @see SubtitleStream#getBitmap()
-     */
     public Bitmap getBitmap() {
         return bitmap;
     }
 
-    /* (non-Javadoc)
-     * @see SubtitleStream#getImage()
-     */
     public BufferedImage getImage() {
         return bitmap.getImage(palette.getColorModel());
     }
 
-    /* (non-Javadoc)
-     * @see SubtitleStream#getImage(Bitmap)
-     */
     public BufferedImage getImage(Bitmap bm) {
         return bm.getImage(palette.getColorModel());
     }
 
-    /* (non-Javadoc)
-     * @see SubtitleStream#getPrimaryColorIndex()
-     */
     public int getPrimaryColorIndex() {
         return primaryColorIndex;
     }
 
-    /* (non-Javadoc)
-     * @see SubtitleStream#getSubPicture(int)
-     */
     public SubPicture getSubPicture(int index) {
         return subPictures.get(index);
     }
 
-    /* (non-Javadoc)
-     * @see SubtitleStream#getNumFrames()
-     */
     public int getFrameCount() {
         return subPictures.size();
     }
 
-    /* (non-Javadoc)
-     * @see SubtitleStream#getNumForcedFrames()
-     */
     public int getForcedFrameCount() {
         return 0;
     }
 
-    /* (non-Javadoc)
-     * @see SubtitleStream#isForced(int)
-     */
     public boolean isForced(int index) {
         return false;
     }
 
-    /* (non-Javadoc)
-     * @see SubtitleStream#getEndTime(int)
-     */
     public long getEndTime(int index) {
-        return subPictures.get(index).endTime;
+        return subPictures.get(index).getEndTime();
     }
 
-    /* (non-Javadoc)
-     * @see SubtitleStream#getStartTime(int)
-     */
     public long getStartTime(int index) {
-        return subPictures.get(index).startTime;
+        return subPictures.get(index).getStartTime();
     }
 
-    /* (non-Javadoc)
-     * @see SubtitleStream#getStartOffset(int)
-     */
     public long getStartOffset(int index) {
-        return subPictures.get(index).imageBufferOfsEven;
+        return subPictures.get(index).getImageBufferOffsetEven();
     }
 }

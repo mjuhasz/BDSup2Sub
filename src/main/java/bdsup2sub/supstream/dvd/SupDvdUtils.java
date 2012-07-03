@@ -115,9 +115,9 @@ public class SupDvdUtils {
     public static Palette decodePalette(SubPictureDVD pic, Palette pal) {
         Palette miniPal = new Palette(4, true);
         for (int i=0; i < 4; i++) {
-            int a = (pic.alpha[i] * 0xff) / 0xf;
+            int a = (pic.getAlpha()[i] * 0xff) / 0xf;
             if (a >= configuration.getAlphaCrop()) {
-                miniPal.setRGB(i, pal.getR()[pic.pal[i]]&0xff, pal.getG()[pic.pal[i]]&0xff, pal.getB()[pic.pal[i]]&0xff);
+                miniPal.setRGB(i, pal.getR()[pic.getPal()[i]]&0xff, pal.getG()[pic.getPal()[i]]&0xff, pal.getB()[pic.getPal()[i]]&0xff);
                 miniPal.setAlpha(i, a);
             } else {
                 miniPal.setARGB(i, 0);
@@ -134,14 +134,14 @@ public class SupDvdUtils {
      * @throws bdsup2sub.core.CoreException
      */
     public static Bitmap decodeImage(final SubPictureDVD pic, final FileBuffer fBuf, final int transIdx) throws CoreException {
-        int w = pic.originalWidth;
-        int h = pic.originalHeight;
+        int w = pic.getOriginalWidth();
+        int h = pic.getOriginalHeight();
         int warnings = 0;
 
-        ImageObjectFragment info = pic.rleFragments.get(0);
+        ImageObjectFragment info = pic.getRleFragments().get(0);
         long startOfs = info.getImageBufferOfs();
 
-        if (w > pic.width || h > pic.height) {
+        if (w > pic.getWidth() || h > pic.getHeight()) {
             Core.printWarn("Subpicture too large: " + w + "x" + h
                     + " at offset " + ToolBox.toHexLeftZeroPadded(startOfs, 8) + "\n");
         }
@@ -149,18 +149,18 @@ public class SupDvdUtils {
         Bitmap bm = new Bitmap(w, h, (byte)transIdx);
 
         // copy buffer(s)
-        byte buf[] = new byte[pic.rleSize];
+        byte buf[] = new byte[pic.getRleSize()];
         int index = 0;
 
         int sizeEven;
         int sizeOdd;
 
-        if (pic.oddOfs > pic.evenOfs) {
-            sizeEven = pic.oddOfs - pic.evenOfs;
-            sizeOdd = pic.rleSize - pic.oddOfs;
+        if (pic.getOddOffset() > pic.getEvenOffset()) {
+            sizeEven = pic.getOddOffset() - pic.getEvenOffset();
+            sizeOdd = pic.getRleSize() - pic.getOddOffset();
         } else {
-            sizeOdd = pic.evenOfs - pic.oddOfs;
-            sizeEven = pic.rleSize - pic.evenOfs;
+            sizeOdd = pic.getEvenOffset() - pic.getOddOffset();
+            sizeEven = pic.getRleSize() - pic.getEvenOffset();
         }
 
         if (sizeEven <= 0 || sizeOdd <= 0)
@@ -169,9 +169,9 @@ public class SupDvdUtils {
         try {
             // copy buffers
             try {
-                for (int p = 0; p < pic.rleFragments.size(); p++) {
+                for (int p = 0; p < pic.getRleFragments().size(); p++) {
                     // copy data of all packet to one common buffer
-                    info = pic.rleFragments.get(p);
+                    info = pic.getRleFragments().get(p);
                     for (int i=0; i < info.getImagePacketSize(); i++) {
                         buf[index+i] = (byte)fBuf.getByte(info.getImageBufferOfs() + i);
                     }
@@ -182,13 +182,13 @@ public class SupDvdUtils {
             }
             // decode even lines
             try {
-                decodeLine(buf, pic.evenOfs, sizeEven, bm.getInternalBuffer(), 0, w,  w*(h/2+(h&1)));
+                decodeLine(buf, pic.getEvenOffset(), sizeEven, bm.getInternalBuffer(), 0, w,  w*(h/2+(h&1)));
             } catch (ArrayIndexOutOfBoundsException ex) {
                 warnings++;
             }
             // decode odd lines
             try {
-                decodeLine(buf, pic.oddOfs, sizeOdd, bm.getInternalBuffer(), w, w, (h/2)*w);
+                decodeLine(buf, pic.getOddOffset(), sizeOdd, bm.getInternalBuffer(), w, w, (h/2)*w);
             } catch (ArrayIndexOutOfBoundsException ex) {
                 warnings++;
             }
