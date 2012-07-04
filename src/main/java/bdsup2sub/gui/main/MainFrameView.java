@@ -97,15 +97,8 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
     public MainFrameView(MainFrameModel model) {
         super(Constants.APP_NAME + " " + Constants.APP_VERSION);
         this.model = model;
-
         initialize();
-
         logger.setMainFrame(this);
-
-        printToConsole(Constants.APP_NAME + " " + Constants.APP_VERSION + " - a converter from Blu-Ray/HD-DVD SUP to DVD SUB/IDX and more\n");
-        printToConsole("Created by " + Constants.DEVELOPERS + "\n");
-        printToConsole("Official thread at Doom9: http://forum.doom9.org/showthread.php?t=145277\n\n");
-        flushConsole();
     }
 
     private void initialize() {
