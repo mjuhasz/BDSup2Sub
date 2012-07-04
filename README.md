@@ -50,4 +50,4 @@ Originally created by Volker Oth (2009); currently maintained and developed by M
 More information
 ----------------
 
-Visit the [WIKI pages](https://github.com/mjuhasz/BDSup2Sub/wiki)
+Visit the [Wiki pages](https://github.com/mjuhasz/BDSup2Sub/wiki)
