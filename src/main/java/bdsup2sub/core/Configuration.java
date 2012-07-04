@@ -176,15 +176,12 @@ public final class Configuration {
         this.cliMode = cliMode;
     }
 
-    /**
-     * Verbatim output
-     */
-    public boolean isVerbatim() {
-        return props.get("verbatim", false);
+    public boolean isVerbose() {
+        return props.get("verbose", false);
     }
 
-    public void setVerbatim(boolean verbatim) {
-        props.set("verbatim", verbatim);
+    public void setVerbose(boolean verbose) {
+        props.set("verbose", verbose);
     }
 
     /**

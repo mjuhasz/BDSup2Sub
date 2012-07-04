@@ -15,7 +15,6 @@
  */
 package bdsup2sub.gui.main;
 
-import bdsup2sub.BDSup2Sub;
 import bdsup2sub.bitmap.Palette;
 import bdsup2sub.core.*;
 import bdsup2sub.gui.conversion.ConversionDialog;
@@ -95,7 +94,7 @@ class MainFrameController {
         view.addConversionSettingsMenuItemActionListener(new ConversionSettingsMenuItemActionListener());
         view.addSwapCrCbMenuItemActionListener(new SwapCrCbMenuItemActionListener());
         view.addFixInvisibleFramesMenuItemActionListener(new FixInvisibleFramesMenuItemActionListener());
-        view.addVerbatimOutputMenuItemActionListener(new VerbatimOutputMenuItemActionListener());
+        view.addVerboseOutputMenuItemActionListener(new VerboseOutputMenuItemActionListener());
     }
 
     private void addAboutMenuActionListeners() {
@@ -638,11 +637,11 @@ class MainFrameController {
         }
     }
 
-    private class VerbatimOutputMenuItemActionListener implements ActionListener {
+    private class VerboseOutputMenuItemActionListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent event) {
-            boolean selected = view.isVerbatimOutputSelected();
-            model.setVerbatim(selected);
+            boolean selected = view.isVerboseOutputSelected();
+            model.setVerbose(selected);
         }
     }
 

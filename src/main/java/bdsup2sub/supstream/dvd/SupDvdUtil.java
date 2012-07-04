@@ -18,8 +18,8 @@ package bdsup2sub.supstream.dvd;
 import bdsup2sub.bitmap.Bitmap;
 import bdsup2sub.bitmap.Palette;
 import bdsup2sub.core.Configuration;
-import bdsup2sub.core.Core;
 import bdsup2sub.core.CoreException;
+import bdsup2sub.core.Logger;
 import bdsup2sub.supstream.ImageObjectFragment;
 import bdsup2sub.tools.FileBuffer;
 import bdsup2sub.tools.FileBufferException;
@@ -31,6 +31,7 @@ import java.util.Iterator;
 public final class SupDvdUtil {
 
     private static final Configuration configuration = Configuration.getInstance();
+    private static final Logger logger = Logger.getInstance();
 
 
     private SupDvdUtil() {
@@ -146,7 +147,7 @@ public final class SupDvdUtil {
         long startOfs = info.getImageBufferOfs();
 
         if (w > pic.getWidth() || h > pic.getHeight()) {
-            Core.printWarn("Subpicture too large: " + w + "x" + h
+            logger.warn("Subpicture too large: " + w + "x" + h
                     + " at offset " + ToolBox.toHexLeftZeroPadded(startOfs, 8) + "\n");
         }
 
@@ -198,7 +199,7 @@ public final class SupDvdUtil {
             }
 
             if (warnings > 0) {
-                Core.printWarn("problems during RLE decoding of picture at offset " + ToolBox.toHexLeftZeroPadded(startOfs,8) + "\n");
+                logger.warn("problems during RLE decoding of picture at offset " + ToolBox.toHexLeftZeroPadded(startOfs, 8) + "\n");
             }
             return bm;
         } catch (FileBufferException ex) {

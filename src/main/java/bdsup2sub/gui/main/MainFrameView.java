@@ -34,6 +34,8 @@ import java.util.List;
 
 public class MainFrameView extends JFrame implements ClipboardOwner {
 
+    private static final Logger logger = Logger.getInstance();
+
     private JPanel jContentPane;
     private JPanel jPanelTop;
     private JPanel jPanelInfoSource;
@@ -67,7 +69,7 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
     private JMenuItem jMenuItemConversionSettings;
     private JCheckBoxMenuItem jMenuItemSwapCrCb;
     private JCheckBoxMenuItem jMenuItemFixInvisibleFrames;
-    private JCheckBoxMenuItem jMenuItemVerbatimOutput;
+    private JCheckBoxMenuItem jMenuItemVerboseOutput;
     private ActionMenu jMenuAbout;
     private JMenuItem jMenuItemHelp;
     private JMenuItem jMenuItemAbout;
@@ -98,7 +100,7 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
 
         initialize();
 
-        Core.setMainFrame(this);
+        logger.setMainFrame(this);
 
         printToConsole(Constants.APP_NAME + " " + Constants.APP_VERSION + " - a converter from Blu-Ray/HD-DVD SUP to DVD SUB/IDX and more\n");
         printToConsole("Created by " + Constants.DEVELOPERS + "\n");
@@ -363,7 +365,7 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
             jMenuSettings.add(getJMenuItemConversionSettings());
             jMenuSettings.add(getJMenuItemSwapCrCb());
             jMenuSettings.add(getJMenuItemFixInvisibleFrames());
-            jMenuSettings.add(getJMenuItemVerbatimOutput());
+            jMenuSettings.add(getJMenuItemVerboseOutput());
         }
         return jMenuSettings;
     }
@@ -417,22 +419,22 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
         return jMenuItemFixInvisibleFrames.isSelected();
     }
 
-    private JMenuItem getJMenuItemVerbatimOutput() {
-        if (jMenuItemVerbatimOutput == null) {
-            jMenuItemVerbatimOutput = new JCheckBoxMenuItem();
-            jMenuItemVerbatimOutput.setText("Verbatim Output");
-            jMenuItemVerbatimOutput.setMnemonic('v');
-            jMenuItemVerbatimOutput.setSelected(model.isVerbatim());
+    private JMenuItem getJMenuItemVerboseOutput() {
+        if (jMenuItemVerboseOutput == null) {
+            jMenuItemVerboseOutput = new JCheckBoxMenuItem();
+            jMenuItemVerboseOutput.setText("Verbose Output");
+            jMenuItemVerboseOutput.setMnemonic('v');
+            jMenuItemVerboseOutput.setSelected(model.isVerbose());
         }
-        return jMenuItemVerbatimOutput;
+        return jMenuItemVerboseOutput;
     }
 
-    void addVerbatimOutputMenuItemActionListener(ActionListener actionListener) {
-        jMenuItemVerbatimOutput.addActionListener(actionListener);
+    void addVerboseOutputMenuItemActionListener(ActionListener actionListener) {
+        jMenuItemVerboseOutput.addActionListener(actionListener);
     }
 
-    boolean isVerbatimOutputSelected() {
-        return jMenuItemVerbatimOutput.isSelected();
+    boolean isVerboseOutputSelected() {
+        return jMenuItemVerboseOutput.isSelected();
     }
 
     private JMenu getJMenuAbout() {
@@ -1302,10 +1304,10 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
      * Output a dialog with number of warnings and errors
      */
     void warningDialog() {
-        int w = Core.getWarnings();
-        Core.resetWarnings();
-        int e = Core.getErrors();
-        Core.resetErrors();
+        int w = logger.getWarningCount();
+        logger.resetWarningCounter();
+        int e = logger.getErrorCount();
+        logger.resetErrorCounter();
         if (w+e > 0) {
             String s = "";
             if (w > 0) {
@@ -1337,7 +1339,7 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
     }
 
     public void error (String message) {
-        Core.printErr(message);
+        logger.error(message);
         JOptionPane.showMessageDialog(this, message, "Error!", JOptionPane.WARNING_MESSAGE);
     }
 }

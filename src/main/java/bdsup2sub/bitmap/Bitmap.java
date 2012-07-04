@@ -15,7 +15,7 @@
  */
 package bdsup2sub.bitmap;
 
-import bdsup2sub.core.Core;
+import bdsup2sub.core.Logger;
 import bdsup2sub.tools.QuantizeFilter;
 import com.mortennobel.imagescaling.ResampleFilter;
 
@@ -29,6 +29,8 @@ import static bdsup2sub.bitmap.ColorSpaceUtils.RGB2YCbCr;
  * Class to handle byte based bitmaps with a separate palette up to 256 colors.
  */
 public class Bitmap {
+
+    private static final Logger logger = Logger.getInstance();
 
     private final int width;
     private final int height;
@@ -560,7 +562,7 @@ public class Bitmap {
         int size = ct.length;
         if (size > 255) {
             size = 255;
-            Core.printWarn("Quantizer failed.\n");
+            logger.warn("Quantizer failed.\n");
         }
         // create palette
         Palette trgPal = new Palette(256);
@@ -646,7 +648,7 @@ public class Bitmap {
         int size = ct.length;
         if (size > 255) {
             size = 255;
-            Core.printWarn("Quantizer failed.\n");
+            logger.warn("Quantizer failed.\n");
         }
         // create palette
         Palette trgPal = new Palette(256);

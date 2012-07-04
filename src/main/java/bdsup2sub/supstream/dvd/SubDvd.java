@@ -18,10 +18,7 @@ package bdsup2sub.supstream.dvd;
 import bdsup2sub.bitmap.Bitmap;
 import bdsup2sub.bitmap.BitmapBounds;
 import bdsup2sub.bitmap.Palette;
-import bdsup2sub.core.Configuration;
-import bdsup2sub.core.Constants;
-import bdsup2sub.core.Core;
-import bdsup2sub.core.CoreException;
+import bdsup2sub.core.*;
 import bdsup2sub.supstream.ImageObjectFragment;
 import bdsup2sub.supstream.SubPicture;
 import bdsup2sub.tools.FileBuffer;
@@ -35,7 +32,6 @@ import java.util.ArrayList;
 import static bdsup2sub.core.Constants.*;
 import static bdsup2sub.utils.ByteUtils.getByte;
 import static bdsup2sub.utils.ByteUtils.getWord;
-import static bdsup2sub.utils.TimeUtils.ptsToTimeStrIdx;
 import static bdsup2sub.utils.TimeUtils.timeStrToPTS;
 
 /**
@@ -44,6 +40,7 @@ import static bdsup2sub.utils.TimeUtils.timeStrToPTS;
 public class SubDvd implements DvdSubtitleStream {
 
     private static final Configuration configuration = Configuration.getInstance();
+    private static final Logger logger = Logger.getInstance();
 
     public static final byte[] PACK_HEADER = {
         0x00, 0x00, 0x01, (byte)0xba,							// 0:  0x000001ba - packet ID
@@ -127,8 +124,8 @@ public class SubDvd implements DvdSubtitleStream {
         }
         for (int i=0; i < subPictures.size(); i++) {
             Core.setProgress(i);
-            Core.printX("# " + (i+1) + "\n");
-            Core.print("Offset: " + ToolBox.toHexLeftZeroPadded(subPictures.get(i).getOffset(),8) + "\n");
+            logger.info("# " + (i + 1) + "\n");
+            logger.trace("Offset: " + ToolBox.toHexLeftZeroPadded(subPictures.get(i).getOffset(), 8) + "\n");
             long nextOfs;
             if (i < subPictures.size() - 1) {
                 nextOfs = subPictures.get(i+1).getOffset();
@@ -137,7 +134,7 @@ public class SubDvd implements DvdSubtitleStream {
             }
             readSubFrame(subPictures.get(i), nextOfs, buffer);
         }
-        Core.printX("\nDetected " + forcedFrameCount + " forced captions.\n");
+        logger.info("\nDetected " + forcedFrameCount + " forced captions.\n");
     }
 
     private void readIdx(String idxFile) throws CoreException {
@@ -155,7 +152,7 @@ public class SubDvd implements DvdSubtitleStream {
                 }
                 int pos = s.indexOf(':');
                 if (pos == -1 || s.length()-pos <= 1) {
-                    Core.printErr("Illegal key: " + s + "\n");
+                    logger.error("Illegal key: " + s + "\n");
                     continue;
                 }
                 String key = s.substring(0, pos).trim();
@@ -295,7 +292,7 @@ public class SubDvd implements DvdSubtitleStream {
                         id = val;
                     }
                     if (id.length() != 2) {
-                        Core.printWarn("Illegal language id: " + id + "\n");
+                        logger.warn("Illegal language id: " + id + "\n");
                         continue;
                     }
                     boolean found = false;
@@ -307,18 +304,18 @@ public class SubDvd implements DvdSubtitleStream {
                         }
                     }
                     if (!found) {
-                        Core.printWarn("Illegal language id: " + id + "\n");
+                        logger.warn("Illegal language id: " + id + "\n");
                     }
 
                     pos = val.indexOf(':');
                     if (pos == -1 || s.length() - pos <= 1) {
-                        Core.printErr("Missing index key: " + val + "\n");
+                        logger.error("Missing index key: " + val + "\n");
                         continue;
                     }
                     key = val.substring(0, pos).trim();
                     val = val.substring(pos+1).trim();
                     if (key.equalsIgnoreCase("index"))  {
-                        Core.printErr("Missing index key: " + s + "\n");
+                        logger.error("Missing index key: " + s + "\n");
                         continue;
                     }
                     v = ToolBox.getInt(val);
@@ -328,7 +325,7 @@ public class SubDvd implements DvdSubtitleStream {
 
                     if (v != langIdx) {
                         ignore = true;
-                        Core.printWarn("Language id " + id + "(index:" + v + ") inactive -> ignored\n");
+                        logger.warn("Language id " + id + "(index:" + v + ") inactive -> ignored\n");
                     } else {
                         streamID = v;
                         ignore = false;
@@ -431,7 +428,7 @@ public class SubDvd implements DvdSubtitleStream {
                     // packet doesn't belong to stream -> skip
                     if (nextOfs % 0x800 != 0) {
                         ofs = (nextOfs/0x800 + 1)*0x800;
-                        Core.printWarn("Offset to next fragment is invalid. Fixed to:"+ToolBox.toHexLeftZeroPadded(ofs, 8)+"\n");
+                        logger.warn("Offset to next fragment is invalid. Fixed to:" + ToolBox.toHexLeftZeroPadded(ofs, 8) + "\n");
                     } else {
                         ofs = nextOfs;
                     }
@@ -458,7 +455,7 @@ public class SubDvd implements DvdSubtitleStream {
                     if (firstPackFound) {
                         ctrlOfs += headerSize; // fix absolute offset by adding header bytes
                     } else {
-                        Core.printWarn("Invalid fragment skipped at ofs " + ToolBox.toHexLeftZeroPadded(startOfs, 8) + "\n");
+                        logger.warn("Invalid fragment skipped at ofs " + ToolBox.toHexLeftZeroPadded(startOfs, 8) + "\n");
                     }
                 }
 
@@ -485,7 +482,7 @@ public class SubDvd implements DvdSubtitleStream {
 
                 if (ctrlHeaderCopied != ctrlSize && (nextOfs % 0x800 != 0)) {
                     ofs = (nextOfs/0x800 + 1) * 0x800;
-                    Core.printWarn("Offset to next fragment is invalid. Fixed to:" + ToolBox.toHexLeftZeroPadded(ofs, 8) + "\n");
+                    logger.warn("Offset to next fragment is invalid. Fixed to:" + ToolBox.toHexLeftZeroPadded(ofs, 8) + "\n");
                     rleBufferFound += ofs-nextOfs;
                 } else {
                     ofs = nextOfs;
@@ -493,7 +490,7 @@ public class SubDvd implements DvdSubtitleStream {
             } while (ofs < endOfs && ctrlHeaderCopied < ctrlSize);
 
             if (ctrlHeaderCopied != ctrlSize) {
-                Core.printWarn("Control buffer size inconsistent.\n");
+                logger.warn("Control buffer size inconsistent.\n");
                 // fill rest of buffer with break command to avoid wrong detection of forced caption (0x00)
                 for (int i=ctrlHeaderCopied; i<ctrlSize; i++) {
                     ctrlHeader[i] = (byte)0xff;
@@ -501,7 +498,7 @@ public class SubDvd implements DvdSubtitleStream {
             }
 
             if (rleBufferFound != rleSize) {
-                Core.printWarn("RLE buffer size inconsistent.\n");
+                logger.warn("RLE buffer size inconsistent.\n");
             }
 
             pic.setRleSize(rleBufferFound);
@@ -517,7 +514,7 @@ public class SubDvd implements DvdSubtitleStream {
         int delay = -1;
         boolean ColAlphaUpdate = false;
 
-        Core.print("SP_DCSQT at ofs: " + ToolBox.toHexLeftZeroPadded(ctrlOfs,8) + "\n");
+        logger.trace("SP_DCSQT at ofs: " + ToolBox.toHexLeftZeroPadded(ctrlOfs, 8) + "\n");
 
         try {
             // parse control header
@@ -525,7 +522,7 @@ public class SubDvd implements DvdSubtitleStream {
             int index = 0;
             int endSeqOfs = getWord(ctrlHeader, index) - ctrlOfsRel - 2;
             if (endSeqOfs < 0 || endSeqOfs > ctrlSize) {
-                Core.printWarn("Invalid end sequence offset -> no end time\n");
+                logger.warn("Invalid end sequence offset -> no end time\n");
                 endSeqOfs = ctrlSize;
             }
             index += 2;
@@ -546,7 +543,7 @@ public class SubDvd implements DvdSubtitleStream {
                         b = getByte(ctrlHeader, index++);
                         pic.getPal()[1] = (b >> 4);
                         pic.getPal()[0] = b & 0x0f;
-                        Core.print("Palette:   "+ pic.getPal()[0]+", "+ pic.getPal()[1]+", "+ pic.getPal()[2]+", "+ pic.getPal()[3]+"\n");
+                        logger.trace("Palette:   " + pic.getPal()[0] + ", " + pic.getPal()[1] + ", " + pic.getPal()[2] + ", " + pic.getPal()[3] + "\n");
                         break;
                     case 4: // alpha info
                         b = getByte(ctrlHeader, index++);
@@ -558,7 +555,7 @@ public class SubDvd implements DvdSubtitleStream {
                         for (int i = 0; i<4; i++) {
                             alphaSum += pic.getAlpha()[i] & 0xff;
                         }
-                        Core.print("Alpha:     "+ pic.getAlpha()[0]+", "+ pic.getAlpha()[1]+", "+ pic.getAlpha()[2]+", "+ pic.getAlpha()[3]+"\n");
+                        logger.trace("Alpha:     " + pic.getAlpha()[0] + ", " + pic.getAlpha()[1] + ", " + pic.getAlpha()[2] + ", " + pic.getAlpha()[3] + "\n");
                         break;
                     case 5: // coordinates
                         int xOfs = (getByte(ctrlHeader, index)<<4) | (getByte(ctrlHeader, index+1)>>4);
@@ -567,16 +564,16 @@ public class SubDvd implements DvdSubtitleStream {
                         int yOfs = (getByte(ctrlHeader, index+3)<<4) | (getByte(ctrlHeader, index+4)>>4);
                         pic.setOfsY(globalYOffset +yOfs);
                         pic.setImageHeight((((getByte(ctrlHeader, index+4)&0xf)<<8) | (getByte(ctrlHeader, index+5))) - yOfs + 1);
-                        Core.print("Area info:"+" ("
-                                +pic.getXOffset()+", "+pic.getYOffset()+") - ("+(pic.getXOffset()+pic.getImageWidth()-1)+", "
-                                +(pic.getYOffset()+pic.getImageHeight()-1)+")\n");
+                        logger.trace("Area info:" + " ("
+                                + pic.getXOffset() + ", " + pic.getYOffset() + ") - (" + (pic.getXOffset() + pic.getImageWidth() - 1) + ", "
+                                + (pic.getYOffset() + pic.getImageHeight() - 1) + ")\n");
                         index += 6;
                         break;
                     case 6: // offset to RLE buffer
                         pic.setEvenOffset(getWord(ctrlHeader, index) - 4);
                         pic.setOddOffset(getWord(ctrlHeader, index + 2) - 4);
                         index += 4;
-                        Core.print("RLE ofs:   "+ToolBox.toHexLeftZeroPadded(pic.getEvenOffset(), 4)+", "+ToolBox.toHexLeftZeroPadded(pic.getOddOffset(), 4)+"\n");
+                        logger.trace("RLE ofs:   " + ToolBox.toHexLeftZeroPadded(pic.getEvenOffset(), 4) + ", " + ToolBox.toHexLeftZeroPadded(pic.getOddOffset(), 4) + "\n");
                         break;
                     case 7: // color/alpha update
                         ColAlphaUpdate = true;
@@ -609,7 +606,7 @@ public class SubDvd implements DvdSubtitleStream {
                         delay = getWord(ctrlHeader, index)*1024;
                         endSeqOfs = getWord(ctrlHeader, index+2)-ctrlOfsRel-2;
                         if (endSeqOfs < 0 || endSeqOfs > ctrlSize) {
-                            Core.printWarn("Invalid end sequence offset -> no end time\n");
+                            logger.warn("Invalid end sequence offset -> no end time\n");
                             endSeqOfs = ctrlSize;
                         }
                         index += 4;
@@ -617,7 +614,7 @@ public class SubDvd implements DvdSubtitleStream {
                     case 0xff: // end sequence
                         break parse_ctrl;
                     default:
-                        Core.printWarn("Unknown control sequence " + ToolBox.toHexLeftZeroPadded(cmd,2) + " skipped\n");
+                        logger.warn("Unknown control sequence " + ToolBox.toHexLeftZeroPadded(cmd, 2) + " skipped\n");
                         break;
                 }
             }
@@ -633,7 +630,7 @@ public class SubDvd implements DvdSubtitleStream {
                     ctrlSeqCount++;
                 }
                 if (ctrlSeqCount > 2) {
-                    Core.printWarn("Control sequence(s) ignored - result may be erratic.");
+                    logger.warn("Control sequence(s) ignored - result may be erratic.");
                 }
                 pic.setEndTime(pic.getStartTime() + delay);
             } else {
@@ -641,15 +638,15 @@ public class SubDvd implements DvdSubtitleStream {
             }
 
             if (ColAlphaUpdate) {
-                Core.printWarn("Palette update/alpha fading detected - result may be erratic.\n");
+                logger.warn("Palette update/alpha fading detected - result may be erratic.\n");
             }
 
             if (alphaSum == 0) {
                 if (configuration.getFixZeroAlpha()) {
                     System.arraycopy(lastAlpha, 0, pic.getAlpha(), 0, 4);
-                    Core.printWarn("Invisible caption due to zero alpha - used alpha info of last caption.\n");
+                    logger.warn("Invisible caption due to zero alpha - used alpha info of last caption.\n");
                 } else {
-                    Core.printWarn("Invisible caption due to zero alpha (not fixed due to user setting).\n");
+                    logger.warn("Invisible caption due to zero alpha (not fixed due to user setting).\n");
                 }
             }
 

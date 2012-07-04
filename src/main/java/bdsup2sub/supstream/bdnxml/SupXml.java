@@ -54,6 +54,7 @@ import static bdsup2sub.utils.TimeUtils.timeStrXmlToPTS;
 public class SupXml implements SubtitleStream {
 
     private static final Configuration configuration = Configuration.getInstance();
+    private static final Logger logger = Logger.getInstance();
 
     /** ArrayList of captions contained in the current file */
     private List<SubPictureXml> subPictures = new ArrayList<SubPictureXml>();
@@ -104,7 +105,7 @@ public class SupXml implements SubtitleStream {
             throw new CoreException(e.getMessage());
         }
 
-        Core.print("\nDetected " + numForcedFrames + " forced captions.\n");
+        logger.trace("\nDetected " + numForcedFrames + " forced captions.\n");
     }
 
     /**
@@ -180,7 +181,7 @@ public class SupXml implements SubtitleStream {
                 int ct[] = qf.quantize(pixels, bitmap.getInternalBuffer(), w, h, 255, false, false);
                 int size = ct.length;
                 if (size > 255) {
-                    Core.printWarn("Quantizer failed.\n");
+                    logger.warn("Quantizer failed.\n");
                     size = 255;
                 }
                 // create palette
@@ -217,7 +218,7 @@ public class SupXml implements SubtitleStream {
         } catch (IOException e) {
             throw new CoreException(e.getMessage());
         } catch (OutOfMemoryError e) {
-            JOptionPane.showMessageDialog(Core.getMainFrame(),"Out of heap! Use -Xmx256m to increase heap!","Error!", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(null,"Out of heap! Use -Xmx256m to increase heap!","Error!", JOptionPane.WARNING_MESSAGE);
             throw new CoreException("Out of heap! Use -Xmx256m to increase heap!");
         }
     }
@@ -441,18 +442,18 @@ public class SupXml implements SubtitleStream {
             String at;
 
             if (state != XmlState.BDN && !valid) {
-                Core.printErr("BDN tag missing");
+                logger.error("BDN tag missing");
             }
 
             txt = null;
 
             switch (state) {
                 case UNKNOWN:
-                    Core.printErr("Unknown tag "+qName+"\n");
+                    logger.error("Unknown tag " + qName + "\n");
                     break;
                 case BDN:
                     if (valid) {
-                        Core.printErr("BDN must be used only once");
+                        logger.error("BDN must be used only once");
                     } else {
                         valid = true;
                     }
@@ -461,14 +462,14 @@ public class SupXml implements SubtitleStream {
                     at = atts.getValue("Title");
                     if (at != null) {
                         title = at;
-                        Core.print("Title: "+title+"\n");
+                        logger.trace("Title: " + title + "\n");
                     }
                     break;
                 case LANGUAGE:
                     at = atts.getValue("Code");
                     if (at != null) {
                         language = at;
-                        Core.print("Language: "+language+"\n");
+                        logger.trace("Language: " + language + "\n");
                     }
                     break;
                 case FORMAT:
@@ -476,7 +477,7 @@ public class SupXml implements SubtitleStream {
                     if (at != null) {
                         fps = SubtitleUtils.getFps(at);
                         fpsXml = XmlFps(fps);
-                        Core.print("fps: " + ToolBox.formatDouble(fps) + "\n");
+                        logger.trace("fps: " + ToolBox.formatDouble(fps) + "\n");
                     }
                     at = atts.getValue("VideoFormat");
                     if (at != null) {
@@ -487,7 +488,7 @@ public class SupXml implements SubtitleStream {
                             }
                             if (r.getResolutionNameForXml().equalsIgnoreCase(res)) {
                                 resolution = r;
-                                Core.print("Language: " + r.getResolutionNameForXml() + "\n");
+                                logger.trace("Language: " + r.getResolutionNameForXml() + "\n");
                                 break;
                             }
                         }
@@ -507,14 +508,14 @@ public class SupXml implements SubtitleStream {
                     pic = new SubPictureXml();
                     subPictures.add(pic);
                     int num  = subPictures.size();
-                    Core.printX("#"+num+"\n");
+                    logger.info("#" + num + "\n");
                     Core.setProgress(num);
                     at = atts.getValue("InTC");
                     if (at != null) {
                         pic.setStartTime(timeStrXmlToPTS(at, fpsXml));
                         if (pic.getStartTime() == -1) {
                             pic.setStartTime(0);
-                            Core.printWarn("Invalid start time " + at + "\n");
+                            logger.warn("Invalid start time " + at + "\n");
                         }
                     }
                     at = atts.getValue("OutTC");
@@ -522,7 +523,7 @@ public class SupXml implements SubtitleStream {
                         pic.setEndTime(timeStrXmlToPTS(at, fpsXml));
                         if (pic.getEndTime() == -1) {
                             pic.setEndTime(0);
-                            Core.printWarn("Invalid end time " + at + "\n");
+                            logger.warn("Invalid end time " + at + "\n");
                         }
                     }
                     if (fps != fpsXml) {

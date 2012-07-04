@@ -101,12 +101,12 @@ class MainFrameModel {
         configuration.addToRecentFiles(filename);
     }
 
-    public boolean isVerbatim() {
-        return configuration.isVerbatim();
+    public boolean isVerbose() {
+        return configuration.isVerbose();
     }
 
-    public void setVerbatim(boolean verbatim) {
-        configuration.setVerbatim(verbatim);
+    public void setVerbose(boolean verbose) {
+        configuration.setVerbose(verbose);
     }
 
     public ScalingFilter getScalingFilter() {

@@ -17,6 +17,7 @@ package bdsup2sub.gui.edit;
 
 import bdsup2sub.core.Core;
 import bdsup2sub.core.CoreException;
+import bdsup2sub.core.Logger;
 import bdsup2sub.gui.support.EditPane;
 import bdsup2sub.gui.support.RequestFocusListener;
 import bdsup2sub.supstream.SubPicture;
@@ -36,6 +37,8 @@ import static bdsup2sub.gui.support.GuiUtils.centerRelativeToOwner;
 import static bdsup2sub.utils.TimeUtils.ptsToTimeStr;
 
 class EditDialogView extends JDialog {
+
+    private static final Logger logger = Logger.getInstance();
 
     private JPanel jContentPane;
     private JPanel jPanelUp;
@@ -990,7 +993,7 @@ class EditDialogView extends JDialog {
     }
 
     void error(String message) {
-        Core.printErr(message);
+        logger.error(message);
         JOptionPane.showMessageDialog(this, message, "Error!", JOptionPane.WARNING_MESSAGE);
     }
 

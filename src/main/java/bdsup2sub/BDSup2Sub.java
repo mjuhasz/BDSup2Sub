@@ -29,12 +29,12 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 
-import static bdsup2sub.core.Configuration.*;
 import static bdsup2sub.gui.support.GuiUtils.applyGtkThemeWorkarounds;
 
 public class BDSup2Sub {
 
-    private static final Configuration configuration = getInstance();
+    private static final Configuration configuration = Configuration.getInstance();
+    private static final Logger logger = Logger.getInstance();
 
     private CommandLineParser options;
 
@@ -115,7 +115,7 @@ public class BDSup2Sub {
             configuration.setFixZeroAlpha(options.isFixInvisibleFrames().get());
         }
         if (options.isVerbose().isPresent()) {
-            configuration.setVerbatim(options.isVerbose().get());
+            configuration.setVerbose(options.isVerbose().get());
         }
         if (options.getAlphaThreshold().isPresent()) {
             configuration.setAlphaThreshold(options.getAlphaThreshold().get());
@@ -281,7 +281,7 @@ public class BDSup2Sub {
             }
 
             Core.scanSubtitles();
-            printWarnings();
+            logger.printWarningsAndErrorsAndResetCounters();
             // move captions
             if (configuration.getMoveModeX() != CaptionMoveModeX.KEEP_POSITION || configuration.getMoveModeY() != CaptionMoveModeY.KEEP_POSITION) {
                 configuration.setCineBarFactor((1.0 - (16.0 / 9) / options.getScreenRatio()) / 2.0);
@@ -294,55 +294,22 @@ public class BDSup2Sub {
             // write output
             Core.writeSub(outputFile);
         } catch (CoreException ex) {
-            Core.printErr(ex.getMessage());
+            logger.error(ex.getMessage());
         } catch (Exception ex) {
             ToolBox.showException(ex);
-            Core.printErr(ex.getMessage());
+            logger.error(ex.getMessage());
         }
         // clean up
-        printWarnings();
+        logger.printWarningsAndErrorsAndResetCounters();
         Core.exit();
 
         System.out.println("\nConversion finished.");
         System.exit(0);
     }
 
-    private static void fatalError(String e) {
+    private static void fatalError(String message) {
         Core.exit();
-        System.out.println("ERROR: " + e);
+        System.out.println("ERROR: " + message);
         System.exit(1);
-    }
-
-    private static void printWarnings() {
-        int w = Core.getWarnings();
-        Core.resetWarnings();
-        int e = Core.getErrors();
-        Core.resetErrors();
-        if (w+e > 0) {
-            String s = "";
-            if (w > 0) {
-                if (w==1) {
-                    s += w+" warning";
-                } else {
-                    s += w+" warnings";
-                }
-            }
-            if (w>0 && e>0) {
-                s += " and ";
-            }
-            if (e > 0) {
-                if (e==1) {
-                    s = e+" error";
-                } else {
-                    s = e+" errors";
-                }
-            }
-            if (w+e < 3) {
-                s = "There was " + s;
-            } else {
-                s = "There were " + s;
-            }
-            System.out.println(s);
-        }
     }
 }

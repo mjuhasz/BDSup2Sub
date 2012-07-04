@@ -17,10 +17,7 @@ package bdsup2sub.supstream.bd;
 
 import bdsup2sub.bitmap.Bitmap;
 import bdsup2sub.bitmap.Palette;
-import bdsup2sub.core.Configuration;
-import bdsup2sub.core.Core;
-import bdsup2sub.core.CoreException;
-import bdsup2sub.core.Framerate;
+import bdsup2sub.core.*;
 import bdsup2sub.supstream.*;
 import bdsup2sub.tools.FileBuffer;
 import bdsup2sub.tools.FileBufferException;
@@ -40,6 +37,7 @@ import static bdsup2sub.utils.TimeUtils.ptsToTimeStr;
 public class SupBD implements SubtitleStream {
 
     private static final Configuration configuration = Configuration.getInstance();
+    private static final Logger logger = Logger.getInstance();
 
     private enum PGSCompositionState {
         /** normal: doesn't have to be complete */
@@ -165,20 +163,20 @@ public class SupBD implements SubtitleStream {
                                 so[0] = null;
                                 int paletteSize = parsePDS(segment, subPictureBD, so);
                                 if (paletteSize >= 0) {
-                                    Core.print(msg + ", " + so[0] + "\n");
+                                    logger.trace(msg + ", " + so[0] + "\n");
                                     if (paletteSize > 0) {
                                         pdsCounter++;
                                     }
                                 } else {
-                                    Core.print(msg + "\n");
-                                    Core.printWarn(so[0] + "\n");
+                                    logger.trace(msg + "\n");
+                                    logger.warn(so[0] + "\n");
                                 }
                             } else {
-                                Core.print(msg + "\n");
-                                Core.printWarn("missing PTS start -> ignored\n");
+                                logger.trace(msg + "\n");
+                                logger.warn("missing PTS start -> ignored\n");
                             }
                         } else {
-                            Core.print(msg + ", composition number unchanged -> ignored\n");
+                            logger.trace(msg + ", composition number unchanged -> ignored\n");
                         }
                         break;
                     case 0x15: // image bitmap data
@@ -190,17 +188,17 @@ public class SupBD implements SubtitleStream {
                                     if (parseODS(segment, subPictureBD, so)) {
                                         odsCounter++;
                                     }
-                                    Core.print(msg + ", img size: " + subPictureBD.getImageWidth() + "*" + subPictureBD.getImageHeight() + (so[0] == null ? "\n" : ", " + so[0]) + "\n");
+                                    logger.trace(msg + ", img size: " + subPictureBD.getImageWidth() + "*" + subPictureBD.getImageHeight() + (so[0] == null ? "\n" : ", " + so[0]) + "\n");
                                 } else {
-                                    Core.print(msg + "\n");
-                                    Core.printWarn("missing PTS start -> ignored\n");
+                                    logger.trace(msg + "\n");
+                                    logger.warn("missing PTS start -> ignored\n");
                                 }
                             } else {
-                                Core.print(msg + "\n");
-                                Core.printWarn("palette update only -> ignored\n");
+                                logger.trace(msg + "\n");
+                                logger.warn("palette update only -> ignored\n");
                             }
                         } else {
-                            Core.print(msg + ", composition number unchanged -> ignored\n");
+                            logger.trace(msg + ", composition number unchanged -> ignored\n");
                         }
                         break;
                     case 0x16: // time codes
@@ -214,11 +212,11 @@ public class SupBD implements SubtitleStream {
                             compositionCount = 0;
                         }
                         if (compositionState == PGSCompositionState.INVALID) {
-                            Core.printWarn("Illegal composition state at offset " + ToolBox.toHexLeftZeroPadded(index, 8) + "\n");
+                            logger.warn("Illegal composition state at offset " + ToolBox.toHexLeftZeroPadded(index, 8) + "\n");
                         } else if (compositionState == PGSCompositionState.EPOCH_START) {
                             // new frame
                             if (subPictures.size() > 0 && (odsCounter == 0 || pdsCounter == 0)) {
-                                Core.printWarn("missing PDS/ODS: last epoch is discarded\n");
+                                logger.warn("missing PDS/ODS: last epoch is discarded\n");
                                 subPictures.remove(subPictures.size() - 1);
                                 compositionNumberOld = compositionNumber - 1;
                                 if (subPictures.size() > 0) {
@@ -232,7 +230,7 @@ public class SupBD implements SubtitleStream {
                             subPictureBD = new SubPictureBD();
                             subPictures.add(subPictureBD);
                             subPictureBD.setStartTime(segment.segmentPTSTimestamp);
-                            Core.printX("#> " + (subPictures.size()) + " (" + ptsToTimeStr(subPictureBD.getStartTime()) + ")\n");
+                            logger.info("#> " + (subPictures.size()) + " (" + ptsToTimeStr(subPictureBD.getStartTime()) + ")\n");
 
                             so[0] = null;
                             parsePCS(segment, subPictureBD, so);
@@ -243,7 +241,7 @@ public class SupBD implements SubtitleStream {
 
                             msg = "PCS offset: " + ToolBox.toHexLeftZeroPadded(index, 8) + ", START, size: " + ToolBox.toHexLeftZeroPadded(segment.segmentSize, 4) + ", composition number: " + compositionNumber + ", forced: " + subPictureBD.isForced() + (so[0] == null ? "\n" : ", " + so[0] + "\n");
                             msg += "PTS start: " + ptsToTimeStr(subPictureBD.getStartTime()) + ", screen size: " + subPictureBD.getWidth() + "*" + subPictureBD.getHeight() + "\n";
-                            Core.print(msg);
+                            logger.trace(msg);
 
                             odsCounter = 0;
                             pdsCounter = 0;
@@ -252,7 +250,7 @@ public class SupBD implements SubtitleStream {
                             picTmp = null;
                         } else {
                             if (subPictureBD == null) {
-                                Core.printWarn("missing start of epoch at offset " + ToolBox.toHexLeftZeroPadded(index, 8) + "\n");
+                                logger.warn("missing start of epoch at offset " + ToolBox.toHexLeftZeroPadded(index, 8) + "\n");
                                 break;
                             }
                             msg = "PCS offset:" + ToolBox.toHexLeftZeroPadded(index, 8) + ", ";
@@ -280,21 +278,21 @@ public class SupBD implements SubtitleStream {
                             }
                             msg += ", pal update: " + paletteUpdate + "\n";
                             msg += "PTS: " + ptsToTimeStr(segment.segmentPTSTimestamp) + "\n";
-                            Core.print(msg);
+                            logger.trace(msg);
                         }
                         break;
                     case 0x17: // window info
                         msg = "WDS offset: " + ToolBox.toHexLeftZeroPadded(index, 8) + ", size: " + ToolBox.toHexLeftZeroPadded(segment.segmentSize, 4);
                         if (subPictureBD != null) {
                             parseWDS(segment, subPictureBD);
-                            Core.print(msg + ", dim: " + subPictureBD.getWindowWidth() + "*" + subPictureBD.getWindowHeight() + "\n");
+                            logger.trace(msg + ", dim: " + subPictureBD.getWindowWidth() + "*" + subPictureBD.getWindowHeight() + "\n");
                         } else {
-                            Core.print(msg + "\n");
-                            Core.printWarn("Missing PTS start -> ignored\n");
+                            logger.trace(msg + "\n");
+                            logger.warn("Missing PTS start -> ignored\n");
                         }
                         break;
                     case 0x80: // END
-                        Core.print("END offset: " + ToolBox.toHexLeftZeroPadded(index, 8) + "\n");
+                        logger.trace("END offset: " + ToolBox.toHexLeftZeroPadded(index, 8) + "\n");
                         // decide whether to store this last composition section as caption or merge it
                         if (compositionState == PGSCompositionState.EPOCH_START) {
                             if (compositionCount>0 && odsCounter>odsCounterOld && compositionNumber!=compositionNumberOld && picMergable(lastSubPicture, subPictureBD)) {
@@ -307,7 +305,7 @@ public class SupBD implements SubtitleStream {
                                 } else {
                                     lastSubPicture = null;
                                 }
-                                Core.printX("#< caption merged\n");
+                                logger.info("#< caption merged\n");
                             }
                         } else {
                             long startTime = 0;
@@ -319,13 +317,13 @@ public class SupBD implements SubtitleStream {
                             if (compositionCount>0 && odsCounter>odsCounterOld && compositionNumber!=compositionNumberOld && !picMergable(picTmp, subPictureBD)) {
                                 // last PCS should be stored as separate caption
                                 if (odsCounter-odsCounterOld>1 || pdsCounter-pdsCounterOld>1) {
-                                    Core.printWarn("multiple PDS/ODS definitions: result may be erratic\n");
+                                    logger.warn("multiple PDS/ODS definitions: result may be erratic\n");
                                 }
                                 // replace subPictureBD with picTmp (deepCopy created before new PCS)
                                 subPictures.set(subPictures.size()-1, picTmp); // replace in list
                                 lastSubPicture = picTmp;
                                 subPictures.add(subPictureBD); // add to list
-                                Core.printX("#< " + (subPictures.size()) + " (" + ptsToTimeStr(subPictureBD.getStartTime()) + ")\n");
+                                logger.info("#< " + (subPictures.size()) + " (" + ptsToTimeStr(subPictureBD.getStartTime()) + ")\n");
                                 odsCounterOld = odsCounter;
 
                             } else {
@@ -339,10 +337,10 @@ public class SupBD implements SubtitleStream {
                                     }
 
                                     if (pdsCounter > pdsCounterOld || paletteUpdate) {
-                                        Core.printWarn("palette animation: result may be erratic\n");
+                                        logger.warn("palette animation: result may be erratic\n");
                                     }
                                 } else {
-                                    Core.printWarn("end without at least one epoch start\n");
+                                    logger.warn("end without at least one epoch start\n");
                                 }
                             }
                         }
@@ -350,7 +348,7 @@ public class SupBD implements SubtitleStream {
                         compositionNumberOld = compositionNumber;
                         break;
                     default:
-                        Core.printWarn("<unknown> " + ToolBox.toHexLeftZeroPadded(segment.segmentType, 2) + " ofs:" + ToolBox.toHexLeftZeroPadded(index, 8) + "\n");
+                        logger.warn("<unknown> " + ToolBox.toHexLeftZeroPadded(segment.segmentType, 2) + " ofs:" + ToolBox.toHexLeftZeroPadded(index, 8) + "\n");
                     break;
                 }
                 index += 13; // header size
@@ -360,13 +358,13 @@ public class SupBD implements SubtitleStream {
             if (subPictures.size() == 0) {
                 throw ex;
             }
-            Core.printErr(ex.getMessage()+"\n");
-            Core.print("Probably not all caption imported due to error.\n");
+            logger.error(ex.getMessage() + "\n");
+            logger.trace("Probably not all caption imported due to error.\n");
         }
 
         // check if last frame is valid
         if (subPictures.size() > 0 && (odsCounter==0 || pdsCounter==0)) {
-            Core.printWarn("missing PDS/ODS: last epoch is discarded\n");
+            logger.warn("missing PDS/ODS: last epoch is discarded\n");
             subPictures.remove(subPictures.size()-1);
         }
 
@@ -378,7 +376,7 @@ public class SupBD implements SubtitleStream {
                 numForcedFrames++;
             }
         }
-        Core.printX("\nDetected " + numForcedFrames + " forced captions.\n");
+        logger.info("\nDetected " + numForcedFrames + " forced captions.\n");
     }
 
     /**
@@ -534,10 +532,10 @@ public class SupBD implements SubtitleStream {
             int size = ct.length;
             if (size > 255) {
                 size = 255;
-                Core.print("Palette had to be reduced from " + pal.getSize() + " to " + size + " entries.\n");
-                Core.printWarn("Quantizer failed.\n");
+                logger.trace("Palette had to be reduced from " + pal.getSize() + " to " + size + " entries.\n");
+                logger.warn("Quantizer failed.\n");
             } else {
-                Core.print("Palette had to be reduced from " + pal.getSize() + " to " + size + " entries.\n");
+                logger.trace("Palette had to be reduced from " + pal.getSize() + " to " + size + " entries.\n");
             }
             // create palette
             pal = new Palette(size);
@@ -1010,7 +1008,7 @@ public class SupBD implements SubtitleStream {
         } catch (FileBufferException ex) {
             throw new CoreException (ex.getMessage());
         } catch (ArrayIndexOutOfBoundsException ex) {
-            Core.printWarn("problems during RLE decoding of picture OBJ at offset " + ToolBox.toHexLeftZeroPadded(startOfs+index, 8)+"\n");
+            logger.warn("problems during RLE decoding of picture OBJ at offset " + ToolBox.toHexLeftZeroPadded(startOfs + index, 8) + "\n");
             return bm;
         }
     }
@@ -1064,7 +1062,7 @@ public class SupBD implements SubtitleStream {
                         + ((first && last) ? "/" : "") + (last ? "" + "last" : "");
                     return true;
                 } else {
-                    Core.printWarn("Invalid image size - ignored\n");
+                    logger.warn("Invalid image size - ignored\n");
                     return false;
                 }
             } else {
@@ -1140,7 +1138,7 @@ public class SupBD implements SubtitleStream {
                 }
             }
             if (fadeOut) {
-                Core.printWarn("fade out detected -> patched palette\n");
+                logger.warn("fade out detected -> patched palette\n");
             }
             return palette;
         } catch (FileBufferException ex) {

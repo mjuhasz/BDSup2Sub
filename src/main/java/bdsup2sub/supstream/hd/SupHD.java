@@ -20,6 +20,7 @@ import bdsup2sub.bitmap.Palette;
 import bdsup2sub.core.Configuration;
 import bdsup2sub.core.Core;
 import bdsup2sub.core.CoreException;
+import bdsup2sub.core.Logger;
 import bdsup2sub.supstream.SubPicture;
 import bdsup2sub.supstream.SubtitleStream;
 import bdsup2sub.tools.BitStream;
@@ -37,7 +38,8 @@ import static bdsup2sub.utils.TimeUtils.ptsToTimeStr;
  */
 public class SupHD implements SubtitleStream {
 
-    private final Configuration configuration = Configuration.getInstance();
+    private static final Configuration configuration = Configuration.getInstance();
+    private static final Logger logger = Logger.getInstance();
 
     /** ArrayList of captions contained in the current file  */
     private ArrayList<SubPictureHD> subPictures = new ArrayList<SubPictureHD>();
@@ -76,7 +78,7 @@ public class SupHD implements SubtitleStream {
                 // hard code size since it's not part of the format???
                 pic.setWidth(1920);
                 pic.setHeight(1080);
-                Core.printX("#" + (subPictures.size() + 1) + "\n");
+                logger.info("#" + (subPictures.size() + 1) + "\n");
                 pic.setStartTime(buffer.getDWordLE(index+=2)); // read PTS
                 int packetSize = buffer.getDWord(index+=10);
                 // offset to command buffer
@@ -85,7 +87,7 @@ public class SupHD implements SubtitleStream {
                 index  = ofsCmd;
                 int dcsq = buffer.getWord(index);
                 pic.setStartTime(pic.getStartTime() + (dcsq * 1024));
-                Core.printX("DCSQ start    ofs: " + ToolBox.toHexLeftZeroPadded(index, 8) + "  (" + ptsToTimeStr(pic.getStartTime()) + ")\n");
+                logger.info("DCSQ start    ofs: " + ToolBox.toHexLeftZeroPadded(index, 8) + "  (" + ptsToTimeStr(pic.getStartTime()) + ")\n");
                 index += 2; // 2 bytes: dcsq
                 int nextIndex = buffer.getDWord(index) + masterIndex; // offset to next dcsq
                 index += 5;  // 4 bytes: offset, 1 byte: start
@@ -98,21 +100,21 @@ public class SupHD implements SubtitleStream {
                     cmd = buffer.getByte(index++);
                     switch (cmd) {
                         case 0x01:
-                            Core.printX("DCSQ start    ofs: " + ToolBox.toHexLeftZeroPadded(index, 8) + "  (" + ptsToTimeStr(pic.getStartTime() +(dcsq*1024)) + ")\n");
-                            Core.printWarn("DCSQ start ignored due to missing DCSQ stop\n");
+                            logger.info("DCSQ start    ofs: " + ToolBox.toHexLeftZeroPadded(index, 8) + "  (" + ptsToTimeStr(pic.getStartTime() + (dcsq * 1024)) + ")\n");
+                            logger.warn("DCSQ start ignored due to missing DCSQ stop\n");
                             break;
                         case 0x02:
                             stopDisplay = true;
                             pic.setEndTime(pic.getStartTime() +(dcsq*1024));
-                            Core.printX("DCSQ stop     ofs: " + ToolBox.toHexLeftZeroPadded(index,8) + "  (" + ptsToTimeStr(pic.getEndTime()) + ")\n");
+                            logger.info("DCSQ stop     ofs: " + ToolBox.toHexLeftZeroPadded(index, 8) + "  (" + ptsToTimeStr(pic.getEndTime()) + ")\n");
                             break;
                         case 0x83: // palette
-                            Core.print("Palette info  ofs: " + ToolBox.toHexLeftZeroPadded(index, 8) + "\n");
+                            logger.trace("Palette info  ofs: " + ToolBox.toHexLeftZeroPadded(index, 8) + "\n");
                             pic.setPaletteOffset(index);
                             index += 0x300;
                             break;
                         case 0x84: // alpha
-                            Core.print("Alpha info    ofs: " + ToolBox.toHexLeftZeroPadded(index, 8) + "\n");
+                            logger.trace("Alpha info    ofs: " + ToolBox.toHexLeftZeroPadded(index, 8) + "\n");
                             alphaSum = 0;
                             for (int i=index; i < index+0x100; i++) {
                                 alphaSum += buffer.getByte(i);
@@ -121,7 +123,7 @@ public class SupHD implements SubtitleStream {
                                 pic.setAlphaOffset(index);
                                 minAlphaSum = alphaSum;
                             } else {
-                                Core.printWarn("Found faded alpha buffer -> alpha buffer skipped\n");
+                                logger.warn("Found faded alpha buffer -> alpha buffer skipped\n");
                             }
 
                             index += 0x100;
@@ -131,7 +133,7 @@ public class SupHD implements SubtitleStream {
                             pic.setImageWidth((((buffer.getByte(index+1)&0xf)<<8) | (buffer.getByte(index+2))) - pic.getXOffset() + 1);
                             pic.setOfsY((buffer.getByte(index+3)<<4) | (buffer.getByte(index+4)>>4));
                             pic.setImageHeight((((buffer.getByte(index+4)&0xf)<<8) | (buffer.getByte(index+5))) - pic.getYOffset() + 1);
-                            Core.print("Area info     ofs: " + ToolBox.toHexLeftZeroPadded(index,8) + "  ("
+                            logger.trace("Area info     ofs: " + ToolBox.toHexLeftZeroPadded(index, 8) + "  ("
                                     + pic.getXOffset() + ", " + pic.getYOffset() + ") - (" + (pic.getXOffset() + pic.getImageWidth()) + ", "
                                     + (pic.getYOffset() + pic.getImageHeight()) + ")\n");
                             index += 6;
@@ -139,14 +141,14 @@ public class SupHD implements SubtitleStream {
                         case 0x86: // even/odd offsets
                             pic.setImageBufferOffsetEven(buffer.getDWord(index) + masterIndex);
                             pic.setImageBufferOffsetOdd(buffer.getDWord(index+4) + masterIndex);
-                            Core.print("RLE buffers   ofs: " + ToolBox.toHexLeftZeroPadded(index, 8)
+                            logger.trace("RLE buffers   ofs: " + ToolBox.toHexLeftZeroPadded(index, 8)
                                     + "  (even: " + ToolBox.toHexLeftZeroPadded(pic.getImageBufferOffsetEven(), 8)
                                     + ", odd: " + ToolBox.toHexLeftZeroPadded(pic.getImageBufferOffsetOdd(), 8) + "\n");
                             index += 8;
                             break;
                         case 0xff:
                             if (stopCommand) {
-                                Core.printWarn("DCSQ stop missing.\n");
+                                logger.warn("DCSQ stop missing.\n");
                                 for (++index; index < bufsize; index++)
                                     if (buffer.getByte(index++) != 0xff) {
                                         index--;
@@ -160,7 +162,7 @@ public class SupHD implements SubtitleStream {
                                 dcsq = d;
                                 nextIndex = buffer.getDWord(index+2) + masterIndex;
                                 stopCommand = (index == nextIndex);
-                                Core.print("DCSQ          ofs: " + ToolBox.toHexLeftZeroPadded(index, 8) + "  (" + (d * 1024 / 90)
+                                logger.trace("DCSQ          ofs: " + ToolBox.toHexLeftZeroPadded(index, 8) + "  (" + (d * 1024 / 90)
                                         + "ms),    next DCSQ at ofs: " + ToolBox.toHexLeftZeroPadded(nextIndex, 8) + "\n");
                                 index += 6;
                             }
@@ -176,14 +178,14 @@ public class SupHD implements SubtitleStream {
             if (subPictures.size() == 0) {
                 throw ex;
             }
-            Core.printErr(ex.getMessage() + "\n");
-            Core.print("Probably not all caption imported due to error.\n");
+            logger.error(ex.getMessage() + "\n");
+            logger.trace("Probably not all caption imported due to error.\n");
         } catch (FileBufferException ex) {
             if (subPictures.size() == 0) {
                 throw new CoreException (ex.getMessage());
             }
-            Core.printErr(ex.getMessage() + "\n");
-            Core.print("Probably not all caption imported due to error.\n");
+            logger.error(ex.getMessage() + "\n");
+            logger.trace("Probably not all caption imported due to error.\n");
         }
     }
 
@@ -326,7 +328,7 @@ public class SupHD implements SubtitleStream {
             }
 
             if (warnings > 0) {
-                Core.printWarn("problems during RLE decoding of picture at offset " + ToolBox.toHexLeftZeroPadded(pic.getImageBufferOffsetEven(), 8) + "\n");
+                logger.warn("problems during RLE decoding of picture at offset " + ToolBox.toHexLeftZeroPadded(pic.getImageBufferOffsetEven(), 8) + "\n");
             }
 
             return bm;

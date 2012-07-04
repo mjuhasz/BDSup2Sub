@@ -19,7 +19,6 @@ import bdsup2sub.bitmap.Bitmap;
 import bdsup2sub.bitmap.BitmapWithPalette;
 import bdsup2sub.bitmap.ErasePatch;
 import bdsup2sub.bitmap.Palette;
-import bdsup2sub.gui.main.MainFrameView;
 import bdsup2sub.gui.support.Progress;
 import bdsup2sub.supstream.*;
 import bdsup2sub.supstream.bd.SupBD;
@@ -49,6 +48,7 @@ import static com.mortennobel.imagescaling.ResampleFilters.*;
 public class Core extends Thread {
 
     private static final Configuration configuration = Configuration.getInstance();
+    private static final Logger logger = Logger.getInstance();
 
     /** Enumeration of functionalities executed in the started thread */
     private enum RunType {
@@ -126,19 +126,12 @@ public class Core extends Thread {
     /** Full filename of current source SUP (needed for thread) */
     private static String fileName;
 
-    /** Reference to main GUI class */
-    private static MainFrameView mainFrame;
     /** Progress dialog for loading/exporting */
     private static Progress progress;
     /** Maximum absolute value for progress bar */
     private static int progressMax;
     /** Last relative value for progress bar */
     private static int progressLast;
-
-    /** Number of errors */
-    private static int errors;
-    /** Number of warnings */
-    private static int warnings;
 
     /** Functionality executed in the started thread */
     private static RunType runType;
@@ -408,16 +401,16 @@ public class Core extends Thread {
      * @throws CoreException
      */
     public static void readSup(String fname) throws CoreException {
-        printX("Loading "+fname+"\n");
-        resetErrors();
-        resetWarnings();
+        logger.info("Loading " + fname + "\n");
+        logger.resetErrorCounter();
+        logger.resetWarningCounter();
 
         // try to find matching language idx if filename contains language string
         String fnl = FilenameUtils.getName(fname.toLowerCase());
         for (int i=0; i < LANGUAGES.length; i++) {
             if (fnl.contains(LANGUAGES[i][0].toLowerCase())) {
                 configuration.setLanguageIdx(i);
-                printX("Selected language '"+LANGUAGES[i][0]+" ("+LANGUAGES[i][1]+")' by filename\n");
+                logger.info("Selected language '" + LANGUAGES[i][0] + " (" + LANGUAGES[i][1] + ")' by filename\n");
                 break;
             }
         }
@@ -478,9 +471,9 @@ public class Core extends Thread {
      * @throws CoreException
      */
     public static void readXml(String fname) throws CoreException {
-        printX("Loading "+fname+"\n");
-        resetErrors();
-        resetWarnings();
+        logger.info("Loading " + fname + "\n");
+        logger.resetErrorCounter();
+        logger.resetWarningCounter();
 
         // close existing subtitleStream
         if (subtitleStream != null) {
@@ -549,9 +542,9 @@ public class Core extends Thread {
      * @throws CoreException
      */
     private static void readDVDSubstream(String fname, boolean isVobSub) throws CoreException {
-        printX("Loading " + fname + "\n");
-        resetErrors();
-        resetWarnings();
+        logger.info("Loading " + fname + "\n");
+        logger.resetErrorCounter();
+        logger.resetWarningCounter();
 
         // close existing subtitleStream
         if (subtitleStream != null) {
@@ -665,7 +658,7 @@ public class Core extends Thread {
         }
 
         if (ts < te_last) {
-            printWarn("start time of frame "+idx+" < end of last frame -> fixed\n");
+            logger.warn("start time of frame " + idx + " < end of last frame -> fixed\n");
             ts = te_last;
         }
 
@@ -689,16 +682,16 @@ public class Core extends Thread {
 
         if (te <= ts) {
             if (te == 0) {
-                printWarn("missing end time of frame "+idx+" -> fixed\n");
+                logger.warn("missing end time of frame " + idx + " -> fixed\n");
             } else {
-                printWarn("end time of frame "+idx+" <= start time -> fixed\n");
+                logger.warn("end time of frame " + idx + " <= start time -> fixed\n");
             }
             te = ts+delay;
             if (te > ts_next) {
                 te = ts_next;
             }
         } else if (te > ts_next) {
-            printWarn("end time of frame "+idx+" > start time of next frame -> fixed\n");
+            logger.warn("end time of frame " + idx + " > start time of next frame -> fixed\n");
             te = ts_next;
         }
 
@@ -709,9 +702,9 @@ public class Core extends Thread {
                 if (te > ts_next) {
                     te = ts_next;
                 }
-                printWarn("duration of frame " + idx + " was shorter than " + (ToolBox.formatDouble(minTimePTS / 90.0)) + "ms -> fixed\n");
+                logger.warn("duration of frame " + idx + " was shorter than " + (ToolBox.formatDouble(minTimePTS / 90.0)) + "ms -> fixed\n");
             } else {
-                printWarn("duration of frame " + idx + " is shorter than " + (ToolBox.formatDouble(minTimePTS / 90.0)) + "ms\n");
+                logger.warn("duration of frame " + idx + " is shorter than " + (ToolBox.formatDouble(minTimePTS / 90.0)) + "ms\n");
             }
         }
 
@@ -1133,7 +1126,7 @@ public class Core extends Thread {
         int startOfs = (int) subtitleStream.getStartOffset(index);
         SubPicture subPic = subtitleStream.getSubPicture(index);
 
-        printX("Decoding frame "+displayNum+"/"+displayMax+((subtitleStream == supXml)?"\n":(" at offset "+ToolBox.toHexLeftZeroPadded(startOfs,8)+"\n")));
+        logger.info("Decoding frame " + displayNum + "/" + displayMax + ((subtitleStream == supXml) ? "\n" : (" at offset " + ToolBox.toHexLeftZeroPadded(startOfs, 8) + "\n")));
 
         synchronized (semaphore) {
             subtitleStream.decode(index);
@@ -1301,9 +1294,9 @@ public class Core extends Thread {
                 fn = FilenameUtils.removeExtension(fname);
                 fname = fn+".xml";
             }
-            printX("\nWriting "+fname+"\n");
-            resetErrors();
-            resetWarnings();
+            logger.info("\nWriting " + fname + "\n");
+            logger.resetErrorCounter();
+            logger.resetWarningCounter();
 
             // main loop
             int offset = 0;
@@ -1379,7 +1372,7 @@ public class Core extends Thread {
                 ts[i] = timestamps.get(i);
             }
             fname = FilenameUtils.removeExtension(fname) + ".idx";
-            printX("\nWriting "+fname+"\n");
+            logger.info("\nWriting " + fname + "\n");
             if (!importedDVDPalette || paletteMode != PaletteMode.KEEP_EXISTING) {
                 trgPallete = currentDVDPalette;
             } else {
@@ -1388,7 +1381,7 @@ public class Core extends Thread {
             SubDvdWriter.writeIdx(fname, subPictures[0], ofs, ts, trgPallete);
         } else if (outputMode == OutputMode.XML) {
             // XML - write ML
-            printX("\nWriting "+fname+"\n");
+            logger.info("\nWriting " + fname + "\n");
             SupXml.writeXml(fname, subPictures);
         } else if (outputMode == OutputMode.SUPIFO) {
             // SUP/IFO - write IFO
@@ -1398,14 +1391,14 @@ public class Core extends Thread {
                 trgPallete = currentSourceDVDPalette;
             }
             fname = FilenameUtils.removeExtension(fname) + ".ifo";
-            printX("\nWriting "+fname+"\n");
+            logger.info("\nWriting " + fname + "\n");
             IfoWriter.writeIFO(fname, subPictures[0].getHeight(), trgPallete);
         }
 
         // only possible for SUB/IDX and SUP/IFO (else there is no public palette)
         if (trgPallete != null && configuration.getWritePGCEditPalette()) {
             String fnp = FilenameUtils.removeExtension(fname) + ".txt";
-            printX("\nWriting "+fnp+"\n");
+            logger.info("\nWriting " + fnp + "\n");
             writePGCEditPal(fnp, trgPallete);
         }
 
@@ -1472,9 +1465,9 @@ public class Core extends Thread {
             if (sx != null) {
                  s += " and to the " + sx;
             }
-            print(s+".\n");
+            logger.trace(s + ".\n");
         } else if (sx != null) {
-            print(s+"to the "+sx+".\n");
+            logger.trace(s + "to the " + sx + ".\n");
         }
 
         if (!configuration.isCliMode()) {
@@ -1525,14 +1518,14 @@ public class Core extends Thread {
             switch (c) {
                 case FULL:
                     // maybe add scaling later, but for now: do nothing
-                    printWarn("Caption "+idx+" not moved (too large)\n");
+                    logger.warn("Caption " + idx + " not moved (too large)\n");
                     break;
                 case UP:
                     if (mmy == CaptionMoveModeY.MOVE_INSIDE_BOUNDS)
                         pic.setOfsY(barHeight+offsetY);
                     else
                         pic.setOfsY(offsetY);
-                    print("Caption "+idx+" moved to y position "+pic.getYOffset()+"\n");
+                    logger.trace("Caption " + idx + " moved to y position " + pic.getYOffset() + "\n");
                     break;
                 case DOWN:
                     if (mmy == CaptionMoveModeY.MOVE_INSIDE_BOUNDS) {
@@ -1540,7 +1533,7 @@ public class Core extends Thread {
                     } else {
                         pic.setOfsY(h-offsetY-hi);
                     }
-                    print("Caption "+idx+" moved to y position "+pic.getYOffset()+"\n");
+                    logger.trace("Caption " + idx + " moved to y position " + pic.getYOffset() + "\n");
                     break;
             }
             if (pic.getYOffset() < cropOffsetY) {
@@ -1571,60 +1564,6 @@ public class Core extends Thread {
             case CENTER:
                 pic.setOfsX((w-wi)/2);
                 break;
-        }
-    }
-
-    /**
-     * Print string to console or console window (only printed in verbatim mode).
-     * @param s String containing message to print
-     */
-    public static void print(String s) {
-        if (configuration.isVerbatim()) {
-            if (mainFrame != null) {
-                mainFrame.printOut(s);
-            } else {
-                System.out.print(s);
-            }
-        }
-    }
-
-    /**
-     * Print string to console or console window (always printed).
-     * @param s String containing message to print
-     */
-    public static void printX(String s) {
-        if (mainFrame != null) {
-            mainFrame.printOut(s);
-        } else {
-            System.out.print(s);
-        }
-    }
-
-    /**
-     * Print error string to console or console window (always printed).
-     * @param s String containing error message to print
-     */
-    public static void printErr(String s) {
-        errors++;
-        s = "ERROR: " + s;
-        if (mainFrame != null) {
-            mainFrame.printErr(s);
-        } else {
-            System.out.print(s);
-        }
-    }
-
-    /**
-     * Print warning string to console or console window (always printed).
-     * @param s String containing warning message to print
-     */
-    public static void printWarn(String s) {
-        warnings++;
-        s = "WARNING: "+s;
-        if (mainFrame != null) {
-            mainFrame.printWarn(s);
-        } else {
-            System.out.print(s);
         }
     }
 
@@ -1723,52 +1662,6 @@ public class Core extends Thread {
      */
     public static CoreThreadState getStatus() {
         return state;
-    }
-
-    /**
-     * Get reference to the main frame.
-     * @return Reference to the main frame
-     */
-    public static MainFrameView getMainFrame() {
-        return mainFrame;
-    }
-
-    /**
-     * Set reference to the main frame.
-     * @param mf Reference to the main frame
-     */
-    public static void setMainFrame(final MainFrameView mf) {
-        mainFrame = mf;
-    }
-
-    /**
-     * Get the number of errors.
-     * @return Number of errors since last call to resetErrors
-     */
-    public static int getErrors() {
-        return errors;
-    }
-
-    /**
-     * Reset the number of errors.
-     */
-    public static void resetErrors() {
-        errors = 0;
-    }
-
-    /**
-     * Get the number of warnings.
-     * @return Number of warnings since last call to resetWarnings
-     */
-    public static int getWarnings() {
-        return warnings;
-    }
-
-    /**
-     * Reset the number of warnings.
-     */
-    public static void resetWarnings() {
-        warnings = 0;
     }
 
     /**

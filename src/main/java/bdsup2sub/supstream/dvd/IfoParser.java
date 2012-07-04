@@ -16,8 +16,8 @@
 package bdsup2sub.supstream.dvd;
 
 import bdsup2sub.bitmap.Palette;
-import bdsup2sub.core.Core;
 import bdsup2sub.core.CoreException;
+import bdsup2sub.core.Logger;
 import bdsup2sub.tools.FileBuffer;
 import bdsup2sub.tools.FileBufferException;
 import bdsup2sub.utils.ToolBox;
@@ -29,7 +29,9 @@ import static bdsup2sub.core.Constants.LANGUAGES;
 
 public class IfoParser {
 
-    private static byte[] IFOheader = "DVDVIDEO-VTS".getBytes();
+    private static final Logger logger = Logger.getInstance();
+
+    private static final byte[] IFO_HEADER = "DVDVIDEO-VTS".getBytes();
 
     private final FileBuffer fileBuffer;
 
@@ -60,9 +62,9 @@ public class IfoParser {
     }
 
     private void validateIfoHeader() throws FileBufferException, CoreException {
-        byte header[] = new byte[IFOheader.length];
-        fileBuffer.getBytes(0, header, IFOheader.length);
-        if (!Arrays.equals(header, IFOheader)) {
+        byte header[] = new byte[IFO_HEADER.length];
+        fileBuffer.getBytes(0, header, IFO_HEADER.length);
+        if (!Arrays.equals(header, IFO_HEADER)) {
             throw new CoreException("Not a valid IFO file.");
         }
     }
@@ -110,7 +112,7 @@ public class IfoParser {
                     break;
             }
         }
-        Core.print("Resolution: " + screenWidth + "x" + screenHeight + "\n");
+        logger.trace("Resolution: " + screenWidth + "x" + screenHeight + "\n");
     }
 
     private void readFirstLanguageIndex() throws FileBufferException {
@@ -128,12 +130,12 @@ public class IfoParser {
                 }
             }
             if (!found) {
-                Core.printWarn("Illegal language id: " + lang + "\n");
+                logger.warn("Illegal language id: " + lang + "\n");
             } else {
-                Core.print("Set language to: " + lang + "\n");
+                logger.trace("Set language to: " + lang + "\n");
             }
         } else {
-            Core.printWarn("Missing language id.\n");
+            logger.warn("Missing language id.\n");
         }
     }
 
@@ -142,7 +144,7 @@ public class IfoParser {
         long VTS_PGCITI_ofs = fileBuffer.getDWord(0xCC) * 2048;
         // PTT_SRPTI
         VTS_PGCITI_ofs += fileBuffer.getDWord(VTS_PGCITI_ofs+0x0C);
-        Core.print("Reading palette from offset: " + ToolBox.toHexLeftZeroPadded(VTS_PGCITI_ofs, 8) + "\n");
+        logger.trace("Reading palette from offset: " + ToolBox.toHexLeftZeroPadded(VTS_PGCITI_ofs, 8) + "\n");
 
         // assume palette in VTS_PGC_1
         long index = VTS_PGCITI_ofs;

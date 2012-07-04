@@ -21,6 +21,7 @@ import bdsup2sub.bitmap.Palette;
 import bdsup2sub.core.Configuration;
 import bdsup2sub.core.Core;
 import bdsup2sub.core.CoreException;
+import bdsup2sub.core.Logger;
 import bdsup2sub.supstream.ImageObjectFragment;
 import bdsup2sub.supstream.SubPicture;
 import bdsup2sub.tools.FileBuffer;
@@ -40,6 +41,7 @@ import static bdsup2sub.utils.ToolBox.toHexLeftZeroPadded;
 public class SupDvd implements DvdSubtitleStream {
 
     private static final Configuration configuration = Configuration.getInstance();
+    private static final Logger logger = Logger.getInstance();
 
     public static final byte[] CONTROL_HEADER = {
             0x00,													//  dummy byte (for shifting when forced)
@@ -94,15 +96,15 @@ public class SupDvd implements DvdSubtitleStream {
             Core.setProgressMax((int) size);
             int i = 0;
             do {
-                Core.printX("# " + (++i) + "\n");
+                logger.info("# " + (++i) + "\n");
                 Core.setProgress((int)offset);
-                Core.print("Offset: " + ToolBox.toHexLeftZeroPadded(offset, 8) + "\n");
+                logger.trace("Offset: " + ToolBox.toHexLeftZeroPadded(offset, 8) + "\n");
                 offset = readSupFrame(offset, fileBuffer);
             } while (offset < size);
         } catch (FileBufferException e) {
             throw new CoreException(e.getMessage());
         }
-        Core.printX("\nDetected " + numForcedFrames + " forced captions.\n");
+        logger.info("\nDetected " + numForcedFrames + " forced captions.\n");
     }
 
     private long readSupFrame(long offset, FileBuffer buffer) throws CoreException  {
@@ -154,7 +156,7 @@ public class SupDvd implements DvdSubtitleStream {
             int delay = -1;
             boolean colorAlphaUpdate = false;
 
-            Core.print("SP_DCSQT at ofs: " + ToolBox.toHexLeftZeroPadded(ctrlOffset, 8) + "\n");
+            logger.trace("SP_DCSQT at ofs: " + ToolBox.toHexLeftZeroPadded(ctrlOffset, 8) + "\n");
 
             // copy control header in buffer (to be more compatible with VobSub)
             ctrlHeader = new byte[ctrlSize];
@@ -168,7 +170,7 @@ public class SupDvd implements DvdSubtitleStream {
                 int index = 0;
                 int endSeqOfs = getWord(ctrlHeader, index) - ctrlOfsRel - 2;
                 if (endSeqOfs < 0 || endSeqOfs > ctrlSize) {
-                    Core.printWarn("Invalid end sequence offset -> no end time\n");
+                    logger.warn("Invalid end sequence offset -> no end time\n");
                     endSeqOfs = ctrlSize;
                 }
                 index += 2;
@@ -189,7 +191,7 @@ public class SupDvd implements DvdSubtitleStream {
                             b = getByte(ctrlHeader, index++);
                             pic.getPal()[1] = (b >> 4);
                             pic.getPal()[0] = b & 0x0f;
-                            Core.print("Palette:   " + pic.getPal()[0] + ", " + pic.getPal()[1] + ", " + pic.getPal()[2] + ", " + pic.getPal()[3] + "\n");
+                            logger.trace("Palette:   " + pic.getPal()[0] + ", " + pic.getPal()[1] + ", " + pic.getPal()[2] + ", " + pic.getPal()[3] + "\n");
                             break;
                         case 4: // alpha info
                             b = getByte(ctrlHeader, index++);
@@ -201,7 +203,7 @@ public class SupDvd implements DvdSubtitleStream {
                             for (int i = 0; i < 4; i++) {
                                 alphaSum += pic.getAlpha()[i] & 0xff;
                             }
-                            Core.print("Alpha:     " + pic.getAlpha()[0] + ", " + pic.getAlpha()[1] + ", " + pic.getAlpha()[2] + ", " + pic.getAlpha()[3] + "\n");
+                            logger.trace("Alpha:     " + pic.getAlpha()[0] + ", " + pic.getAlpha()[1] + ", " + pic.getAlpha()[2] + ", " + pic.getAlpha()[3] + "\n");
                             break;
                         case 5: // coordinates
                             int xOfs = (getByte(ctrlHeader, index) << 4) | (getByte(ctrlHeader, index+1) >> 4);
@@ -210,16 +212,16 @@ public class SupDvd implements DvdSubtitleStream {
                             int yOfs = (getByte(ctrlHeader, index + 3) << 4) | (getByte(ctrlHeader, index + 4) >> 4);
                             pic.setOfsY(yOfs);
                             pic.setImageHeight((((getByte(ctrlHeader, index + 4) & 0xf) << 8) | (getByte(ctrlHeader, index + 5))) - yOfs + 1);
-                            Core.print("Area info:" + " ("
-                                    + pic.getXOffset() + ", "+pic.getYOffset() + ") - (" + (pic.getXOffset() + pic.getImageWidth()-1) + ", "
-                                    + (pic.getYOffset() + pic.getImageHeight()-1) + ")\n");
+                            logger.trace("Area info:" + " ("
+                                    + pic.getXOffset() + ", " + pic.getYOffset() + ") - (" + (pic.getXOffset() + pic.getImageWidth() - 1) + ", "
+                                    + (pic.getYOffset() + pic.getImageHeight() - 1) + ")\n");
                             index += 6;
                             break;
                         case 6: // offset to RLE buffer
                             pic.setEvenOffset(getWord(ctrlHeader, index) - 4);
                             pic.setOddOffset(getWord(ctrlHeader, index + 2) - 4);
                             index += 4;
-                            Core.print("RLE ofs:   " + ToolBox.toHexLeftZeroPadded(pic.getEvenOffset(), 4) + ", " + ToolBox.toHexLeftZeroPadded(pic.getOddOffset(), 4) + "\n");
+                            logger.trace("RLE ofs:   " + ToolBox.toHexLeftZeroPadded(pic.getEvenOffset(), 4) + ", " + ToolBox.toHexLeftZeroPadded(pic.getOddOffset(), 4) + "\n");
                             break;
                         case 7: // color/alpha update
                             colorAlphaUpdate = true;
@@ -252,7 +254,7 @@ public class SupDvd implements DvdSubtitleStream {
                             delay = getWord(ctrlHeader, index) * 1024;
                             endSeqOfs = getWord(ctrlHeader, index + 2)-ctrlOfsRel - 2;
                             if (endSeqOfs < 0 || endSeqOfs > ctrlSize) {
-                                Core.printWarn("Invalid end sequence offset -> no end time\n");
+                                logger.warn("Invalid end sequence offset -> no end time\n");
                                 endSeqOfs = ctrlSize;
                             }
                             index += 4;
@@ -260,7 +262,7 @@ public class SupDvd implements DvdSubtitleStream {
                         case 0xff: // end sequence
                             break parse_ctrl;
                         default:
-                            Core.printWarn("Unknown control sequence " + toHexLeftZeroPadded(cmd, 2) + " skipped\n");
+                            logger.warn("Unknown control sequence " + toHexLeftZeroPadded(cmd, 2) + " skipped\n");
                             break;
                     }
                 }
@@ -276,7 +278,7 @@ public class SupDvd implements DvdSubtitleStream {
                         ctrlSeqCount++;
                     }
                     if (ctrlSeqCount > 2) {
-                        Core.printWarn("Control sequence(s) ignored - result may be erratic.");
+                        logger.warn("Control sequence(s) ignored - result may be erratic.");
                     }
                     pic.setEndTime(pic.getStartTime() + delay);
                 } else {
@@ -286,15 +288,15 @@ public class SupDvd implements DvdSubtitleStream {
                 pic.storeOriginal();
 
                 if (colorAlphaUpdate) {
-                    Core.printWarn("Palette update/alpha fading detected - result may be erratic.\n");
+                    logger.warn("Palette update/alpha fading detected - result may be erratic.\n");
                 }
 
                 if (alphaSum == 0) {
                     if (configuration.getFixZeroAlpha()) {
                         System.arraycopy(lastAlpha, 0, pic.getAlpha(), 0, 4);
-                        Core.printWarn("Invisible caption due to zero alpha - used alpha info of last caption.\n");
+                        logger.warn("Invisible caption due to zero alpha - used alpha info of last caption.\n");
                     } else {
-                        Core.printWarn("Invisible caption due to zero alpha (not fixed due to user setting).\n");
+                        logger.warn("Invisible caption due to zero alpha (not fixed due to user setting).\n");
                     }
                 }
                 lastAlpha = pic.getAlpha();

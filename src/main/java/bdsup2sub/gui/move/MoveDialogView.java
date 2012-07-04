@@ -15,10 +15,7 @@
  */
 package bdsup2sub.gui.move;
 
-import bdsup2sub.core.CaptionMoveModeX;
-import bdsup2sub.core.CaptionMoveModeY;
-import bdsup2sub.core.Core;
-import bdsup2sub.core.CoreException;
+import bdsup2sub.core.*;
 import bdsup2sub.gui.support.EditPane;
 import bdsup2sub.gui.support.RequestFocusListener;
 import bdsup2sub.supstream.SubPicture;
@@ -36,6 +33,8 @@ import static bdsup2sub.core.Configuration.OK_BACKGROUND;
 import static bdsup2sub.gui.support.GuiUtils.centerRelativeToOwner;
 
 class MoveDialogView extends JDialog {
+
+    private static final Logger logger = Logger.getInstance();
 
     private static final Dimension DIMENSION_LABEL = new Dimension(70,14);
     private static final Dimension DIMENSION_TEXTFIELD = new Dimension(40,20);
@@ -648,7 +647,7 @@ class MoveDialogView extends JDialog {
     }
 
     void error(String message) {
-        Core.printErr(message);
+        logger.error(message);
         JOptionPane.showMessageDialog(this, message, "Error!", JOptionPane.WARNING_MESSAGE);
     }
 
