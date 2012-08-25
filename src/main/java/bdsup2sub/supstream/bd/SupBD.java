@@ -601,9 +601,8 @@ public class SupBD implements SubtitleStream {
         int imageDecodeTime = (bm.getWidth() * bm.getHeight() * 9 + 1599) / 1600;
         // write PCS start
         packetHeader[10] = 0x16;											// ID
-        int dts = (int) pic.getStartTime() - (frameInitTime + windowInitTime);
         setDWord(packetHeader, 2, (int) pic.getStartTime());				// PTS
-        setDWord(packetHeader, 6, dts);								// DTS
+        setDWord(packetHeader, 6, 0);								// DTS (0)
         setWord(packetHeader, 11, headerPCSStart.length);			// size
         for (byte b : packetHeader) {
             buf[index++] = b;
@@ -622,7 +621,8 @@ public class SupBD implements SubtitleStream {
         // write WDS
         packetHeader[10] = 0x17;											// ID
         int timeStamp = (int) pic.getStartTime() - windowInitTime;
-        setDWord(packetHeader, 2, timeStamp);						// PTS (keep DTS)
+        setDWord(packetHeader, 2, timeStamp);						// PTS
+        setDWord(packetHeader, 6, 0);                               // DTS (0)
         setWord(packetHeader, 11, headerWDS.length);				// size
         for (byte b : packetHeader) {
             buf[index++] = b;
@@ -637,7 +637,8 @@ public class SupBD implements SubtitleStream {
 
         // write PDS
         packetHeader[10] = 0x14;											// ID
-        setDWord(packetHeader, 2, dts);								// PTS (=DTS of PCS/WDS)
+        int dts = (int) pic.getStartTime() - (frameInitTime + windowInitTime);        
+        setDWord(packetHeader, 2, dts);								// PTS
         setDWord(packetHeader, 6, 0);								// DTS (0)
         setWord(packetHeader, 11, (2+palSize*5));					// size
         for (byte b : packetHeader) {
@@ -662,7 +663,7 @@ public class SupBD implements SubtitleStream {
         packetHeader[10] = 0x15;											// ID
         timeStamp = dts + imageDecodeTime;
         setDWord(packetHeader, 2, timeStamp);						// PTS
-        setDWord(packetHeader, 6, dts);								// DTS
+        setDWord(packetHeader, 6, 0);								// DTS (0)
         setWord(packetHeader, 11, headerODSFirst.length+bufSize);	// size
         for (byte b : packetHeader) {
             buf[index++] = b;
@@ -701,7 +702,8 @@ public class SupBD implements SubtitleStream {
 
         // write END
         packetHeader[10] = (byte)0x80;										// ID
-        setDWord(packetHeader, 6, 0);								// DTS (0) (keep PTS of ODS)
+        setDWord(packetHeader, 2, timeStamp);    					// PTS        
+        setDWord(packetHeader, 6, 0);								// DTS (0)
         setWord(packetHeader, 11, 0);								// size
         for (byte b : packetHeader) {
             buf[index++] = b;
@@ -710,8 +712,7 @@ public class SupBD implements SubtitleStream {
         // write PCS end
         packetHeader[10] = 0x16;											// ID
         setDWord(packetHeader, 2, (int) pic.getEndTime());				// PTS
-        dts = (int) pic.getStartTime() - 1;
-        setDWord(packetHeader, 6, dts);								// DTS
+        setDWord(packetHeader, 6, 0);								// DTS (0)
         setWord(packetHeader, 11, headerPCSEnd.length);				// size
         for (byte b : packetHeader) {
             buf[index++] = b;
@@ -727,7 +728,8 @@ public class SupBD implements SubtitleStream {
         // write WDS
         packetHeader[10] = 0x17;											// ID
         timeStamp = (int) pic.getEndTime() - windowInitTime;
-        setDWord(packetHeader, 2, timeStamp);						// PTS (keep DTS of PCS)
+        setDWord(packetHeader, 2, timeStamp);						// PTS
+        setDWord(packetHeader, 6, 0);
         setWord(packetHeader, 11, headerWDS.length);				// size
         for (byte b : packetHeader) {
             buf[index++] = b;
@@ -742,7 +744,7 @@ public class SupBD implements SubtitleStream {
 
         // write END
         packetHeader[10] = (byte)0x80;										// ID
-        setDWord(packetHeader, 2, dts);								// PTS (DTS of end PCS)
+        setDWord(packetHeader, 2, timeStamp);								// PTS (PTS of end PCS)
         setDWord(packetHeader, 6, 0);								// DTS (0)
         setWord(packetHeader, 11, 0);								// size
         for (byte b : packetHeader) {
