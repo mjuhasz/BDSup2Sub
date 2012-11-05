@@ -97,7 +97,7 @@ public class CommandLineOptions {
 
         Option loadSettings = OptionBuilder
                 .withLongOpt("load-settings")
-                .withDescription("Load settings stored in configuration file.")
+                .withDescription("Load settings stored in configuration file even if running in command-line mode.")
                 .hasArg(false).create(LOAD_SETTINGS);
         options.addOption(loadSettings);
 
