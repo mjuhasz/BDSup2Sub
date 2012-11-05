@@ -36,7 +36,7 @@ class MoveDialogView extends JDialog {
 
     private static final Logger logger = Logger.getInstance();
 
-    private static final Dimension DIMENSION_LABEL = new Dimension(70,14);
+    private static final Dimension DIMENSION_LABEL = new Dimension(80, 14);
     private static final Dimension DIMENSION_TEXTFIELD = new Dimension(40,20);
 
     private JPanel jContentPane;
@@ -257,10 +257,10 @@ class MoveDialogView extends JDialog {
             gridBagLabelRatio1.gridx = 2;
             gridBagLabelRatio1.weightx = 20.0;
             gridBagLabelRatio1.anchor = GridBagConstraints.WEST;
-            gridBagLabelRatio1.insets = new Insets(0, 6, 0, 0);
+            gridBagLabelRatio1.insets = new Insets(0, 0, 0, 0);
             gridBagLabelRatio1.gridy = 1;
             JLabel jLabelRatio1 = new JLabel();
-            jLabelRatio1.setText(" : 1");
+            jLabelRatio1.setText(": 1");
             jLabelRatio1.setHorizontalAlignment(SwingConstants.LEFT);
             jLabelRatio1.setHorizontalTextPosition(SwingConstants.LEFT);
             GridBagConstraints gridBagButtonBtn21_9 = new GridBagConstraints();

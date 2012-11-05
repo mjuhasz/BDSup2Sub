@@ -58,7 +58,7 @@ class DvdPaletteDialogView extends JDialog {
             jContentPane = new JPanel();
             jContentPane.setLayout(null);
             lblColor.setText("Choose Color");
-            lblColor.setBounds(15, 9, 73, 16);
+            lblColor.setBounds(15, 9, 80, 16);
             jContentPane.add(lblColor, null);
             jContentPane.add(getJButtonOk(), null);
             jContentPane.add(getJButtonCancel(), null);

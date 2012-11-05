@@ -37,7 +37,7 @@ import static bdsup2sub.gui.support.GuiUtils.centerRelativeToOwner;
 
 class ConversionDialogView extends JDialog {
 
-    private static final Dimension DIM_LABEL = new Dimension(70,20);
+    private static final Dimension DIM_LABEL = new Dimension(80, 20);
     private static final String[] FRAMERATES = {"23.975", "23.976", "24", "25", "29.97", "50", "59.94"};
 
     private JPanel jContentPane;

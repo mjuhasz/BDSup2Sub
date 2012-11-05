@@ -74,13 +74,13 @@ class FramePaletteDialogView extends JDialog {
             jLabelAlpha1.setBounds(new Rectangle(155, 10, 41, 16));
             jLabelAlpha1.setText("Alpha 1");
             JLabel jLabelAlpha2 = new JLabel();
-            jLabelAlpha2.setBounds(new Rectangle(155, 35, 36, 16));
+            jLabelAlpha2.setBounds(new Rectangle(155, 35, 41, 16));
             jLabelAlpha2.setText("Alpha 2");
             JLabel jLabelAlpha3 = new JLabel();
-            jLabelAlpha3.setBounds(new Rectangle(155, 60, 36, 16));
+            jLabelAlpha3.setBounds(new Rectangle(155, 60, 41, 16));
             jLabelAlpha3.setText("Alpha 3");
             JLabel jLabelAlpha4 = new JLabel();
-            jLabelAlpha4.setBounds(new Rectangle(155, 85, 36, 16));
+            jLabelAlpha4.setBounds(new Rectangle(155, 85, 41, 16));
             jLabelAlpha4.setText("Alpha 4");
             JLabel jLabelColor1 = new JLabel();
             jLabelColor1.setBounds(new Rectangle(15, 10, 46, 16));

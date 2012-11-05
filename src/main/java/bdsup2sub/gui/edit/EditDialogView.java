@@ -86,7 +86,7 @@ class EditDialogView extends JDialog {
 
     private void initialize() {
         setMinimumDimension();
-        setSize(model.getMinWidth() + 36, model.getMinHeight() + 280);
+        setSize(model.getMinWidth() + 36, model.getMinHeight() + 320);
         setContentPane(getJContentPane());
         centerRelativeToOwner(this);
         setResizable(false);
