@@ -443,14 +443,14 @@ class OctTreeQuantizer {
 
     /**
      * A quick way to use the quantizer. Just create a table the right size and pass in the pixels.
-     * @param inPixels Integer array containing the pixels
+     * @param pixels Integer array containing the pixels
      * @param table Output color table
      */
-    public void buildColorTable(int[] inPixels, int[] table) {
-        int count = inPixels.length;
+    public void buildColorTable(int[] pixels, int[] table) {
+        int count = pixels.length;
         maximumColors = table.length;
-        for (int i = 0; i < count; i++) {
-            insertColor(inPixels[i]);
+        for (int pixel : pixels) {
+            insertColor(pixel);
             if (colors > reduceColors) {
                 reduceTree(reduceColors);
             }

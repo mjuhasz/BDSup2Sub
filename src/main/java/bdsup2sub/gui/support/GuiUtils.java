@@ -101,7 +101,7 @@ public final class GuiUtils {
                 }
             }
 
-            private Field getAccessibleFieldFromStyle(SynthStyle style, String fieldName) throws IllegalAccessException, NoSuchFieldException {
+            private Field getAccessibleFieldFromStyle(SynthStyle style, String fieldName) throws NoSuchFieldException {
                 Field f = style.getClass().getDeclaredField(fieldName);
                 f.setAccessible(true);
                 return f;

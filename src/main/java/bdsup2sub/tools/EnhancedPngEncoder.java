@@ -26,16 +26,17 @@ import java.util.zip.DeflaterOutputStream;
 
 /**
  * @author J. David Eisenberg - modified by 0xdeadbeef (added tRNS tag for transparency in palette mode)
- * @version 1.5, 19 Oct 2003 (modified by 0xdeadbeef in 2009)
+ * @version 1.5, 19 Oct 2003 (modified by 0xdeadbeef in 2009 and mjuhasz in 2012)
  *
  * CHANGES:<br>
  * --------<br>
  * 19-Sep-2003 : Fix for platforms using EBCDIC (contributed by Paulo Soares);<br>
  * 19-Oct-2003 : Change private fields to protected fields so that<br>
  *               PngEncoderB can inherit them (JDE)<br>
- *				 Fixed bug with calculation of nRows<br>
- *				 Added modifications for unsigned short images<br>
- *					(contributed by Christian at xpogen.com) <br>
+ *               Fixed bug with calculation of nRows<br>
+ *               Added modifications for unsigned short images<br>
+ *                   (contributed by Christian at xpogen.com) <br>
+ * 10-Nov-2012 : Removed unused constants and useless method override. (mjuhasz)
  */
 public class EnhancedPngEncoder extends PngEncoder {
 
@@ -111,15 +112,13 @@ public class EnhancedPngEncoder extends PngEncoder {
     }
 
     /**
-     * Creates an array of bytes that is the PNG equivalent of the current image,
-     * specifying whether to encode alpha or not.
+     * Creates an array of bytes that is the PNG equivalent of the current image.
      *
-     * @param encodeAlpha boolean false=no alpha, true=encode alpha
      * @return an array of bytes, or null if there was a problem
      */
     @Override
-    public byte[] pngEncode(boolean encodeAlpha) {
-        byte[]  pngIdBytes = { -119, 80, 78, 71, 13, 10, 26, 10 };
+    public byte[] pngEncode() {
+        byte[] pngIdBytes = { -119, 80, 78, 71, 13, 10, 26, 10 };
 
         if (image == null) {
             System.err.println("pngEncode: image is null; returning null");
@@ -153,17 +152,6 @@ public class EnhancedPngEncoder extends PngEncoder {
             pngBytes = null;
         }
         return pngBytes;
-    }
-
-    /**
-     * Creates an array of bytes that is the PNG equivalent of the current image.
-     * Alpha encoding is determined by its setting in the constructor.
-     *
-     * @return an array of bytes, or null if there was a problem
-     */
-    @Override
-    public byte[] pngEncode() {
-        return pngEncode(encodeAlpha);
     }
 
     /**
@@ -360,7 +348,7 @@ public class EnhancedPngEncoder extends PngEncoder {
                         startPos = scanPos;
                     }
 
-                    if (bytesPerPixel == 1)	{ // assume TYPE_BYTE, indexed
+                    if (bytesPerPixel == 1) { // assume TYPE_BYTE, indexed
                         scanLines[scanPos++] = pixels[readPos++];
                     } else if (tType == DataBuffer.TYPE_BYTE) {
                         scanLines[scanPos++] = pixels[readPos++];

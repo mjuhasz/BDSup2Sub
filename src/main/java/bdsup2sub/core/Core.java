@@ -1335,7 +1335,7 @@ public class Core extends Thread {
                         //ImageIO.write(trgBitmap.getImage(trgPal), "png", file);
                         out = new BufferedOutputStream(new FileOutputStream(fnp));
                         EnhancedPngEncoder pngEncoder= new EnhancedPngEncoder(trgBitmap.getImage(trgPal.getColorModel()));
-                        byte buf[] = pngEncoder.pngEncode(true);
+                        byte buf[] = pngEncoder.pngEncode();
                         out.write(buf);
                         out.close();
 

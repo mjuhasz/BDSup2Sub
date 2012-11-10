@@ -63,7 +63,7 @@ class ZoomableGraphicsPanel extends JPanel {
             Dimension dim = new Dimension(zoomScale * image.getWidth(), zoomScale * image.getHeight());
             setPreferredSize(dim);
             getParent().setSize(dim);
-            ((JScrollPane)getParent().getParent()).revalidate();
+            getParent().getParent().revalidate();
         }
     }
 
@@ -77,7 +77,7 @@ class ZoomableGraphicsPanel extends JPanel {
         }
         setPreferredSize(dim);
         getParent().setSize(dim);
-        ((JScrollPane)getParent().getParent()).revalidate();
+        getParent().getParent().revalidate();
     }
 
     private class MouseListener extends MouseAdapter {

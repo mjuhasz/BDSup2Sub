@@ -79,8 +79,6 @@ public class SupXml implements SubtitleStream {
     private double fps = Framerate.FPS_23_976.getValue();
     /** converted xml frame rate read from the stream */
     private double fpsXml = XmlFps(fps);
-    /** number of subtitles read from the xml */
-    private int numToImport;
 
     /**
      * Constructor (for reading)
@@ -499,8 +497,8 @@ public class SupXml implements SubtitleStream {
                     if (at != null) {
                         int n = ToolBox.getInt(at);
                         if (n> 0) {
-                            numToImport = n;
-                            Core.setProgressMax(numToImport);
+                            /* number of subtitles read from the xml */
+                            Core.setProgressMax(n);
                         }
                     }
                     break;
