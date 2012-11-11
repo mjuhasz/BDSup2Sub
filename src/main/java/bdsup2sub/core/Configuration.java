@@ -21,6 +21,7 @@ import bdsup2sub.utils.SubtitleUtils;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.File;
 import java.util.*;
 import java.util.List;
 
@@ -137,7 +138,9 @@ public final class Configuration {
         int i = 0;
         String filename;
         while (i < RECENT_FILE_COUNT && (filename = props.get("recent_" + i, "")).length() > 0) {
-            recentFiles.add(filename);
+            if (new File(filename).exists()) {
+                recentFiles.add(filename);
+            }
             i++;
         }
     }
