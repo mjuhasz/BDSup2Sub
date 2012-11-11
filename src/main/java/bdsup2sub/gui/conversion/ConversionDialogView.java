@@ -704,10 +704,10 @@ class ConversionDialogView extends JDialog {
                         }
                         jComboBoxFpsTrg.setSelectedItem(ToolBox.formatDouble(model.getFpsTrg()));
                         jComboBoxFpsTrg.getEditor().getEditorComponent().setBackground(OK_BACKGROUND);
-                        //
+
                         model.setDelayPTS((int)SubtitleUtils.syncTimePTS(model.getDelayPTS(), model.getFpsTrg(), model.getFpsTrgConf()));
-                        jTextFieldDelay.setText(ToolBox.formatDouble(model.getFpsTrg() / 90.0));
-                        //
+                        jTextFieldDelay.setText(ToolBox.formatDouble(model.getDelayPTS() / 90.0));
+
                         model.setMinTimePTS((int)SubtitleUtils.syncTimePTS(model.getMinTimePTS(), model.getFpsTrg(), model.getFpsTrgConf()));
                         jTextFieldMinTime.setText(ToolBox.formatDouble(model.getMinTimePTS() / 90.0));
                     }
