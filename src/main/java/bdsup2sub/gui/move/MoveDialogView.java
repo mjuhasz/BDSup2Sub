@@ -27,6 +27,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.image.BufferedImage;
 
 import static bdsup2sub.core.Configuration.ERROR_BACKGROUND;
 import static bdsup2sub.core.Configuration.OK_BACKGROUND;
@@ -68,9 +69,6 @@ class MoveDialogView extends JDialog {
     private JRadioButton jRadioButtonRight;
     private JTextField jTextFieldOffsetX;
     private JRadioButton jRadioButtonCenter;
-
-
-    private static final double SCREEN_ASPECT_RATIO = 16.0/9;
 
     private final MoveDialogModel model;
 
@@ -130,12 +128,6 @@ class MoveDialogView extends JDialog {
     private void initialize() {
         setSize(392, 546);
         setContentPane(getJContentPane());
-        addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                dispose();
-            }
-        });
     }
 
     private JPanel getJContentPane() {
@@ -427,22 +419,22 @@ class MoveDialogView extends JDialog {
         return jPanelButtons;
     }
 
+    void setInfoLabelText(String text) {
+        jLabelInfo.setText(text);
+    }
+
     private JButton getJButtonPrev() {
         if (jButtonPrev == null) {
             jButtonPrev = new JButton();
             jButtonPrev.setText("  <  ");
             jButtonPrev.setMnemonic(KeyEvent.VK_LEFT);
             jButtonPrev.setToolTipText("Lose changes and skip to previous frame");
-            jButtonPrev.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    if (model.getCurrentSubtitleIndex() > 0) {
-                        setCurrentSubtitleIndex(model.getCurrentSubtitleIndex() - 1);
-                    }
-                }
-            });
         }
         return jButtonPrev;
+    }
+
+    void addPrevButtonActionListener(ActionListener actionListener) {
+        jButtonPrev.addActionListener(actionListener);
     }
 
     private JButton getJButtonNext() {
@@ -451,16 +443,12 @@ class MoveDialogView extends JDialog {
             jButtonNext.setText("  >  ");
             jButtonNext.setMnemonic(KeyEvent.VK_RIGHT);
             jButtonNext.setToolTipText("Lose changes and skip to next frame");
-            jButtonNext.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    if (model.getCurrentSubtitleIndex() < Core.getNumFrames()-1) {
-                        setCurrentSubtitleIndex(model.getCurrentSubtitleIndex() + 1);
-                    }
-                }
-            });
         }
         return jButtonNext;
+    }
+
+    void addNextButtonActionListener(ActionListener actionListener) {
+        jButtonNext.addActionListener(actionListener);
     }
 
     private EditPane getJPanelPreview() {
@@ -476,20 +464,50 @@ class MoveDialogView extends JDialog {
         return jPanelPreview;
     }
 
+    void repaintPreviewPanel() {
+        jPanelPreview.repaint();
+    }
+
+    void setPreviewPanelAspectRatio(double aspectRatio) {
+        jPanelPreview.setAspectRatio(aspectRatio);
+    }
+
+    void setPreviewPanelSubtitleOffsets(int xOffset, int yOffset) {
+        jPanelPreview.setSubtitleOffsets(xOffset, yOffset);
+    }
+
+    void setPreviewPanelScreenDimension(int width, int height) {
+        jPanelPreview.setScreenDimension(width, height);
+    }
+
+    void setPreviewPanelImage(BufferedImage image, int width, int height) {
+        jPanelPreview.setImage(image, width, height);
+    }
+
+    void setPreviewPanelCropOffsetY(int offset) {
+        jPanelPreview.setCropOffsetY(offset);
+    }
+
+    void setPreviewPanelExcluded(boolean excluded) {
+        jPanelPreview.setExcluded(excluded);
+    }
+
+    void setPreviewPanelCropOfsY(int offset) {
+        jPanelPreview.setCropOffsetY(offset);
+    }
+
     private JButton getJButtonCancel() {
         if (jButtonCancel == null) {
             jButtonCancel = new JButton();
             jButtonCancel.setText("Cancel");
             jButtonCancel.setMnemonic('c');
             jButtonCancel.setToolTipText("Lose changes and return");
-            jButtonCancel.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    dispose();
-                }
-            });
         }
         return jButtonCancel;
+    }
+
+    void addCancelButtonActionListener(ActionListener actionListener) {
+        jButtonCancel.addActionListener(actionListener);
     }
 
     private JButton getJButtonOk() {
@@ -499,22 +517,13 @@ class MoveDialogView extends JDialog {
             jButtonOk.setMnemonic('m');
             jButtonOk.setPreferredSize(new Dimension(79, 23));
             jButtonOk.setToolTipText("Save changes and return");
-            jButtonOk.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    model.storeCropOfsY();
-                    model.storeMoveModeX();
-                    model.storeMoveModeY();
-                    model.storeMoveOffsetX();
-                    model.storeMoveOffsetY();
-                    model.storeCinemascopeBarFactor();
-                    // moving is done in MainFrame
-                    dispose();
-                }
-            });
             jButtonOk.addAncestorListener(new RequestFocusListener());
         }
         return jButtonOk;
+    }
+
+    void addOkButtonActionListener(ActionListener actionListener) {
+        jButtonOk.addActionListener(actionListener);
     }
 
     private JTextField getJTextFieldRatio() {
@@ -525,59 +534,28 @@ class MoveDialogView extends JDialog {
             jTextFieldRatio.setMinimumSize(DIMENSION_TEXTFIELD);
             jTextFieldRatio.setMaximumSize(DIMENSION_TEXTFIELD);
             jTextFieldRatio.setToolTipText("Set inner frame ratio");
-            jTextFieldRatio.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    if (model.isReady()) {
-                        double targetScreenAspectRatio = ToolBox.getDouble(jTextFieldRatio.getText());
-                        if (targetScreenAspectRatio == -1.0 ) {
-                            targetScreenAspectRatio = model.getTargetScreenAspectRatio(); // invalid number -> keep old value
-                        } else if (targetScreenAspectRatio > 4.0) {
-                            targetScreenAspectRatio = 4.0;
-                        } else if (targetScreenAspectRatio < SCREEN_ASPECT_RATIO) {
-                            targetScreenAspectRatio = SCREEN_ASPECT_RATIO;
-                        }
-                        if (targetScreenAspectRatio != model.getTargetScreenAspectRatio()) {
-                            model.setTargetScreenAspectRatio(targetScreenAspectRatio);
-                            setRatio(targetScreenAspectRatio);
-                        }
-                        jTextFieldRatio.setText(ToolBox.formatDouble(targetScreenAspectRatio));
-                    }
-                }
-            });
-            jTextFieldRatio.getDocument().addDocumentListener(new DocumentListener() {
-                private void check() {
-                    if (model.isReady()) {
-                        double targetScreenAspectRatio = ToolBox.getDouble(jTextFieldRatio.getText());
-                        if (targetScreenAspectRatio < SCREEN_ASPECT_RATIO || targetScreenAspectRatio > 4.0 ) {
-                            jTextFieldRatio.setBackground(ERROR_BACKGROUND);
-                        } else {
-                            if (!ToolBox.formatDouble(targetScreenAspectRatio).equalsIgnoreCase(ToolBox.formatDouble(model.getTargetScreenAspectRatio()))) {
-                                model.setTargetScreenAspectRatio(targetScreenAspectRatio);
-                                setRatio(targetScreenAspectRatio);
-                            }
-                            jTextFieldRatio.setBackground(OK_BACKGROUND);
-                        }
-                    }
-                }
-
-                @Override
-                public void insertUpdate(DocumentEvent e) {
-                    check();
-                }
-
-                @Override
-                public void changedUpdate(DocumentEvent e) {
-                    check();
-                }
-
-                @Override
-                public void removeUpdate(DocumentEvent e) {
-                    check();
-                }
-            });
         }
         return jTextFieldRatio;
+    }
+
+    void addRatioTextFieldActionListener(ActionListener actionListener) {
+        jTextFieldRatio.addActionListener(actionListener);
+    }
+
+    void addRatioTextFieldDocumentListener(DocumentListener documentListener) {
+        jTextFieldRatio.getDocument().addDocumentListener(documentListener);
+    }
+
+    String getRatioTextFieldText() {
+        return jTextFieldRatio.getText();
+    }
+
+    void setRatioTextFieldText(String text) {
+        jTextFieldRatio.setText(text);
+    }
+
+    void setRatioTextFieldBackground(Color color) {
+        jTextFieldRatio.setBackground(color);
     }
 
     private JTextField getJTextFieldOffsetY() {
@@ -588,62 +566,28 @@ class MoveDialogView extends JDialog {
             jTextFieldOffsetY.setMinimumSize(DIMENSION_TEXTFIELD);
             jTextFieldOffsetY.setMaximumSize(DIMENSION_TEXTFIELD);
             jTextFieldOffsetY.setToolTipText("Set offset from lower/upper border in pixels");
-            jTextFieldOffsetY.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    if (model.isReady()) {
-                        int y = ToolBox.getInt(jTextFieldOffsetY.getText());
-
-                        if (y == -1) {
-                            y = model.getOffsetY();  // invalid number -> keep old value
-                        } else if (y < 0) {
-                            y = 0;
-                        } else if (y > model.getSubPic().getHeight() /3) {
-                            y = model.getSubPic().getHeight() /3;
-                        }
-
-                        if ( y != model.getOffsetY() ) {
-                            model.setOffsetY(y);
-                            setRatio(model.getTargetScreenAspectRatio());
-                        }
-                        jTextFieldOffsetY.setText(String.valueOf(model.getOffsetY()));
-                    }
-                }
-            });
-            jTextFieldOffsetY.getDocument().addDocumentListener(new DocumentListener() {
-                private void check() {
-                    if (model.isReady()) {
-                        int y = ToolBox.getInt(jTextFieldOffsetY.getText());
-
-                        if ( y < 0 || y > model.getSubPic().getHeight() /3 ) {
-                            jTextFieldOffsetY.setBackground(ERROR_BACKGROUND);
-                        } else {
-                            if (y != model.getOffsetY()) {
-                                model.setOffsetY(y);
-                                setRatio(model.getTargetScreenAspectRatio());
-                            }
-                            jTextFieldOffsetY.setBackground(OK_BACKGROUND);
-                        }
-                    }
-                }
-
-                @Override
-                public void insertUpdate(DocumentEvent e) {
-                    check();
-                }
-
-                @Override
-                public void changedUpdate(DocumentEvent e) {
-                    check();
-                }
-
-                @Override
-                public void removeUpdate(DocumentEvent e) {
-                    check();
-                }
-            });
         }
         return jTextFieldOffsetY;
+    }
+
+    void addOffsetYTextFieldActionListener(ActionListener actionListener) {
+        jTextFieldOffsetY.addActionListener(actionListener);
+    }
+
+    void addOffsetYTextFieldDocumentListener(DocumentListener documentListener) {
+        jTextFieldOffsetY.getDocument().addDocumentListener(documentListener);
+    }
+
+    String getOffsetYTextFieldText() {
+        return jTextFieldOffsetY.getText();
+    }
+
+    void setOffsetYTextFieldText(String text) {
+        jTextFieldOffsetY.setText(text);
+    }
+
+    void setOffsetYTextFieldBackground(Color color) {
+        jTextFieldOffsetY.setBackground(color);
     }
 
     void error(String message) {
@@ -651,52 +595,17 @@ class MoveDialogView extends JDialog {
         JOptionPane.showMessageDialog(this, message, "Error!", JOptionPane.WARNING_MESSAGE);
     }
 
-    public void setCurrentSubtitleIndex(int idx) {
-        model.setReady(false);
-        model.setCurrentSubtitleIndex(idx);
-        // update components
-        try {
-            Core.convertSup(idx, idx+1, Core.getNumFrames());
-            SubPicture subPic = Core.getSubPictureTrg(idx).clone();
-            model.setSubPic(subPic);
-            model.setImage(Core.getTrgImagePatched(subPic));
-
-            model.setOriginalX(subPic.getXOffset());
-            model.setOriginalY(subPic.getYOffset());
-
-            jLabelInfo.setText("Frame " + (idx+1) + " of " + Core.getNumFrames());
-            move();
-            jPanelPreview.setSubtitleOffsets(subPic.getXOffset(), subPic.getYOffset());
-            jPanelPreview.setScreenDimension(subPic.getWidth(), subPic.getHeight());
-            jPanelPreview.setImage(model.getImage(), subPic.getImageWidth(), subPic.getImageHeight());
-            jPanelPreview.setAspectRatio(model.getTargetScreenAspectRatio());
-            jPanelPreview.setCropOffsetY(model.getCropOfsY());
-            jPanelPreview.setExcluded(subPic.isExcluded());
-            jPanelPreview.repaint();
-            model.setReady(true);
-
-        } catch (CoreException ex) {
-            error(ex.getMessage());
-        } catch (Exception ex) {
-            ToolBox.showException(ex);
-            Core.exit();
-            System.exit(4);
-        }
-    }
-
     private JButton getJButton21_9() {
         if (jButton21_9 == null) {
             jButton21_9 = new JButton();
             jButton21_9.setText("21:9");
             jButton21_9.setToolTipText("Set inner frame ratio to 21:9");
-            jButton21_9.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    setRatio(21.0/9);
-                }
-            });
         }
         return jButton21_9;
+    }
+
+    void add_21_9_ButtonActionListener(ActionListener actionListener) {
+        jButton21_9.addActionListener(actionListener);
     }
 
     private JButton getJButton240_1() {
@@ -704,14 +613,12 @@ class MoveDialogView extends JDialog {
             jButton240_1 = new JButton();
             jButton240_1.setText("2.40:1");
             jButton240_1.setToolTipText("Set inner frame ratio to 2.40:1");
-            jButton240_1.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    setRatio(2.4);
-                }
-            });
         }
         return jButton240_1;
+    }
+
+    void add_240_1_ButtonActionListener(ActionListener actionListener) {
+        jButton240_1.addActionListener(actionListener);
     }
 
     private JButton getJButton235_1() {
@@ -719,14 +626,12 @@ class MoveDialogView extends JDialog {
             jButton235_1 = new JButton();
             jButton235_1.setText("2.35:1");
             jButton235_1.setToolTipText("Set inner frame ratio to 2.35:1");
-            jButton235_1.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    setRatio(2.35);
-                }
-            });
         }
         return jButton235_1;
+    }
+
+    void add_235_1_ButtonActionListener(ActionListener actionListener) {
+        jButton235_1.addActionListener(actionListener);
     }
 
     private JRadioButton getJRadioButtonInside() {
@@ -735,15 +640,12 @@ class MoveDialogView extends JDialog {
             jRadioButtonInside.setText("move inside bounds");
             jRadioButtonInside.setToolTipText("Move the subtitles inside the inner frame");
             jRadioButtonInside.setMnemonic('i');
-            jRadioButtonInside.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    model.setMoveModeY(CaptionMoveModeY.MOVE_INSIDE_BOUNDS);
-                    setRatio(model.getTargetScreenAspectRatio());
-                }
-            });
         }
         return jRadioButtonInside;
+    }
+
+    void addInsideRadioButtonActionListener(ActionListener actionListener) {
+        jRadioButtonInside.addActionListener(actionListener);
     }
 
     private JRadioButton getJRadioButtonOutside() {
@@ -752,15 +654,12 @@ class MoveDialogView extends JDialog {
             jRadioButtonOutside.setText("move outside bounds");
             jRadioButtonOutside.setToolTipText("Move the subtitles outside the inner frame as much as possible");
             jRadioButtonOutside.setMnemonic('o');
-            jRadioButtonOutside.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    model.setMoveModeY(CaptionMoveModeY.MOVE_OUTSIDE_BOUNDS);
-                    setRatio(model.getTargetScreenAspectRatio());
-                }
-            });
         }
         return jRadioButtonOutside;
+    }
+
+    void addOutsideRadioButtonActionListener(ActionListener actionListener) {
+        jRadioButtonOutside.addActionListener(actionListener);
     }
 
     private JRadioButton getJRadioButtonKeepY() {
@@ -769,32 +668,12 @@ class MoveDialogView extends JDialog {
             jRadioButtonKeepY.setText("keep Y position");
             jRadioButtonKeepY.setToolTipText("Don't alter current Y position");
             jRadioButtonKeepY.setMnemonic('y');
-            jRadioButtonKeepY.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    model.setMoveModeY(CaptionMoveModeY.KEEP_POSITION);
-                    model.getSubPic().setOfsY(model.getOriginalY());
-                    setRatio(model.getTargetScreenAspectRatio());
-                }
-            });
         }
         return jRadioButtonKeepY;
     }
 
-    private void setRatio(double targetScreenAspectRatio) {
-        if (!ToolBox.formatDouble(model.getTargetScreenAspectRatio()).equalsIgnoreCase(ToolBox.formatDouble(targetScreenAspectRatio))) {
-            jTextFieldRatio.setText(ToolBox.formatDouble(targetScreenAspectRatio));
-        }
-        model.setTargetScreenAspectRatio(targetScreenAspectRatio);
-        model.setCinemascopeBarFactor((1.0 - SCREEN_ASPECT_RATIO / targetScreenAspectRatio) / 2.0);
-        move();
-        jPanelPreview.setAspectRatio(targetScreenAspectRatio);
-        jPanelPreview.setSubtitleOffsets(model.getSubPic().getXOffset(), model.getSubPic().getYOffset());
-        jPanelPreview.repaint();
-    }
-
-    private void move() {
-        Core.moveToBounds(model.getSubPic(), model.getCurrentSubtitleIndex() + 1, model.getCinemascopeBarFactor(), model.getOffsetX(), model.getOffsetY(), model.getMoveModeX(), model.getMoveModeY(), model.getCropOfsY());
+    void addKeepYRadioButtonActionListener(ActionListener actionListener) {
+        jRadioButtonKeepY.addActionListener(actionListener);
     }
 
     private JPanel getJPanelCrop() {
@@ -836,64 +715,28 @@ class MoveDialogView extends JDialog {
             jTextFieldCropOfsY.setMinimumSize(DIMENSION_TEXTFIELD);
             jTextFieldCropOfsY.setMaximumSize(DIMENSION_TEXTFIELD);
             jTextFieldCropOfsY.setToolTipText("Set number of lines to be cropped from upper and lower border");
-            jTextFieldCropOfsY.addActionListener(new java.awt.event.ActionListener() {
-                @Override
-                public void actionPerformed(java.awt.event.ActionEvent e) {
-                    if (model.isReady()) {
-                        int cropOffsetY = ToolBox.getInt(jTextFieldCropOfsY.getText());
-
-                        if (cropOffsetY == -1) {
-                            cropOffsetY = model.getCropOfsY();   // invalid number -> keep old value
-                        } else if (cropOffsetY < 0) {
-                            cropOffsetY = 0;
-                        } else if (cropOffsetY > model.getSubPic().getHeight() /3) {
-                            cropOffsetY = model.getSubPic().getHeight() /3;
-                        }
-
-                        if (cropOffsetY != model.getCropOfsY()) {
-                            model.setCropOfsY(cropOffsetY);
-                            jPanelPreview.setCropOffsetY(cropOffsetY);
-                            setRatio(model.getTargetScreenAspectRatio());
-                        }
-                        jTextFieldCropOfsY.setText(String.valueOf(cropOffsetY));
-                    }
-                }
-            });
-            jTextFieldCropOfsY.getDocument().addDocumentListener(new DocumentListener() {
-                private void check() {
-                    if (model.isReady()) {
-                        int cropOffsetY = ToolBox.getInt(jTextFieldCropOfsY.getText());
-
-                        if (cropOffsetY < 0 || cropOffsetY > model.getSubPic().getHeight() /3) {
-                            jTextFieldCropOfsY.setBackground(ERROR_BACKGROUND);
-                        } else {
-                            if (cropOffsetY != model.getCropOfsY()) {
-                                model.setCropOfsY(cropOffsetY);
-                                jPanelPreview.setCropOffsetY(cropOffsetY);
-                                setRatio(model.getTargetScreenAspectRatio());
-                            }
-                            jTextFieldCropOfsY.setBackground(OK_BACKGROUND);
-                        }
-                    }
-                }
-
-                @Override
-                public void insertUpdate(DocumentEvent e) {
-                    check();
-                }
-
-                @Override
-                public void changedUpdate(DocumentEvent e) {
-                    check();
-                }
-
-                @Override
-                public void removeUpdate(DocumentEvent e) {
-                    check();
-                }
-            });
         }
         return jTextFieldCropOfsY;
+    }
+
+    void addCropOfsYTextFieldActionListener(ActionListener actionListener) {
+        jTextFieldCropOfsY.addActionListener(actionListener);
+    }
+
+    void addCropOfsYTextFieldDocumentListener(DocumentListener documentListener) {
+        jTextFieldCropOfsY.getDocument().addDocumentListener(documentListener);
+    }
+
+    String getCropOfsYTextFieldText() {
+        return jTextFieldCropOfsY.getText();
+    }
+
+    void setCropOfsYTextFieldText(String text) {
+        jTextFieldCropOfsY.setText(text);
+    }
+
+    void setCropOfsYTextFieldBackground(Color color) {
+        jTextFieldCropOfsY.setBackground(color);
     }
 
     private JButton getJButtonCropBars() {
@@ -903,18 +746,12 @@ class MoveDialogView extends JDialog {
             jButtonCropBars.setText("Crop Bars");
             jButtonCropBars.setPreferredSize(new Dimension(79, 23));
             jButtonCropBars.setMnemonic('b');
-            jButtonCropBars.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    int cropOffsetY = (int) (model.getSubPic().getHeight() * model.getCinemascopeBarFactor() + 0.5);
-                    model.setCropOfsY(cropOffsetY); // height of one cinemascope bar in pixels
-                    jPanelPreview.setCropOffsetY(cropOffsetY);
-                    setRatio(model.getTargetScreenAspectRatio());
-                    jTextFieldCropOfsY.setText(String.valueOf(cropOffsetY));
-                }
-            });
         }
         return jButtonCropBars;
+    }
+
+    void addCropBarsButtonActionListener(ActionListener actionListener) {
+        jButtonCropBars.addActionListener(actionListener);
     }
 
     private JRadioButton getJRadioButtonKeepX() {
@@ -923,16 +760,12 @@ class MoveDialogView extends JDialog {
             jRadioButtonKeepX.setText("keep X position");
             jRadioButtonKeepX.setToolTipText("Don't alter current X position");
             jRadioButtonKeepX.setMnemonic('x');
-            jRadioButtonKeepX.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    model.setMoveModeX(CaptionMoveModeX.KEEP_POSITION);
-                    model.getSubPic().setOfsX(model.getOriginalX());
-                    setRatio(model.getTargetScreenAspectRatio());
-                }
-            });
         }
         return jRadioButtonKeepX;
+    }
+
+    void addKeepXRadioButtonActionListener(ActionListener actionListener) {
+        jRadioButtonKeepX.addActionListener(actionListener);
     }
 
     private JRadioButton getJRadioButtonLeft() {
@@ -941,15 +774,12 @@ class MoveDialogView extends JDialog {
             jRadioButtonLeft.setText("move left");
             jRadioButtonLeft.setToolTipText("Move to the left");
             jRadioButtonLeft.setMnemonic('l');
-            jRadioButtonLeft.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    model.setMoveModeX(CaptionMoveModeX.LEFT);
-                    setRatio(model.getTargetScreenAspectRatio());
-                }
-            });
         }
         return jRadioButtonLeft;
+    }
+
+    void addLeftRadioButtonActionListener(ActionListener actionListener) {
+        jRadioButtonLeft.addActionListener(actionListener);
     }
 
     private JRadioButton getJRadioButtonRight() {
@@ -958,15 +788,12 @@ class MoveDialogView extends JDialog {
             jRadioButtonRight.setText("move right");
             jRadioButtonRight.setToolTipText("Move to the right");
             jRadioButtonRight.setMnemonic('r');
-            jRadioButtonRight.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    model.setMoveModeX(CaptionMoveModeX.RIGHT);
-                    setRatio(model.getTargetScreenAspectRatio());
-                }
-            });
         }
         return jRadioButtonRight;
+    }
+
+    void addRightRadioButtonActionListener(ActionListener actionListener) {
+        jRadioButtonRight.addActionListener(actionListener);
     }
 
     private JRadioButton getJRadioButtonCenter() {
@@ -975,15 +802,12 @@ class MoveDialogView extends JDialog {
             jRadioButtonCenter.setText("move to center");
             jRadioButtonCenter.setToolTipText("Move to center");
             jRadioButtonCenter.setMnemonic('e');
-            jRadioButtonCenter.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    model.setMoveModeX(CaptionMoveModeX.CENTER);
-                    setRatio(model.getTargetScreenAspectRatio());
-                }
-            });
         }
         return jRadioButtonCenter;
+    }
+
+    void addCenterRadioButtonActionListener(ActionListener actionListener) {
+        jRadioButtonCenter.addActionListener(actionListener);
     }
 
     private JTextField getJTextFieldOffsetX() {
@@ -994,61 +818,27 @@ class MoveDialogView extends JDialog {
             jTextFieldOffsetX.setMinimumSize(DIMENSION_TEXTFIELD);
             jTextFieldOffsetX.setMaximumSize(DIMENSION_TEXTFIELD);
             jTextFieldOffsetX.setToolTipText("Set offset from left/right border in pixels");
-            jTextFieldOffsetX.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    if (model.isReady()) {
-                        int offsetX = ToolBox.getInt(jTextFieldOffsetX.getText());
-
-                        if (offsetX == -1) {
-                            offsetX = model.getOffsetX();  // invalid number -> keep old value
-                        } else if (offsetX < 0) {
-                            offsetX = 0;
-                        } else if (offsetX > model.getSubPic().getWidth() / 3) {
-                            offsetX = model.getSubPic().getWidth() /3;
-                        }
-
-                        if ( offsetX != model.getOffsetX() ) {
-                            model.setOffsetX(offsetX);
-                            setRatio(model.getTargetScreenAspectRatio());
-                        }
-                        jTextFieldOffsetX.setText(String.valueOf(offsetX));
-                    }
-                }
-            });
-            jTextFieldOffsetX.getDocument().addDocumentListener(new DocumentListener() {
-                private void check() {
-                    if (model.isReady()) {
-                        int offsetX = ToolBox.getInt(jTextFieldOffsetX.getText());
-
-                        if ( offsetX < 0 || offsetX > model.getSubPic().getWidth() /3 ) {
-                            jTextFieldOffsetX.setBackground(ERROR_BACKGROUND);
-                        } else {
-                            if (offsetX != model.getOffsetX()) {
-                                model.setOffsetX(offsetX);
-                                setRatio(model.getTargetScreenAspectRatio());
-                            }
-                            jTextFieldOffsetX.setBackground(OK_BACKGROUND);
-                        }
-                    }
-                }
-
-                @Override
-                public void insertUpdate(DocumentEvent e) {
-                    check();
-                }
-
-                @Override
-                public void changedUpdate(DocumentEvent e) {
-                    check();
-                }
-
-                @Override
-                public void removeUpdate(DocumentEvent e) {
-                    check();
-                }
-            });
         }
         return jTextFieldOffsetX;
+    }
+
+    void addOffsetXTextFieldActionListener(ActionListener actionListener) {
+        jTextFieldOffsetX.addActionListener(actionListener);
+    }
+
+    void addOffsetXTextFieldDocumentListener(DocumentListener documentListener) {
+        jTextFieldOffsetX.getDocument().addDocumentListener(documentListener);
+    }
+
+    String getOffsetXTextFieldText() {
+        return jTextFieldOffsetX.getText();
+    }
+
+    void setOffsetXTextFieldText(String text) {
+        jTextFieldOffsetX.setText(text);
+    }
+
+    void setOffsetXTextFieldBackground(Color color) {
+        jTextFieldOffsetX.setBackground(color);
     }
 }

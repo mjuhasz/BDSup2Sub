@@ -38,7 +38,7 @@ public class MoveDialog {
     }
 
     public void setCurrentSubtitleIndex(int idx) {
-        view.setCurrentSubtitleIndex(idx);
+        controller.setCurrentSubtitleIndex(idx);
     }
 
     public double getTrgRatio() {
