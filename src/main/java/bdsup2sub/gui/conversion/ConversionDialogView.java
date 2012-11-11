@@ -79,7 +79,7 @@ class ConversionDialogView extends JDialog {
         model.setReady(true);
     }
 
-    private void fillDialog() {
+    void fillDialog() {
         jComboBoxResolution.setSelectedIndex(model.getOutputResolution().ordinal());
         jComboBoxResolution.setEnabled(model.getConvertResolution());
         jCheckBoxResolution.setSelected(model.getConvertResolution());
@@ -115,13 +115,6 @@ class ConversionDialogView extends JDialog {
         setContentPane(getJContentPane());
         centerRelativeToOwner(this);
         setResizable(false);
-        this.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                model.setCancel(true);
-                dispose();
-            }
-        });
     }
 
     private JPanel getJPanelResolution() {
@@ -177,7 +170,6 @@ class ConversionDialogView extends JDialog {
             jPanelMove.setPreferredSize(new Dimension(200, 50));
 
             jPanelMove.add(getJCheckBoxMove(), gridBagCheckBoxMove);
-
         }
         return jPanelMove;
     }
@@ -536,25 +528,20 @@ class ConversionDialogView extends JDialog {
             for (Resolution resolution : Resolution.values()) {
                 jComboBoxResolution.addItem(resolution.toString());
             }
-            jComboBoxResolution.addItemListener(new ItemListener() {
-                public void itemStateChanged(ItemEvent e) {
-                    if (model.isReady()) {
-                        int idx = jComboBoxResolution.getSelectedIndex();
-                        for (Resolution resolution : Resolution.values()) {
-                            if (idx == resolution.ordinal()) {
-                                model.setOutputResolution(resolution);
-                                if (!model.isKeepFps()) {
-                                    model.setFpsTrg(SubtitleUtils.getDefaultFramerateForResolution(resolution));
-                                }
-                                jComboBoxFpsTrg.setSelectedItem(ToolBox.formatDouble(model.getFpsTrg()));
-                                break;
-                            }
-                        }
-                    }
-                }
-            });
         }
         return jComboBoxResolution;
+    }
+
+    void addResolutionComboBoxItemListener(ItemListener itemListener) {
+        jCheckBoxResolution.addItemListener(itemListener);
+    }
+
+    int getResolutionComboBoxSelectedIndex() {
+        return jComboBoxResolution.getSelectedIndex();
+    }
+
+    void setResolutionComboBoxEnabled(boolean enabled) {
+        jComboBoxResolution.setEnabled(enabled);
     }
 
     private JCheckBox getJCheckBoxFrameRate() {
@@ -565,17 +552,16 @@ class ConversionDialogView extends JDialog {
             jCheckBoxFrameRate.setMnemonic('f');
             jCheckBoxFrameRate.setFocusable(false);
             jCheckBoxFrameRate.setIconTextGap(10);
-            jCheckBoxFrameRate.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    if (model.isReady()) {
-                        boolean changeFPS = jCheckBoxFrameRate.isSelected();
-                        model.setConvertFPS(changeFPS);
-                        jComboBoxFpsSrc.setEnabled(changeFPS);
-                    }
-                }
-            });
         }
         return jCheckBoxFrameRate;
+    }
+
+    void addFrameRateCheckBoxActionListener(ActionListener actionListener) {
+        jCheckBoxFrameRate.addActionListener(actionListener);
+    }
+
+    boolean isFrameRateCheckBoxSelected() {
+        return jCheckBoxFrameRate.isSelected();
     }
 
     private JCheckBox getJCheckBoxResolution() {
@@ -588,17 +574,16 @@ class ConversionDialogView extends JDialog {
             jCheckBoxResolution.setDisplayedMnemonicIndex(text.indexOf("resolution"));
             jCheckBoxResolution.setFocusable(false);
             jCheckBoxResolution.setIconTextGap(10);
-            jCheckBoxResolution.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    if (model.isReady()) {
-                        boolean changeResolution = jCheckBoxResolution.isSelected();
-                        model.setConvertResolution(changeResolution);
-                        jComboBoxResolution.setEnabled(changeResolution);
-                    }
-                }
-            });
         }
         return jCheckBoxResolution;
+    }
+
+    void addResolutionCheckBoxActionListener(ActionListener actionListener) {
+        jCheckBoxResolution.addActionListener(actionListener);
+    }
+
+    boolean isResolutionCheckBoxSelected() {
+        return jCheckBoxResolution.isSelected();
     }
 
     private JCheckBox getJCheckBoxMove() {
@@ -611,15 +596,20 @@ class ConversionDialogView extends JDialog {
             jCheckBoxMove.setIconTextGap(10);
             jCheckBoxMove.setEnabled(false);
             jCheckBoxMove.setSelected(model.getMoveCaptions());
-            jCheckBoxMove.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    if (model.isReady()) {
-                        model.setMoveCaptions(jCheckBoxMove.isSelected());
-                    }
-                }
-            });
         }
         return jCheckBoxMove;
+    }
+
+    void addMoveCheckBoxActionListener(ActionListener actionListener) {
+        jCheckBoxMove.addActionListener(actionListener);
+    }
+
+    boolean isMoveCheckBoxSelected() {
+        return jCheckBoxMove.isSelected();
+    }
+
+    boolean isMoveCheckBoxEnabled() {
+        return jCheckBoxMove.isEnabled();
     }
 
     private JComboBox getJComboBoxFpsSrc() {
@@ -633,54 +623,38 @@ class ConversionDialogView extends JDialog {
             for (String fps : FRAMERATES) {
                 jComboBoxFpsSrc.addItem(fps);
             }
-            jComboBoxFpsSrc.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    if (model.isReady()) {
-                        String s = (String) jComboBoxFpsSrc.getSelectedItem();
-                        double fpsSrc = SubtitleUtils.getFps(s);
-                        if (fpsSrc > 0) {
-                            model.setFpsSrc(fpsSrc);
-                        }
-                        jComboBoxFpsSrc.setSelectedItem(ToolBox.formatDouble(model.getFpsSrc()));
-                        jComboBoxFpsSrc.getEditor().getEditorComponent().setBackground(OK_BACKGROUND);
-                        model.setFpsSrcCertain(false);
-                    }
-                }
-            });
-            final JTextField fpsSrcEditor = (JTextField) jComboBoxFpsSrc.getEditor().getEditorComponent();
-            fpsSrcEditor.getDocument().addDocumentListener(new DocumentListener() {
-                private void check() {
-                    if (model.isReady()) {
-                        String s = fpsSrcEditor.getText();
-                        double fpsSrc = SubtitleUtils.getFps(s);
-                        Color color;
-                        if (fpsSrc > 0) {
-                            color = OK_BACKGROUND;
-                            model.setFpsSrc(fpsSrc);
-                        } else {
-                            color = ERROR_BACKGROUND;
-                        }
-                        fpsSrcEditor.setBackground(color);
-                        model.setFpsSrcCertain(false);
-                    }
-                }
-
-                public void insertUpdate(DocumentEvent e) {
-                    check();
-                }
-
-                @Override
-                public void changedUpdate(DocumentEvent e) {
-                    check();
-                }
-
-                @Override
-                public void removeUpdate(DocumentEvent e) {
-                    check();
-                }
-            });
         }
         return jComboBoxFpsSrc;
+    }
+
+    void addFpsSrcComboBoxActionListener(ActionListener actionListener) {
+        jComboBoxFpsSrc.addActionListener(actionListener);
+    }
+
+    void addFpsSrcComboBoxDocumentListener(DocumentListener documentListener) {
+        JTextField fpsSrcEditor = (JTextField) jComboBoxFpsSrc.getEditor().getEditorComponent();
+        fpsSrcEditor.getDocument().addDocumentListener(documentListener);
+    }
+
+    String getFpsSrcComboBoxText() {
+        JTextField fpsSrcEditor = (JTextField) jComboBoxFpsSrc.getEditor().getEditorComponent();
+        return fpsSrcEditor.getText();
+    }
+
+    void setFpsSrcComboBoxEnabled(boolean enabled) {
+        jComboBoxFpsSrc.setEnabled(enabled);
+    }
+
+    String getFpsSrcComboBoxSelectedItem() {
+        return (String) jComboBoxFpsSrc.getSelectedItem();
+    }
+
+    void setFpsSrcComboBoxBackground(Color color) {
+        jComboBoxFpsSrc.getEditor().getEditorComponent().setBackground(color);
+    }
+
+    void setFpsSrcComboBoxSelectedItem(String item) {
+        jComboBoxFpsSrc.setSelectedItem(item);
     }
 
     private JComboBox getJComboBoxFpsTrg() {
@@ -694,62 +668,34 @@ class ConversionDialogView extends JDialog {
             for (String fps : FRAMERATES) {
                 jComboBoxFpsTrg.addItem(fps);
             }
-            jComboBoxFpsTrg.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    if (model.isReady()) {
-                        String s = (String) jComboBoxFpsTrg.getSelectedItem();
-                        double d = SubtitleUtils.getFps(s);
-                        if (d > 0) {
-                            model.setFpsTrg(d);
-                        }
-                        jComboBoxFpsTrg.setSelectedItem(ToolBox.formatDouble(model.getFpsTrg()));
-                        jComboBoxFpsTrg.getEditor().getEditorComponent().setBackground(OK_BACKGROUND);
-
-                        model.setDelayPTS((int)SubtitleUtils.syncTimePTS(model.getDelayPTS(), model.getFpsTrg(), model.getFpsTrgConf()));
-                        jTextFieldDelay.setText(ToolBox.formatDouble(model.getDelayPTS() / 90.0));
-
-                        model.setMinTimePTS((int)SubtitleUtils.syncTimePTS(model.getMinTimePTS(), model.getFpsTrg(), model.getFpsTrgConf()));
-                        jTextFieldMinTime.setText(ToolBox.formatDouble(model.getMinTimePTS() / 90.0));
-                    }
-                }
-            });
-            final JTextField fpsTrgEditor = (JTextField) jComboBoxFpsTrg.getEditor().getEditorComponent();
-            fpsTrgEditor.getDocument().addDocumentListener(new DocumentListener() {
-                private void check() {
-                    if (model.isReady()) {
-                        String s = fpsTrgEditor.getText();
-                        double fpsTrg = SubtitleUtils.getFps(s);
-                        Color c;
-                        if (fpsTrg > 0) {
-                            if ((int)SubtitleUtils.syncTimePTS(model.getDelayPTS(), model.getFpsTrg(), model.getFpsTrgConf()) != model.getDelayPTS() || model.getMinTimePTS() != (int)SubtitleUtils.syncTimePTS(model.getMinTimePTS(), model.getFpsTrg(), model.getFpsTrgConf())) {
-                                c = WARN_BACKGROUND;
-                            } else {
-                                c = OK_BACKGROUND;
-                            }
-                            model.setFpsTrg(fpsTrg);
-                        } else {
-                            c = ERROR_BACKGROUND;
-                        }
-                        fpsTrgEditor.setBackground(c);
-                    }
-                }
-
-                public void insertUpdate(DocumentEvent e) {
-                    check();
-                }
-
-                @Override
-                public void changedUpdate(DocumentEvent e) {
-                    check();
-                }
-
-                @Override
-                public void removeUpdate(DocumentEvent e) {
-                    check();
-                }
-            });
         }
         return jComboBoxFpsTrg;
+    }
+
+    void addFpsTrgComboBoxActionListener(ActionListener actionListener) {
+        jComboBoxFpsTrg.addActionListener(actionListener);
+    }
+
+    void addFpsTrgComboBoxDocumentListener(DocumentListener documentListener) {
+        JTextField fpsTrgEditor = (JTextField) jComboBoxFpsTrg.getEditor().getEditorComponent();
+        fpsTrgEditor.getDocument().addDocumentListener(documentListener);
+    }
+
+    String getFpsTrgComboBoxText() {
+        JTextField fpsTrgEditor = (JTextField) jComboBoxFpsTrg.getEditor().getEditorComponent();
+        return fpsTrgEditor.getText();
+    }
+
+    String getFpsTrgComboBoxSelectedItem() {
+        return (String) jComboBoxFpsTrg.getSelectedItem();
+    }
+
+    void setFpsTrgComboBoxSelectedItem(String item) {
+        jComboBoxFpsTrg.setSelectedItem(item);
+    }
+
+    void setFpsTrgComboBoxBackground(Color color) {
+        jComboBoxFpsTrg.getEditor().getEditorComponent().setBackground(color);
     }
 
     private JTextField getJTextFieldDelay() {
@@ -757,57 +703,29 @@ class ConversionDialogView extends JDialog {
             jTextFieldDelay = new JTextField();
             jTextFieldDelay.setPreferredSize(new Dimension(200, 20));
             jTextFieldDelay.setToolTipText("Set global delay (in milliseconds) added to all timestamps");
-            jTextFieldDelay.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    if (model.isReady()) {
-                        String s = jTextFieldDelay.getText();
-                        try {
-                            // don't use getDouble as the value can be negative
-                            model.setDelayPTS((int)SubtitleUtils.syncTimePTS((long)(Double.parseDouble(s) * 90), model.getFpsTrg(), model.getFpsTrgConf()));
-                        } catch (NumberFormatException ex) {
-                        }
-                        jTextFieldDelay.setBackground(OK_BACKGROUND);
-                        jTextFieldDelay.setText(ToolBox.formatDouble(model.getDelayPTS() / 90.0));
-                    }
-                }
-            });
-            jTextFieldDelay.getDocument().addDocumentListener(new DocumentListener() {
-                private void check() {
-                    if (model.isReady()) {
-                        String s = jTextFieldDelay.getText();
-                        try {
-                            // don't use getDouble as the value can be negative
-                            model.setDelayPTS((int)SubtitleUtils.syncTimePTS((long)(Double.parseDouble(s) * 90), model.getFpsTrg(), model.getFpsTrgConf()));
-                            if (!s.equalsIgnoreCase(ToolBox.formatDouble(model.getDelayPTS() / 90.0))) {
-                                jTextFieldDelay.setBackground(WARN_BACKGROUND);
-                            } else {
-                                jTextFieldDelay.setBackground(OK_BACKGROUND);
-                            }
-                        } catch (NumberFormatException ex) {
-                            jTextFieldDelay.setBackground(ERROR_BACKGROUND);
-                        }
-                    }
-                }
-
-                public void insertUpdate(DocumentEvent e) {
-                    check();
-                }
-
-                @Override
-                public void changedUpdate(DocumentEvent e) {
-                    check();
-                }
-
-                @Override
-                public void removeUpdate(DocumentEvent e) {
-                    check();
-                }
-            });
         }
         return jTextFieldDelay;
     }
 
+    void addDelayTextFieldActionListener(ActionListener actionListener) {
+        jTextFieldDelay.addActionListener(actionListener);
+    }
 
+    void addDelayTextFieldDocumentListener(DocumentListener documentListener) {
+        jTextFieldDelay.getDocument().addDocumentListener(documentListener);
+    }
+
+    String getDelayTextFieldText() {
+        return jTextFieldDelay.getText();
+    }
+
+    void setDelayTextFieldText(String text) {
+        jTextFieldDelay.setText(text);
+    }
+
+    void setDelayTextFieldBoxBackground(Color color) {
+        jTextFieldDelay.setBackground(color);
+    }
 
     private JButton getJButtonCancel() {
         if (jButtonCancel == null) {
@@ -815,14 +733,12 @@ class ConversionDialogView extends JDialog {
             jButtonCancel.setText("Cancel");
             jButtonCancel.setToolTipText("Lose all changes and use the default values");
             jButtonCancel.setMnemonic('c');
-            jButtonCancel.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    model.setCancel(true);
-                    dispose();
-                }
-            });
         }
         return jButtonCancel;
+    }
+
+    void addCancelButtonActionListener(ActionListener actionListener) {
+        jButtonCancel.addActionListener(actionListener);
     }
 
     private JButton getJButtonStore() {
@@ -831,74 +747,12 @@ class ConversionDialogView extends JDialog {
             jButtonStore.setText("Store");
             jButtonStore.setToolTipText("Store current settings as default");
             jButtonStore.setMnemonic('s');
-            jButtonStore.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    if (model.isReady()) {
-                        // fps source
-                        model.storeConvertFPS();
-                        if (model.getConvertFPS()) {
-                            double fpsSrc  = SubtitleUtils.getFps((String) jComboBoxFpsSrc.getSelectedItem());
-                            if (fpsSrc > 0) {
-                                model.setFpsSrc(fpsSrc);
-                                model.storeFPSSrc();
-                            }
-                        }
-                        // fps target
-                        double fpsTrg = SubtitleUtils.getFps((String) jComboBoxFpsTrg.getSelectedItem());
-                        if (fpsTrg > 0) {
-                            model.setFpsTrg(fpsTrg);
-                            model.storeFpsTrg();
-                        }
-                        // delay
-                        try {
-                            model.setDelayPTS((int)SubtitleUtils.syncTimePTS((long)(Double.parseDouble(jTextFieldDelay.getText()) * 90), model.getFpsTrg(), model.getFpsTrgConf()));
-                            model.storeDelayPTS();
-                        } catch (NumberFormatException ex) {
-                        }
-                        // min time
-                        model.storeFixShortFrames();
-                        try {
-                            model.setMinTimePTS((int)SubtitleUtils.syncTimePTS((long)(Double.parseDouble(jTextFieldMinTime.getText()) * 90), model.getFpsTrg(), model.getFpsTrgConf()));
-                            model.storeMinTimePTS();
-                        } catch (NumberFormatException ex) {
-                        }
-                        // exit
-                        model.storeConvertResolution();
-                        if (model.getConvertResolution()) {
-                            model.storeOutputResolution();
-                        }
-                        // scaleX
-                        double scaleX = ToolBox.getDouble(jTextFieldScaleX.getText());
-                        if (scaleX > 0) {
-                            if (scaleX > MAX_FREE_SCALE_FACTOR) {
-                                scaleX = MAX_FREE_SCALE_FACTOR;
-                            } else if (scaleX < MIN_FREE_SCALE_FACTOR) {
-                                scaleX = MIN_FREE_SCALE_FACTOR;
-                            }
-                            model.setFreeScaleFactorX(scaleX);
-                        }
-                        // scaleY
-                        double scaleY = ToolBox.getDouble(jTextFieldScaleY.getText());
-                        if (scaleY > 0) {
-                            if (scaleY > MAX_FREE_SCALE_FACTOR) {
-                                scaleY = MAX_FREE_SCALE_FACTOR;
-                            } else if (scaleY < MIN_FREE_SCALE_FACTOR) {
-                                scaleY = MIN_FREE_SCALE_FACTOR;
-                            }
-                            model.setFreeScaleFactorY(scaleY);
-                        }
-                        // set scale X/Y
-                        model.storeApplyFreeScale();
-                        if (model.getApplyFreeScale()) {
-                            model.storeFreeScaleFactor();
-                        }
-                        // forceAll is not stored
-                        model.storeConfig();
-                    }
-                }
-            });
         }
         return jButtonStore;
+    }
+
+    void addStoreButtonActionListener(ActionListener actionListener) {
+        jButtonStore.addActionListener(actionListener);
     }
 
     private JButton getJButtonRestore() {
@@ -907,31 +761,12 @@ class ConversionDialogView extends JDialog {
             jButtonRestore.setText("Restore");
             jButtonRestore.setToolTipText("Restore last default settings");
             jButtonRestore.setMnemonic('e');
-            jButtonRestore.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    model.loadConvertResolution();
-                    if (model.getConvertResolution()) {
-                        model.loadOutputResolution();
-                    }
-                    model.loadConvertFPS();
-                    if (model.getConvertFPS() && !model.isFpsSrcCertain()) {
-                        model.loadFpsSrc();
-                    }
-                    model.loadFpsTrg();
-                    model.loadDelayPTS();
-                    model.loadFixShortFrames();
-                    model.loadMinTimePTS();
-                    model.loadApplyFreeScale();
-                    if (model.getApplyFreeScale()) {
-                        model.loadFreeScaleFactorX();
-                        model.loadFreeScaleFactorY();
-                    }
-                    model.loadForcedState();
-                    fillDialog();
-                }
-            });
         }
         return jButtonRestore;
+    }
+
+    void addRestoreButtonActionListener(ActionListener actionListener) {
+        jButtonRestore.addActionListener(actionListener);
     }
 
     private JButton getJButtonReset() {
@@ -940,36 +775,12 @@ class ConversionDialogView extends JDialog {
             jButtonReset.setText("Reset");
             jButtonReset.setToolTipText("Reset defaults");
             jButtonReset.setMnemonic('t');
-            jButtonReset.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    boolean convertResolution = CONVERT_RESOLUTION_BY_DEFAULT;
-                    model.setConvertResolution(convertResolution);
-                    if (convertResolution) {
-                        model.setOutputResolution(DEFAULT_TARGET_RESOLUTION);
-                    }
-                    model.setConvertFPS(CONVERT_FRAMERATE_BY_DEFAULT);
-                    if (model.getConvertFPS()) {
-                        if (!model.isFpsSrcCertain()) {
-                            model.setFpsSrc(DEFAULT_SOURCE_FRAMERATE);
-                        }
-                        model.setFpsTrg(DEFAULT_TARGET_FRAMERATE);
-                    } else {
-                        model.setFpsTrg(model.getFpsSrc());
-                    }
-                    model.setDelayPTS(DEFAULT_PTS_DELAY);
-                    model.setFixShortFrames(FIX_SHORT_FRAMES_BY_DEFAULT);
-                    model.setMinTimePTS(DEFAULT_MIN_DISPLAY_TIME_PTS);
-                    model.setApplyFreeScale(APPLY_FREE_SCALE_BY_DEFAULT);
-                    if (model.getApplyFreeScale()) {
-                        model.setFreeScaleFactorX(DEFAULT_FREE_SCALE_FACTOR_X);
-                        model.setFreeScaleFactorY(DEFAULT_FREE_SCALE_FACTOR_Y);
-                    }
-                    model.setForcedState(ForcedFlagState.KEEP);
-                    fillDialog();
-                }
-            });
         }
         return jButtonReset;
+    }
+
+    void addResetButtonActionListener(ActionListener actionListener) {
+        jButtonReset.addActionListener(actionListener);
     }
 
     private JCheckBox getJCheckBoxScale() {
@@ -980,18 +791,16 @@ class ConversionDialogView extends JDialog {
             jCheckBoxScale.setMnemonic('a');
             jCheckBoxScale.setFocusable(false);
             jCheckBoxScale.setIconTextGap(10);
-            jCheckBoxScale.addItemListener(new ItemListener() {
-                public void itemStateChanged(ItemEvent e) {
-                    if (model.isReady()) {
-                        boolean changeScale = jCheckBoxScale.isSelected();
-                        model.setApplyFreeScale(changeScale);
-                        jTextFieldScaleX.setEnabled(changeScale);
-                        jTextFieldScaleY.setEnabled(changeScale);
-                    }
-                }
-            });
         }
         return jCheckBoxScale;
+    }
+
+    void addScaleCheckBoxItemListener(ItemListener itemListener) {
+        jCheckBoxScale.addItemListener(itemListener);
+    }
+
+    boolean isScaleCheckBoxSelected() {
+        return jCheckBoxScale.isSelected();
     }
 
     private JCheckBox getJCheckBoxFixMinTime() {
@@ -1002,17 +811,16 @@ class ConversionDialogView extends JDialog {
             jCheckBoxFixMinTime.setMnemonic('x');
             jCheckBoxFixMinTime.setFocusable(false);
             jCheckBoxFixMinTime.setIconTextGap(10);
-            jCheckBoxFixMinTime.addItemListener(new ItemListener() {
-                public void itemStateChanged(ItemEvent e) {
-                    if (model.isReady()) {
-                        boolean fixShortFrames = jCheckBoxFixMinTime.isSelected();
-                        model.setFixShortFrames(fixShortFrames);
-                        jTextFieldMinTime.setEnabled(fixShortFrames);
-                    }
-                }
-            });
         }
         return jCheckBoxFixMinTime;
+    }
+
+    void addFixMinTimeCheckBoxItemListener(ItemListener itemListener) {
+        jCheckBoxFixMinTime.addItemListener(itemListener);
+    }
+
+    boolean isFixMinTimeCheckBoxSelected() {
+        return jCheckBoxFixMinTime.isSelected();
     }
 
     private JTextField getJTextFieldMinTime() {
@@ -1022,52 +830,31 @@ class ConversionDialogView extends JDialog {
             jTextFieldMinTime.setPreferredSize(new Dimension(200, 20));
             jTextFieldMinTime.setEnabled(false);
             jTextFieldMinTime.setToolTipText("Set minimum display time for a subtitle");
-            jTextFieldMinTime.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    if (model.isReady()) {
-                        String s = jTextFieldMinTime.getText();
-                        try {
-                            model.setMinTimePTS((int)SubtitleUtils.syncTimePTS((long)(Double.parseDouble(s) * 90), model.getFpsTrg(), model.getFpsTrgConf()));
-                        } catch (NumberFormatException ex) {
-                        }
-                        jTextFieldMinTime.setBackground(OK_BACKGROUND);
-                        jTextFieldMinTime.setText(ToolBox.formatDouble(model.getMinTimePTS() / 90.0));
-                    }
-                }
-            });
-            jTextFieldMinTime.getDocument().addDocumentListener(new DocumentListener() {
-                private void check() {
-                    if (model.isReady()) {
-                        String s = jTextFieldMinTime.getText();
-                        try {
-                            model.setMinTimePTS((int)SubtitleUtils.syncTimePTS((long)(Double.parseDouble(s) * 90), model.getFpsTrg(), model.getFpsTrgConf()));
-                            if (!s.equalsIgnoreCase(ToolBox.formatDouble(model.getMinTimePTS() / 90.0))) {
-                                jTextFieldMinTime.setBackground(WARN_BACKGROUND);
-                            } else {
-                                jTextFieldMinTime.setBackground(OK_BACKGROUND);
-                            }
-                        } catch (NumberFormatException ex) {
-                            jTextFieldMinTime.setBackground(ERROR_BACKGROUND);
-                        }
-                    }
-                }
-
-                public void insertUpdate(DocumentEvent e) {
-                    check();
-                }
-
-                @Override
-                public void changedUpdate(DocumentEvent e) {
-                    check();
-                }
-
-                @Override
-                public void removeUpdate(DocumentEvent e) {
-                    check();
-                }
-            });
         }
         return jTextFieldMinTime;
+    }
+
+    void addMinTimeTextFieldActionListener(ActionListener actionListener) {
+        jTextFieldMinTime.addActionListener(actionListener);
+    }
+    void addMinTimeTextFieldDocumentListener(DocumentListener documentListener) {
+        jTextFieldMinTime.getDocument().addDocumentListener(documentListener);
+    }
+
+    String getMinTimeTextFieldText() {
+        return jTextFieldMinTime.getText();
+    }
+
+    void setMinTimeTextFieldText(String text) {
+        jTextFieldMinTime.setText(text);
+    }
+
+    void setMinTimeTextFieldBackground(Color color) {
+        jTextFieldMinTime.setBackground(color);
+    }
+
+    void enableMinTimeTextField(boolean enabled) {
+        jTextFieldMinTime.setEnabled(enabled);
     }
 
     private JButton getJButtonOk() {
@@ -1076,83 +863,13 @@ class ConversionDialogView extends JDialog {
             jButtonOk.setText("  Ok  ");
             jButtonOk.setMnemonic('o');
             jButtonOk.setToolTipText("Use current values and continue");
-            jButtonOk.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    if (model.isReady()) {
-                        // fps source
-                        model.setConvertFPSConf(model.getConvertFPS());
-                        if (model.getConvertFPS()) {
-                            double fpsSrc = SubtitleUtils.getFps((String) jComboBoxFpsSrc.getSelectedItem());
-                            if (fpsSrc > 0) {
-                                model.setFpsSrc(fpsSrc);
-                                model.setFPSSrcConf(fpsSrc);
-                            }
-                        }
-                        // fps target
-                        double fpsTrg = SubtitleUtils.getFps((String) jComboBoxFpsTrg.getSelectedItem());
-                        if (fpsTrg > 0) {
-                            model.setFpsTrg(fpsTrg);
-                            model.setFpsTrgConf(fpsTrg);
-                        }
-                        // delay
-                        try {
-                            model.setDelayPTS((int) SubtitleUtils.syncTimePTS((long) (Double.parseDouble(jTextFieldDelay.getText()) * 90), model.getFpsTrg(), model.getFpsTrgConf()));
-                            model.setDelayPTSConf(model.getDelayPTS());
-                        } catch (NumberFormatException ex) {
-                        }
-                        // min time
-                        model.setFixShortFramesConf(model.getFixShortFrames());
-                        try {
-                            model.setMinTimePTS((int) SubtitleUtils.syncTimePTS((long) (Double.parseDouble(jTextFieldMinTime.getText()) * 90), model.getFpsTrg(), model.getFpsTrgConf()));
-                            model.setMinTimePTSConf(model.getMinTimePTS());
-                        } catch (NumberFormatException ex) {
-                        }
-                        // exit
-                        boolean convertResolution = model.getConvertResolution();
-                        model.setConvertResolutionConf(convertResolution);
-                        if (convertResolution) {
-                            model.setOutputResolutionConf(model.getOutputResolution());
-                        }
-                        // scaleX
-                        double scaleX = ToolBox.getDouble(jTextFieldScaleX.getText());
-                        if (scaleX > 0) {
-                            if (scaleX > MAX_FREE_SCALE_FACTOR) {
-                                scaleX = MAX_FREE_SCALE_FACTOR;
-                            } else if (scaleX < MIN_FREE_SCALE_FACTOR) {
-                                scaleX = MIN_FREE_SCALE_FACTOR;
-                            }
-                            model.setFreeScaleFactorX(scaleX);
-                        }
-                        // scaleY
-                        double scaleY = ToolBox.getDouble(jTextFieldScaleY.getText());
-                        if (scaleY > 0) {
-                            if (scaleY > MAX_FREE_SCALE_FACTOR) {
-                                scaleY = MAX_FREE_SCALE_FACTOR;
-                            } else if (scaleY < MIN_FREE_SCALE_FACTOR) {
-                                scaleY = MIN_FREE_SCALE_FACTOR;
-                            }
-                            model.setFreeScaleFactorY(scaleY);
-                        }
-                        // set scale X/Y
-                        model.setApplyFreeScaleConf(model.getApplyFreeScale());
-                        if (model.getApplyFreeScale()) {
-                            model.setFreeScaleFactorConf(model.getFreeScaleFactorX(), model.getFreeScaleFactorY());
-                        }
-                        model.setCancel(false);
-                        // forced state
-                        Core.setForceAll();
-                        // keep move settings
-                        if (jCheckBoxMove.isEnabled()) {
-                            model.storeMoveCaptions();
-                        }
-                        //
-                        dispose();
-                    }
-                }
-            });
             jButtonOk.addAncestorListener(new RequestFocusListener());
         }
         return jButtonOk;
+    }
+
+    void addOkButtonActionListener(ActionListener actionListener) {
+        jButtonOk.addActionListener(actionListener);
     }
 
     private JTextField getJTextFieldScaleX() {
@@ -1160,53 +877,32 @@ class ConversionDialogView extends JDialog {
             jTextFieldScaleX = new JTextField();
             jTextFieldScaleX.setPreferredSize(new Dimension(200, 20));
             jTextFieldScaleX.setToolTipText("Set free scaling factor in X direction");
-            jTextFieldScaleX.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    if (model.isReady()) {
-                        String s = jTextFieldScaleX.getText();
-                        double scaleX = ToolBox.getDouble(s);
-                        if (scaleX >0) {
-                            if (scaleX > MAX_FREE_SCALE_FACTOR) {
-                                scaleX = MAX_FREE_SCALE_FACTOR;
-                            } else if (scaleX < MIN_FREE_SCALE_FACTOR) {
-                                scaleX = MIN_FREE_SCALE_FACTOR;
-                            }
-                            model.setFreeScaleFactorX(scaleX);
-                        }
-                        jTextFieldScaleX.setText(ToolBox.formatDouble(model.getFreeScaleFactorX()));
-                        jTextFieldScaleX.setBackground(OK_BACKGROUND);
-                    }
-                }
-            });
-            jTextFieldScaleX.getDocument().addDocumentListener(new DocumentListener() {
-                private void check() {
-                    if (model.isReady()) {
-                        double scaleX = ToolBox.getDouble(jTextFieldScaleX.getText());
-                        if (scaleX >= MIN_FREE_SCALE_FACTOR && scaleX <= MAX_FREE_SCALE_FACTOR) {
-                            model.setFreeScaleFactorX(scaleX);
-                            jTextFieldScaleX.setBackground(OK_BACKGROUND);
-                        } else {
-                            jTextFieldScaleX.setBackground(ERROR_BACKGROUND);
-                        }
-                    }
-                }
-
-                public void insertUpdate(DocumentEvent e) {
-                    check();
-                }
-
-                @Override
-                public void changedUpdate(DocumentEvent e) {
-                    check();
-                }
-
-                @Override
-                public void removeUpdate(DocumentEvent e) {
-                    check();
-                }
-            });
         }
         return jTextFieldScaleX;
+    }
+
+    void addScaleXTextFieldActionListener(ActionListener actionListener) {
+        jTextFieldScaleX.addActionListener(actionListener);
+    }
+
+    void addScaleXTextFieldDocumentListener(DocumentListener documentListener) {
+        jTextFieldScaleX.getDocument().addDocumentListener(documentListener);
+    }
+
+    String getScaleXTextFieldText() {
+        return jTextFieldScaleX.getText();
+    }
+
+    void setScaleXTextFieldText(String text) {
+        jTextFieldScaleX.setText(text);
+    }
+
+    void enableScaleXTextField(boolean enabled) {
+        jTextFieldScaleX.setEnabled(enabled);
+    }
+
+    void setScaleXTextFieldBackground(Color color) {
+        jTextFieldScaleX.setBackground(color);
     }
 
     private JTextField getJTextFieldScaleY() {
@@ -1214,51 +910,32 @@ class ConversionDialogView extends JDialog {
             jTextFieldScaleY = new JTextField();
             jTextFieldScaleY.setPreferredSize(new Dimension(200, 20));
             jTextFieldScaleY.setToolTipText("Set free scaling factor in Y direction");
-            jTextFieldScaleY.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    if (model.isReady()) {
-                        double scaleY = ToolBox.getDouble(jTextFieldScaleY.getText());
-                        if (scaleY > 0) {
-                            if (scaleY > MAX_FREE_SCALE_FACTOR) {
-                                scaleY = MAX_FREE_SCALE_FACTOR;
-                            } else if (scaleY < MIN_FREE_SCALE_FACTOR) {
-                                scaleY = MIN_FREE_SCALE_FACTOR;
-                            }
-                            model.setFreeScaleFactorY(scaleY);
-                        }
-                        jTextFieldScaleY.setText(ToolBox.formatDouble(model.getFreeScaleFactorY()));
-                    }
-                }
-            });
-            jTextFieldScaleY.getDocument().addDocumentListener(new DocumentListener() {
-                private void check() {
-                    if (model.isReady()) {
-                        double scaleY = ToolBox.getDouble(jTextFieldScaleY.getText());
-                        if (scaleY >= MIN_FREE_SCALE_FACTOR && scaleY <= MAX_FREE_SCALE_FACTOR) {
-                            model.setFreeScaleFactorY(scaleY);
-                            jTextFieldScaleY.setBackground(OK_BACKGROUND);
-                        } else {
-                            jTextFieldScaleY.setBackground(ERROR_BACKGROUND);
-                        }
-                    }
-                }
-
-                public void insertUpdate(DocumentEvent e) {
-                    check();
-                }
-
-                @Override
-                public void changedUpdate(DocumentEvent e) {
-                    check();
-                }
-
-                @Override
-                public void removeUpdate(DocumentEvent e) {
-                    check();
-                }
-            });
         }
         return jTextFieldScaleY;
+    }
+
+    void addScaleYTextFieldActionListener(ActionListener actionListener) {
+        jTextFieldScaleY.addActionListener(actionListener);
+    }
+
+    void addScaleYTextFieldDocumentListener(DocumentListener documentListener) {
+        jTextFieldScaleY.getDocument().addDocumentListener(documentListener);
+    }
+
+    String getScaleYTextFieldText() {
+        return jTextFieldScaleY.getText();
+    }
+
+    void setScaleYTextFieldText(String text) {
+        jTextFieldScaleY.setText(text);
+    }
+
+    void enableScaleYTextField(boolean enabled) {
+        jTextFieldScaleY.setEnabled(enabled);
+    }
+
+    void setScaleYTextFieldBackground(Color color) {
+        jTextFieldScaleY.setBackground(color);
     }
 
     private JComboBox getJComboBoxForced() {
@@ -1271,21 +948,16 @@ class ConversionDialogView extends JDialog {
             for (ForcedFlagState state : ForcedFlagState.values()) {
                 jComboBoxForced.addItem(state.toString());
             }
-            jComboBoxForced.addItemListener(new ItemListener() {
-                public void itemStateChanged(ItemEvent e) {
-                    if (model.isReady()) {
-                        int idx = jComboBoxForced.getSelectedIndex();
-                        for (ForcedFlagState forcedFlagState : ForcedFlagState.values()) {
-                            if (idx == forcedFlagState.ordinal()) {
-                                model.setForcedState(forcedFlagState);
-                                break;
-                            }
-                        }
-                    }
-                }
-            });
         }
         return jComboBoxForced;
+    }
+
+    void addForcedComboBoxItemListener(ItemListener itemListener) {
+        jComboBoxForced.addItemListener(itemListener);
+    }
+
+    int getForcedComboBoxSelectedIndex() {
+        return jComboBoxForced.getSelectedIndex();
     }
 
     public void enableOptionMove(boolean e) {
