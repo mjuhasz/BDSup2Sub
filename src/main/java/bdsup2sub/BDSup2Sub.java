@@ -239,7 +239,7 @@ public class BDSup2Sub {
         } catch (Exception e) {
             // ignore
         }
-        System.setProperty("com.apple.macos.useScreenMenuBar", "true");
+        System.setProperty("apple.laf.useScreenMenuBar", "true");
     }
 
     private void runCliLoop() {
