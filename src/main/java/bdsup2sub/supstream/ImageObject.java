@@ -16,11 +16,12 @@
 package bdsup2sub.supstream;
 
 import java.util.ArrayList;
+import java.util.List;
 
-public class ImageObject implements Cloneable  {
+public class ImageObject  {
 
     /** list of ODS packets containing image info */
-    private ArrayList<ImageObjectFragment> fragmentList;
+    private List<ImageObjectFragment> fragmentList;
     /** palette identifier */
     private int paletteID;
     /** overall size of RLE buffer (might be spread over several packages) */
@@ -34,20 +35,26 @@ public class ImageObject implements Cloneable  {
     /** upper left corner of subtitle y */
     private int yOffset;
 
-    @Override
-    public ImageObject clone() {
-        try {
-            return (ImageObject)super.clone();
-        } catch (CloneNotSupportedException e) {
-            return null;
-        }
+    public ImageObject() {
     }
 
-    public ArrayList<ImageObjectFragment> getFragmentList() {
+    public ImageObject(ImageObject other) {
+        if (other.fragmentList != null) {
+            this.fragmentList = new ArrayList<ImageObjectFragment>(other.fragmentList);
+        }
+        this.paletteID = other.paletteID;
+        this.bufferSize = other.bufferSize;
+        this.width = other.width;
+        this.height = other.height;
+        this.xOffset = other.xOffset;
+        this.yOffset = other.yOffset;
+    }
+
+    public List<ImageObjectFragment> getFragmentList() {
         return fragmentList;
     }
 
-    public void setFragmentList(ArrayList<ImageObjectFragment> fragmentList) {
+    public void setFragmentList(List<ImageObjectFragment> fragmentList) {
         this.fragmentList = fragmentList;
     }
 

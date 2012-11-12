@@ -27,6 +27,7 @@ import bdsup2sub.utils.ToolBox;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import static bdsup2sub.utils.ByteUtils.*;
 import static bdsup2sub.utils.TimeUtils.ptsToTimeStr;
@@ -269,7 +270,7 @@ public class SupBD implements SubtitleStream {
                             if (compositionNumber != compositionNumberOld) {
                                 so[0] = null;
                                 // store state to be able to revert to it
-                                picTmp = subPictureBD.deepCopy();
+                                picTmp = new SubPictureBD(subPictureBD);
                                 // create new subPictureBD
                                 parsePCS(segment, subPictureBD, so);
                             }
@@ -1053,9 +1054,7 @@ public class SupBD implements SubtitleStream {
 
                 if (width <= pic.getWidth() && height <= pic.getHeight()) {
                     imgObj.setFragmentList(new ArrayList<ImageObjectFragment>());
-                    info = new ImageObjectFragment();
-                    info.setImageBufferOfs(index+11);
-                    info.setImagePacketSize(segment.segmentSize - (index+11-segment.offset));
+                    info = new ImageObjectFragment(index+11, segment.segmentSize - (index+11-segment.offset));
                     imgObj.getFragmentList().add(info);
                     imgObj.setBufferSize(info.getImagePacketSize());
                     imgObj.setHeight(height);
@@ -1073,9 +1072,7 @@ public class SupBD implements SubtitleStream {
                 //  16bit object_id
                 //  8bit  object_version_number
                 //  8bit  first_in_sequence (0x80), last_in_sequence (0x40), 6bits reserved
-                info = new ImageObjectFragment();
-                info.setImageBufferOfs(index+4);
-                info.setImagePacketSize(segment.segmentSize - (index+4-segment.offset));
+                info = new ImageObjectFragment(index+4, segment.segmentSize - (index+4-segment.offset));
                 imgObj.getFragmentList().add(info);
                 imgObj.setBufferSize(imgObj.getBufferSize() + info.getImagePacketSize());
                 msg[0] = "ID: " + objID + ", update: " + objVer + ", seq: " + (first ? "first" : "")
@@ -1096,7 +1093,7 @@ public class SupBD implements SubtitleStream {
     private Palette decodePalette(SubPictureBD pic) throws CoreException {
         boolean fadeOut = false;
         int palIndex;
-        ArrayList<PaletteInfo> pl = pic.getPalettes().get(pic.getImageObject().getPaletteID());
+        List<PaletteInfo> pl = pic.getPalettes().get(pic.getImageObject().getPaletteID());
         if (pl == null) {
             throw new CoreException("Palette ID out of bounds.");
         }
@@ -1165,7 +1162,7 @@ public class SupBD implements SubtitleStream {
             // 8bit palette version number (incremented for each palette change)
             int paletteUpdate = buffer.getByte(index+1);
             if (pic.getPalettes() == null) {
-                pic.setPalettes(new ArrayList<ArrayList <PaletteInfo>>());
+                pic.setPalettes(new ArrayList<List<PaletteInfo>>());
                 for (int i=0; i<8; i++) {
                     pic.getPalettes().add(new ArrayList<PaletteInfo>());
                 }
@@ -1175,13 +1172,11 @@ public class SupBD implements SubtitleStream {
                 return -1;
             }
 
-            ArrayList<PaletteInfo> al = pic.getPalettes().get(paletteID);
+            List<PaletteInfo> al = pic.getPalettes().get(paletteID);
             if (al == null) {
                 al = new ArrayList<PaletteInfo>();
             }
-            PaletteInfo p = new PaletteInfo();
-            p.setPaletteSize((segment.segmentSize-2)/5);
-            p.setPaletteOffset(index + 2);
+            PaletteInfo p = new PaletteInfo(index + 2, (segment.segmentSize-2)/5);
             al.add(p);
             msg[0] = "ID: " + paletteID + ", update: " + paletteUpdate + ", " + p.getPaletteSize() + " entries";
             return p.getPaletteSize();

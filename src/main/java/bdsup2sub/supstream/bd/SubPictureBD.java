@@ -20,13 +20,14 @@ import bdsup2sub.supstream.PaletteInfo;
 import bdsup2sub.supstream.SubPicture;
 
 import java.util.ArrayList;
+import java.util.List;
 
-public class SubPictureBD extends SubPicture implements Cloneable {
+public class SubPictureBD extends SubPicture {
 
     /** objectID used in decoded object */
     private int objectID;
     /** list of ODS packets containing image info */
-    private ArrayList<ImageObject> imageObjectList;
+    private List<ImageObject> imageObjectList;
     /** width of subtitle window (might be larger than image) */
     private int windowWidth;
     /** height of subtitle window (might be larger than image) */
@@ -38,42 +39,34 @@ public class SubPictureBD extends SubPicture implements Cloneable {
     /** FPS type (e.g. 0x10 = 24p) */
     private int type;
     /** list of (list of) palette info - there are up to 8 palettes per epoch, each can be updated several times */
-    private ArrayList<ArrayList<PaletteInfo>> palettes;
+    private List<List<PaletteInfo>> palettes;
 
-
-    @Override
-    public SubPictureBD clone() {
-        return (SubPictureBD)super.clone();
+    public SubPictureBD() {
     }
 
-    /**
-     * Create clone of this object, but featuring a deep copy of the palettes
-     * and image object information.
-     * Note that the ODS fragments are only a flat copy, since they are never
-     * updated, only overwritten.
-     * @return clone of this object
-     */
-    SubPictureBD deepCopy() {
-        SubPictureBD c = this.clone();
-        // deep copy palettes
-        if (palettes != null) {
-            c.palettes = new ArrayList<ArrayList<PaletteInfo>>();
-            for (ArrayList<PaletteInfo> pi : palettes) {
-                ArrayList<PaletteInfo> cpi = new ArrayList<PaletteInfo>();
-                c.palettes.add(cpi);
-                for (PaletteInfo p : pi) {
-                    cpi.add(p.clone());
-                }
+    public SubPictureBD(SubPictureBD other) {
+        super(other);
+
+        this.objectID = other.objectID;
+        this.windowWidth = other.windowWidth;
+        this.windowHeight = other.windowHeight;
+        this.xWindowOffset = other.xWindowOffset;
+        this.yWindowOffset = other.yWindowOffset;
+        this.type = other.type;
+
+        if (other.palettes != null) {
+            this.palettes = new ArrayList<List<PaletteInfo>>();
+            for (List<PaletteInfo> pi : other.palettes) {
+                List<PaletteInfo> cpi = new ArrayList<PaletteInfo>(pi);
+                this.palettes.add(cpi);
             }
         }
-        // (not so) deep copy of objects (cloning of the fragment lists is not needed)
-        if (imageObjectList != null) {
-            c.imageObjectList = new ArrayList<ImageObject>();
-            for (ImageObject io : imageObjectList) {
-                c.imageObjectList.add(io.clone());
+        if (other.imageObjectList != null) {
+            this.imageObjectList = new ArrayList<ImageObject>();
+            for (ImageObject io : other.imageObjectList) {
+                this.imageObjectList.add(new ImageObject(io));
             }
         }
-        return c;
     }
 
     @Override
@@ -117,11 +110,11 @@ public class SubPictureBD extends SubPicture implements Cloneable {
         this.objectID = objectID;
     }
 
-    public ArrayList<ImageObject> getImageObjectList() {
+    public List<ImageObject> getImageObjectList() {
         return imageObjectList;
     }
 
-    public void setImageObjectList(ArrayList<ImageObject> imageObjectList) {
+    public void setImageObjectList(List<ImageObject> imageObjectList) {
         this.imageObjectList = imageObjectList;
     }
 
@@ -157,11 +150,11 @@ public class SubPictureBD extends SubPicture implements Cloneable {
         this.type = type;
     }
 
-    public ArrayList<ArrayList<PaletteInfo>> getPalettes() {
+    public List<List<PaletteInfo>> getPalettes() {
         return palettes;
     }
 
-    public void setPalettes(ArrayList<ArrayList<PaletteInfo>> palettes) {
+    public void setPalettes(List<List<PaletteInfo>> palettes) {
         this.palettes = palettes;
     }
 }

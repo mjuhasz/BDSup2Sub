@@ -18,35 +18,23 @@ package bdsup2sub.supstream;
 /**
  * Contains offset and size of one fragment containing (parts of the) RLE buffer
  */
-public class ImageObjectFragment implements Cloneable  {
+public class ImageObjectFragment {
 
     /** offset to RLE buffer in SUP file */
-    private long imageBufferOfs;
+    private final long imageBufferOfs;
     /** size of this part of the RLE buffer */
-    private int imagePacketSize;
+    private final int imagePacketSize;
 
-    @Override
-    public ImageObjectFragment clone() {
-        try {
-            return (ImageObjectFragment)super.clone();
-        } catch (CloneNotSupportedException e) {
-            return null;
-        }
+    public ImageObjectFragment(long imageBufferOfs, int imagePacketSize) {
+        this.imageBufferOfs = imageBufferOfs;
+        this.imagePacketSize = imagePacketSize;
     }
 
     public long getImageBufferOfs() {
         return imageBufferOfs;
     }
 
-    public void setImageBufferOfs(long imageBufferOfs) {
-        this.imageBufferOfs = imageBufferOfs;
-    }
-
     public int getImagePacketSize() {
         return imagePacketSize;
-    }
-
-    public void setImagePacketSize(int imagePacketSize) {
-        this.imagePacketSize = imagePacketSize;
     }
 }

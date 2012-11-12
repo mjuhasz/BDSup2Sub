@@ -142,9 +142,7 @@ public class SupDvd implements DvdSubtitleStream {
             ctrlOffset = ctrlOfsRel + offset;   // absolute offset of control header
             offset += 2;
             pic.setRleFragments(new ArrayList<ImageObjectFragment>(1));
-            rleFrag = new ImageObjectFragment();
-            rleFrag.setImageBufferOfs(offset);
-            rleFrag.setImagePacketSize(rleSize);
+            rleFrag = new ImageObjectFragment(offset, rleSize);
             pic.getRleFragments().add(rleFrag);
             pic.setRleSize(rleSize);
 

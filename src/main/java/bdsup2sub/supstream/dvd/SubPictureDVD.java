@@ -20,11 +20,13 @@ import bdsup2sub.supstream.SubPicture;
 import bdsup2sub.supstream.hd.SubPictureHD;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Extends SubPicture to store information read from DVD (SUB/IDX or SUP/IFO)
  */
-public class SubPictureDVD extends SubPicture implements Cloneable {
+public class SubPictureDVD extends SubPicture {
 
     /** offset to information in SUB file */
     private long offset;
@@ -35,7 +37,7 @@ public class SubPictureDVD extends SubPicture implements Cloneable {
     /** odd line offset (inside RLE buffer) */
     private int oddOffset;
     /** list of RLE fragments */
-    private ArrayList<ImageObjectFragment> rleFragments;
+    private List<ImageObjectFragment> rleFragments;
     /** uncropped bitmap width */
     private int originalWidth;
     /** uncropped bitmap height */
@@ -53,21 +55,14 @@ public class SubPictureDVD extends SubPicture implements Cloneable {
     /** 4 palette values */
     private int[] pal;
 
-    @Override
-    public SubPictureHD clone() {
-        return (SubPictureHD)super.clone();
-    }
-
     public void storeOriginal() {
         originalWidth = getImageWidth();
         originalHeight = getImageHeight();
         originalX = getXOffset();
         originalY = getYOffset();
 
-        originalAlpha = new int[4];
-        originalPal = new int[4];
-        System.arraycopy(alpha, 0, originalAlpha, 0, 4);
-        System.arraycopy(pal, 0, originalPal, 0, 4);
+        originalAlpha = Arrays.copyOf(alpha, alpha.length);
+        originalPal = Arrays.copyOf(pal, pal.length);
     }
 
     /**
@@ -120,11 +115,11 @@ public class SubPictureDVD extends SubPicture implements Cloneable {
         this.oddOffset = oddOffset;
     }
 
-    public ArrayList<ImageObjectFragment> getRleFragments() {
+    public List<ImageObjectFragment> getRleFragments() {
         return rleFragments;
     }
 
-    public void setRleFragments(ArrayList<ImageObjectFragment> rleFragments) {
+    public void setRleFragments(List<ImageObjectFragment> rleFragments) {
         this.rleFragments = rleFragments;
     }
 

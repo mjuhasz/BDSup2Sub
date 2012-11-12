@@ -473,9 +473,7 @@ public class SubDvd implements DvdSubtitleStream {
                 } catch (ArrayIndexOutOfBoundsException ex) {
                     throw new CoreException("Inconsistent control buffer access (" + ex.getMessage() + ")");
                 }
-                rleFrag = new ImageObjectFragment();
-                rleFrag.setImageBufferOfs(ofs);
-                rleFrag.setImagePacketSize((length - headerSize - diff + packHeaderSize));
+                rleFrag = new ImageObjectFragment(ofs, length - headerSize - diff + packHeaderSize);
                 pic.getRleFragments().add(rleFrag);
 
                 rleBufferFound += rleFrag.getImagePacketSize();

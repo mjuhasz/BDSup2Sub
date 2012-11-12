@@ -19,9 +19,9 @@ import bdsup2sub.bitmap.ErasePatch;
 
 import java.util.ArrayList;
 
-public class SubPicture implements Cloneable {
+public class SubPicture {
 
-    /** with of subtitle image */
+    /** width of subtitle image */
     private int imageWidth;
     /** height of subtitle image */
     private int imageHeight;
@@ -53,39 +53,35 @@ public class SubPicture implements Cloneable {
     /** list of erase patches */
     private ArrayList<ErasePatch> erasePatch;
 
-    /**
-     * Allows to get a clone of the parent object even for SubPictureBD objects.
-     * @return clone of the parent object
-     */
-    public SubPicture copy() {
-        SubPicture sp = new SubPicture();
-        sp.setWidth(width);
-        sp.setHeight(height);
-        sp.setStartTime(startTime);
-        sp.setEndTime(endTime);
-        sp.setForced(forced);
-        sp.setCompNum(compNum);
+    public SubPicture() {
+    }
 
+    public SubPicture(SubPicture other) {
         /* Note that by using the getter functions
          * the internal values of a SubPictureBD are
          * copied into the plain members of the
          * SubPicture object.
          */
-        sp.setImageWidth(getImageWidth());
-        sp.setImageHeight(getImageHeight());
-        sp.setOfsX(getXOffset());
-        sp.setOfsY(getYOffset());
+        this.imageWidth = other.getImageWidth();
+        this.imageHeight = other.getImageHeight();
+        this.xOffset = other.getXOffset();
+        this.yOffset = other.getYOffset();
+        this.imageWidth = other.imageWidth;
+        this.imageHeight = other.imageHeight;
+        this.xOffset = other.xOffset;
+        this.yOffset = other.yOffset;
 
-        sp.setExcluded(excluded);
-        sp.setWasDecoded(wasDecoded);
-        if (erasePatch != null && erasePatch.size() > 0) {
-            ArrayList<ErasePatch> epl = new ArrayList<ErasePatch>();
-            for (ErasePatch ep : getErasePatch()) {
-                epl.add(ep);
-            }
-            sp.setErasePatch(epl);
+        this.width = other.width;
+        this.height = other.height;
+        this.startTime = other.startTime;
+        this.endTime = other.endTime;
+        this.forced = other.forced;
+        this.compNum = other.compNum;
+        this.wasDecoded = other.wasDecoded;
+        this.excluded = other.excluded;
+        if (other.erasePatch != null) {
+            this.erasePatch = new ArrayList<ErasePatch>(other.erasePatch);
         }
-        return sp;
     }
 
     public int getImageWidth() {
@@ -118,15 +114,6 @@ public class SubPicture implements Cloneable {
 
     public void setOfsY(int ofs) {
         yOffset = ofs;
-    }
-
-    @Override
-    public SubPicture clone() {
-        try {
-            return (SubPicture)super.clone();
-        } catch (CloneNotSupportedException e) {
-            return null;
-        }
     }
 
     public int getWidth() {

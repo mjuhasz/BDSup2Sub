@@ -826,7 +826,7 @@ public class Core extends Thread {
         SubPicture picSrc;
         for (int i=0; i<subPictures.length; i++) {
             picSrc = subtitleStream.getSubPicture(i);
-            subPictures[i] = picSrc.copy();
+            subPictures[i] = new SubPicture(picSrc);
             long ts = picSrc.getStartTime();
             long te = picSrc.getEndTime();
             // copy time stamps and apply speedup/speeddown
@@ -981,7 +981,7 @@ public class Core extends Thread {
         for (int i=0; i < subPictures.length; i++) {
             picOld = subPictures[i];
             picSrc = subtitleStream.getSubPicture(i);
-            subPictures[i] = picOld.copy();
+            subPictures[i] = new SubPicture(picOld);
 
             // set forced flag
             switch (configuration.getForceAll()) {

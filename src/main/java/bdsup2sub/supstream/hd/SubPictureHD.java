@@ -20,7 +20,7 @@ import bdsup2sub.supstream.SubPicture;
 /**
  * Extends SubPicture to store information read from HD-DVD SUP
  */
-public class SubPictureHD extends SubPicture implements Cloneable {
+public class SubPictureHD extends SubPicture {
 
     /** offset to palette info for this subpicture in SUP file */
     private int paletteOffset;
@@ -33,9 +33,16 @@ public class SubPictureHD extends SubPicture implements Cloneable {
     /** offset to odd part of RLE buffer in SUP file*/
     private int imageBufferOffsetOdd;
 
-    @Override
-    public SubPictureHD clone() {
-        return (SubPictureHD)super.clone();
+    public SubPictureHD() {
+    }
+
+    public SubPictureHD(SubPictureHD other) {
+        super(other);
+        this.paletteOffset = other.paletteOffset;
+        this.alphaOffset = other.alphaOffset;
+        this.imageBufferSize = other.imageBufferSize;
+        this.imageBufferOffsetEven = other.imageBufferOffsetEven;
+        this.imageBufferOffsetOdd = other.imageBufferOffsetOdd;
     }
 
     public int getPaletteOffset() {

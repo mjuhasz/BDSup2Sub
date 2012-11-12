@@ -1007,7 +1007,7 @@ class EditDialogView extends JDialog {
         // update components
         try {
             Core.convertSup(idx, idx + 1, Core.getNumFrames());
-            model.setSubPic(Core.getSubPictureTrg(idx).copy());
+            model.setSubPic(new SubPicture(Core.getSubPictureTrg(idx)));
             SubPicture subPic = model.getSubPic();
             model.setImage(Core.getTrgImagePatched(subPic));
 

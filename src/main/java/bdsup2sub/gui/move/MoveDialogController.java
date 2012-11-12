@@ -253,7 +253,7 @@ class MoveDialogController {
         // update components
         try {
             Core.convertSup(idx, idx+1, Core.getNumFrames());
-            SubPicture subPic = Core.getSubPictureTrg(idx).clone();
+            SubPicture subPic = new SubPicture(Core.getSubPictureTrg(idx));
             model.setSubPic(subPic);
             model.setImage(Core.getTrgImagePatched(subPic));
 

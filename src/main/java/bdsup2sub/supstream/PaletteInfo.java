@@ -18,35 +18,23 @@ package bdsup2sub.supstream;
 /**
  * Contains offset and size of one update of a palette
  */
-public class PaletteInfo implements Cloneable {
+public class PaletteInfo {
 
     /** offset to palette info in SUP file */
-    private int paletteOffset;
+    private final int paletteOffset;
     /** number of palette entries */
-    private int paletteSize;
+    private final int paletteSize;
 
-    @Override
-    public PaletteInfo clone() {
-        try {
-            return (PaletteInfo)super.clone();
-        } catch (CloneNotSupportedException e) {
-            return null;
-        }
+    public PaletteInfo(int paletteOffset, int paletteSize) {
+        this.paletteOffset = paletteOffset;
+        this.paletteSize = paletteSize;
     }
 
     public int getPaletteOffset() {
         return paletteOffset;
     }
 
-    public void setPaletteOffset(int paletteOffset) {
-        this.paletteOffset = paletteOffset;
-    }
-
     public int getPaletteSize() {
         return paletteSize;
-    }
-
-    public void setPaletteSize(int paletteSize) {
-        this.paletteSize = paletteSize;
     }
 }
