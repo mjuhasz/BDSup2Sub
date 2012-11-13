@@ -42,46 +42,6 @@ public class SubDvd implements DvdSubtitleStream {
     private static final Configuration configuration = Configuration.getInstance();
     private static final Logger logger = Logger.getInstance();
 
-    public static final byte[] PACK_HEADER = {
-        0x00, 0x00, 0x01, (byte)0xba,							// 0:  0x000001ba - packet ID
-        0x44, 0x02, (byte)0xc4, (byte)0x82, 0x04, (byte)0xa9,	// 4:  system clock reference
-        0x01 , (byte)0x89, (byte)0xc3,							// 10: multiplexer rate
-        (byte)0xf8,												// 13: stuffing info
-    };
-
-    public static final byte[] HEADER_FIRST = {						// header only in first packet
-        0x00, 0x00, 0x01, (byte)0xbd,							// 0: 0x000001bd - sub ID
-        0x00, 0x00,												// 4: packet length
-        (byte)0x81, (byte)0x80, 								// 6:  packet type
-        0x05,													// 8:  PTS length
-        0x00, 0x0, 0x00, 0x00, 0x00,							// 9:  PTS
-        0x20,													// 14: stream ID
-        0x00, 0x00,												// 15: Subpicture size in bytes
-        0x00, 0x00,												// 17: offset to control header
-    };
-
-    public static final byte[] HEADER_NEXT = {						// header in following packets
-        0x00, 0x00, 0x01, (byte)0xbd,							// 0: 0x000001bd - sub ID
-        0x00, 0x00,												// 4: packet length
-        (byte)0x81, (byte)0x00, 								// 6: packet type
-        0x00,													// 8: PTS length = 0
-        0x20													// 9: Stream ID
-    };
-
-    public static final byte[] CONTROL_HEADER = {
-        0x00,													//  dummy byte (for shifting when forced)
-        0x00, 0x00,												//  0: offset to end sequence
-        0x01,													//  2: CMD 1: start displaying
-        0x03, 0x32, 0x10,										//  3: CMD 3: Palette Info
-        0x04, (byte)0xff, (byte)0xff,							//  6: CMD 4: Alpha Info
-        0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,				//  9: CMD 5: sub position
-        0x06, 0x00, 0x00, 0x00, 0x00,							// 16: CMD 6: rle offsets
-        (byte)0xff,												// 21: End of control header
-        0x00, 0x00,												// 22: display duration in 90kHz/1024
-        0x00, 0x00,												// 24: offset to end sequence (again)
-        0x02, (byte)0xff,										// 26: CMD 2: stop displaying
-    };
-
     /** ArrayList of captions contained in the current file */
     private final ArrayList<SubPictureDVD> subPictures = new ArrayList<SubPictureDVD>();
     /** color palette read from idx file  */

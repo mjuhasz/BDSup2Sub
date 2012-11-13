@@ -20,13 +20,15 @@ import java.util.List;
 
 public class ImageObject  {
 
-    /** list of ODS packets containing image info */
-    private List<ImageObjectFragment> fragmentList;
+    /**
+     * list of ODS packets containing image info
+     */
+    private List<ImageObjectFragment> fragmentList = new ArrayList<ImageObjectFragment>();
     /** palette identifier */
     private int paletteID;
     /** overall size of RLE buffer (might be spread over several packages) */
     private int bufferSize;
-    /** with of subtitle image */
+    /** width of subtitle image */
     private int width;
     /** height of subtitle image */
     private int height;
@@ -39,9 +41,7 @@ public class ImageObject  {
     }
 
     public ImageObject(ImageObject other) {
-        if (other.fragmentList != null) {
-            this.fragmentList = new ArrayList<ImageObjectFragment>(other.fragmentList);
-        }
+        this.fragmentList = new ArrayList<ImageObjectFragment>(other.fragmentList);
         this.paletteID = other.paletteID;
         this.bufferSize = other.bufferSize;
         this.width = other.width;
@@ -52,10 +52,6 @@ public class ImageObject  {
 
     public List<ImageObjectFragment> getFragmentList() {
         return fragmentList;
-    }
-
-    public void setFragmentList(List<ImageObjectFragment> fragmentList) {
-        this.fragmentList = fragmentList;
     }
 
     public int getPaletteID() {

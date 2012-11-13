@@ -22,6 +22,7 @@ import bdsup2sub.bitmap.Palette;
 import bdsup2sub.gui.support.Progress;
 import bdsup2sub.supstream.*;
 import bdsup2sub.supstream.bd.SupBD;
+import bdsup2sub.supstream.bd.SupBDWriter;
 import bdsup2sub.supstream.bdnxml.SupXml;
 import bdsup2sub.supstream.dvd.*;
 import bdsup2sub.supstream.hd.SupHD;
@@ -1325,7 +1326,7 @@ public class Core extends Thread {
                     } else if (outputMode == OutputMode.BDSUP) {
                         subPictures[i].setCompNum(frameNum);
                         convertSup(i, frameNum/2+1, maxNum);
-                        byte buf[] = SupBD.createSupFrame(subPictures[i], trgBitmap, trgPal);
+                        byte buf[] = SupBDWriter.createSupFrame(subPictures[i], trgBitmap, trgPal);
                         out.write(buf);
                     } else {
                         // Xml

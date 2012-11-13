@@ -43,20 +43,6 @@ public class SupDvd implements DvdSubtitleStream {
     private static final Configuration configuration = Configuration.getInstance();
     private static final Logger logger = Logger.getInstance();
 
-    public static final byte[] CONTROL_HEADER = {
-            0x00,													//  dummy byte (for shifting when forced)
-            0x00, 0x00,												//  0: offset to end sequence
-            0x01,													//  2: CMD 1: start displaying
-            0x03, 0x32, 0x10,										//  3: CMD 3: Palette Info
-            0x04, (byte)0xff, (byte)0xff,							//  6: CMD 4: Alpha Info
-            0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,				//  9: CMD 5: sub position
-            0x06, 0x00, 0x00, 0x00, 0x00,							// 16: CMD 6: rle offsets
-            (byte)0xff,												// 21: End of control header
-            0x00, 0x00,												// 22: display duration in 90kHz/1024
-            0x00, 0x00,												// 24: offset to end sequence (again)
-            0x02, (byte)0xff,										// 26: CMD 2: stop displaying
-    };
-
     private List<SubPictureDVD> subPictures = new ArrayList<SubPictureDVD>();
     private int screenWidth = 720;
     private int screenHeight = 576;
