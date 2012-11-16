@@ -29,7 +29,7 @@ public class FileBuffer {
     /** Size of the buffer in memory */
     private static final int BUFFERSIZE = 1024*1024; /* 1MB */
     /** Buffer in memory */
-    private byte buf[];
+    private byte[] buf;
     /** File name of the input file */
     private String filename;
     /** File input stream of the input file */

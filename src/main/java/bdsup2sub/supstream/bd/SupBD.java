@@ -25,6 +25,7 @@ import bdsup2sub.tools.QuantizeFilter;
 import bdsup2sub.utils.ToolBox;
 
 import java.awt.image.BufferedImage;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -40,6 +41,20 @@ public class SupBD implements SubtitleStream {
     private static final Configuration configuration = Configuration.getInstance();
     private static final Logger logger = Logger.getInstance();
 
+    private static final int PGSSUP_FILE_MAGIC = 0x5047;
+    private static final int PGSSUP_PALETTE_SEGMENT = 0x14;
+    private static final int PGSSUP_PICTURE_SEGMENT = 0x15;
+    private static final int PGSSUP_PRESENTATION_SEGMENT = 0x16;
+    private static final int PGSSUP_WINDOW_SEGMENT = 0x17;
+    private static final int PGSSUP_DISPLAY_SEGMENT = 0x80;
+
+    private static class SupSegment {
+        int segmentType;
+        int segmentSize;
+        long segmentPTSTimestamp;
+        int offset; // file offset of segment
+    }
+
     /** ArrayList of captions contained in the current file  */
     private List<SubPictureBD> subPictures = new ArrayList<SubPictureBD>();
     /** color palette of the last decoded caption  */
@@ -54,7 +69,6 @@ public class SupBD implements SubtitleStream {
     private int numForcedFrames;
 
     public SupBD(String filename) throws CoreException {
-        //int tFrame = (int)(90000/Core.getFPSSrc());
         int index = 0;
         try {
             buffer = new FileBuffer(filename);
@@ -88,7 +102,7 @@ public class SupBD implements SubtitleStream {
                 String msg;
                 String so[] = new String[1]; // hack to return string
                 switch (segment.segmentType) {
-                    case 0x14: // palette
+                    case PGSSUP_PALETTE_SEGMENT:
                         msg = "PDS offset: " + ToolBox.toHexLeftZeroPadded(index, 8) + ", size: " + ToolBox.toHexLeftZeroPadded(segment.segmentSize, 4);
                         if (compositionNumber != compositionNumberOld) {
                             if (subPictureBD != null) {
@@ -111,7 +125,7 @@ public class SupBD implements SubtitleStream {
                             logger.trace(msg + ", composition number unchanged -> ignored\n");
                         }
                         break;
-                    case 0x15: // image bitmap data
+                    case PGSSUP_PICTURE_SEGMENT:
                         msg = "ODS offset: " + ToolBox.toHexLeftZeroPadded(index, 8) + ", size: " + ToolBox.toHexLeftZeroPadded(segment.segmentSize, 4);
                         if (compositionNumber != compositionNumberOld) {
                             if (!paletteUpdate) {
@@ -133,7 +147,7 @@ public class SupBD implements SubtitleStream {
                             logger.trace(msg + ", composition number unchanged -> ignored\n");
                         }
                         break;
-                    case 0x16: // time codes
+                    case PGSSUP_PRESENTATION_SEGMENT:
                         compositionNumber = getCompositionNumber(segment);
                         compositionState = getCompositionState(segment);
                         paletteUpdate = getPaletteUpdateFlag(segment);
@@ -213,7 +227,7 @@ public class SupBD implements SubtitleStream {
                             logger.trace(msg);
                         }
                         break;
-                    case 0x17: // window info
+                    case PGSSUP_WINDOW_SEGMENT:
                         msg = "WDS offset: " + ToolBox.toHexLeftZeroPadded(index, 8) + ", size: " + ToolBox.toHexLeftZeroPadded(segment.segmentSize, 4);
                         if (subPictureBD != null) {
                             parseWDS(segment, subPictureBD);
@@ -223,7 +237,7 @@ public class SupBD implements SubtitleStream {
                             logger.warn("Missing PTS start -> ignored\n");
                         }
                         break;
-                    case 0x80: // END
+                    case PGSSUP_DISPLAY_SEGMENT:
                         logger.trace("END offset: " + ToolBox.toHexLeftZeroPadded(index, 8) + "\n");
                         // decide whether to store this last composition section as caption or merge it
                         if (compositionState == PGSCompositionState.EPOCH_START) {
@@ -342,14 +356,14 @@ public class SupBD implements SubtitleStream {
     private SupSegment readSegment(int offset) throws CoreException {
         try {
             SupSegment segment = new SupSegment();
-            if (buffer.getWord(offset) != 0x5047) {
+            if (buffer.getWord(offset) != PGSSUP_FILE_MAGIC) {
                 throw new CoreException("PG missing at index " + ToolBox.toHexLeftZeroPadded(offset,8) + "\n");
             }
-            segment.segmentPTSTimestamp = buffer.getDWord(offset+=2); // read PTS
+            segment.segmentPTSTimestamp = buffer.getDWord(offset += 2);
             offset += 4; /* ignore DTS */
-            segment.segmentType = buffer.getByte(offset+=4);
-            segment.segmentSize = buffer.getWord(++offset);
-            segment.offset = offset+2;
+            segment.segmentType = buffer.getByte(offset += 4);
+            segment.segmentSize = buffer.getWord(offset += 1);
+            segment.offset = offset + 2;
             return segment;
         } catch (FileBufferException ex) {
             throw new CoreException(ex.getMessage());
@@ -881,15 +895,6 @@ public class SupBD implements SubtitleStream {
      */
     public double getFps(int index) {
         return Framerate.valueForId(subPictures.get(index).getType());
-    }
-
-
-    private static class SupSegment {
-        int segmentType;
-        int segmentSize;
-        long segmentPTSTimestamp;
-        /** file offset of segment */
-        int  offset;
     }
 }
 
