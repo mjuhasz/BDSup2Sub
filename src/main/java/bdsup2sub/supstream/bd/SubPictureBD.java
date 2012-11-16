@@ -106,6 +106,10 @@ public class SubPictureBD extends SubPicture {
         return imageObjectList.get(objectID);
     }
 
+    int getObjectID() {
+        return objectID;
+    }
+
     public void setObjectID(int objectID) {
         this.objectID = objectID;
     }
@@ -134,8 +138,16 @@ public class SubPictureBD extends SubPicture {
         this.windowHeight = windowHeight;
     }
 
+    int getXWindowOffset() {
+        return xWindowOffset;
+    }
+
     public void setXWindowOffset(int xWindowOffset) {
         this.xWindowOffset = xWindowOffset;
+    }
+
+    int getYWindowOffset() {
+        return yWindowOffset;
     }
 
     public void setYWindowOffset(int yWindowOffset) {

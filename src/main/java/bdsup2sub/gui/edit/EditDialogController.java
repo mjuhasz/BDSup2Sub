@@ -651,9 +651,6 @@ public class EditDialogController {
             SubPicture subPic = model.getSubPic();
             int sel[] = view.getPreviewPanelSelection();
             if (sel != null) {
-                if (subPic.getErasePatch() == null) {
-                    subPic.setErasePatch(new ArrayList<ErasePatch>());
-                }
                 ErasePatch ep = new ErasePatch(sel[0], sel[1], sel[2]-sel[0]+1, sel[3]-sel[1]+1);
                 subPic.getErasePatch().add(ep);
 
@@ -675,10 +672,9 @@ public class EditDialogController {
         @Override
         public void actionPerformed(ActionEvent event) {
             SubPicture subPic = model.getSubPic();
-            if (subPic.getErasePatch() != null && subPic.getErasePatch().size() > 0) {
+            if (!subPic.getErasePatch().isEmpty()) {
                 subPic.getErasePatch().remove(subPic.getErasePatch().size() - 1);
-                if (subPic.getErasePatch().size() == 0) {
-                    subPic.setErasePatch(null);
+                if (subPic.getErasePatch().isEmpty()) {
                     view.setUndoPatchButtonEnabled(false);
                     view.setUndoAllPatchesButtonEnabled(false);
                 }
@@ -694,9 +690,8 @@ public class EditDialogController {
         @Override
         public void actionPerformed(ActionEvent event) {
             SubPicture subPic = model.getSubPic();
-            if (subPic.getErasePatch() != null) {
+            if (!subPic.getErasePatch().isEmpty()) {
                 subPic.getErasePatch().clear();
-                subPic.setErasePatch(null);
                 model.setImage(Core.getTrgImagePatched(subPic));
                 view.setPreviewPanelImage(model.getImage(), subPic.getImageWidth(), subPic.getImageHeight());
                 view.repaintPreviewPanel();

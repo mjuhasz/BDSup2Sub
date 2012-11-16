@@ -36,6 +36,7 @@ import javax.swing.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.List;
 
 import static bdsup2sub.core.Constants.*;
 import static bdsup2sub.utils.SubtitleUtils.getResolutionForDimension;
@@ -1073,8 +1074,8 @@ public class Core extends Thread {
             // fix erase patches
             double fx = factX * fsXNew / fsXOld;
             double fy = factY * fsYNew / fsYOld;
-            ArrayList<ErasePatch> erasePatches = subPictures[i].getErasePatch();
-            if (erasePatches != null) {
+            List<ErasePatch> erasePatches = subPictures[i].getErasePatch();
+            if (!erasePatches.isEmpty()) {
                 for (int j = 0; j < erasePatches.size(); j++) {
                     ErasePatch ep = erasePatches.get(j);
                     int x = (int)(ep.x * fx + 0.5);
@@ -1238,7 +1239,7 @@ public class Core extends Thread {
                     }
                 }
             }
-            if (picTrg.getErasePatch() != null) {
+            if (!picTrg.getErasePatch().isEmpty()) {
                 trgBitmapUnpatched = new Bitmap(tBm);
                 int col = tPal.getIndexOfMostTransparentPaletteEntry();
                 for (ErasePatch ep : picTrg.getErasePatch()) {
@@ -1727,7 +1728,7 @@ public class Core extends Thread {
      */
     public static BufferedImage getTrgImagePatched(SubPicture pic) {
         synchronized (semaphore) {
-            if (pic.getErasePatch() != null) {
+            if (!pic.getErasePatch().isEmpty()) {
                 Bitmap trgBitmapPatched = new Bitmap(trgBitmapUnpatched);
                 int col = trgPal.getIndexOfMostTransparentPaletteEntry();
                 for (ErasePatch ep : pic.getErasePatch()) {

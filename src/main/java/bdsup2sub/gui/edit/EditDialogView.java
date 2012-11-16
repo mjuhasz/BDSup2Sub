@@ -1011,7 +1011,7 @@ class EditDialogView extends JDialog {
             SubPicture subPic = model.getSubPic();
             model.setImage(Core.getTrgImagePatched(subPic));
 
-            if (subPic.getErasePatch() != null && subPic.getErasePatch().size() > 0) {
+            if (!subPic.getErasePatch().isEmpty()) {
                 jButtonUndoPatch.setEnabled(true);
                 jButtonUndoAllPatches.setEnabled(true);
             }

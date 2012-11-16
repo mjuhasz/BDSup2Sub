@@ -37,4 +37,24 @@ public class PaletteInfo {
     public int getPaletteSize() {
         return paletteSize;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        PaletteInfo that = (PaletteInfo) o;
+
+        if (paletteOffset != that.paletteOffset) return false;
+        if (paletteSize != that.paletteSize) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = paletteOffset;
+        result = 31 * result + paletteSize;
+        return result;
+    }
 }

@@ -18,6 +18,7 @@ package bdsup2sub.supstream;
 import bdsup2sub.bitmap.ErasePatch;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class SubPicture {
 
@@ -49,9 +50,8 @@ public class SubPicture {
 
     /** exclude from export? */
     private boolean excluded;
-
     /** list of erase patches */
-    private ArrayList<ErasePatch> erasePatch;
+    private List<ErasePatch> erasePatch = new ArrayList<ErasePatch>();
 
     public SubPicture() {
     }
@@ -180,11 +180,11 @@ public class SubPicture {
         this.excluded = excluded;
     }
 
-    public ArrayList<ErasePatch> getErasePatch() {
+    public List<ErasePatch> getErasePatch() {
         return erasePatch;
     }
 
-    public void setErasePatch(ArrayList<ErasePatch> erasePatch) {
+    public void setErasePatch(List<ErasePatch> erasePatch) {
         this.erasePatch = erasePatch;
     }
 }

@@ -37,4 +37,24 @@ public class ImageObjectFragment {
     public int getImagePacketSize() {
         return imagePacketSize;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ImageObjectFragment that = (ImageObjectFragment) o;
+
+        if (imageBufferOfs != that.imageBufferOfs) return false;
+        if (imagePacketSize != that.imagePacketSize) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = (int) (imageBufferOfs ^ (imageBufferOfs >>> 32));
+        result = 31 * result + imagePacketSize;
+        return result;
+    }
 }

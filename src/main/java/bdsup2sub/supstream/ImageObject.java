@@ -18,7 +18,7 @@ package bdsup2sub.supstream;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ImageObject  {
+public class ImageObject {
 
     /**
      * list of ODS packets containing image info
@@ -100,5 +100,35 @@ public class ImageObject  {
 
     public void setYOffset(int yOffset) {
         this.yOffset = yOffset;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ImageObject that = (ImageObject) o;
+
+        if (bufferSize != that.bufferSize) return false;
+        if (height != that.height) return false;
+        if (paletteID != that.paletteID) return false;
+        if (width != that.width) return false;
+        if (xOffset != that.xOffset) return false;
+        if (yOffset != that.yOffset) return false;
+        if (!fragmentList.equals(that.fragmentList)) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = fragmentList.hashCode();
+        result = 31 * result + paletteID;
+        result = 31 * result + bufferSize;
+        result = 31 * result + width;
+        result = 31 * result + height;
+        result = 31 * result + xOffset;
+        result = 31 * result + yOffset;
+        return result;
     }
 }
