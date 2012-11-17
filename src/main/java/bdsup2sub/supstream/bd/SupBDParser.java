@@ -74,52 +74,50 @@ public class SupBDParser {
                 }
                 Core.setProgress(index);
                 segment = readPCSSegment(index);
-                String msg;
-                String so[] = new String[1]; // hack to return string
                 switch (segment.type) {
                     case PGSSUP_PALETTE_SEGMENT:
-                        msg = "PDS offset: " + ToolBox.toHexLeftZeroPadded(index, 8) + ", size: " + ToolBox.toHexLeftZeroPadded(segment.size, 4);
+                        StringBuffer message = new StringBuffer("PDS offset: ").append(ToolBox.toHexLeftZeroPadded(index, 8)).append(", size: ").append(ToolBox.toHexLeftZeroPadded(segment.size, 4));
                         if (compositionNumber != compositionNumberOld) {
                             if (subPictureBD != null) {
-                                so[0] = null;
-                                int paletteSize = parsePDS(segment, subPictureBD, so);
+                                StringBuffer result = new StringBuffer();
+                                int paletteSize = parsePDS(segment, subPictureBD, result);
                                 if (paletteSize >= 0) {
-                                    logger.trace(msg + ", " + so[0] + "\n");
+                                    logger.trace(message + ", " + result + "\n");
                                     if (paletteSize > 0) {
                                         pdsCounter++;
                                     }
                                 } else {
-                                    logger.trace(msg + "\n");
-                                    logger.warn(so[0] + "\n");
+                                    logger.trace(message + "\n");
+                                    logger.warn(result + "\n");
                                 }
                             } else {
-                                logger.trace(msg + "\n");
+                                logger.trace(message + "\n");
                                 logger.warn("Missing PTS start -> ignored\n");
                             }
                         } else {
-                            logger.trace(msg + ", composition number unchanged -> ignored\n");
+                            logger.trace(message + ", composition number unchanged -> ignored\n");
                         }
                         break;
                     case PGSSUP_PICTURE_SEGMENT:
-                        msg = "ODS offset: " + ToolBox.toHexLeftZeroPadded(index, 8) + ", size: " + ToolBox.toHexLeftZeroPadded(segment.size, 4);
+                        message = new StringBuffer("ODS offset: ").append(ToolBox.toHexLeftZeroPadded(index, 8)).append(", size: ").append(ToolBox.toHexLeftZeroPadded(segment.size, 4));
                         if (compositionNumber != compositionNumberOld) {
                             if (!paletteUpdate) {
                                 if (subPictureBD != null) {
-                                    so[0] = null;
-                                    if (parseODS(segment, subPictureBD, so)) {
+                                    StringBuffer result = new StringBuffer();
+                                    if (parseODS(segment, subPictureBD, result)) {
                                         odsCounter++;
                                     }
-                                    logger.trace(msg + ", img size: " + subPictureBD.getImageWidth() + "*" + subPictureBD.getImageHeight() + (so[0] == null ? "\n" : ", " + so[0]) + "\n");
+                                    logger.trace(message + ", img size: " + subPictureBD.getImageWidth() + "*" + subPictureBD.getImageHeight() + (result.length() == 0 ? "\n" : ", " + result) + "\n");
                                 } else {
-                                    logger.trace(msg + "\n");
+                                    logger.trace(message + "\n");
                                     logger.warn("missing PTS start -> ignored\n");
                                 }
                             } else {
-                                logger.trace(msg + "\n");
+                                logger.trace(message + "\n");
                                 logger.warn("palette update only -> ignored\n");
                             }
                         } else {
-                            logger.trace(msg + ", composition number unchanged -> ignored\n");
+                            logger.trace(message + ", composition number unchanged -> ignored\n");
                         }
                         break;
                     case PGSSUP_PRESENTATION_SEGMENT:
@@ -153,16 +151,16 @@ public class SupBDParser {
                             subPictureBD.setStartTime(segment.pts);
                             logger.info("#> " + (subPictures.size()) + " (" + ptsToTimeStr(subPictureBD.getStartTime()) + ")\n");
 
-                            so[0] = null;
-                            parsePCS(segment, subPictureBD, so);
+                            StringBuffer result = new StringBuffer();
+                            parsePCS(segment, subPictureBD, result);
                             // fix end time stamp of previous subPictureBD if still missing
                             if (lastSubPicture != null && lastSubPicture.getEndTime() == 0) {
                                 lastSubPicture.setEndTime(subPictureBD.getStartTime());
                             }
 
-                            msg = "PCS offset: " + ToolBox.toHexLeftZeroPadded(index, 8) + ", START, size: " + ToolBox.toHexLeftZeroPadded(segment.size, 4) + ", composition number: " + compositionNumber + ", forced: " + subPictureBD.isForced() + (so[0] == null ? "\n" : ", " + so[0] + "\n");
-                            msg += "PTS start: " + ptsToTimeStr(subPictureBD.getStartTime()) + ", screen size: " + subPictureBD.getWidth() + "*" + subPictureBD.getHeight() + "\n";
-                            logger.trace(msg);
+                            message = new StringBuffer("PCS offset: ").append(ToolBox.toHexLeftZeroPadded(index, 8)).append(", START, size: ").append(ToolBox.toHexLeftZeroPadded(segment.size, 4)).append(", composition number: ").append(compositionNumber).append(", forced: ").append(subPictureBD.isForced()).append((result.length() == 0 ? "\n" : ", " + result + "\n"));
+                            message.append("PTS start: ").append(ptsToTimeStr(subPictureBD.getStartTime())).append(", screen size: ").append(subPictureBD.getWidth()).append("*").append(subPictureBD.getHeight()).append("\n");
+                            logger.trace(message.toString());
 
                             odsCounter = 0;
                             pdsCounter = 0;
@@ -174,41 +172,40 @@ public class SupBDParser {
                                 logger.warn("Missing start of epoch at offset " + ToolBox.toHexLeftZeroPadded(index, 8) + "\n");
                                 break;
                             }
-                            msg = "PCS offset:" + ToolBox.toHexLeftZeroPadded(index, 8) + ", ";
+                            message = new StringBuffer("PCS offset: ").append(ToolBox.toHexLeftZeroPadded(index, 8)).append(", ");
                             switch (compositionState) {
                                 case EPOCH_CONTINUE:
-                                    msg += "CONT, ";
+                                    message.append("CONT, ");
                                     break;
                                 case ACQU_POINT:
-                                    msg += "ACQU, ";
+                                    message.append("ACQU, ");
                                     break;
                                 case NORMAL:
-                                    msg += "NORM, ";
+                                    message.append("NORM, ");
                                     break;
                             }
-                            msg += " size: " + ToolBox.toHexLeftZeroPadded(segment.size, 4) + ", composition number: " + compositionNumber + ", forced: " + subPictureBD.isForced();
+                            message.append(" size: ").append(ToolBox.toHexLeftZeroPadded(segment.size, 4)).append(", composition number: ").append(compositionNumber).append(", forced: ").append(subPictureBD.isForced());
+                            StringBuffer result = new StringBuffer();
                             if (compositionNumber != compositionNumberOld) {
-                                so[0] = null;
                                 // store the state so that we can revert to it
                                 picTmp = new SubPictureBD(subPictureBD);
                                 // create new subPictureBD
-                                parsePCS(segment, subPictureBD, so);
+                                parsePCS(segment, subPictureBD, result);
                             }
-                            if (so[0] != null) {
-                                msg += ", " + so[0];
+                            if (result.length() > 0) {
+                                message.append(", ").append(result);
                             }
-                            msg += ", pal update: " + paletteUpdate + "\n";
-                            msg += "PTS: " + ptsToTimeStr(segment.pts) + "\n";
-                            logger.trace(msg);
+                            message.append(", pal update: ").append(paletteUpdate).append("\n").append("PTS: ").append(ptsToTimeStr(segment.pts)).append("\n");
+                            logger.trace(message.toString());
                         }
                         break;
                     case PGSSUP_WINDOW_SEGMENT:
-                        msg = "WDS offset: " + ToolBox.toHexLeftZeroPadded(index, 8) + ", size: " + ToolBox.toHexLeftZeroPadded(segment.size, 4);
+                        message = new StringBuffer("WDS offset: ").append(ToolBox.toHexLeftZeroPadded(index, 8)).append(", size: ").append(ToolBox.toHexLeftZeroPadded(segment.size, 4));
                         if (subPictureBD != null) {
                             parseWDS(segment, subPictureBD);
-                            logger.trace(msg + ", dim: " + subPictureBD.getWindowWidth() + "*" + subPictureBD.getWindowHeight() + "\n");
+                            logger.trace(message + ", dim: " + subPictureBD.getWindowWidth() + "*" + subPictureBD.getWindowHeight() + "\n");
                         } else {
-                            logger.trace(msg + "\n");
+                            logger.trace(message + "\n");
                             logger.warn("Missing PTS start -> ignored\n");
                         }
                         break;
@@ -349,12 +346,13 @@ public class SupBDParser {
 
     /**
      * parse an PCS packet which contains width/height info
+     *
      * @param segment object containing info about the current segment
      * @param subPictureBD SubPicture object containing info about the current caption
-     * @param msg reference to message string
+     * @param message
      * @throws FileBufferException
      */
-    private void parsePCS(PCSSegment segment, SubPictureBD subPictureBD, String msg[]) throws FileBufferException {
+    private void parsePCS(PCSSegment segment, SubPictureBD subPictureBD, StringBuffer message) throws FileBufferException {
         int index = segment.offset;
         if (segment.size >= 4) {
             subPictureBD.setWidth(buffer.getWord(index));               // video_width
@@ -369,7 +367,7 @@ public class SupBDParser {
             if (compositionObjectCount > 0) {
                 // composition_object:
                 int objectId = buffer.getWord(index + 11); // 16bit object_id_ref
-                msg[0] = "paletteId: " + paletteId + ", objectId: " + objectId;
+                message.append("paletteId: ").append(paletteId).append(", objectId: ").append(objectId);
                 ImageObject imageObject;
                 if (objectId >= subPictureBD.getImageObjectList().size()) {
                     imageObject = new ImageObject();
@@ -412,7 +410,7 @@ public class SupBDParser {
         }
     }
 
-    private boolean parseODS(PCSSegment pcsSegment, SubPictureBD subPictureBD, String msg[]) throws FileBufferException {
+    private boolean parseODS(PCSSegment pcsSegment, SubPictureBD subPictureBD, StringBuffer message) throws FileBufferException {
         int index = pcsSegment.offset;
         int objectID = buffer.getWord(index);                 // 16bit object_id
         int objectVersion = buffer.getByte(index+1);          // object_version_number
@@ -441,8 +439,7 @@ public class SupBDParser {
                 imageObject.setBufferSize(imageObjectFragment.getImagePacketSize());
                 imageObject.setHeight(height);
                 imageObject.setWidth(width);
-                msg[0] = "ID: " + objectID + ", update: " + objectVersion + ", seq: " + (first ? "first" : "")
-                        + ((first && last) ? "/" : "") + (last ? "" + "last" : "");
+                message.append("ID: ").append(objectID).append(", update: ").append(objectVersion).append(", seq: ").append((first ? "first" : "")).append(((first && last) ? "/" : "")).append((last ? "" + "last" : ""));
                 return true;
             } else {
                 logger.warn("Invalid image size - ignored\n");
@@ -457,25 +454,24 @@ public class SupBDParser {
             imageObjectFragment = new ImageObjectFragment(index + 4, pcsSegment.size - (index + 4 - pcsSegment.offset));
             imageObject.getFragmentList().add(imageObjectFragment);
             imageObject.setBufferSize(imageObject.getBufferSize() + imageObjectFragment.getImagePacketSize());
-            msg[0] = "ID: " + objectID + ", update: " + objectVersion + ", seq: " + (first ? "first" : "")
-                    + ((first && last) ? "/" : "") + (last ? "" + "last" : "");
+            message.append("ID: ").append(objectID).append(", update: ").append(objectVersion).append(", seq: ").append((first ? "first" : "")).append(((first && last) ? "/" : "")).append((last ? "" + "last" : ""));
             return false;
         }
     }
 
-    private int parsePDS(PCSSegment pcsSegment, SubPictureBD subPictureBD, String msg[]) throws FileBufferException {
+    private int parsePDS(PCSSegment pcsSegment, SubPictureBD subPictureBD, StringBuffer message) throws FileBufferException {
         int index = pcsSegment.offset;
         int paletteID = buffer.getByte(index);  // 8bit palette ID (0..7)
         // 8bit palette version number (incremented for each palette change)
         int paletteUpdate = buffer.getByte(index + 1);
         if (paletteID > 7) {
-            msg[0] = "Illegal palette id at offset " + ToolBox.toHexLeftZeroPadded(index, 8);
+            message.append("Illegal palette id at offset ").append(ToolBox.toHexLeftZeroPadded(index, 8));
             return -1;
         }
 
         PaletteInfo paletteInfo = new PaletteInfo(index + 2, (pcsSegment.size - 2) / 5);
         subPictureBD.getPalettes().get(paletteID).add(paletteInfo);
-        msg[0] = "ID: " + paletteID + ", update: " + paletteUpdate + ", " + paletteInfo.getPaletteSize() + " entries";
+        message.append("ID: ").append(paletteID).append(", update: ").append(paletteUpdate).append(", ").append(paletteInfo.getPaletteSize()).append(" entries");
         return paletteInfo.getPaletteSize();
     }
 
