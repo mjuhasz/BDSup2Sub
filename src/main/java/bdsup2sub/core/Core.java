@@ -1304,8 +1304,8 @@ public class Core extends Thread {
             int offset = 0;
             for (int i=0; i < subtitleStream.getFrameCount(); i++) {
                 // for threaded version
-                if (isCancelled()) {
-                    throw new CoreException("Cancelled by user!");
+                if (isCanceled()) {
+                    throw new CoreException("Canceled by user!");
                 }
                 // for threaded version (progress bar);
                 setProgress(i);
@@ -1325,7 +1325,7 @@ public class Core extends Thread {
                         byte buf[] = SupDvdWriter.createSupFrame(subVobTrg, trgBitmap);
                         out.write(buf);
                     } else if (outputMode == OutputMode.BDSUP) {
-                        subPictures[i].setCompNum(frameNum);
+                        subPictures[i].setCompositionNumber(frameNum);
                         convertSup(i, frameNum/2+1, maxNum);
                         byte buf[] = SupBDWriter.createSupFrame(subPictures[i], trgBitmap, trgPal);
                         out.write(buf);
@@ -1654,7 +1654,7 @@ public class Core extends Thread {
      * Get cancel state.
      * @return True if the current operation was canceled
      */
-    public static boolean isCancelled() {
+    public static boolean isCanceled() {
         return state == CoreThreadState.CANCELED;
     }
 
@@ -1670,9 +1670,9 @@ public class Core extends Thread {
      * Set progress in progress bar.
      * @param p Subtitle index processed
      */
-    public static void setProgress(int p) {
+    public static void setProgress(long p) {
         if (progress != null) {
-            int val = (int)(((long)p * 100) / progressMax);
+            int val = (int)((p * 100) / progressMax);
             if (val > progressLast) {
                 progressLast = val;
                 progress.setProgress(val);

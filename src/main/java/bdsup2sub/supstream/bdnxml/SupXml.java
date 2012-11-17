@@ -325,7 +325,7 @@ public class SupXml implements SubtitleStream {
     }
 
     /* (non-Javadoc)
-     * @see SubtitleStream#getNumForcedFrames()
+     * @see SubtitleStream#getForcedFrameCount()
      */
     public int getForcedFrameCount() {
         return numForcedFrames;

@@ -65,8 +65,8 @@ public class SupHD implements SubtitleStream {
         int index = 0;
         try {
             while (index < bufsize) {
-                if (Core.isCancelled()) {
-                    throw new CoreException("Cancelled by user!");
+                if (Core.isCanceled()) {
+                    throw new CoreException("Canceled by user!");
                 }
                 Core.setProgress(index);
 

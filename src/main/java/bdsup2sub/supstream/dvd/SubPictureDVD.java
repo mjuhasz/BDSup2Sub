@@ -17,9 +17,7 @@ package bdsup2sub.supstream.dvd;
 
 import bdsup2sub.supstream.ImageObjectFragment;
 import bdsup2sub.supstream.SubPicture;
-import bdsup2sub.supstream.hd.SubPictureHD;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -76,7 +74,7 @@ public class SubPictureDVD extends SubPicture {
         setStartTime(pic.getStartTime());
         setEndTime(pic.getEndTime());
         setForced(pic.isForced());
-        setCompNum(pic.getCompNum());
+        setCompositionNumber(pic.getCompositionNumber());
         setImageWidth(pic.getImageWidth());
         setImageHeight(pic.getImageHeight());
         setOfsX(pic.getXOffset());

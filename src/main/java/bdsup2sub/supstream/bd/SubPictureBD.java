@@ -15,6 +15,7 @@
  */
 package bdsup2sub.supstream.bd;
 
+import bdsup2sub.core.Configuration;
 import bdsup2sub.supstream.ImageObject;
 import bdsup2sub.supstream.PaletteInfo;
 import bdsup2sub.supstream.SubPicture;
@@ -24,10 +25,12 @@ import java.util.List;
 
 public class SubPictureBD extends SubPicture {
 
+    private static final Configuration configuration = Configuration.getInstance();
+
     /** objectID used in decoded object */
     private int objectID;
     /** list of ODS packets containing image info */
-    private List<ImageObject> imageObjectList;
+    private List<ImageObject> imageObjectList = new ArrayList<ImageObject>();
     /** width of subtitle window (might be larger than image) */
     private int windowWidth;
     /** height of subtitle window (might be larger than image) */
@@ -39,7 +42,12 @@ public class SubPictureBD extends SubPicture {
     /** FPS type (e.g. 0x10 = 24p) */
     private int type;
     /** list of (list of) palette info - there are up to 8 palettes per epoch, each can be updated several times */
-    private List<List<PaletteInfo>> palettes;
+    private List<List<PaletteInfo>> palettes = new ArrayList<List<PaletteInfo>>();
+    {
+        for (int i=0; i < 8; i++) {
+        palettes.add(new ArrayList<PaletteInfo>());
+        }
+    }
 
     public SubPictureBD() {
     }
@@ -61,12 +69,24 @@ public class SubPictureBD extends SubPicture {
                 this.palettes.add(cpi);
             }
         }
-        if (other.imageObjectList != null) {
-            this.imageObjectList = new ArrayList<ImageObject>();
-            for (ImageObject io : other.imageObjectList) {
-                this.imageObjectList.add(new ImageObject(io));
-            }
+        for (ImageObject io : other.imageObjectList) {
+            this.imageObjectList.add(new ImageObject(io));
         }
+    }
+
+    public boolean isMergableWith(SubPictureBD previous) {
+        if (previous != null && (previous.getEndTime() == 0 || getStartTime() - previous.getEndTime() < configuration.getMergePTSdiff())) {
+            return isThisImageObjectIdenticalWith(previous.getImageObject());
+        }
+        return false;
+    }
+
+    private boolean isThisImageObjectIdenticalWith(ImageObject previousImageObject) {
+        ImageObject thisImageObject = getImageObject();
+        if (previousImageObject != null && thisImageObject != null) {
+            return previousImageObject.getBufferSize() == thisImageObject.getBufferSize() && previousImageObject.getWidth() == thisImageObject.getWidth() && previousImageObject.getHeight() == thisImageObject.getHeight();
+        }
+        return false;
     }
 
     @Override
@@ -118,10 +138,6 @@ public class SubPictureBD extends SubPicture {
         return imageObjectList;
     }
 
-    public void setImageObjectList(List<ImageObject> imageObjectList) {
-        this.imageObjectList = imageObjectList;
-    }
-
     public int getWindowWidth() {
         return windowWidth;
     }
@@ -164,9 +180,5 @@ public class SubPictureBD extends SubPicture {
 
     public List<List<PaletteInfo>> getPalettes() {
         return palettes;
-    }
-
-    public void setPalettes(List<List<PaletteInfo>> palettes) {
-        this.palettes = palettes;
     }
 }

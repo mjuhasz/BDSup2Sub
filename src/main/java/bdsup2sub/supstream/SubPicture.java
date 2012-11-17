@@ -42,7 +42,7 @@ public class SubPicture {
     /** if true, this is a forced subtitle */
     private boolean forced;
     /** composition number - increased at start and end PCS */
-    private int compNum;
+    private int compositionNumber;
     /** frame was already decoded */
     private boolean wasDecoded;
 
@@ -76,7 +76,7 @@ public class SubPicture {
         this.startTime = other.startTime;
         this.endTime = other.endTime;
         this.forced = other.forced;
-        this.compNum = other.compNum;
+        this.compositionNumber = other.compositionNumber;
         this.wasDecoded = other.wasDecoded;
         this.excluded = other.excluded;
         if (other.erasePatch != null) {
@@ -156,12 +156,12 @@ public class SubPicture {
         this.forced = forced;
     }
 
-    public int getCompNum() {
-        return compNum;
+    public int getCompositionNumber() {
+        return compositionNumber;
     }
 
-    public void setCompNum(int compNum) {
-        this.compNum = compNum;
+    public void setCompositionNumber(int compositionNumber) {
+        this.compositionNumber = compositionNumber;
     }
 
     public boolean isWasDecoded() {

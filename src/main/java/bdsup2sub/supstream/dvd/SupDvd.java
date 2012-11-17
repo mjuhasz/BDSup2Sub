@@ -83,7 +83,7 @@ public class SupDvd implements DvdSubtitleStream {
             int i = 0;
             do {
                 logger.info("# " + (++i) + "\n");
-                Core.setProgress((int)offset);
+                Core.setProgress(offset);
                 logger.trace("Offset: " + ToolBox.toHexLeftZeroPadded(offset, 8) + "\n");
                 offset = readSupFrame(offset, fileBuffer);
             } while (offset < size);

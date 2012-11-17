@@ -172,7 +172,7 @@ public final class SupBDWriter {
         setWord(HEADER_PCS_START,0, pic.getWidth());
         setWord(HEADER_PCS_START, 2, h);                        // cropped height
         setByte(HEADER_PCS_START, 4, fpsId);
-        setWord(HEADER_PCS_START, 5, pic.getCompNum());
+        setWord(HEADER_PCS_START, 5, pic.getCompositionNumber());
         HEADER_PCS_START[14] = (pic.isForced() ? (byte)0x40 : 0);
         setWord(HEADER_PCS_START,15, pic.getXOffset());
         setWord(HEADER_PCS_START,17, yOfs);
@@ -282,7 +282,7 @@ public final class SupBDWriter {
         setWord(HEADER_PCS_END,0, pic.getWidth());
         setWord(HEADER_PCS_END, 2, h);                          // cropped height
         setByte(HEADER_PCS_END, 4, fpsId);
-        setWord(HEADER_PCS_END, 5, pic.getCompNum() + 1);
+        setWord(HEADER_PCS_END, 5, pic.getCompositionNumber() + 1);
         for (byte b : HEADER_PCS_END) {
             buf[index++] = b;
         }
