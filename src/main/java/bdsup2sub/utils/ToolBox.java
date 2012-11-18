@@ -99,8 +99,8 @@ public final class ToolBox {
             fc.setFileFilter(filter);
         }
         fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
-        if (fn != null) {
-            f = new File(FilenameUtils.addSeparator(path) + fn);
+        if (fn != null && !fn.isEmpty()) {
+            f = new File(FilenameUtils.addSeparator(p) + fn);
             fc.setSelectedFile(f);
         }
         if (!load) {
