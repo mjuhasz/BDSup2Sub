@@ -36,6 +36,7 @@ import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.List;
 
 import static bdsup2sub.core.Configuration.*;
@@ -128,15 +129,15 @@ class MainFrameController {
     private class LoadMenuItemActionListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent event) {
-            String[] extension = new String[] {"idx", "ifo", "sub", "sup", "xml"};
+            List<String> extensions = Arrays.asList(new String[] {"idx", "ifo", "sub", "sup", "xml"});
             view.setConsoleText("");
             String parent = FilenameUtils.getParent(model.getLoadPath());
-            String name = FilenameUtils.getName(model.getLoadPath());
-            final String fname = ToolBox.getFilename(parent, name, extension, true, view);
+            String defaultFilename = FilenameUtils.getName(model.getLoadPath());
+            final String filename = ToolBox.getFilename(parent, defaultFilename, extensions, true, view);
             (new Thread() {
                 @Override
                 public void run() {
-                    load(fname);
+                    load(filename);
                 } }).start();
         }
     }

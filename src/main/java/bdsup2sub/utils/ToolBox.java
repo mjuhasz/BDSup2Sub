@@ -15,7 +15,6 @@
  */
 package bdsup2sub.utils;
 
-import bdsup2sub.core.StreamID;
 import bdsup2sub.tools.JFileFilter;
 
 import javax.swing.*;
@@ -24,6 +23,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.util.List;
 import java.util.Locale;
 
 public final class ToolBox {
@@ -77,40 +77,41 @@ public final class ToolBox {
 
     /**
      * Get file name via "file chooser" dialog
-     * @param path   Default path (without file name). Might be "", but not null.
-     * @param fn     Default file name (without path). Can be null.
-     * @param ext    Array of allowed extensions (without ".")
-     * @param load   If true, this is a load dialog, else it's a save dialog
+     * @param path   Default path (without file name).
+     * @param filename     Default file name (without path).
+     * @param extensions    Array of allowed extensions (without ".")
+     * @param loadDialog   If true, this is a load dialog, else it's a save dialog
      * @param parent Parent component (Frame, Window)
      * @return       Selected filename or null if canceled
      */
-    public static String getFilename(String path, String fn, String ext[], boolean load, Component parent) {
-        String p = path;
-        File f;
-        if (p == null || p.isEmpty()) {
-            p = ".";
+    public static String getFilename(String path, String filename, List<String> extensions, boolean loadDialog, Component parent) {
+        if (path == null || path.isEmpty()) {
+            path = ".";
         }
-        JFileChooser fc = new JFileChooser(p);
-        if (ext != null) {
-            JFileFilter filter = new JFileFilter();
-            for (String e : ext) {
-                filter.addExtension(e);
+        JFileChooser fileChooser = new JFileChooser(path);
+        if (extensions != null) {
+            JFileFilter fileFilter = new JFileFilter();
+            for (String extension : extensions) {
+                fileFilter.addExtension(extension);
             }
-            fc.setFileFilter(filter);
+            fileChooser.setFileFilter(fileFilter);
         }
-        fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
-        if (fn != null && !fn.isEmpty()) {
-            f = new File(FilenameUtils.addSeparator(p) + fn);
-            fc.setSelectedFile(f);
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        File file;
+        if (filename != null && !filename.isEmpty()) {
+            file = new File(FilenameUtils.addSeparator(path) + filename);
+            if (file.canRead()) {
+                fileChooser.setSelectedFile(file);
+            }
         }
-        if (!load) {
-            fc.setDialogType(JFileChooser.SAVE_DIALOG);
+        if (!loadDialog) {
+            fileChooser.setDialogType(JFileChooser.SAVE_DIALOG);
         }
-        int returnVal = fc.showDialog(parent, null);
-        if(returnVal == JFileChooser.APPROVE_OPTION) {
-            f = fc.getSelectedFile();
-            if (f != null) {
-                return f.getAbsolutePath();
+        int returnVal = fileChooser.showDialog(parent, null);
+        if (returnVal == JFileChooser.APPROVE_OPTION) {
+            file = fileChooser.getSelectedFile();
+            if (file != null) {
+                return file.getAbsolutePath();
             }
         }
         return null;

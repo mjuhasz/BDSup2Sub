@@ -20,6 +20,7 @@ import bdsup2sub.utils.FilenameUtils;
 import bdsup2sub.utils.ToolBox;
 
 import java.awt.event.*;
+import java.util.Collections;
 
 class ExportDialogController {
 
@@ -57,7 +58,7 @@ class ExportDialogController {
         public void actionPerformed(ActionEvent event) {
             String parent = FilenameUtils.getParent(model.getFilename());
             String defaultFilename = FilenameUtils.getName(model.getFilename());
-            String filename = ToolBox.getFilename(parent, defaultFilename, new String[]{model.getExtension()}, false, view.getOwner());
+            String filename = ToolBox.getFilename(parent, defaultFilename, Collections.singletonList(model.getExtension()), false, view.getOwner());
             if (filename != null) {
                 model.setFilename(FilenameUtils.removeExtension(filename) + "." + model.getExtension());
                 view.setFilenameTextFieldText(model.getFilename());

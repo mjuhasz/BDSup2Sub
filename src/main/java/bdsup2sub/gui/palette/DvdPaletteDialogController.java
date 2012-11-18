@@ -25,6 +25,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
+import java.util.Collections;
 
 class DvdPaletteDialogController {
 
@@ -92,8 +93,8 @@ class DvdPaletteDialogController {
         @Override
         public void actionPerformed(ActionEvent e) {
             String parent = FilenameUtils.getParent(model.getColorProfilePath());
-            String name = FilenameUtils.getName(model.getColorProfilePath());
-            String filename = ToolBox.getFilename(parent, name, new String[]{"ini"}, false, view);
+            String defaultFilename = FilenameUtils.getName(model.getColorProfilePath());
+            String filename = ToolBox.getFilename(parent, defaultFilename, Collections.singletonList("ini"), false, view);
             if (filename != null) {
                 filename = FilenameUtils.removeExtension(filename) + ".ini";
                 File file = new File(filename);
@@ -127,8 +128,8 @@ class DvdPaletteDialogController {
         @Override
         public void actionPerformed(ActionEvent e) {
             String parent = FilenameUtils.getParent(model.getColorProfilePath());
-            String name = FilenameUtils.getName(model.getColorProfilePath());
-            String filename = ToolBox.getFilename(parent, name, new String[]{"ini"}, true, view);
+            String defaultFilename = FilenameUtils.getName(model.getColorProfilePath());
+            String filename = ToolBox.getFilename(parent, defaultFilename, Collections.singletonList("ini"), true, view);
             if (filename != null) {
                 File file = new File(filename);
                 try {
