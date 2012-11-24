@@ -150,25 +150,35 @@ public final class Configuration {
     }
 
     private String workOutConfigFilePath() {
-        String relPathToClassFile = Configuration.class.getName().replace('.','/') + ".class";
-        String absPathToClassFile = Configuration.class.getClassLoader().getResource(relPathToClassFile).getPath();
-
-        int pos = absPathToClassFile.toLowerCase().indexOf(relPathToClassFile.toLowerCase());
-        String configFileDir = absPathToClassFile.substring(0, pos);
-
-        if (configFileDir.startsWith("file:")) {
-            configFileDir = configFileDir.substring("file:".length());
-        }
-
-        configFileDir = FilenameUtils.separatorsToUnix(configFileDir);
-        pos = configFileDir.lastIndexOf(".jar");
-        if (pos != -1) {
-            pos = configFileDir.substring(0, pos).lastIndexOf('/');
-            if (pos != -1) {
-                configFileDir = configFileDir.substring(0, pos + 1);
+        String osName = System.getProperty("os.name");
+        if (osName != null && osName.toLowerCase().contains("linux")) {
+            String xdgConfigHome = System.getenv("XDG_CONFIG_HOME");
+            File configFileDir = new File((xdgConfigHome != null ? xdgConfigHome : System.getProperty("user.home") + "/.config") + "/bdsup2sub");
+            if (!configFileDir.exists()) {
+                configFileDir.mkdir();
             }
+            return configFileDir + "/" + CONFIG_FILE;
+        } else {
+            String relPathToClassFile = Configuration.class.getName().replace('.','/') + ".class";
+            String absPathToClassFile = Configuration.class.getClassLoader().getResource(relPathToClassFile).getPath();
+
+            int pos = absPathToClassFile.toLowerCase().indexOf(relPathToClassFile.toLowerCase());
+            String configFileDir = absPathToClassFile.substring(0, pos);
+
+            if (configFileDir.startsWith("file:")) {
+                configFileDir = configFileDir.substring("file:".length());
+            }
+
+            configFileDir = FilenameUtils.separatorsToUnix(configFileDir);
+            pos = configFileDir.lastIndexOf(".jar");
+            if (pos != -1) {
+                pos = configFileDir.substring(0, pos).lastIndexOf('/');
+                if (pos != -1) {
+                    configFileDir = configFileDir.substring(0, pos + 1);
+                }
+            }
+            return configFileDir + CONFIG_FILE;
         }
-        return configFileDir + CONFIG_FILE;
     }
     
     public boolean isCliMode() {

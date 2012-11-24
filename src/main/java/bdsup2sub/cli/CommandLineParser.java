@@ -608,6 +608,7 @@ public class CommandLineParser {
             }
         });
         formatter.setWidth(79);
-        formatter.printHelp("java -jar BDSup2Sub [options] -o <output> <input>", options);
+        String command = System.getProperty("wrapper") == null ? "java -jar BDSup2Sub" : "bdsup2sub";
+        formatter.printHelp(command + " [options] -o <output> <input>", options);
     }
 }
