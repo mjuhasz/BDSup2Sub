@@ -55,23 +55,23 @@ public class SupBD implements SubtitleStream {
 
     /**
      * Decode caption from the input stream.
-     * @param pic SubPicture object containing info about the caption
-     * @param transIdx index of the transparent color
+     * @param subPictureBD SubPicture object containing info about the caption
+     * @param transparentColorIndex index of the transparent color
      * @return bitmap of the decoded caption
      * @throws CoreException
      */
-    private Bitmap decodeImage(SubPictureBD pic, int transIdx) throws CoreException {
-        int w = pic.getImageWidth();
-        int h = pic.getImageHeight();
+    private Bitmap decodeImage(SubPictureBD subPictureBD, int transparentColorIndex) throws CoreException {
+        int width = subPictureBD.getImageWidth();
+        int height = subPictureBD.getImageHeight();
         // always decode image obj 0, start with first entry in fragment list
-        ImageObjectFragment info = pic.getImageObject().getFragmentList().get(0);
-        long startOfs = info.getImageBufferOfs();
+        ImageObjectFragment imageObjectFragment = subPictureBD.getImageObject().getFragmentList().get(0);
+        long startOfs = imageObjectFragment.getImageBufferOfs();
 
-        if (w > pic.getWidth() || h > pic.getHeight()) {
-            throw new CoreException("Subpicture too large: " + w + "x" + h + " at offset " + ToolBox.toHexLeftZeroPadded(startOfs, 8));
+        if (width > subPictureBD.getWidth() || height > subPictureBD.getHeight()) {
+            throw new CoreException("Subpicture too large: " + width + "x" + height + " at offset " + ToolBox.toHexLeftZeroPadded(startOfs, 8));
         }
 
-        Bitmap bm = new Bitmap(w, h, (byte)transIdx);
+        Bitmap bm = new Bitmap(width, height, (byte)transparentColorIndex);
 
         int b;
         int index = 0;
@@ -81,34 +81,35 @@ public class SupBD implements SubtitleStream {
 
         try {
             // just for multi-packet support, copy all of the image data in one common buffer
-            byte buf[] = new byte[pic.getImageObject().getBufferSize()];
+            byte[] buffer = new byte[subPictureBD.getImageObject().getBufferSize()];
             index = 0;
-            for (int p = 0; p < pic.getImageObject().getFragmentList().size(); p++) {
+
+            for (ImageObjectFragment fragment : subPictureBD.getImageObject().getFragmentList()) {
                 // copy data of all packet to one common buffer
-                info = pic.getImageObject().getFragmentList().get(p);
-                for (int i=0; i < info.getImagePacketSize(); i++) {
-                    buf[index+i] = (byte)buffer.getByte(info.getImageBufferOfs()+i);
+                imageObjectFragment = fragment;
+                for (int i=0; i < imageObjectFragment.getImagePacketSize(); i++) {
+                    buffer[index+i] = (byte) this.buffer.getByte(imageObjectFragment.getImageBufferOfs() + i);
                 }
-                index += info.getImagePacketSize();
+                index += imageObjectFragment.getImagePacketSize();
             }
 
             index = 0;
 
             do {
-                b = buf[index++]&0xff;
+                b = buffer[index++] & 0xff;
                 if (b == 0) {
-                    b = buf[index++]&0xff;
+                    b = buffer[index++] & 0xff;
                     if (b == 0) {
                         // next line
-                        ofs = (ofs/w)*w;
-                        if (xpos < w) {
-                            ofs+=w;
+                        ofs = (ofs/width) * width;
+                        if (xpos < width) {
+                            ofs += width;
                         }
                         xpos = 0;
                     } else {
                         if ( (b & 0xC0) == 0x40) {
                             // 00 4x xx -> xxx zeroes
-                            size = ((b-0x40)<<8)+(buf[index++]&0xff);
+                            size = ((b - 0x40) << 8) + (buffer[index++] & 0xff);
                             for (int i=0; i < size; i++) {
                                 bm.getInternalBuffer()[ofs++] = 0; /*(byte)b;*/
                             }
@@ -116,15 +117,15 @@ public class SupBD implements SubtitleStream {
                         } else if ((b & 0xC0) == 0x80) {
                             // 00 8x yy -> x times value y
                             size = (b-0x80);
-                            b = buf[index++]&0xff;
-                            for (int i=0; i<size; i++) {
+                            b = buffer[index++]&0xff;
+                            for (int i=0; i < size; i++) {
                                 bm.getInternalBuffer()[ofs++] = (byte)b;
                             }
                             xpos += size;
                         } else if  ((b & 0xC0) != 0) {
                             // 00 cx yy zz -> xyy times value z
-                            size = ((b - 0xC0) << 8) + (buf[index++] & 0xff);
-                            b = buf[index++] & 0xff;
+                            size = ((b - 0xC0) << 8) + (buffer[index++] & 0xff);
+                            b = buffer[index++] & 0xff;
                             for (int i=0; i < size; i++) {
                                 bm.getInternalBuffer()[ofs++] = (byte)b;
                             }
@@ -141,13 +142,13 @@ public class SupBD implements SubtitleStream {
                     bm.getInternalBuffer()[ofs++] = (byte)b;
                     xpos++;
                 }
-            } while (index < buf.length);
+            } while (index < buffer.length);
 
             return bm;
         } catch (FileBufferException ex) {
             throw new CoreException(ex.getMessage());
         } catch (ArrayIndexOutOfBoundsException ex) {
-            logger.warn("problems during RLE decoding of picture OBJ at offset " + ToolBox.toHexLeftZeroPadded(startOfs + index, 8) + "\n");
+            logger.warn("Problems during RLE decoding of picture OBJ at offset " + ToolBox.toHexLeftZeroPadded(startOfs + index, 8) + "\n");
             return bm;
         }
     }
@@ -160,9 +161,9 @@ public class SupBD implements SubtitleStream {
      */
     private Palette decodePalette(SubPictureBD pic) throws CoreException {
         boolean fadeOut = false;
-        int palIndex;
-        List<PaletteInfo> pl = pic.getPalettes().get(pic.getImageObject().getPaletteID());
-        if (pl == null) {
+        int paletteIndex;
+        List<PaletteInfo> paletteInfos = pic.getPalettes().get(pic.getImageObject().getPaletteID());
+        if (paletteInfos == null) {
             throw new CoreException("Palette ID out of bounds.");
         }
 
@@ -171,11 +172,11 @@ public class SupBD implements SubtitleStream {
         // also all entries must be fully transparent after initialization
 
         try {
-            for (PaletteInfo p : pl) {
-                int index = p.getPaletteOffset();
-                for (int i = 0; i < p.getPaletteSize(); i++) {
+            for (PaletteInfo paletteInfo : paletteInfos) {
+                int index = paletteInfo.getPaletteOffset();
+                for (int i = 0; i < paletteInfo.getPaletteSize(); i++) {
                     // each palette entry consists of 5 bytes
-                    palIndex = buffer.getByte(index);
+                    paletteIndex = buffer.getByte(index);
                     int y = buffer.getByte(++index);
                     int cr, cb;
                     if (configuration.isSwapCrCb()) {
@@ -187,7 +188,7 @@ public class SupBD implements SubtitleStream {
                     }
                     int alpha = buffer.getByte(++index);
 
-                    int alphaOld = palette.getAlpha(palIndex);
+                    int alphaOld = palette.getAlpha(paletteIndex);
                     // avoid fading out
                     if (alpha >= alphaOld) {
                         if (alpha < configuration.getAlphaCrop()) {// to not mess with scaling algorithms, make transparent color black
@@ -195,12 +196,12 @@ public class SupBD implements SubtitleStream {
                             cr = 128;
                             cb = 128;
                         }
-                        palette.setAlpha(palIndex, alpha);
+                        palette.setAlpha(paletteIndex, alpha);
                     } else {
                         fadeOut = true;
                     }
 
-                    palette.setYCbCr(palIndex, y, cb, cr);
+                    palette.setYCbCr(paletteIndex, y, cb, cr);
                     index++;
                 }
             }
@@ -234,8 +235,6 @@ public class SupBD implements SubtitleStream {
             throw new CoreException("Index "+index+" out of bounds\n");
         }
     }
-
-    /* setters / getters */
 
     /* (non-Javadoc)
      * @see SubtitleStream#getPalette()
