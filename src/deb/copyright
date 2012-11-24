@@ -1,0 +1,18 @@
+This is BDSup2Sub, maintained by Miklos Juhasz <juhasz.miklos.1@gmail.com>
+
+The original source can always be found at:
+    https://github.com/mjuhasz/BDSup2Sub
+
+Copyright Holder:  Miklos Juhasz <juhasz.miklos.1@gmail.com>, Volker Oth (0xdeadbeef)
+
+BDSup2Subs License:
+===================
+
+  Licensed under the Apache License, Version 2.0.
+  On Debian systems, the complete text of the Apache License, Version 2.0
+  can be found in '/usr/share/common-licenses/Apache-2.0'.
+
+  Some parts of the code are licensed under the GNU Lesser General Public License.
+  On Debian systems, the complete text of the GNU Lesser General Public License
+    can be found in '/usr/share/common-licenses/LGPL-3 '.
+
