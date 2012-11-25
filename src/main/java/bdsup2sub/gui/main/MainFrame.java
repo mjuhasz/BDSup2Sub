@@ -15,6 +15,8 @@
  */
 package bdsup2sub.gui.main;
 
+import org.simplericity.macify.eawt.ApplicationListener;
+
 import java.io.File;
 
 public class MainFrame {
@@ -35,5 +37,9 @@ public class MainFrame {
 
     public void setVisible(boolean visible) {
         view.setVisible(visible);
+    }
+
+    public ApplicationListener getApplicationListener() {
+        return controller.getApplicationListener();
     }
 }

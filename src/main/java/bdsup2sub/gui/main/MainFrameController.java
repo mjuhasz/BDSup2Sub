@@ -26,6 +26,8 @@ import bdsup2sub.gui.palette.FramePaletteDialog;
 import bdsup2sub.utils.FilenameUtils;
 import bdsup2sub.utils.StreamUtils;
 import bdsup2sub.utils.ToolBox;
+import org.simplericity.macify.eawt.ApplicationEvent;
+import org.simplericity.macify.eawt.ApplicationListener;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -47,7 +49,7 @@ class MainFrameController {
     private final MainFrameView view;
     private final MainFrameModel model;
     private final Object threadSemaphore = new Object();
-
+    private final ApplicationListener applicationListener = new MacOSXApplicationListener();
 
     public MainFrameController(MainFrameModel model, MainFrameView view) {
         this.view = view;
@@ -72,6 +74,10 @@ class MainFrameController {
         if (model.isSourceFileSpecifiedOnCmdLine()) {
             load(model.getLoadPath());
         }
+    }
+
+    public ApplicationListener getApplicationListener() {
+        return applicationListener;
     }
 
     private void addFileMenuActionListeners() {
@@ -129,17 +135,21 @@ class MainFrameController {
     private class LoadMenuItemActionListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent event) {
-            List<String> extensions = Arrays.asList(new String[] {"idx", "ifo", "sub", "sup", "xml"});
-            view.setConsoleText("");
-            String parent = FilenameUtils.getParent(model.getLoadPath());
-            String defaultFilename = FilenameUtils.getName(model.getLoadPath());
-            final String filename = ToolBox.getFilename(parent, defaultFilename, extensions, true, view);
-            (new Thread() {
-                @Override
-                public void run() {
-                    load(filename);
-                } }).start();
+            loadFile();
         }
+    }
+
+    private void loadFile() {
+        List<String> extensions = Arrays.asList(new String[]{"idx", "ifo", "sub", "sup", "xml"});
+        view.setConsoleText("");
+        String parent = FilenameUtils.getParent(model.getLoadPath());
+        String defaultFilename = FilenameUtils.getName(model.getLoadPath());
+        final String filename = ToolBox.getFilename(parent, defaultFilename, extensions, true, view);
+        (new Thread() {
+            @Override
+            public void run() {
+                load(filename);
+            } }).start();
     }
 
     private class RecentMenuItemActionListener implements ActionListener {
@@ -229,10 +239,13 @@ class MainFrameController {
     private class QuitMenuItemActionListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent event) {
-            view.exit(0);
+            exit();
         }
     }
 
+    private void exit() {
+        view.exit(0);
+    }
 
     private class DragAndDropTransferHandler extends TransferHandler {
 
@@ -660,16 +673,21 @@ class MainFrameController {
     private class AboutMenuItemActionListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent event) {
-            JOptionPane.showMessageDialog(view,
-                    Constants.APP_NAME + " v" + Constants.APP_VERSION + "\n"
-                    + "Created by " + Constants.DEVELOPERS + "\n"
-                    + "\n"
-                    + "Built on " + Constants.BUILD_DATE + "\n"
-                    + "Copyright © 2009 Volker Oth, 2011-2012 Miklos Juhasz",
-                    Constants.APP_NAME,
-                    JOptionPane.INFORMATION_MESSAGE,
-                    new ImageIcon(getClass().getClassLoader().getResource("icon_32.png")));
+            showAboutDialog();
         }
+
+    }
+
+    private void showAboutDialog() {
+        JOptionPane.showMessageDialog(view,
+                Constants.APP_NAME + " v" + Constants.APP_VERSION + "\n"
+                        + "Created by " + Constants.DEVELOPERS + "\n"
+                        + "\n"
+                        + "Built on " + Constants.BUILD_DATE + "\n"
+                        + "Copyright © 2009 Volker Oth, 2011-2012 Miklos Juhasz",
+                Constants.APP_NAME,
+                JOptionPane.INFORMATION_MESSAGE,
+                new ImageIcon(getClass().getClassLoader().getResource("icon_32.png")));
     }
 
     private class SubNumComboBoxActionListener implements ActionListener {
@@ -1200,7 +1218,7 @@ class MainFrameController {
     private class MainWindowListener extends WindowAdapter {
         @Override
         public void windowClosing(WindowEvent e) {
-            view.exit(0);
+            exit();
         }
     }
 
@@ -1235,6 +1253,53 @@ class MainFrameController {
                     }).start();
                 }
             }
+        }
+    }
+
+    public class MacOSXApplicationListener implements ApplicationListener {
+
+        private void handle(ApplicationEvent event, String message) {
+            event.setHandled(true);
+            JOptionPane.showMessageDialog(view,
+                    message,
+                    Constants.APP_NAME,
+                    JOptionPane.INFORMATION_MESSAGE,
+                    new ImageIcon(getClass().getClassLoader().getResource("icon_32.png")));
+        }
+
+        public void handleAbout(ApplicationEvent event) {
+            event.setHandled(true);
+            showAboutDialog();
+        }
+
+        public void handleOpenApplication(ApplicationEvent event) {
+            event.setHandled(true);
+            // application open, nothing to do
+        }
+
+        public void handleOpenFile(ApplicationEvent event) {
+            event.setHandled(true);
+            loadFile();
+        }
+
+        public void handlePreferences(ApplicationEvent event) {
+            event.setHandled(true);
+            handle(event, "Preferences not implemented");
+        }
+
+        public void handlePrintFile(ApplicationEvent event) {
+            event.setHandled(true);
+            handle(event, "Printing not implemented");
+        }
+
+        public void handleQuit(ApplicationEvent event) {
+            event.setHandled(true);
+            exit();
+        }
+
+        public void handleReOpenApplication(ApplicationEvent event) {
+            event.setHandled(true);
+            view.setVisible(true);
         }
     }
 }

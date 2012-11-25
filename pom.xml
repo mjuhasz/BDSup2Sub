@@ -17,6 +17,13 @@
     </properties>
 
 
+    <repositories>
+        <repository>
+            <id>macify</id>
+            <url>http://simplericity.org/repository/</url>
+        </repository>
+    </repositories>
+
     <dependencies>
         <dependency>
             <groupId>com.mortennobel</groupId>
@@ -33,6 +40,11 @@
             <groupId>commons-cli</groupId>
             <artifactId>commons-cli</artifactId>
             <version>1.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.simplericity.macify</groupId>
+            <artifactId>macify</artifactId>
+            <version>1.4</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -130,6 +142,26 @@
                                     </mapper>
                                 </data>
                             </dataSet>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>osxappbundle-maven-plugin</artifactId>
+                <version>1.0-alpha-2</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>bundle</goal>
+                        </goals>
+                        <configuration>
+                            <mainClass>bdsup2sub.BDSup2Sub</mainClass>
+                            <jvmVersion>1.6+</jvmVersion>
+                            <javaApplicationStub>${basedir}/src/main/resources/JavaApplicationStub</javaApplicationStub>
+                            <iconFile>${project.basedir}/src/main/resources/bdsup2sub.icns</iconFile>
+                            <bundleName>BDSup2Sub</bundleName>
                         </configuration>
                     </execution>
                 </executions>

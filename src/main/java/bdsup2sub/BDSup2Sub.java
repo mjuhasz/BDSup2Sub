@@ -19,11 +19,10 @@ import bdsup2sub.cli.CommandLineParser;
 import bdsup2sub.core.*;
 import bdsup2sub.gui.main.MainFrame;
 import bdsup2sub.tools.Props;
-import bdsup2sub.utils.FilenameUtils;
-import bdsup2sub.utils.StreamUtils;
-import bdsup2sub.utils.SubtitleUtils;
-import bdsup2sub.utils.ToolBox;
+import bdsup2sub.utils.*;
 import org.apache.commons.cli.ParseException;
+import org.simplericity.macify.eawt.Application;
+import org.simplericity.macify.eawt.DefaultApplication;
 
 import javax.swing.*;
 import java.awt.*;
@@ -223,7 +222,10 @@ public class BDSup2Sub {
                 SwingUtilities.invokeLater(new Runnable() {
                     public void run() {
                         configuration.setCliMode(false);
-                        new MainFrame(options.getInputFile()).setVisible(true);
+                        Application app = new DefaultApplication();
+                        MainFrame mainFrame = new MainFrame(options.getInputFile());
+                        app.addApplicationListener(mainFrame.getApplicationListener());
+                        mainFrame.setVisible(true);
                     }
                 });
             } else {
@@ -235,11 +237,18 @@ public class BDSup2Sub {
     private static void setupGUI() {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-            applyGtkThemeWorkarounds();
         } catch (Exception e) {
             // ignore
         }
-        System.setProperty("apple.laf.useScreenMenuBar", "true");
+
+        if (PlatformUtils.isLinux()) {
+            applyGtkThemeWorkarounds();
+        }
+
+        if (PlatformUtils.isMac()) {
+            System.setProperty("apple.laf.useScreenMenuBar", "true");
+            System.setProperty("com.apple.mrj.application.apple.menu.about.name", Constants.APP_NAME);
+        }
     }
 
     private void runCliLoop() {
