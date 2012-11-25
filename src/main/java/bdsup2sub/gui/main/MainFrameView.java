@@ -71,7 +71,7 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
     private JCheckBoxMenuItem jMenuItemSwapCrCb;
     private JCheckBoxMenuItem jMenuItemFixInvisibleFrames;
     private JCheckBoxMenuItem jMenuItemVerboseOutput;
-    private ActionMenu jMenuAbout;
+    private ActionMenu jMenuHelp;
     private JMenuItem jMenuItemHelp;
     private JMenuItem jMenuItemAbout;
 
@@ -132,7 +132,7 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
             jMenuBar.add(getJMenuFile());
             jMenuBar.add(getJMenuEdit());
             jMenuBar.add(getJMenuPrefs());
-            jMenuBar.add(getJMenuAbout());
+            jMenuBar.add(getJMenuHelp());
         }
         return jMenuBar;
     }
@@ -472,21 +472,21 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
         return jMenuItemVerboseOutput.isSelected();
     }
 
-    private JMenu getJMenuAbout() {
-        if (jMenuAbout == null) {
-            jMenuAbout = new ActionMenu();
-            jMenuAbout.setText("About");
+    private JMenu getJMenuHelp() {
+        if (jMenuHelp == null) {
+            jMenuHelp = new ActionMenu();
+            jMenuHelp.setText("Help");
             if (!PlatformUtils.isMac()) {
-                jMenuAbout.setMnemonic('a');
+                jMenuHelp.setMnemonic('h');
             }
-            jMenuAbout.add(getJMenuItemHelp());
+            jMenuHelp.add(getJMenuItemHelp());
             JMenuItem aboutMenuItem = getJMenuItemAbout();
             if (!PlatformUtils.isMac()) {
-                jMenuAbout.addSeparator();
-                jMenuAbout.add(aboutMenuItem);
+                jMenuHelp.addSeparator();
+                jMenuHelp.add(aboutMenuItem);
             }
         }
-        return jMenuAbout;
+        return jMenuHelp;
     }
 
     private JMenuItem getJMenuItemHelp() {
