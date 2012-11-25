@@ -17,6 +17,7 @@ package bdsup2sub.core;
 
 import bdsup2sub.tools.Props;
 import bdsup2sub.utils.FilenameUtils;
+import bdsup2sub.utils.PlatformUtils;
 import bdsup2sub.utils.SubtitleUtils;
 
 import javax.swing.*;
@@ -150,8 +151,7 @@ public final class Configuration {
     }
 
     private String workOutConfigFilePath() {
-        String osName = System.getProperty("os.name");
-        if (osName != null && osName.toLowerCase().contains("linux")) {
+        if (PlatformUtils.isLinux()) {
             String xdgConfigHome = System.getenv("XDG_CONFIG_HOME");
             File configFileDir = new File((xdgConfigHome != null ? xdgConfigHome : System.getProperty("user.home") + "/.config") + "/bdsup2sub");
             if (!configFileDir.exists()) {
