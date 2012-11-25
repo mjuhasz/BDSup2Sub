@@ -687,7 +687,7 @@ class MainFrameController {
                         + "Copyright © 2009 Volker Oth, 2011-2012 Miklos Juhasz",
                 Constants.APP_NAME,
                 JOptionPane.INFORMATION_MESSAGE,
-                new ImageIcon(getClass().getClassLoader().getResource("icon_32.png")));
+                new ImageIcon(getClass().getClassLoader().getResource("icons/bdsup2sub_32.png")));
     }
 
     private class SubNumComboBoxActionListener implements ActionListener {
@@ -1176,11 +1176,11 @@ class MainFrameController {
     private class CopyPopupMenuItemActionListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent event) {
-            String s = view.getConsoleSelectedText();
+            String selectedText = view.getConsoleSelectedText();
             try {
-                if ( s!= null) {
+                if (selectedText != null) {
                     Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(""), view);
-                    Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(s), view);
+                    Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(selectedText), view);
                 }
             } catch (OutOfMemoryError ex) {
                 JOptionPane.showMessageDialog(view, "Out of heap! Use -Xmx256m to increase heap!" , "Error!", JOptionPane.WARNING_MESSAGE);
@@ -1264,7 +1264,7 @@ class MainFrameController {
                     message,
                     Constants.APP_NAME,
                     JOptionPane.INFORMATION_MESSAGE,
-                    new ImageIcon(getClass().getClassLoader().getResource("icon_32.png")));
+                    new ImageIcon(getClass().getClassLoader().getResource("icons/bdsup2sub_32.png")));
         }
 
         public void handleAbout(ApplicationEvent event) {

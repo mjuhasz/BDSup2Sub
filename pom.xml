@@ -133,7 +133,7 @@
                                     </mapper>
                                 </data>
                                 <data>
-                                    <src>${project.basedir}/src/main/resources/icon_128.png</src>
+                                    <src>${project.basedir}/src/main/resources/icons/bdsup2sub_128.png</src>
                                     <dst>bdsup2sub.png</dst>
                                     <type>file</type>
                                     <mapper>
@@ -160,7 +160,7 @@
                             <mainClass>bdsup2sub.BDSup2Sub</mainClass>
                             <jvmVersion>1.6+</jvmVersion>
                             <javaApplicationStub>${basedir}/src/main/resources/JavaApplicationStub</javaApplicationStub>
-                            <iconFile>${project.basedir}/src/main/resources/bdsup2sub.icns</iconFile>
+                            <iconFile>${project.basedir}/src/main/resources/icons/bdsup2sub.icns</iconFile>
                             <bundleName>BDSup2Sub</bundleName>
                         </configuration>
                     </execution>

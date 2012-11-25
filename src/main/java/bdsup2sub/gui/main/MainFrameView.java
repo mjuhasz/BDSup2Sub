@@ -115,7 +115,7 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
         initAlphaThresholdComboBoxSelectedIndices();
         updateRecentFilesMenu();
 
-        setIconImage(Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource("icon_32.png")));
+        setIconImage(Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource("icons/bdsup2sub_32.png")));
 
         setLocation();
     }
