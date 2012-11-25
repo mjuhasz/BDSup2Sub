@@ -158,26 +158,18 @@ public final class Configuration {
                 configFileDir.mkdir();
             }
             return configFileDir + "/" + CONFIG_FILE;
+        } else if (PlatformUtils.isMac()) {
+            File configFileDir = new File(System.getProperty("user.home") + "/Library/Application Support/bdsup2sub");
+            if (!configFileDir.exists()) {
+                configFileDir.mkdir();
+            }
+            return configFileDir + "/" + CONFIG_FILE;
         } else {
-            String relPathToClassFile = Configuration.class.getName().replace('.','/') + ".class";
-            String absPathToClassFile = Configuration.class.getClassLoader().getResource(relPathToClassFile).getPath();
-
-            int pos = absPathToClassFile.toLowerCase().indexOf(relPathToClassFile.toLowerCase());
-            String configFileDir = absPathToClassFile.substring(0, pos);
-
-            if (configFileDir.startsWith("file:")) {
-                configFileDir = configFileDir.substring("file:".length());
+            File configFileDir = new File(System.getProperty("user.home") + "/bdsup2sub");
+            if (!configFileDir.exists()) {
+                configFileDir.mkdir();
             }
-
-            configFileDir = FilenameUtils.separatorsToUnix(configFileDir);
-            pos = configFileDir.lastIndexOf(".jar");
-            if (pos != -1) {
-                pos = configFileDir.substring(0, pos).lastIndexOf('/');
-                if (pos != -1) {
-                    configFileDir = configFileDir.substring(0, pos + 1);
-                }
-            }
-            return configFileDir + CONFIG_FILE;
+            return configFileDir + "/" + CONFIG_FILE;
         }
     }
     
