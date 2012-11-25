@@ -29,6 +29,7 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.ClipboardOwner;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
 import java.util.List;
@@ -36,6 +37,8 @@ import java.util.List;
 public class MainFrameView extends JFrame implements ClipboardOwner {
 
     private static final Logger logger = Logger.getInstance();
+
+    private static final int MENU_SHORTCUT_KEY_MASK = Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
 
     private JPanel jContentPane;
     private JPanel jPanelTop;
@@ -161,6 +164,7 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
         if (jMenuItemLoad == null) {
             jMenuItemLoad = new JMenuItem();
             jMenuItemLoad.setText("Load");
+            jMenuItemLoad.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, MENU_SHORTCUT_KEY_MASK));
             if (!PlatformUtils.isMac()) {
                 jMenuItemLoad.setMnemonic('l');
             }
@@ -206,8 +210,10 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
                 String s = recentFiles.get(i);
                 j.setText(i + ": " + s);
                 j.setActionCommand(s);
+                char keyCode = Character.forDigit(i, 10);
+                j.setAccelerator(KeyStroke.getKeyStroke(keyCode, MENU_SHORTCUT_KEY_MASK));
                 if (!PlatformUtils.isMac()) {
-                    j.setMnemonic(Character.forDigit(i, 10));
+                    j.setMnemonic(keyCode);
                 }
                 j.addActionListener(recentFilesMenuActionListener);
                 jMenuRecentFiles.add(j);
@@ -219,9 +225,10 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
     private JMenuItem getJMenuItemSave() {
         if (jMenuItemSave == null) {
             jMenuItemSave = new JMenuItem();
-            jMenuItemSave.setText("Save/Export");
+            jMenuItemSave.setText("Export");
+            jMenuItemSave.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, MENU_SHORTCUT_KEY_MASK));
             if (!PlatformUtils.isMac()) {
-                jMenuItemSave.setMnemonic('s');
+                jMenuItemSave.setMnemonic('e');
             }
             jMenuItemSave.setEnabled(false);
         }
@@ -237,6 +244,7 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
             jMenuItemClose = new JMenuItem();
             jMenuItemClose.setText("Close");
             jMenuItemClose.setEnabled(false);
+            jMenuItemClose.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_W, MENU_SHORTCUT_KEY_MASK));
             if (!PlatformUtils.isMac()) {
                 jMenuItemClose.setMnemonic('c');
             }
@@ -252,6 +260,7 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
         if (jMenuItemQuit == null) {
             jMenuItemQuit = new JMenuItem();
             jMenuItemQuit.setText("Quit");
+            jMenuItemQuit.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, MENU_SHORTCUT_KEY_MASK));
             if (!PlatformUtils.isMac()) {
                 jMenuItemQuit.setMnemonic('q');
             }
@@ -493,6 +502,7 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
         if (jMenuItemHelp == null) {
             jMenuItemHelp = new JMenuItem();
             jMenuItemHelp.setText("Get Help Online...");
+            jMenuItemHelp.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F1, 0));
             if (!PlatformUtils.isMac()) {
                 jMenuItemHelp.setMnemonic('h');
             }
