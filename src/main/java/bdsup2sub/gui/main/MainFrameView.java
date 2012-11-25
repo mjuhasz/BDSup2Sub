@@ -149,7 +149,10 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
             jMenuFile.add(getJMenuItemRecentFiles());
             jMenuFile.add(getJMenuItemSave());
             jMenuFile.add(getJMenuItemClose());
-            jMenuFile.add(getJMenuItemQuit());
+            JMenuItem quitMenuItem = getJMenuItemQuit();
+            if (!PlatformUtils.isMac()) {
+                jMenuFile.add(quitMenuItem);
+            }
         }
         return jMenuFile;
     }
@@ -477,8 +480,11 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
                 jMenuAbout.setMnemonic('a');
             }
             jMenuAbout.add(getJMenuItemHelp());
-            jMenuAbout.addSeparator();
-            jMenuAbout.add(getJMenuItemAbout());
+            JMenuItem aboutMenuItem = getJMenuItemAbout();
+            if (!PlatformUtils.isMac()) {
+                jMenuAbout.addSeparator();
+                jMenuAbout.add(aboutMenuItem);
+            }
         }
         return jMenuAbout;
     }
