@@ -18,6 +18,7 @@ package bdsup2sub.gui.main;
 import bdsup2sub.core.*;
 import bdsup2sub.gui.support.ActionMenu;
 import bdsup2sub.gui.support.EditPane;
+import bdsup2sub.utils.PlatformUtils;
 
 import javax.swing.*;
 import javax.swing.event.DocumentListener;
@@ -140,7 +141,9 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
         if (jMenuFile == null) {
             jMenuFile = new ActionMenu();
             jMenuFile.setName("");
-            jMenuFile.setMnemonic('f');
+            if (!PlatformUtils.isMac()) {
+                jMenuFile.setMnemonic('f');
+            }
             jMenuFile.setText("File");
             jMenuFile.add(getJMenuItemLoad());
             jMenuFile.add(getJMenuItemRecentFiles());
@@ -155,7 +158,9 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
         if (jMenuItemLoad == null) {
             jMenuItemLoad = new JMenuItem();
             jMenuItemLoad.setText("Load");
-            jMenuItemLoad.setMnemonic('l');
+            if (!PlatformUtils.isMac()) {
+                jMenuItemLoad.setMnemonic('l');
+            }
         }
         return jMenuItemLoad;
     }
@@ -172,7 +177,9 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
         if (jMenuRecentFiles == null) {
             jMenuRecentFiles = new JMenu();
             jMenuRecentFiles.setText("Recent Files");
-            jMenuRecentFiles.setMnemonic('r');
+            if (!PlatformUtils.isMac()) {
+                jMenuRecentFiles.setMnemonic('r');
+            }
         }
         return jMenuRecentFiles;
     }
@@ -196,7 +203,9 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
                 String s = recentFiles.get(i);
                 j.setText(i + ": " + s);
                 j.setActionCommand(s);
-                j.setMnemonic(Character.forDigit(i, 10));
+                if (!PlatformUtils.isMac()) {
+                    j.setMnemonic(Character.forDigit(i, 10));
+                }
                 j.addActionListener(recentFilesMenuActionListener);
                 jMenuRecentFiles.add(j);
             }
@@ -208,7 +217,9 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
         if (jMenuItemSave == null) {
             jMenuItemSave = new JMenuItem();
             jMenuItemSave.setText("Save/Export");
-            jMenuItemSave.setMnemonic('s');
+            if (!PlatformUtils.isMac()) {
+                jMenuItemSave.setMnemonic('s');
+            }
             jMenuItemSave.setEnabled(false);
         }
         return jMenuItemSave;
@@ -223,7 +234,9 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
             jMenuItemClose = new JMenuItem();
             jMenuItemClose.setText("Close");
             jMenuItemClose.setEnabled(false);
-            jMenuItemClose.setMnemonic('c');
+            if (!PlatformUtils.isMac()) {
+                jMenuItemClose.setMnemonic('c');
+            }
         }
         return jMenuItemClose;
     }
@@ -236,7 +249,9 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
         if (jMenuItemQuit == null) {
             jMenuItemQuit = new JMenuItem();
             jMenuItemQuit.setText("Quit");
-            jMenuItemQuit.setMnemonic('q');
+            if (!PlatformUtils.isMac()) {
+                jMenuItemQuit.setMnemonic('q');
+            }
         }
         return jMenuItemQuit;
     }
@@ -253,7 +268,9 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
         if (jMenuEdit == null) {
             jMenuEdit = new ActionMenu();
             jMenuEdit.setText("Edit");
-            jMenuEdit.setMnemonic('e');
+            if (!PlatformUtils.isMac()) {
+                jMenuEdit.setMnemonic('e');
+            }
             jMenuEdit.add(getJMenuItemEditFrame());
             jMenuEdit.add(getJMenuItemEditDefaultDvdPalette());
             jMenuEdit.add(getJMenuItemEditImportedDvdPalette());
@@ -268,7 +285,9 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
         if (jMenuItemEditFrame == null) {
             jMenuItemEditFrame = new JMenuItem();
             jMenuItemEditFrame.setText("Edit Frame");
-            jMenuItemEditFrame.setMnemonic('f');
+            if (!PlatformUtils.isMac()) {
+                jMenuItemEditFrame.setMnemonic('f');
+            }
             jMenuItemEditFrame.setEnabled(false);
         }
         return jMenuItemEditFrame;
@@ -283,7 +302,9 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
             jMenuItemEditDefaultDvdPalette = new JMenuItem();
             String text = "Edit default DVD Palette";
             jMenuItemEditDefaultDvdPalette.setText(text);
-            jMenuItemEditDefaultDvdPalette.setMnemonic('d');
+            if (!PlatformUtils.isMac()) {
+                jMenuItemEditDefaultDvdPalette.setMnemonic('d');
+            }
             jMenuItemEditDefaultDvdPalette.setDisplayedMnemonicIndex(text.indexOf("DVD"));
         }
         return jMenuItemEditDefaultDvdPalette;
@@ -299,7 +320,9 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
             jMenuItemEditImportedDvdPalette.setEnabled(false);
             String text = "Edit imported DVD Palette";
             jMenuItemEditImportedDvdPalette.setText(text);
-            jMenuItemEditImportedDvdPalette.setMnemonic('i');
+            if (!PlatformUtils.isMac()) {
+                jMenuItemEditImportedDvdPalette.setMnemonic('i');
+            }
             jMenuItemEditImportedDvdPalette.setDisplayedMnemonicIndex(text.indexOf("imported"));
         }
         return jMenuItemEditImportedDvdPalette;
@@ -314,7 +337,9 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
             jMenuItemEditDvdFramePalette = new JMenuItem();
             jMenuItemEditDvdFramePalette.setEnabled(false);
             jMenuItemEditDvdFramePalette.setText("Edit DVD Frame Palette");
-            jMenuItemEditDvdFramePalette.setMnemonic('p');
+            if (!PlatformUtils.isMac()) {
+                jMenuItemEditDvdFramePalette.setMnemonic('p');
+            }
         }
         return jMenuItemEditDvdFramePalette;
     }
@@ -327,7 +352,9 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
         if (jMenuItemMoveAll == null) {
             jMenuItemMoveAll = new JMenuItem();
             jMenuItemMoveAll.setText("Move all captions");
-            jMenuItemMoveAll.setMnemonic('m');
+            if (!PlatformUtils.isMac()) {
+                jMenuItemMoveAll.setMnemonic('m');
+            }
             jMenuItemMoveAll.setEnabled(false);
         }
         return jMenuItemMoveAll;
@@ -340,7 +367,9 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
     private JMenuItem getJMenuItemResetCropOffset() {
         if (jMenuItemResetCropOffset == null) {
             jMenuItemResetCropOffset = new JMenuItem();
-            jMenuItemResetCropOffset.setMnemonic('r');
+            if (!PlatformUtils.isMac()) {
+                jMenuItemResetCropOffset.setMnemonic('r');
+            }
             jMenuItemResetCropOffset.setText("Reset crop offset");
         }
         return jMenuItemResetCropOffset;
@@ -354,7 +383,9 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
         if (jMenuSettings == null) {
             jMenuSettings = new ActionMenu();
             jMenuSettings.setText("Settings");
-            jMenuSettings.setMnemonic('s');
+            if (!PlatformUtils.isMac()) {
+                jMenuSettings.setMnemonic('s');
+            }
             jMenuSettings.add(getJMenuItemConversionSettings());
             jMenuSettings.add(getJMenuItemSwapCrCb());
             jMenuSettings.add(getJMenuItemFixInvisibleFrames());
@@ -367,7 +398,9 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
         if (jMenuItemConversionSettings == null) {
             jMenuItemConversionSettings = new JMenuItem();
             jMenuItemConversionSettings.setText("Conversion Settings");
-            jMenuItemConversionSettings.setMnemonic('c');
+            if (!PlatformUtils.isMac()) {
+                jMenuItemConversionSettings.setMnemonic('c');
+            }
         }
         return jMenuItemConversionSettings;
     }
@@ -380,7 +413,9 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
         if (jMenuItemSwapCrCb == null) {
             jMenuItemSwapCrCb = new JCheckBoxMenuItem();
             jMenuItemSwapCrCb.setText("Swap Cr/Cb");
-            jMenuItemSwapCrCb.setMnemonic('s');
+            if (!PlatformUtils.isMac()) {
+                jMenuItemSwapCrCb.setMnemonic('s');
+            }
             jMenuItemSwapCrCb.setSelected(false);
         }
         return jMenuItemSwapCrCb;
@@ -398,7 +433,9 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
         if (jMenuItemFixInvisibleFrames == null) {
             jMenuItemFixInvisibleFrames = new JCheckBoxMenuItem();
             jMenuItemFixInvisibleFrames.setText("Fix invisible frames");
-            jMenuItemFixInvisibleFrames.setMnemonic('f');
+            if (!PlatformUtils.isMac()) {
+                jMenuItemFixInvisibleFrames.setMnemonic('f');
+            }
             jMenuItemFixInvisibleFrames.setSelected(model.getFixZeroAlpha());
         }
         return jMenuItemFixInvisibleFrames;
@@ -416,7 +453,9 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
         if (jMenuItemVerboseOutput == null) {
             jMenuItemVerboseOutput = new JCheckBoxMenuItem();
             jMenuItemVerboseOutput.setText("Verbose Output");
-            jMenuItemVerboseOutput.setMnemonic('v');
+            if (!PlatformUtils.isMac()) {
+                jMenuItemVerboseOutput.setMnemonic('v');
+            }
             jMenuItemVerboseOutput.setSelected(model.isVerbose());
         }
         return jMenuItemVerboseOutput;
@@ -434,7 +473,9 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
         if (jMenuAbout == null) {
             jMenuAbout = new ActionMenu();
             jMenuAbout.setText("About");
-            jMenuAbout.setMnemonic('a');
+            if (!PlatformUtils.isMac()) {
+                jMenuAbout.setMnemonic('a');
+            }
             jMenuAbout.add(getJMenuItemHelp());
             jMenuAbout.addSeparator();
             jMenuAbout.add(getJMenuItemAbout());
@@ -446,7 +487,9 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
         if (jMenuItemHelp == null) {
             jMenuItemHelp = new JMenuItem();
             jMenuItemHelp.setText("Get Help Online...");
-            jMenuItemHelp.setMnemonic('h');
+            if (!PlatformUtils.isMac()) {
+                jMenuItemHelp.setMnemonic('h');
+            }
         }
         return jMenuItemHelp;
     }
@@ -459,7 +502,9 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
         if (jMenuItemAbout == null) {
             jMenuItemAbout = new JMenuItem();
             jMenuItemAbout.setText("About");
-            jMenuItemAbout.setMnemonic('a');
+            if (!PlatformUtils.isMac()) {
+                jMenuItemAbout.setMnemonic('a');
+            }
         }
         return jMenuItemAbout;
     }
