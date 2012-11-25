@@ -58,7 +58,7 @@ class ExportDialogController {
         public void actionPerformed(ActionEvent event) {
             String parent = FilenameUtils.getParent(model.getFilename());
             String defaultFilename = FilenameUtils.getName(model.getFilename());
-            String filename = ToolBox.getFilename(parent, defaultFilename, Collections.singletonList(model.getExtension()), false, view.getOwner());
+            String filename = ToolBox.getFilename(parent, defaultFilename, Collections.singletonList(model.getExtension()), false, view);
             if (filename != null) {
                 model.setFilename(FilenameUtils.removeExtension(filename) + "." + model.getExtension());
                 view.setFilenameTextFieldText(model.getFilename());
