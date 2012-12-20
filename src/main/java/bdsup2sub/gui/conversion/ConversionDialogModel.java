@@ -306,7 +306,15 @@ class ConversionDialogModel {
     }
 
     public void loadForcedState() {
-        forcedState = configuration.getForceAll();
+        forcedState = configuration.loadForceAll();
+    }
+
+    public void setForcedStateConf(ForcedFlagState forcedState) {
+        configuration.setForceAll(forcedState);
+    }
+
+    public void storeForcedState() {
+        configuration.storeForceAll(forcedState);
     }
 
     public boolean getMoveCaptions() {

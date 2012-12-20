@@ -15,7 +15,6 @@
  */
 package bdsup2sub.gui.conversion;
 
-import bdsup2sub.core.Core;
 import bdsup2sub.core.ForcedFlagState;
 import bdsup2sub.core.Resolution;
 import bdsup2sub.utils.SubtitleUtils;
@@ -349,7 +348,10 @@ class ConversionDialogController {
                 if (model.getApplyFreeScale()) {
                     model.storeFreeScaleFactor();
                 }
-                // forceAll is not stored
+
+                // forced flag
+                model.storeForcedState();
+
                 model.storeConfig();
             }
         }
@@ -405,7 +407,7 @@ class ConversionDialogController {
                 model.setFreeScaleFactorX(DEFAULT_FREE_SCALE_FACTOR_X);
                 model.setFreeScaleFactorY(DEFAULT_FREE_SCALE_FACTOR_Y);
             }
-            model.setForcedState(ForcedFlagState.KEEP);
+            model.setForcedState(DEFAULT_FORCED_FLAG_STATE);
             view.fillDialog();
         }
     }
@@ -544,7 +546,7 @@ class ConversionDialogController {
                 }
                 model.setCancel(false);
                 // forced state
-                Core.setForceAll();
+                model.setForcedStateConf(model.getForcedState());
                 // keep move settings
                 if (view.isMoveCheckBoxEnabled()) {
                     model.storeMoveCaptions();

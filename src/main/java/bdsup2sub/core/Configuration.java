@@ -46,6 +46,7 @@ public final class Configuration {
     public static final double DEFAULT_SOURCE_FRAMERATE = Framerate.FPS_23_976.getValue();  //TODO: dumb default
     public static final double DEFAULT_TARGET_FRAMERATE = Framerate.PAL.getValue(); //TODO: dumb default
     public static final Resolution DEFAULT_TARGET_RESOLUTION = Resolution.PAL; //TODO: dumb default
+    public static final ForcedFlagState DEFAULT_FORCED_FLAG_STATE = ForcedFlagState.KEEP;
     public static final int DEFAULT_ALPHA_CROP_THRESHOLD = 14;
     public static final int DEFAULT_ALPHA_THRESHOLD = 80;
     public static final int DEFAULT_LUMINANCE_MED_HIGH_THRESHOLD = 210;
@@ -74,7 +75,7 @@ public final class Configuration {
     private boolean exportForced;
 
     private int cropOffsetY = DEFAULT_CROP_LINE_COUNT;
-    private ForcedFlagState forceAll = ForcedFlagState.KEEP;
+    private ForcedFlagState forceAll = DEFAULT_FORCED_FLAG_STATE;
     private boolean swapCrCb;
     private CaptionMoveModeX moveModeX = CaptionMoveModeX.KEEP_POSITION;
     private CaptionMoveModeY moveModeY = CaptionMoveModeY.KEEP_POSITION;
@@ -126,6 +127,7 @@ public final class Configuration {
         applyFreeScale = loadApplyFreeScale();
         freeScaleFactorX = loadFreeScaleFactorX();
         freeScaleFactorY = loadFreeScaleFactorY();
+        forceAll = loadForceAll();
     }
 
     public void storeConfig() {
@@ -599,8 +601,20 @@ public final class Configuration {
         return forceAll;
     }
 
+    public ForcedFlagState loadForceAll() {
+        try {
+            return ForcedFlagState.valueOf(props.get("forceAll", DEFAULT_FORCED_FLAG_STATE.name()));
+        } catch (IllegalArgumentException ex) {
+            return DEFAULT_FORCED_FLAG_STATE;
+        }
+    }
+
     public void setForceAll(ForcedFlagState forceAll) {
         this.forceAll = forceAll;
+    }
+
+    public void storeForceAll(ForcedFlagState forceAll) {
+        props.set("forceAll", forceAll.name());
     }
 
     public boolean isSwapCrCb() {
