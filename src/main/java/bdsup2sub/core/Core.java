@@ -782,24 +782,6 @@ public class Core extends Thread {
     }
 
     /**
-     * Apply the state of forceAll to all captions
-     */
-    public static void setForceAll() {
-        if (subPictures != null) {
-            for (SubPicture subPicture : subPictures) {
-                switch (configuration.getForceAll()) {
-                    case SET:
-                        subPicture.setForced(true);
-                        break;
-                    case CLEAR:
-                        subPicture.setForced(false);
-                        break;
-                }
-            }
-        }
-    }
-
-    /**
      * Create a copy of the loaded subpicture information frames.<br>
      * Apply scaling and speedup/delay to the copied frames.<br>
      * Sync frames to target fps.
