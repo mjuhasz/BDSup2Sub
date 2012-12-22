@@ -396,7 +396,7 @@ public final class SubDvdWriter {
             out.write("# Decomment next line to activate alternative name in DirectVobSub / Windows Media Player 6.x"); out.newLine();
             out.write("# alt: " + LANGUAGES[configuration.getLanguageIdx()][0]); out.newLine();
             out.write("# Vob/Cell ID: 1, 1 (PTS: 0)"); out.newLine();
-            for (int i=0; i<timestamps.length; i++) {
+            for (int i=0; i < timestamps.length; i++) {
                 out.write("timestamp: "+ptsToTimeStrIdx(timestamps[i]));
                 out.write(", filepos: "+ToolBox.toHexLeftZeroPadded(offsets[i], 9).substring(2));
                 out.newLine();

@@ -36,6 +36,7 @@ import javax.swing.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static bdsup2sub.core.Constants.*;
@@ -92,7 +93,7 @@ public class Core extends Thread {
     /** Current palette based on the one imported from SUB/IDX or SUP/IFO */
     private static Palette currentSourceDVDPalette;
     /** Default alpha map */
-    private static final int DEFAULT_ALPHA[] = { 0, 0xf, 0xf, 0xf};
+    private static final int[] DEFAULT_ALPHA = { 0, 0xf, 0xf, 0xf};
 
     /** Converted unpatched target bitmap of current subpicture - just for display */
     private static Bitmap trgBitmapUnpatched;
@@ -117,7 +118,7 @@ public class Core extends Thread {
     private static SubtitleStream subtitleStream;
 
     /** Array of subpictures used for editing and export */
-    private static SubPicture subPictures[];
+    private static SubPicture[] subPictures;
 
     /** Input mode used for last import */
     private static InputMode inMode = InputMode.VOBSUB;
@@ -248,13 +249,13 @@ public class Core extends Thread {
         } else if (ifo || sid == StreamID.IFO) {
             runType = RunType.READSUPIFO;
         } else {
-			File ifoFile = new File(FilenameUtils.removeExtension(fname) + ".ifo");
+            File ifoFile = new File(FilenameUtils.removeExtension(fname) + ".ifo");
             if (ifoFile.exists()) {
                 runType = RunType.READSUPIFO;
             } else {
                 runType = RunType.READSUP;
             }
-		}
+        }
 
         configuration.setCurrentStreamID(sid);
 
@@ -645,64 +646,54 @@ public class Core extends Thread {
      */
     private static void validateTimes(int idx, SubPicture subPic, SubPicture subPicNext, SubPicture subPicPrev) {
         //long tpf = (long)(90000/fpsTrg); // time per frame
-        long ts = subPic.getStartTime();     // start time
-        long te = subPic.getEndTime();       // end time
-        long delay = 5000*90;            // default delay for missing end time (5 seconds)
+        long startTime = subPic.getStartTime();
+        long endTime = subPic.getEndTime();
+        final long delay = 5000 * 90;  // default delay for missing end time (5 seconds)
 
         idx += 1; // only used for display
 
         // get end time of last frame
-        long te_last;
-        if (subPicPrev != null) {
-            te_last = subPicPrev.getEndTime();
-        } else {
-            te_last = -1;
-        }
+        long lastEndTime = subPicPrev != null ? subPicPrev.getEndTime() : -1;
 
-        if (ts < te_last) {
+        if (startTime < lastEndTime) {
             logger.warn("start time of frame " + idx + " < end of last frame -> fixed\n");
-            ts = te_last;
+            startTime = lastEndTime;
         }
 
         // get start time of next frame
-        long ts_next;
-        if (subPicNext != null) {
-            ts_next = subPicNext.getStartTime();
-        } else {
-            ts_next = 0;
-        }
+        long nextStartTime = subPicNext != null ? subPicNext.getStartTime() : 0;
 
-        if (ts_next == 0) {
-            if ( te > ts) {
-                ts_next = te;
+        if (nextStartTime == 0) {
+            if (endTime > startTime) {
+                nextStartTime = endTime;
             } else {
                 // completely messed up:
                 // end time and next start time are invalid
-                ts_next = ts+delay;
+                nextStartTime = startTime + delay;
             }
         }
 
-        if (te <= ts) {
-            if (te == 0) {
+        if (endTime <= startTime) {
+            if (endTime == 0) {
                 logger.warn("missing end time of frame " + idx + " -> fixed\n");
             } else {
                 logger.warn("end time of frame " + idx + " <= start time -> fixed\n");
             }
-            te = ts+delay;
-            if (te > ts_next) {
-                te = ts_next;
+            endTime = startTime + delay;
+            if (endTime > nextStartTime) {
+                endTime = nextStartTime;
             }
-        } else if (te > ts_next) {
+        } else if (endTime > nextStartTime) {
             logger.warn("end time of frame " + idx + " > start time of next frame -> fixed\n");
-            te = ts_next;
+            endTime = nextStartTime;
         }
 
         int minTimePTS = configuration.getMinTimePTS();
-        if (te - ts < minTimePTS) {
+        if (endTime - startTime < minTimePTS) {
             if (configuration.getFixShortFrames()) {
-                te = ts + minTimePTS;
-                if (te > ts_next) {
-                    te = ts_next;
+                endTime = startTime + minTimePTS;
+                if (endTime > nextStartTime) {
+                    endTime = nextStartTime;
                 }
                 logger.warn("duration of frame " + idx + " was shorter than " + (ToolBox.formatDouble(minTimePTS / 90.0)) + "ms -> fixed\n");
             } else {
@@ -710,11 +701,11 @@ public class Core extends Thread {
             }
         }
 
-        if (subPic.getStartTime() != ts) {
-            subPic.setStartTime(SubtitleUtils.syncTimePTS(ts, configuration.getFpsTrg(), configuration.getFpsTrg()));
+        if (subPic.getStartTime() != startTime) {
+            subPic.setStartTime(SubtitleUtils.syncTimePTS(startTime, configuration.getFpsTrg(), configuration.getFpsTrg()));
         }
-        if (subPic.getEndTime() != te) {
-            subPic.setEndTime(SubtitleUtils.syncTimePTS(te, configuration.getFpsTrg(), configuration.getFpsTrg()));
+        if (subPic.getEndTime() != endTime) {
+            subPic.setEndTime(SubtitleUtils.syncTimePTS(endTime, configuration.getFpsTrg(), configuration.getFpsTrg()));
         }
     }
 
@@ -819,8 +810,8 @@ public class Core extends Thread {
                 subPictures[i].setStartTime(ts + delayPTS);
                 subPictures[i].setEndTime(te + delayPTS);
             } else {
-                subPictures[i].setStartTime((long)(ts * factTS + 0.5) + delayPTS);
-                subPictures[i].setEndTime((long)(te * factTS + 0.5) + delayPTS);
+                subPictures[i].setStartTime((long) (ts * factTS + 0.5) + delayPTS);
+                subPictures[i].setEndTime((long) (te * factTS + 0.5) + delayPTS);
             }
             // synchronize to target frame rate
             subPictures[i].setStartTime(SubtitleUtils.syncTimePTS(subPictures[i].getStartTime(), configuration.getFpsTrg(), configuration.getFpsTrg()));
@@ -1329,8 +1320,7 @@ public class Core extends Thread {
             }
         } catch (IOException ex) {
             throw new CoreException(ex.getMessage());
-        }
-        finally {
+        } finally {
             try {
                 if (out != null) {
                     out.close();
@@ -1339,20 +1329,19 @@ public class Core extends Thread {
             }
         }
 
-        boolean importedDVDPalette;
-        importedDVDPalette = (inMode == InputMode.VOBSUB) || (inMode == InputMode.SUPIFO);
+        boolean importedDVDPalette = (inMode == InputMode.VOBSUB) || (inMode == InputMode.SUPIFO);
 
         Palette trgPallete = null;
         PaletteMode paletteMode = configuration.getPaletteMode();
         if (outputMode == OutputMode.VOBSUB) {
             // VobSub - write IDX
-            /* return offets as array of ints */
-            int ofs[] = new int[offsets.size()];
-            for (int i=0; i<ofs.length; i++) {
+            /* return offsets as array of ints */
+            int[] ofs = new int[offsets.size()];
+            for (int i=0; i < ofs.length; i++) {
                 ofs[i] = offsets.get(i);
             }
-            int ts[] = new int[timestamps.size()];
-            for (int i=0; i<ts.length; i++) {
+            int[] ts = new int[timestamps.size()];
+            for (int i=0; i < ts.length; i++) {
                 ts[i] = timestamps.get(i);
             }
             fname = FilenameUtils.removeExtension(fname) + ".idx";
@@ -1364,9 +1353,9 @@ public class Core extends Thread {
             }
             SubDvdWriter.writeIdx(fname, subPictures[0], ofs, ts, trgPallete);
         } else if (outputMode == OutputMode.XML) {
-            // XML - write ML
+            // XML - write XML
             logger.info("\nWriting " + fname + "\n");
-            SupXml.writeXml(fname, subPictures);
+            SupXml.writeXml(fname, Arrays.asList(subPictures));
         } else if (outputMode == OutputMode.SUPIFO) {
             // SUP/IFO - write IFO
             if (!importedDVDPalette || paletteMode != PaletteMode.KEEP_EXISTING) {

@@ -82,19 +82,19 @@ public class SupXml implements SubtitleStream {
 
     /**
      * Constructor (for reading)
-     * @param fn file name of Xml file to read
+     * @param filename file name of Xml file to read
      * @throws CoreException
      */
-    public SupXml(String fn) throws CoreException {
-        this.pathName = FilenameUtils.addSeparator(FilenameUtils.getParent(fn));
-        this.title = FilenameUtils.removeExtension(FilenameUtils.getName(fn));
+    public SupXml(String filename) throws CoreException {
+        this.pathName = FilenameUtils.addSeparator(FilenameUtils.getParent(filename));
+        this.title = FilenameUtils.removeExtension(FilenameUtils.getName(filename));
 
         SAXParserFactory factory = SAXParserFactory.newInstance();
         SAXParser saxParser;
         try {
             saxParser = factory.newSAXParser();
             DefaultHandler handler = new XmlHandler();
-            saxParser.parse(new File(fn), handler);
+            saxParser.parse(new File(filename), handler);
         } catch (ParserConfigurationException e) {
             throw new CoreException(e.getMessage());
         } catch (SAXException e) {
@@ -227,10 +227,9 @@ public class SupXml implements SubtitleStream {
      * @param pics array of SubPictures
      * @throws CoreException
      */
-    public static void writeXml(final String fname, final SubPicture pics[]) throws CoreException {
+    public static void writeXml(String fname, List<SubPicture> pics) throws CoreException {
         double fps = configuration.getFpsTrg();
         double fpsXml = XmlFps(fps);
-        long t;
         BufferedWriter out = null;
         String name = FilenameUtils.removeExtension(FilenameUtils.getName(fname));
         try {
@@ -248,24 +247,24 @@ public class SupXml implements SubtitleStream {
             String res = configuration.getOutputResolution().getResolutionNameForXml();
             out.write("    <Format VideoFormat=\"" + res + "\" FrameRate=\"" + ToolBox.formatDouble(fps) + "\" DropFrame=\"False\"/>");
             out.newLine();
-            t = pics[0].getStartTime();
+            long t = pics.get(0).getStartTime();
             if (fps != fpsXml) {
                 t = (t * 2000 + 1001) / 2002;
             }
             String ts = ptsToTimeStrXml(t,fpsXml);
-            t = pics[pics.length-1].getEndTime();
+            t = pics.get(pics.size()-1).getEndTime();
             if (fps != fpsXml) {
                 t = (t * 2000 + 1001) / 2002;
             }
             String te = ptsToTimeStrXml(t,fpsXml);
-            out.write("    <Events Type=\"Graphic\" FirstEventInTC=\"" + ts + "\" LastEventOutTC=\"" + te + "\" NumberofEvents=\"" + pics.length + "\"/>");
+            out.write("    <Events Type=\"Graphic\" FirstEventInTC=\"" + ts + "\" LastEventOutTC=\"" + te + "\" NumberofEvents=\"" + pics.size() + "\"/>");
             out.newLine();
             out.write("  </Description>");
             out.newLine();
             out.write("  <Events>");
             out.newLine();
-            for (int idx=0; idx < pics.length; idx++) {
-                SubPicture p = pics[idx];
+            for (int idx=0; idx < pics.size(); idx++) {
+                SubPicture p = pics.get(idx);
                 t = p.getStartTime();
                 if (fps != fpsXml) {
                     t = (t * 2000 + 1001) / 2002;
