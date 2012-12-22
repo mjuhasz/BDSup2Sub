@@ -28,6 +28,7 @@ import bdsup2sub.utils.ToolBox;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.List;
 
 import static bdsup2sub.core.Constants.*;
 import static bdsup2sub.utils.ByteUtils.getByte;
@@ -43,7 +44,7 @@ public class SubDvd implements DvdSubtitleStream {
     private static final Logger logger = Logger.getInstance();
 
     /** ArrayList of captions contained in the current file */
-    private final ArrayList<SubPictureDVD> subPictures = new ArrayList<SubPictureDVD>();
+    private final List<SubPictureDVD> subPictures = new ArrayList<SubPictureDVD>();
     /** color palette read from idx file  */
     private Palette srcPalette = new Palette(DEFAULT_DVD_PALETTE);
     /** color palette created for last decoded caption  */

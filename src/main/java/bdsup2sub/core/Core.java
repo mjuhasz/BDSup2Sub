@@ -1240,14 +1240,15 @@ public class Core extends Thread {
         List<Integer> timestamps = null;
         SortedMap<Integer, SubPicture> exportedSubPictures = new TreeMap<Integer, SubPicture>();
         int frameNum = 0;
-        int maxNum;
         String fn = "";
+        logger.resetErrorCounter();
+        logger.resetWarningCounter();
 
-        // handling of forced subtitles
-        if (configuration.isExportForced()) {
-            maxNum = countForcedIncluded();
-        } else {
-            maxNum = countIncluded();
+        List<Integer> subPicturesToBeExported = getSubPicturesToBeExported();
+
+        if (subPicturesToBeExported.isEmpty()) {
+            logger.warn("There is no subpicture to be exported.");
+            return;
         }
 
         OutputMode outputMode = configuration.getOutputMode();
@@ -1266,57 +1267,53 @@ public class Core extends Thread {
                 out = new BufferedOutputStream(new FileOutputStream(fname));
             } else {
                 fn = FilenameUtils.removeExtension(fname);
-                fname = fn+".xml";
+                fname = fn + ".xml";
             }
             logger.info("\nWriting " + fname + "\n");
-            logger.resetErrorCounter();
-            logger.resetWarningCounter();
 
             // main loop
             int offset = 0;
-            for (int i=0; i < subtitleStream.getFrameCount(); i++) {
+            for (int i : subPicturesToBeExported) {
                 // for threaded version
                 if (isCanceled()) {
                     throw new CoreException("Canceled by user!");
                 }
                 // for threaded version (progress bar);
                 setProgress(i);
-                //
+
                 SubPicture subPicture = subPictures[i];
-                if (!subPicture.isExcluded() && (!configuration.isExportForced() || subPicture.isForced())) {
-                    if (outputMode == OutputMode.VOBSUB) {
-                        offsets.add(offset);
-                        convertSup(i, frameNum/2+1, maxNum);
-                        subVobTrg.copyInfo(subPicture);
-                        byte buf[] = SubDvdWriter.createSubFrame(subVobTrg, trgBitmap);
-                        out.write(buf);
-                        offset += buf.length;
-                        timestamps.add((int) subPicture.getStartTime());
-                    } else if (outputMode == OutputMode.SUPIFO) {
-                        convertSup(i, frameNum/2+1, maxNum);
-                        subVobTrg.copyInfo(subPicture);
-                        byte buf[] = SupDvdWriter.createSupFrame(subVobTrg, trgBitmap);
-                        out.write(buf);
-                    } else if (outputMode == OutputMode.BDSUP) {
-                        subPicture.setCompositionNumber(frameNum);
-                        convertSup(i, frameNum/2+1, maxNum);
-                        byte buf[] = SupBDWriter.createSupFrame(subPicture, trgBitmap, trgPal);
-                        out.write(buf);
-                    } else {
-                        // Xml
-                        convertSup(i, frameNum/2+1, maxNum);
-                        String fnp = SupXml.getPNGname(fn, i+1);
-                        //File file = new File(fnp);
-                        //ImageIO.write(trgBitmap.getImage(trgPal), "png", file);
-                        out = new BufferedOutputStream(new FileOutputStream(fnp));
-                        EnhancedPngEncoder pngEncoder= new EnhancedPngEncoder(trgBitmap.getImage(trgPal.getColorModel()));
-                        byte buf[] = pngEncoder.pngEncode();
-                        out.write(buf);
-                        out.close();
-                        exportedSubPictures.put(i, subPicture);
-                    }
-                    frameNum+=2;
+                if (outputMode == OutputMode.VOBSUB) {
+                    offsets.add(offset);
+                    convertSup(i, frameNum/2+1, subPicturesToBeExported.size());
+                    subVobTrg.copyInfo(subPicture);
+                    byte buf[] = SubDvdWriter.createSubFrame(subVobTrg, trgBitmap);
+                    out.write(buf);
+                    offset += buf.length;
+                    timestamps.add((int) subPicture.getStartTime());
+                } else if (outputMode == OutputMode.SUPIFO) {
+                    convertSup(i, frameNum/2+1, subPicturesToBeExported.size());
+                    subVobTrg.copyInfo(subPicture);
+                    byte buf[] = SupDvdWriter.createSupFrame(subVobTrg, trgBitmap);
+                    out.write(buf);
+                } else if (outputMode == OutputMode.BDSUP) {
+                    subPicture.setCompositionNumber(frameNum);
+                    convertSup(i, frameNum/2+1, subPicturesToBeExported.size());
+                    byte buf[] = SupBDWriter.createSupFrame(subPicture, trgBitmap, trgPal);
+                    out.write(buf);
+                } else {
+                    // Xml
+                    convertSup(i, frameNum/2+1, subPicturesToBeExported.size());
+                    String fnp = SupXml.getPNGname(fn, i+1);
+                    //File file = new File(fnp);
+                    //ImageIO.write(trgBitmap.getImage(trgPal), "png", file);
+                    out = new BufferedOutputStream(new FileOutputStream(fnp));
+                    EnhancedPngEncoder pngEncoder= new EnhancedPngEncoder(trgBitmap.getImage(trgPal.getColorModel()));
+                    byte buf[] = pngEncoder.pngEncode();
+                    out.write(buf);
+                    out.close();
+                    exportedSubPictures.put(i, subPicture);
                 }
+                frameNum+=2;
             }
         } catch (IOException ex) {
             throw new CoreException(ex.getMessage());
@@ -1585,17 +1582,18 @@ public class Core extends Thread {
     }
 
     /**
-     * Count the number of subpictures to be exported.
-     * @return Number of subpictures to be exported
+     * Return indexes of subpictures to be exported.
+     * @return indexes of subpictures to be exported
      */
-    private static int countIncluded() {
-        int n = 0;
-        for (SubPicture pic : subPictures) {
-            if (!pic.isExcluded()) {
-                n++;
+    private static List<Integer> getSubPicturesToBeExported() {
+        List<Integer> subPicturesToBeExported = new ArrayList<Integer>();
+        for (int i=0; i < subPictures.length; i++) {
+            SubPicture subPicture = subPictures[i];
+            if (!subPicture.isExcluded() && (!configuration.isExportForced() || subPicture.isForced())) {
+                subPicturesToBeExported.add(i);
             }
         }
-        return n;
+        return subPicturesToBeExported;
     }
 
     /**

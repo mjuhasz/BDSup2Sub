@@ -498,7 +498,7 @@ public class SupXml implements SubtitleStream {
                     at = atts.getValue("NumberofEvents");
                     if (at != null) {
                         int n = ToolBox.getInt(at);
-                        if (n> 0) {
+                        if (n > 0) {
                             /* number of subtitles read from the xml */
                             Core.setProgressMax(n);
                         }
