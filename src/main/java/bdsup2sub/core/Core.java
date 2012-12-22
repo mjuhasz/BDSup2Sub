@@ -35,9 +35,7 @@ import com.mortennobel.imagescaling.ResampleFilter;
 import javax.swing.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 import static bdsup2sub.core.Constants.*;
 import static bdsup2sub.utils.SubtitleUtils.getResolutionForDimension;
@@ -1238,8 +1236,9 @@ public class Core extends Thread {
      */
     public static void writeSub(String fname) throws CoreException {
         BufferedOutputStream out = null;
-        ArrayList<Integer> offsets = null;
-        ArrayList<Integer> timestamps = null;
+        List<Integer> offsets = null;
+        List<Integer> timestamps = null;
+        SortedMap<Integer, SubPicture> exportedSubPictures = new TreeMap<Integer, SubPicture>();
         int frameNum = 0;
         int maxNum;
         String fn = "";
@@ -1283,29 +1282,30 @@ public class Core extends Thread {
                 // for threaded version (progress bar);
                 setProgress(i);
                 //
-                if (!subPictures[i].isExcluded() && (!configuration.isExportForced() || subPictures[i].isForced())) {
+                SubPicture subPicture = subPictures[i];
+                if (!subPicture.isExcluded() && (!configuration.isExportForced() || subPicture.isForced())) {
                     if (outputMode == OutputMode.VOBSUB) {
                         offsets.add(offset);
                         convertSup(i, frameNum/2+1, maxNum);
-                        subVobTrg.copyInfo(subPictures[i]);
+                        subVobTrg.copyInfo(subPicture);
                         byte buf[] = SubDvdWriter.createSubFrame(subVobTrg, trgBitmap);
                         out.write(buf);
                         offset += buf.length;
-                        timestamps.add((int) subPictures[i].getStartTime());
+                        timestamps.add((int) subPicture.getStartTime());
                     } else if (outputMode == OutputMode.SUPIFO) {
                         convertSup(i, frameNum/2+1, maxNum);
-                        subVobTrg.copyInfo(subPictures[i]);
+                        subVobTrg.copyInfo(subPicture);
                         byte buf[] = SupDvdWriter.createSupFrame(subVobTrg, trgBitmap);
                         out.write(buf);
                     } else if (outputMode == OutputMode.BDSUP) {
-                        subPictures[i].setCompositionNumber(frameNum);
+                        subPicture.setCompositionNumber(frameNum);
                         convertSup(i, frameNum/2+1, maxNum);
-                        byte buf[] = SupBDWriter.createSupFrame(subPictures[i], trgBitmap, trgPal);
+                        byte buf[] = SupBDWriter.createSupFrame(subPicture, trgBitmap, trgPal);
                         out.write(buf);
                     } else {
                         // Xml
                         convertSup(i, frameNum/2+1, maxNum);
-                        String fnp = SupXml.getPNGname(fn,i+1);
+                        String fnp = SupXml.getPNGname(fn, i+1);
                         //File file = new File(fnp);
                         //ImageIO.write(trgBitmap.getImage(trgPal), "png", file);
                         out = new BufferedOutputStream(new FileOutputStream(fnp));
@@ -1313,7 +1313,7 @@ public class Core extends Thread {
                         byte buf[] = pngEncoder.pngEncode();
                         out.write(buf);
                         out.close();
-
+                        exportedSubPictures.put(i, subPicture);
                     }
                     frameNum+=2;
                 }
@@ -1355,7 +1355,7 @@ public class Core extends Thread {
         } else if (outputMode == OutputMode.XML) {
             // XML - write XML
             logger.info("\nWriting " + fname + "\n");
-            SupXml.writeXml(fname, Arrays.asList(subPictures));
+            SupXml.writeXml(fname, exportedSubPictures);
         } else if (outputMode == OutputMode.SUPIFO) {
             // SUP/IFO - write IFO
             if (!importedDVDPalette || paletteMode != PaletteMode.KEEP_EXISTING) {

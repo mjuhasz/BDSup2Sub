@@ -43,6 +43,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.SortedMap;
 
 import static bdsup2sub.core.Constants.LANGUAGES;
 import static bdsup2sub.utils.TimeUtils.ptsToTimeStrXml;
@@ -223,11 +224,12 @@ public class SupXml implements SubtitleStream {
 
     /**
      * Create Xml file
+     *
      * @param fname file name
-     * @param pics array of SubPictures
+     * @param pics Map of SubPictures and their original indexes which were used to generate the png file names
      * @throws CoreException
      */
-    public static void writeXml(String fname, List<SubPicture> pics) throws CoreException {
+    public static void writeXml(String fname, SortedMap<Integer, SubPicture> pics) throws CoreException {
         double fps = configuration.getFpsTrg();
         double fpsXml = XmlFps(fps);
         BufferedWriter out = null;
@@ -247,12 +249,12 @@ public class SupXml implements SubtitleStream {
             String res = configuration.getOutputResolution().getResolutionNameForXml();
             out.write("    <Format VideoFormat=\"" + res + "\" FrameRate=\"" + ToolBox.formatDouble(fps) + "\" DropFrame=\"False\"/>");
             out.newLine();
-            long t = pics.get(0).getStartTime();
+            long t = pics.get(pics.firstKey()).getStartTime();
             if (fps != fpsXml) {
                 t = (t * 2000 + 1001) / 2002;
             }
             String ts = ptsToTimeStrXml(t,fpsXml);
-            t = pics.get(pics.size()-1).getEndTime();
+            t = pics.get(pics.lastKey()).getEndTime();
             if (fps != fpsXml) {
                 t = (t * 2000 + 1001) / 2002;
             }
@@ -263,7 +265,8 @@ public class SupXml implements SubtitleStream {
             out.newLine();
             out.write("  <Events>");
             out.newLine();
-            for (int idx=0; idx < pics.size(); idx++) {
+
+            for (int idx : pics.keySet()) {
                 SubPicture p = pics.get(idx);
                 t = p.getStartTime();
                 if (fps != fpsXml) {
