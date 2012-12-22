@@ -971,6 +971,7 @@ class EditDialogView extends JDialog {
             jButtonStoreNext = new JButton();
             jButtonStoreNext.setText("<html><font color=\"red\"><b>&nbsp;&gt;&nbsp;</b></font></html>");
             jButtonStoreNext.setToolTipText("Store changes and skip to next frame");
+            jButtonStoreNext.setMnemonic(KeyEvent.VK_PAGE_DOWN);
         }
         return jButtonStoreNext;
     }
@@ -984,6 +985,7 @@ class EditDialogView extends JDialog {
             jButtonStorePrev = new JButton();
             jButtonStorePrev.setText("<html><font color=\"red\"><b>&nbsp;&lt;&nbsp;</b></font></html>");
             jButtonStorePrev.setToolTipText("Store changes and skip to previous frame");
+            jButtonStorePrev.setMnemonic(KeyEvent.VK_PAGE_UP);
         }
         return jButtonStorePrev;
     }
