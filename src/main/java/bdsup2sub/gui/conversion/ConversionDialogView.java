@@ -533,7 +533,7 @@ class ConversionDialogView extends JDialog {
     }
 
     void addResolutionComboBoxItemListener(ItemListener itemListener) {
-        jCheckBoxResolution.addItemListener(itemListener);
+        jComboBoxResolution.addItemListener(itemListener);
     }
 
     int getResolutionComboBoxSelectedIndex() {
