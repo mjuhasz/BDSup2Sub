@@ -397,7 +397,7 @@ public class SupXml implements SubtitleStream {
      * @return PNG name
      */
     public static String getPNGname(String fn, int idx) {
-        return FilenameUtils.removeExtension(fn) + "_" + ToolBox.leftZeroPad(idx, 4) + ".png";
+        return fn + "_" + ToolBox.leftZeroPad(idx, 4) + ".png";
     }
 
     /**
