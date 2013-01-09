@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Miklos Juhasz (mjuhasz)
+ * Copyright 2013 Miklos Juhasz (mjuhasz)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -684,7 +684,7 @@ class MainFrameController {
                         + "Created by " + Constants.DEVELOPERS + "\n"
                         + "\n"
                         + "Built on " + Constants.BUILD_DATE + "\n"
-                        + "Copyright © 2009 Volker Oth, 2011-2012 Miklos Juhasz",
+                        + "Copyright © 2009 Volker Oth, 2011-2013 Miklos Juhasz",
                 Constants.APP_NAME,
                 JOptionPane.INFORMATION_MESSAGE,
                 new ImageIcon(getClass().getClassLoader().getResource("icons/bdsup2sub_32.png")));
