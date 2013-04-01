@@ -48,7 +48,6 @@ class MainFrameController {
 
     private final MainFrameView view;
     private final MainFrameModel model;
-    private final Object threadSemaphore = new Object();
     private final ApplicationListener applicationListener = new MacOSXApplicationListener();
 
     public MainFrameController(MainFrameModel model, MainFrameView view) {
@@ -145,11 +144,7 @@ class MainFrameController {
         String parent = FilenameUtils.getParent(model.getLoadPath());
         String defaultFilename = FilenameUtils.getName(model.getLoadPath());
         final String filename = ToolBox.getFilename(parent, defaultFilename, extensions, true, view);
-        (new Thread() {
-            @Override
-            public void run() {
-                load(filename);
-            } }).start();
+        load(filename);
     }
 
     private class RecentMenuItemActionListener implements ActionListener {
@@ -157,11 +152,7 @@ class MainFrameController {
         public void actionPerformed(ActionEvent event) {
             view.setConsoleText("");
             final String fname = event.getActionCommand();
-            (new Thread() {
-                @Override
-                public void run() {
-                    load(fname);
-                } }).start();
+            load(fname);
         }
     }
 
@@ -278,75 +269,73 @@ class MainFrameController {
             if (!new File(fname).exists()) {
                 JOptionPane.showMessageDialog(view, "File '" + fname + "' does not exist", "File not found!", JOptionPane.WARNING_MESSAGE);
             } else {
-                synchronized (threadSemaphore) {
-                    boolean xml = FilenameUtils.getExtension(fname).equalsIgnoreCase("xml");
-                    boolean idx = FilenameUtils.getExtension(fname).equalsIgnoreCase("idx");
-                    boolean ifo = FilenameUtils.getExtension(fname).equalsIgnoreCase("ifo");
-                    byte id[] = ToolBox.getFileID(fname, 4);
-                    StreamID sid = (id == null) ? StreamID.UNKNOWN : StreamUtils.getStreamID(id);
-                    if (idx || xml || ifo || sid != StreamID.UNKNOWN) {
-                        view.setTitle(Constants.APP_NAME + " " + Constants.APP_VERSION + " - " + fname);
-                        model.setSubIndex(0);
-                        model.setLoadPath(fname);
-                        String loadPath = model.getLoadPath();
-                        model.setSaveFilename(FilenameUtils.removeExtension(FilenameUtils.getName(loadPath)));
-                        model.setSavePath(FilenameUtils.getParent(loadPath));
-                        view.enableCoreComponents(false);
-                        view.enableVobsubBits(false);
-                        try {
-                            Core.readStreamThreaded(loadPath, view, sid);
-                            view.warningDialog();
-                            int num = Core.getNumFrames();
-                            Core.setReady(false);
-                            view.initSubNumComboBox(num);
-                            view.initAlphaThresholdComboBoxSelectedIndices();
-                            //
-                            if (model.getCropOffsetY() > 0) {
-                                if (JOptionPane.showConfirmDialog(view, "Reset Crop Offset?",
-                                        "", JOptionPane.YES_NO_OPTION) == 0) {
-                                    model.setCropOffsetY(0);
-                                }
+                boolean xml = FilenameUtils.getExtension(fname).equalsIgnoreCase("xml");
+                boolean idx = FilenameUtils.getExtension(fname).equalsIgnoreCase("idx");
+                boolean ifo = FilenameUtils.getExtension(fname).equalsIgnoreCase("ifo");
+                byte id[] = ToolBox.getFileID(fname, 4);
+                StreamID sid = (id == null) ? StreamID.UNKNOWN : StreamUtils.getStreamID(id);
+                if (idx || xml || ifo || sid != StreamID.UNKNOWN) {
+                    view.setTitle(Constants.APP_NAME + " " + Constants.APP_VERSION + " - " + fname);
+                    model.setSubIndex(0);
+                    model.setLoadPath(fname);
+                    String loadPath = model.getLoadPath();
+                    model.setSaveFilename(FilenameUtils.removeExtension(FilenameUtils.getName(loadPath)));
+                    model.setSavePath(FilenameUtils.getParent(loadPath));
+                    view.enableCoreComponents(false);
+                    view.enableVobsubBits(false);
+                    try {
+                        Core.readStreamThreaded(loadPath, view, sid);
+                        view.warningDialog();
+                        int num = Core.getNumFrames();
+                        Core.setReady(false);
+                        view.initSubNumComboBox(num);
+                        view.initAlphaThresholdComboBoxSelectedIndices();
+                        //
+                        if (model.getCropOffsetY() > 0) {
+                            if (JOptionPane.showConfirmDialog(view, "Reset Crop Offset?",
+                                    "", JOptionPane.YES_NO_OPTION) == 0) {
+                                model.setCropOffsetY(0);
                             }
-
-                            ConversionDialog conversionDialog = new ConversionDialog(view);
-                            conversionDialog.enableOptionMove(model.getMoveCaptions());
-                            conversionDialog.setVisible(true);
-                            if (!conversionDialog.wasCanceled()) {
-                                Core.scanSubtitles();
-                                if (model.getMoveCaptions()) {
-                                    Core.moveAllThreaded(view);
-                                }
-                                int subIndex = model.getSubIndex();
-                                Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
-                                Core.setReady(true);
-                                view.setQuitMenuItemEnabled(true);
-                                view.refreshSrcFrame(subIndex);
-                                view.refreshTrgFrame(subIndex);
-                                view.enableCoreComponents(true);
-                                if (model.getOutputMode() == OutputMode.VOBSUB || Core.getInputMode() == InputMode.SUPIFO) {
-                                    view.enableVobsubBits(true);
-                                }
-                                model.addToRecentFiles(loadPath);
-                                view.updateRecentFilesMenu();
-                            } else {
-                                view.closeSub();
-                                view.printWarn("Loading cancelled by user.");
-                                Core.close();
-                            }
-                        } catch (CoreException ex) {
-                            view.setLoadMenuItemEnabled(true);
-                            view.updateRecentFilesMenu();
-                            view.setComboBoxOutFormatEnabled(true);
-                            view.error(ex.getMessage());
-                        } catch (Exception ex) {
-                            ToolBox.showException(ex);
-                            view.exit(4);
-                        } finally {
-                            view.flushConsole();
                         }
-                    } else {
-                        JOptionPane.showMessageDialog(view, "This is not a supported SUP stream", "Wrong format!", JOptionPane.WARNING_MESSAGE);
+
+                        ConversionDialog conversionDialog = new ConversionDialog(view);
+                        conversionDialog.enableOptionMove(model.getMoveCaptions());
+                        conversionDialog.setVisible(true);
+                        if (!conversionDialog.wasCanceled()) {
+                            Core.scanSubtitles();
+                            if (model.getMoveCaptions()) {
+                                Core.moveAllThreaded(view);
+                            }
+                            int subIndex = model.getSubIndex();
+                            Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
+                            Core.setReady(true);
+                            view.setQuitMenuItemEnabled(true);
+                            view.refreshSrcFrame(subIndex);
+                            view.refreshTrgFrame(subIndex);
+                            view.enableCoreComponents(true);
+                            if (model.getOutputMode() == OutputMode.VOBSUB || Core.getInputMode() == InputMode.SUPIFO) {
+                                view.enableVobsubBits(true);
+                            }
+                            model.addToRecentFiles(loadPath);
+                            view.updateRecentFilesMenu();
+                        } else {
+                            view.closeSub();
+                            Logger.getInstance().warn("Loading cancelled by user.");
+                            Core.close();
+                        }
+                    } catch (CoreException ex) {
+                        view.setLoadMenuItemEnabled(true);
+                        view.updateRecentFilesMenu();
+                        view.setComboBoxOutFormatEnabled(true);
+                        view.error(ex.getMessage());
+                    } catch (Exception ex) {
+                        ToolBox.showException(ex);
+                        view.exit(4);
+                    } finally {
+                        view.flushConsole();
                     }
+                } else {
+                    JOptionPane.showMessageDialog(view, "This is not a supported SUP stream", "Wrong format!", JOptionPane.WARNING_MESSAGE);
                 }
             }
         }
@@ -360,25 +349,18 @@ class MainFrameController {
                 ed.setIndex(model.getSubIndex());
                 ed.setVisible(true);
                 model.setSubIndex(ed.getIndex());
-                (new Thread() {
-                    @Override
-                    public void run() {
-                        synchronized (threadSemaphore) {
-                            try {
-                                int subIndex = model.getSubIndex();
-                                Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
-                                view.refreshSrcFrame(subIndex);
-                                view.refreshTrgFrame(subIndex);
-                                view.setSubNumComboBoxSelectedIndex(subIndex);
-                            } catch (CoreException ex) {
-                                view.error(ex.getMessage());
-                            } catch (Exception ex) {
-                                ToolBox.showException(ex);
-                                view.exit(4);
-                            }
-                        }
-                    }
-                }).start();
+                try {
+                    int subIndex = model.getSubIndex();
+                    Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
+                    view.refreshSrcFrame(subIndex);
+                    view.refreshTrgFrame(subIndex);
+                    view.setSubNumComboBoxSelectedIndex(subIndex);
+                } catch (CoreException ex) {
+                    view.error(ex.getMessage());
+                } catch (Exception ex) {
+                    ToolBox.showException(ex);
+                    view.exit(4);
+                }
             }
         }
     }
@@ -410,26 +392,18 @@ class MainFrameController {
                     Core.getCurrentDVDPalette().setColor(i+1, currentColors[i]);
                 }
 
-                (new Thread() {
-                    @Override
-                    public void run() {
-                        synchronized (threadSemaphore) {
-                            try {
-                                if (Core.isReady()) {
-                                    int subIndex = model.getSubIndex();
-                                    Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
-                                    view.refreshTrgFrame(subIndex);
-                                }
-                            } catch (CoreException ex) {
-                                view.error(ex.getMessage());
-                            } catch (Exception ex) {
-                                ToolBox.showException(ex);
-                                view.exit(4);
-                            }
-
-                        }
+                try {
+                    if (Core.isReady()) {
+                        int subIndex = model.getSubIndex();
+                        Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
+                        view.refreshTrgFrame(subIndex);
                     }
-                }).start();
+                } catch (CoreException ex) {
+                    view.error(ex.getMessage());
+                } catch (Exception ex) {
+                    ToolBox.showException(ex);
+                    view.exit(4);
+                }
             }
         }
     }
@@ -460,27 +434,19 @@ class MainFrameController {
                 }
                 Core.setCurSrcDVDPalette(p);
 
-                (new Thread() {
-                    @Override
-                    public void run() {
-                        synchronized (threadSemaphore) {
-                            try {
-                                if (Core.isReady()) {
-                                    int subIndex = model.getSubIndex();
-                                    Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
-                                    view.refreshSrcFrame(subIndex);
-                                    view.refreshTrgFrame(subIndex);
-                                }
-                            } catch (CoreException ex) {
-                                view.error(ex.getMessage());
-                            } catch (Exception ex) {
-                                ToolBox.showException(ex);
-                                view.exit(4);
-                            }
-
-                        }
+                try {
+                    if (Core.isReady()) {
+                        int subIndex = model.getSubIndex();
+                        Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
+                        view.refreshSrcFrame(subIndex);
+                        view.refreshTrgFrame(subIndex);
                     }
-                }).start();
+                } catch (CoreException ex) {
+                    view.error(ex.getMessage());
+                } catch (Exception ex) {
+                    ToolBox.showException(ex);
+                    view.exit(4);
+                }
             }
         }
     }
@@ -491,27 +457,19 @@ class MainFrameController {
             FramePaletteDialog framePaletteDialog = new FramePaletteDialog(view, model.getSubIndex());
             framePaletteDialog.setVisible(true);
 
-            (new Thread() {
-                @Override
-                public void run() {
-                    synchronized (threadSemaphore) {
-                        try {
-                            if (Core.isReady()) {
-                                int subIndex = model.getSubIndex();
-                                Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
-                                view.refreshSrcFrame(subIndex);
-                                view.refreshTrgFrame(subIndex);
-                            }
-                        } catch (CoreException ex) {
-                            view.error(ex.getMessage());
-                        } catch (Exception ex) {
-                            ToolBox.showException(ex);
-                            view.exit(4);
-                        }
-
-                    }
+            try {
+                if (Core.isReady()) {
+                    int subIndex = model.getSubIndex();
+                    Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
+                    view.refreshSrcFrame(subIndex);
+                    view.refreshTrgFrame(subIndex);
                 }
-            }).start();
+            } catch (CoreException ex) {
+                view.error(ex.getMessage());
+            } catch (Exception ex) {
+                ToolBox.showException(ex);
+                view.exit(4);
+            }
         }
     }
 
@@ -534,25 +492,18 @@ class MainFrameController {
                 }
                 model.setSubIndex(moveDialog.getCurrentSubtitleIndex());
                 view.setLayoutPaneAspectRatio(moveDialog.getTrgRatio());
-                (new Thread() {
-                    @Override
-                    public void run() {
-                        synchronized (threadSemaphore) {
-                            try {
-                                int subIndex = model.getSubIndex();
-                                Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
-                                view.refreshSrcFrame(subIndex);
-                                view.refreshTrgFrame(subIndex);
-                                view.setSubNumComboBoxSelectedIndex(subIndex);
-                            } catch (CoreException ex) {
-                                view.error(ex.getMessage());
-                            } catch (Exception ex) {
-                                ToolBox.showException(ex);
-                                view.exit(4);
-                            }
-                        }
-                    }
-                }).start();
+                try {
+                    int subIndex = model.getSubIndex();
+                    Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
+                    view.refreshSrcFrame(subIndex);
+                    view.refreshTrgFrame(subIndex);
+                    view.setSubNumComboBoxSelectedIndex(subIndex);
+                } catch (CoreException ex) {
+                    view.error(ex.getMessage());
+                } catch (Exception ex) {
+                    ToolBox.showException(ex);
+                    view.exit(4);
+                }
             }
         }
     }
@@ -589,26 +540,19 @@ class MainFrameController {
 
             if (!trans.wasCanceled()) {
                 // create and show image
-                (new Thread() {
-                    @Override
-                    public void run() {
-                        synchronized (threadSemaphore) {
-                            try {
-                                if (Core.isReady()) {
-                                    int subIndex = model.getSubIndex();
-                                    Core.reScanSubtitles(rOld, fpsTrgOld, delayOld, changeFpsOld, fsXOld, fsYOld);
-                                    Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
-                                    view.refreshTrgFrame(subIndex);
-                                }
-                            } catch (CoreException ex) {
-                                view.error(ex.getMessage());
-                            } catch (Exception ex) {
-                                ToolBox.showException(ex);
-                                view.exit(4);
-                            }
-                        }
+                try {
+                    if (Core.isReady()) {
+                        int subIndex = model.getSubIndex();
+                        Core.reScanSubtitles(rOld, fpsTrgOld, delayOld, changeFpsOld, fsXOld, fsYOld);
+                        Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
+                        view.refreshTrgFrame(subIndex);
                     }
-                }).start();
+                } catch (CoreException ex) {
+                    view.error(ex.getMessage());
+                } catch (Exception ex) {
+                    ToolBox.showException(ex);
+                    view.exit(4);
+                }
             }
         }
     }
@@ -619,27 +563,19 @@ class MainFrameController {
             boolean selected = view.isSwapCrCbSelected();
             model.setSwapCrCb(selected);
             // create and show image
-            (new Thread() {
-                @Override
-                public void run() {
-                    synchronized (threadSemaphore) {
-                        try {
-                            if (Core.isReady()) {
-                                int subIndex = model.getSubIndex();
-                                Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
-                                view.refreshSrcFrame(subIndex);
-                                view.refreshTrgFrame(subIndex);
-                            }
-                        } catch (CoreException ex) {
-                            view.error(ex.getMessage());
-                        } catch (Exception ex) {
-                            ToolBox.showException(ex);
-                            view.exit(4);
-                        }
-
-                    }
+            try {
+                if (Core.isReady()) {
+                    int subIndex = model.getSubIndex();
+                    Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
+                    view.refreshSrcFrame(subIndex);
+                    view.refreshTrgFrame(subIndex);
                 }
-            }).start();
+            } catch (CoreException ex) {
+                view.error(ex.getMessage());
+            } catch (Exception ex) {
+                ToolBox.showException(ex);
+                view.exit(4);
+            }
         }
     }
 
@@ -711,25 +647,17 @@ class MainFrameController {
                 model.setSubIndex(idx);
                 view.setSubNumComboBoxSelectedIndex(model.getSubIndex());
 
-                (new Thread() {
-                    @Override
-                    public void run() {
-                        synchronized (threadSemaphore) {
-                            try {
-                                int subIndex = model.getSubIndex();
-                                Core.convertSup(subIndex, subIndex +1, Core.getNumFrames());
-                                view.refreshSrcFrame(subIndex);
-                                view.refreshTrgFrame(subIndex);
-                            } catch (CoreException ex) {
-                                view.error(ex.getMessage());
-                            } catch (Exception ex) {
-                                ToolBox.showException(ex);
-                                view.exit(4);
-                            }
-
-                        }
-                    }
-                }).start();
+                try {
+                    int subIndex = model.getSubIndex();
+                    Core.convertSup(subIndex, subIndex +1, Core.getNumFrames());
+                    view.refreshSrcFrame(subIndex);
+                    view.refreshTrgFrame(subIndex);
+                } catch (CoreException ex) {
+                    view.error(ex.getMessage());
+                } catch (Exception ex) {
+                    ToolBox.showException(ex);
+                    view.exit(4);
+                }
             }
         }
     }
@@ -757,25 +685,17 @@ class MainFrameController {
                     view.setSubNumComboBoxBackground(ERROR_BACKGROUND);
                 } else {
                     model.setSubIndex(idx);
-                    (new Thread() {
-                        @Override
-                        public void run() {
-                            synchronized (threadSemaphore) {
-                                try {
-                                    int subIndex = model.getSubIndex();
-                                    Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
-                                    view.refreshSrcFrame(subIndex);
-                                    view.refreshTrgFrame(subIndex);
-                                } catch (CoreException ex) {
-                                    view.error(ex.getMessage());
-                                } catch (Exception ex) {
-                                    ToolBox.showException(ex);
-                                    view.exit(4);
-                                }
-
-                            }
-                        }
-                    }).start();
+                    try {
+                        int subIndex = model.getSubIndex();
+                        Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
+                        view.refreshSrcFrame(subIndex);
+                        view.refreshTrgFrame(subIndex);
+                    } catch (CoreException ex) {
+                        view.error(ex.getMessage());
+                    } catch (Exception ex) {
+                        ToolBox.showException(ex);
+                        view.exit(4);
+                    }
                     view.setSubNumComboBoxBackground(OK_BACKGROUND);
                 }
             }
@@ -803,23 +723,16 @@ class MainFrameController {
                 model.setAlphaThreshold(idx);
                 view.setAlphaThresholdComboBoxSelectedIndex(model.getAlphaThreshold());
 
-                (new Thread() {
-                    @Override
-                    public void run() {
-                        synchronized (threadSemaphore) {
-                            try {
-                                int subIndex = model.getSubIndex();
-                                Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
-                                view.refreshTrgFrame(subIndex);
-                            } catch (CoreException ex) {
-                                view.error(ex.getMessage());
-                            } catch (Exception ex) {
-                                ToolBox.showException(ex);
-                                view.exit(4);
-                            }
-                        }
-                    }
-                }).start();
+                try {
+                    int subIndex = model.getSubIndex();
+                    Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
+                    view.refreshTrgFrame(subIndex);
+                } catch (CoreException ex) {
+                    view.error(ex.getMessage());
+                } catch (Exception ex) {
+                    ToolBox.showException(ex);
+                    view.exit(4);
+                }
             }
         }
     }
@@ -847,23 +760,16 @@ class MainFrameController {
                     view.setAlphaThresholdComboBoxBackground(ERROR_BACKGROUND);
                 } else {
                     model.setAlphaThreshold(idx);
-                    (new Thread() {
-                        @Override
-                        public void run() {
-                            synchronized (threadSemaphore) {
-                                try {
-                                    int subIndex = model.getSubIndex();
-                                    Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
-                                    view.refreshTrgFrame(subIndex);
-                                } catch (CoreException ex) {
-                                    view.error(ex.getMessage());
-                                } catch (Exception ex) {
-                                    ToolBox.showException(ex);
-                                    view.exit(4);
-                                }
-                            }
-                        }
-                    }).start();
+                    try {
+                        int subIndex = model.getSubIndex();
+                        Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
+                        view.refreshTrgFrame(subIndex);
+                    } catch (CoreException ex) {
+                        view.error(ex.getMessage());
+                    } catch (Exception ex) {
+                        ToolBox.showException(ex);
+                        view.exit(4);
+                    }
                     view.setAlphaThresholdComboBoxBackground(OK_BACKGROUND);
                 }
             }
@@ -899,24 +805,16 @@ class MainFrameController {
                 final int index = idx;
                 view.setMedLowThresholdComboBoxSelectedIndex(index);
 
-                (new Thread() {
-                    @Override
-                    public void run() {
-                        synchronized (threadSemaphore) {
-                            try {
-                                int subIndex = model.getSubIndex();
-                                Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
-                                view.refreshTrgFrame(subIndex);
-                            } catch (CoreException ex) {
-                                view.error(ex.getMessage());
-                            } catch (Exception ex) {
-                                ToolBox.showException(ex);
-                                view.exit(4);
-                            }
-
-                        }
-                    }
-                }).start();
+                try {
+                    int subIndex = model.getSubIndex();
+                    Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
+                    view.refreshTrgFrame(subIndex);
+                } catch (CoreException ex) {
+                    view.error(ex.getMessage());
+                } catch (Exception ex) {
+                    ToolBox.showException(ex);
+                    view.exit(4);
+                }
             }
         }
     }
@@ -946,22 +844,16 @@ class MainFrameController {
                 else {
                     lumThr[1] = idx;
                     model.setLuminanceThreshold(lumThr);
-                    (new Thread() {
-                        @Override
-                        public void run() {
-                            synchronized (threadSemaphore) {
-                                try {
-                                    int subIndex = model.getSubIndex();
-                                    Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
-                                    view.refreshTrgFrame(subIndex);
-                                } catch (CoreException ex) {
-                                    view.error(ex.getMessage());
-                                } catch (Exception ex) {
-                                    ToolBox.showException(ex);
-                                    view.exit(4);
-                                }
-
-                            } } }).start();
+                    try {
+                        int subIndex = model.getSubIndex();
+                        Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
+                        view.refreshTrgFrame(subIndex);
+                    } catch (CoreException ex) {
+                        view.error(ex.getMessage());
+                    } catch (Exception ex) {
+                        ToolBox.showException(ex);
+                        view.exit(4);
+                    }
                     view.setMedLowThresholdComboBoxBackground(OK_BACKGROUND);
                 }
             }
@@ -995,24 +887,16 @@ class MainFrameController {
                 model.setLuminanceThreshold(lumThr);
                 view.setHiMedThresholdComboBoxSelectedIndex(model.getLuminanceThreshold()[0]);
 
-                (new Thread() {
-                    @Override
-                    public void run() {
-                        synchronized (threadSemaphore) {
-                            try {
-                                int subIndex = model.getSubIndex();
-                                Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
-                                view.refreshTrgFrame(subIndex);
-                            } catch (CoreException ex) {
-                                view.error(ex.getMessage());
-                            } catch (Exception ex) {
-                                ToolBox.showException(ex);
-                                view.exit(4);
-                            }
-
-                        }
-                    }
-                }).start();
+                try {
+                    int subIndex = model.getSubIndex();
+                    Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
+                    view.refreshTrgFrame(subIndex);
+                } catch (CoreException ex) {
+                    view.error(ex.getMessage());
+                } catch (Exception ex) {
+                    ToolBox.showException(ex);
+                    view.exit(4);
+                }
             }
         }
     }
@@ -1042,22 +926,16 @@ class MainFrameController {
                 } else {
                     lumThr[0] = idx;
                     model.setLuminanceThreshold(lumThr);
-                    (new Thread() {
-                        @Override
-                        public void run() {
-                            synchronized (threadSemaphore) {
-                                try {
-                                    int subIndex = model.getSubIndex();
-                                    Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
-                                    view.refreshTrgFrame(subIndex);
-                                } catch (CoreException ex) {
-                                    view.error(ex.getMessage());
-                                } catch (Exception ex) {
-                                    ToolBox.showException(ex);
-                                    view.exit(4);
-                                }
-
-                            } } }).start();
+                    try {
+                        int subIndex = model.getSubIndex();
+                        Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
+                        view.refreshTrgFrame(subIndex);
+                    } catch (CoreException ex) {
+                        view.error(ex.getMessage());
+                    } catch (Exception ex) {
+                        ToolBox.showException(ex);
+                        view.exit(4);
+                    }
                     view.setHiMedThresholdComboBoxBackground(OK_BACKGROUND);
                 }
             }
@@ -1076,29 +954,21 @@ class MainFrameController {
                     }
                 }
 
-                (new Thread() {
-                    @Override
-                    public void run() {
-                        synchronized (threadSemaphore) {
-                            try {
-                                int subIndex = model.getSubIndex();
-                                Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
-                                view.refreshTrgFrame(subIndex);
-                                if (model.getOutputMode() == OutputMode.VOBSUB || model.getOutputMode() == OutputMode.SUPIFO) {
-                                    view.enableVobsubBits(true);
-                                } else {
-                                    view.enableVobsubBits(false);
-                                }
-                            } catch (CoreException ex) {
-                                view.error(ex.getMessage());
-                            } catch (Exception ex) {
-                                ToolBox.showException(ex);
-                                view.exit(4);
-                            }
-
-                        }
+                try {
+                    int subIndex = model.getSubIndex();
+                    Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
+                    view.refreshTrgFrame(subIndex);
+                    if (model.getOutputMode() == OutputMode.VOBSUB || model.getOutputMode() == OutputMode.SUPIFO) {
+                        view.enableVobsubBits(true);
+                    } else {
+                        view.enableVobsubBits(false);
                     }
-                }).start();
+                } catch (CoreException ex) {
+                    view.error(ex.getMessage());
+                } catch (Exception ex) {
+                    ToolBox.showException(ex);
+                    view.exit(4);
+                }
             }
         }
     }
@@ -1117,24 +987,16 @@ class MainFrameController {
 
                 view.enableVobSubMenuCombo();
 
-                (new Thread() {
-                    @Override
-                    public void run() {
-                        synchronized (threadSemaphore) {
-                            try {
-                                int subIndex = model.getSubIndex();
-                                Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
-                                view.refreshTrgFrame(subIndex);
-                            } catch (CoreException ex) {
-                                view.error(ex.getMessage());
-                            } catch (Exception ex) {
-                                ToolBox.showException(ex);
-                                view.exit(4);
-                            }
-
-                        }
-                    }
-                }).start();
+                try {
+                    int subIndex = model.getSubIndex();
+                    Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
+                    view.refreshTrgFrame(subIndex);
+                } catch (CoreException ex) {
+                    view.error(ex.getMessage());
+                } catch (Exception ex) {
+                    ToolBox.showException(ex);
+                    view.exit(4);
+                }
             }
         }
     }
@@ -1151,24 +1013,16 @@ class MainFrameController {
                     }
                 }
 
-                (new Thread() {
-                    @Override
-                    public void run() {
-                        synchronized (threadSemaphore) {
-                            try {
-                                int subIndex = model.getSubIndex();
-                                Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
-                                view.refreshTrgFrame(subIndex);
-                            } catch (CoreException ex) {
-                                view.error(ex.getMessage());
-                            } catch (Exception ex) {
-                                ToolBox.showException(ex);
-                                view.exit(4);
-                            }
-
-                        }
-                    }
-                }).start();
+                try {
+                    int subIndex = model.getSubIndex();
+                    Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
+                    view.refreshTrgFrame(subIndex);
+                } catch (CoreException ex) {
+                    view.error(ex.getMessage());
+                } catch (Exception ex) {
+                    ToolBox.showException(ex);
+                    view.exit(4);
+                }
             }
         }
     }
@@ -1231,26 +1085,18 @@ class MainFrameController {
                     ed.setIndex(model.getSubIndex());
                     ed.setVisible(true);
                     model.setSubIndex(ed.getIndex());
-                    (new Thread() {
-                        @Override
-                        public void run() {
-                            synchronized (threadSemaphore) {
-                                try {
-                                    int subIndex = model.getSubIndex();
-                                    Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
-                                    view.refreshSrcFrame(subIndex);
-                                    view.refreshTrgFrame(subIndex);
-                                    view.setSubNumComboBoxSelectedIndex(subIndex);
-                                } catch (CoreException ex) {
-                                    view.error(ex.getMessage());
-                                } catch (Exception ex) {
-                                    ToolBox.showException(ex);
-                                    view.exit(4);
-                                }
-
-                            }
-                        }
-                    }).start();
+                    try {
+                        int subIndex = model.getSubIndex();
+                        Core.convertSup(subIndex, subIndex + 1, Core.getNumFrames());
+                        view.refreshSrcFrame(subIndex);
+                        view.refreshTrgFrame(subIndex);
+                        view.setSubNumComboBoxSelectedIndex(subIndex);
+                    } catch (CoreException ex) {
+                        view.error(ex.getMessage());
+                    } catch (Exception ex) {
+                        ToolBox.showException(ex);
+                        view.exit(4);
+                    }
                 }
             }
         }
