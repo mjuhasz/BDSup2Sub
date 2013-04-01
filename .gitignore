@@ -5,4 +5,4 @@
 .settings/
 bin/
 target/
-
+failed-gui-tests/
