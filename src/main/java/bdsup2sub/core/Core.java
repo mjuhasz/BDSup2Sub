@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.SortedMap;
@@ -1655,10 +1656,21 @@ public class Core extends Thread {
      */
     public static void setProgress(long p) {
         if (progress != null) {
-            int val = (int)((p * 100) / progressMax);
+            final int val = (int)((p * 100) / progressMax);
             if (val > progressLast) {
                 progressLast = val;
-                progress.setProgress(val);
+                try {
+                    SwingUtilities.invokeAndWait(new Runnable() {
+                        @Override
+                        public void run() {
+                            progress.setProgress(val);
+                        }
+                    });
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } catch (InvocationTargetException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }

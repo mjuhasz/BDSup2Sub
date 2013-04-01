@@ -886,7 +886,7 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
         console.addMouseListener(mouseListener);
     }
 
-    private void printToConsole(String message) {
+    public void printToConsole(String message) {
         Document doc = console.getDocument();
         int length = doc.getLength();
         try {
@@ -896,40 +896,8 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
         }
     }
 
-    public void printOut(final String message) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                printToConsole(message);
-            }
-        });
-    }
-
-    public void printErr(final String message) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                printToConsole(message);
-            }
-        });
-    }
-
-    public void printWarn(final String message) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                printToConsole(message);
-            }
-        });
-    }
-
     public void flushConsole() {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                console.setCaretPosition(console.getDocument().getLength());
-            }
-        });
+        console.setCaretPosition(console.getDocument().getLength());
     }
 
     String getConsoleSelectedText() {
@@ -1314,33 +1282,24 @@ public class MainFrameView extends JFrame implements ClipboardOwner {
      * @param index caption index
      */
     void refreshSrcFrame(final int index) {
-        SwingUtilities.invokeLater( new Runnable() {
-            @Override
-            public void run() {
-                BufferedImage img = Core.getSrcImage();
-                jPanelSource.setImage(img);
-                jLabelInfoSource.setText(Core.getSrcInfoStr(index));
-            }
-        });
+        BufferedImage img = Core.getSrcImage();
+        jPanelSource.setImage(img);
+        jLabelInfoSource.setText(Core.getSrcInfoStr(index));
     }
+
     /**
      * Update all components belonging to the target window
      * @param index caption index
      */
     void refreshTrgFrame(final int index) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                jLayoutPane.setScreenDimension(Core.getTrgWidth(index), Core.getTrgHeight(index));
-                jLayoutPane.setSubtitleOffsets(Core.getTrgOfsX(index), Core.getTrgOfsY(index));
-                jLayoutPane.setCropOffsetY(model.getCropOffsetY());
-                jLayoutPane.setImage(Core.getTrgImage(), Core.getTrgImgWidth(index), Core.getTrgImgHeight(index));
-                jLayoutPane.setExcluded(Core.getTrgExcluded(index));
-                jPanelTarget.setImage(Core.getTrgImage());
-                jLabelInfoTarget.setText(Core.getTrgInfoStr(index));
-                jLayoutPane.repaint();
-            }
-        });
+        jLayoutPane.setScreenDimension(Core.getTrgWidth(index), Core.getTrgHeight(index));
+        jLayoutPane.setSubtitleOffsets(Core.getTrgOfsX(index), Core.getTrgOfsY(index));
+        jLayoutPane.setCropOffsetY(model.getCropOffsetY());
+        jLayoutPane.setImage(Core.getTrgImage(), Core.getTrgImgWidth(index), Core.getTrgImgHeight(index));
+        jLayoutPane.setExcluded(Core.getTrgExcluded(index));
+        jPanelTarget.setImage(Core.getTrgImage());
+        jLabelInfoTarget.setText(Core.getTrgInfoStr(index));
+        jLayoutPane.repaint();
     }
 
     void exit(int code) {

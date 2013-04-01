@@ -123,19 +123,8 @@ public class Progress extends JDialog {
     }
 
     public void setProgress(final int val) {
-        try {
-            SwingUtilities.invokeAndWait(new Runnable() {
-                @Override
-                public void run() {
-                    jProgressBar.setValue(val);
-                    jProgressBar.repaint();
-                }
-            });
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        }
+        jProgressBar.setValue(val);
+        jProgressBar.repaint();
     }
 
     private class ProgressTimer extends TimerTask {

@@ -17,6 +17,8 @@ package bdsup2sub.core;
 
 import bdsup2sub.gui.main.MainFrameView;
 
+import javax.swing.*;
+
 public final class Logger {
 
     private static final Configuration configuration = Configuration.getInstance();
@@ -36,39 +38,61 @@ public final class Logger {
 
     public void warn(String message) {
         warningCount++;
-        message = "WARNING: " + message;
+        final String msg = "WARNING: " + message;
         if (mainFrame != null) {
-            mainFrame.printWarn(message);
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    mainFrame.printToConsole(msg);
+                }
+            });
         } else {
-            System.out.print(message);
+            System.out.print(msg);
         }
     }
 
     public void error(String message) {
         errorCount++;
-        message = "ERROR: " + message;
+        final String msg = "ERROR: " + message;
         if (mainFrame != null) {
-            mainFrame.printErr(message);
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    mainFrame.printToConsole(msg);
+                }
+            });
         } else {
-            System.out.print(message);
+            System.out.print(msg);
         }
     }
 
-    public void trace(String s) {
+    public void trace(String message) {
+        final String msg = message;
         if (configuration.isVerbose()) {
             if (mainFrame != null) {
-                mainFrame.printOut(s);
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        mainFrame.printToConsole(msg);
+                    }
+                });
             } else {
-                System.out.print(s);
+                System.out.print(msg);
             }
         }
     }
 
-    public void info(String s) {
+    public void info(String message) {
+        final String msg = message;
         if (mainFrame != null) {
-            mainFrame.printOut(s);
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    mainFrame.printToConsole(msg);
+                }
+            });
         } else {
-            System.out.print(s);
+            System.out.print(msg);
         }
     }
 
