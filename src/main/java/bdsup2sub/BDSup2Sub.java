@@ -96,6 +96,7 @@ public class BDSup2Sub {
             configuration.setAlphaCrop(options.getAlphaCropThreshold().get());
         }
         if (options.getScaleX().isPresent() && options.getScaleY().isPresent()) {
+            configuration.setApplyFreeScale(true);
             configuration.setFreeScaleFactor(options.getScaleX().get(), options.getScaleY().get());
         }
         if (options.isExportPalette().isPresent()) {
