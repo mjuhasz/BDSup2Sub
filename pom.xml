@@ -6,7 +6,7 @@
     <packaging>jar</packaging>
 
     <name>BDSup2Sub</name>
-    <version>5.1.2</version>
+    <version>5.2.0-SNAPSHOT</version>
     <url>https://github.com/mjuhasz/BDSup2Sub</url>
 
     <properties>
