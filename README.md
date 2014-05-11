@@ -51,3 +51,17 @@ More information
 ----------------
 
 Visit the [Wiki pages](https://github.com/mjuhasz/BDSup2Sub/wiki)
+
+License
+-------
+
+As of version 4.0.0, BDSup2Sub became an Open Source project. All files that are Volker Oth own creation are released under the Apache License 2.0. 
+In a nutshell that means you can use them and modify them even for closed source or commercial projects, as long as you leave some copyright info in and give appropriate credit. See the linked Apache License for details.
+Note that there are also some sources included which are based on the work of other people and thus have partly different license models:
+
+- PNG Encoder by J. David Eisenberg (modified to support transparency for palette mode via the tRNS tag). Licensed under the LGPL.
+- Octree Quantize Filter by Jerry Huxtable (modified to support alpha component and better palette reduction). Licensed under the Apache License 2.0.
+- Scaling/filter routine based on Morten Nobel-Joergensen's ResampleOp from his Java image scaling library. Licensed under the LGPL.
+- JFileFilter based on ExampleFileFilter from the FileChooserDemo included in the JDK. Licensed under proprietary Sun license (similar to Apache).
+
+Each file of the source code should contain a header with the license information.
