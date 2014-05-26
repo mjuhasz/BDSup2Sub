@@ -19,7 +19,7 @@ import bdsup2sub.utils.ToolBox;
 public class SupBDParser {
 
     private static final Configuration configuration = Configuration.getInstance();
-	private static final LibLogger logger = LibLogger.getInstance();
+    private static final LibLogger logger = LibLogger.getInstance();
 
     private static final int PGSSUP_FILE_MAGIC = 0x5047;
     private static final int PGSSUP_PALETTE_SEGMENT = 0x14;
@@ -38,11 +38,11 @@ public class SupBDParser {
     private FileBuffer buffer;
     private final List<SubPictureBD> subPictures = new ArrayList<SubPictureBD>();
     private int forcedFrameCount;
-	private BDSup2SubManager manager;
+    private BDSup2SubManager manager;
 
     public SupBDParser(String filename, BDSup2SubManager manager) throws CoreException {
         this.manager = manager;
-		try {
+        try {
             buffer = new FileBuffer(filename);
         } catch (FileBufferException ex) {
             throw new CoreException(ex.getMessage());

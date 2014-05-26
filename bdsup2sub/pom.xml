@@ -4,11 +4,11 @@
     <artifactId>bdsup2sub</artifactId>
     <packaging>jar</packaging>
 
-	<parent>
-		<groupId>bdsup2sub</groupId>
-		<artifactId>bdsup2sub-parent</artifactId>
-		<version>5.2.0-SNAPSHOT</version>
-	</parent>
+    <parent>
+        <groupId>bdsup2sub</groupId>
+        <artifactId>bdsup2sub-parent</artifactId>
+        <version>5.2.0-SNAPSHOT</version>
+    </parent>
 
     <repositories>
         <repository>
@@ -17,8 +17,8 @@
         </repository>
     </repositories>
 
-	<dependencies>
-	       <dependency>
+    <dependencies>
+           <dependency>
             <groupId>bdsup2sub</groupId>
             <artifactId>bdsup2sub-lib</artifactId>
             <version>${project.version}</version>
@@ -33,19 +33,19 @@
             <artifactId>macify</artifactId>
             <version>1.4</version>
         </dependency>
-		<dependency>
-			<groupId>org.easytesting</groupId>
-			<artifactId>fest-swing</artifactId>
-			<version>1.2.1</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.easytesting</groupId>
-			<artifactId>fest-swing-junit-4.5</artifactId>
-			<version>1.2.1</version>
-			<scope>test</scope>
-		</dependency>
-	</dependencies>
+        <dependency>
+            <groupId>org.easytesting</groupId>
+            <artifactId>fest-swing</artifactId>
+            <version>1.2.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.easytesting</groupId>
+            <artifactId>fest-swing-junit-4.5</artifactId>
+            <version>1.2.1</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 
 
     <build>

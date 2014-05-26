@@ -18,7 +18,7 @@ import bdsup2sub.tools.QuantizeFilter;
 public final class SupBDWriter {
 
     private static final Configuration configuration = Configuration.getInstance();
-	private static final LibLogger logger = LibLogger.getInstance();
+    private static final LibLogger logger = LibLogger.getInstance();
 
     private static final byte PACKET_HEADER[] = {
             0x50, 0x47,             // 0:  "PG"

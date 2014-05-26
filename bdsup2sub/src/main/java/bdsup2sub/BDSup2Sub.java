@@ -64,7 +64,7 @@ public class BDSup2Sub {
     }
 
     private void run(String[] args) {
-		LibLogger.getInstance().setObserver(Logger.getInstance());
+        LibLogger.getInstance().setObserver(Logger.getInstance());
         parseOptions(args);
         processOptions();
         execute();
@@ -240,7 +240,7 @@ public class BDSup2Sub {
                 setupGUI();
                 SwingUtilities.invokeLater(new Runnable() {
                     @Override
-					public void run() {
+                    public void run() {
                         configuration.setCliMode(false);
                         Application app = new DefaultApplication();
                         MainFrame mainFrame = new MainFrame(options.getInputFile());

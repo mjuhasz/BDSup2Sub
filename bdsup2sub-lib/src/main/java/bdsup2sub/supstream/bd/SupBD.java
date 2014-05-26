@@ -40,7 +40,7 @@ import bdsup2sub.utils.ToolBox;
 public class SupBD implements SubtitleStream {
 
     private static final Configuration configuration = Configuration.getInstance();
-	private static final LibLogger logger = LibLogger.getInstance();
+    private static final LibLogger logger = LibLogger.getInstance();
 
     private final FileBuffer buffer;
     private List<SubPictureBD> subPictures = new ArrayList<SubPictureBD>();
@@ -52,11 +52,11 @@ public class SupBD implements SubtitleStream {
     private Bitmap bitmap;
     /** index of dominant color for the current caption  */
     private int primaryColorIndex;
-	private BDSup2SubManager manager;
+    private BDSup2SubManager manager;
 
     public SupBD(String filename, BDSup2SubManager manager) throws CoreException {
         this.manager = manager;
-		SupBDParser parser = new SupBDParser(filename, manager);
+        SupBDParser parser = new SupBDParser(filename, manager);
         buffer = parser.getBuffer();
         subPictures = parser.getSubPictures();
         forcedFrameCount = parser.getForcedFrameCount();
@@ -238,7 +238,7 @@ public class SupBD implements SubtitleStream {
      * @see SubtitleStream#decode(int)
      */
     @Override
-	public void decode(int index) throws CoreException {
+    public void decode(int index) throws CoreException {
         if (index < subPictures.size()) {
             decode(subPictures.get(index));
         } else {
@@ -250,7 +250,7 @@ public class SupBD implements SubtitleStream {
      * @see SubtitleStream#getPalette()
      */
     @Override
-	public Palette getPalette() {
+    public Palette getPalette() {
         return palette;
     }
 
@@ -258,7 +258,7 @@ public class SupBD implements SubtitleStream {
      * @see SubtitleStream#getBitmap()
      */
     @Override
-	public Bitmap getBitmap() {
+    public Bitmap getBitmap() {
         return bitmap;
     }
 
@@ -266,7 +266,7 @@ public class SupBD implements SubtitleStream {
      * @see SubtitleStream#getImage()
      */
     @Override
-	public BufferedImage getImage() {
+    public BufferedImage getImage() {
         return bitmap.getImage(palette.getColorModel());
     }
 
@@ -274,7 +274,7 @@ public class SupBD implements SubtitleStream {
      * @see SubtitleStream#getImage(Bitmap)
      */
     @Override
-	public BufferedImage getImage(Bitmap bm) {
+    public BufferedImage getImage(Bitmap bm) {
         return bm.getImage(palette.getColorModel());
     }
 
@@ -282,7 +282,7 @@ public class SupBD implements SubtitleStream {
      * @see SubtitleStream#getPrimaryColorIndex()
      */
     @Override
-	public int getPrimaryColorIndex() {
+    public int getPrimaryColorIndex() {
         return primaryColorIndex;
     }
 
@@ -290,7 +290,7 @@ public class SupBD implements SubtitleStream {
      * @see SubtitleStream#getSubPicture(int)
      */
     @Override
-	public SubPicture getSubPicture(int index) {
+    public SubPicture getSubPicture(int index) {
         return subPictures.get(index);
     }
 
@@ -298,7 +298,7 @@ public class SupBD implements SubtitleStream {
      * @see SubtitleStream#getNumFrames()
      */
     @Override
-	public int getFrameCount() {
+    public int getFrameCount() {
         return subPictures.size();
     }
 
@@ -306,7 +306,7 @@ public class SupBD implements SubtitleStream {
      * @see SubtitleStream#getForcedFrameCount()
      */
     @Override
-	public int getForcedFrameCount() {
+    public int getForcedFrameCount() {
         return forcedFrameCount;
     }
 
@@ -314,7 +314,7 @@ public class SupBD implements SubtitleStream {
      * @see SubtitleStream#close()
      */
     @Override
-	public void close() {
+    public void close() {
         if (buffer != null) {
             buffer.close();
         }
@@ -324,7 +324,7 @@ public class SupBD implements SubtitleStream {
      * @see SubtitleStream#getEndTime(int)
      */
     @Override
-	public long getEndTime(int index) {
+    public long getEndTime(int index) {
         return subPictures.get(index).getEndTime();
     }
 
@@ -332,7 +332,7 @@ public class SupBD implements SubtitleStream {
      * @see SubtitleStream#getStartTime(int)
      */
     @Override
-	public long getStartTime(int index) {
+    public long getStartTime(int index) {
         return subPictures.get(index).getStartTime();
     }
 
@@ -340,7 +340,7 @@ public class SupBD implements SubtitleStream {
      * @see SubtitleStream#isForced(int)
      */
     @Override
-	public boolean isForced(int index) {
+    public boolean isForced(int index) {
         return subPictures.get(index).isForced();
     }
 
@@ -348,7 +348,7 @@ public class SupBD implements SubtitleStream {
      * @see SubtitleStream#getStartOffset(int)
      */
     @Override
-	public long getStartOffset(int index) {
+    public long getStartOffset(int index) {
         SubPictureBD pic = subPictures.get(index);
         return pic.getImageObject().getFragmentList().get(0).getImageBufferOfs();
     }

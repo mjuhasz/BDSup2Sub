@@ -62,7 +62,7 @@ import bdsup2sub.utils.ToolBox;
 public class SupXml implements SubtitleStream {
 
     private static final Configuration configuration = Configuration.getInstance();
-	private static final LibLogger logger = LibLogger.getInstance();
+    private static final LibLogger logger = LibLogger.getInstance();
 
     /** ArrayList of captions contained in the current file */
     private final List<SubPictureXml> subPictures = new ArrayList<SubPictureXml>();
@@ -87,7 +87,7 @@ public class SupXml implements SubtitleStream {
     private double fps = Framerate.FPS_23_976.getValue();
     /** converted xml frame rate read from the stream */
     private double fpsXml = XmlFps(fps);
-	private final BDSup2SubManager manager;
+    private final BDSup2SubManager manager;
 
     /**
      * Constructor (for reading)
@@ -96,7 +96,7 @@ public class SupXml implements SubtitleStream {
      */
     public SupXml(String filename, BDSup2SubManager manager) throws CoreException {
         this.manager = manager;
-		this.pathName = FilenameUtils.addSeparator(FilenameUtils.getParent(filename));
+        this.pathName = FilenameUtils.addSeparator(FilenameUtils.getParent(filename));
         this.title = FilenameUtils.removeExtension(FilenameUtils.getName(filename));
 
         SAXParserFactory factory = SAXParserFactory.newInstance();
@@ -318,7 +318,7 @@ public class SupXml implements SubtitleStream {
      * @see SubtitleStream#getBitmap()
      */
     @Override
-	public Bitmap getBitmap() {
+    public Bitmap getBitmap() {
         return bitmap;
     }
 
@@ -326,7 +326,7 @@ public class SupXml implements SubtitleStream {
      * @see SubtitleStream#getImage()
      */
     @Override
-	public BufferedImage getImage() {
+    public BufferedImage getImage() {
         return bitmap.getImage(palette.getColorModel());
     }
 
@@ -334,7 +334,7 @@ public class SupXml implements SubtitleStream {
      * @see SubtitleStream#getImage(Bitmap)
      */
     @Override
-	public BufferedImage getImage(final Bitmap bm) {
+    public BufferedImage getImage(final Bitmap bm) {
         return bm.getImage(palette.getColorModel());
     }
 
@@ -342,7 +342,7 @@ public class SupXml implements SubtitleStream {
      * @see SubtitleStream#getForcedFrameCount()
      */
     @Override
-	public int getForcedFrameCount() {
+    public int getForcedFrameCount() {
         return numForcedFrames;
     }
 
@@ -350,7 +350,7 @@ public class SupXml implements SubtitleStream {
      * @see SubtitleStream#getNumFrames()
      */
     @Override
-	public int getFrameCount() {
+    public int getFrameCount() {
         return subPictures.size();
     }
 
@@ -358,7 +358,7 @@ public class SupXml implements SubtitleStream {
      * @see SubtitleStream#getPalette()
      */
     @Override
-	public Palette getPalette() {
+    public Palette getPalette() {
         return palette;
     }
 
@@ -366,7 +366,7 @@ public class SupXml implements SubtitleStream {
      * @see SubtitleStream#getPrimaryColorIndex()
      */
     @Override
-	public int getPrimaryColorIndex() {
+    public int getPrimaryColorIndex() {
         return primaryColorIndex;
     }
 
@@ -374,7 +374,7 @@ public class SupXml implements SubtitleStream {
      * @see deadbeef.SupTools.SubtitleStream#getStartOffset(int)
      */
     @Override
-	public long getStartOffset(int index) {
+    public long getStartOffset(int index) {
         // dummy
         return 0;
     }
@@ -383,7 +383,7 @@ public class SupXml implements SubtitleStream {
      * @see SubtitleStream#getSubPicture(int)
      */
     @Override
-	public SubPicture getSubPicture(int index) {
+    public SubPicture getSubPicture(int index) {
         return subPictures.get(index);
     }
 
@@ -391,7 +391,7 @@ public class SupXml implements SubtitleStream {
      * @see SubtitleStream#getEndTime(int)
      */
     @Override
-	public long getEndTime(int index) {
+    public long getEndTime(int index) {
         return subPictures.get(index).getEndTime();
     }
 
@@ -399,7 +399,7 @@ public class SupXml implements SubtitleStream {
      * @see SubtitleStream#getStartTime(int)
      */
     @Override
-	public long getStartTime(final int index) {
+    public long getStartTime(final int index) {
         return subPictures.get(index).getStartTime();
     }
 
@@ -407,7 +407,7 @@ public class SupXml implements SubtitleStream {
      * @see SubtitleStream#isForced(int)
      */
     @Override
-	public boolean isForced(int index) {
+    public boolean isForced(int index) {
         return subPictures.get(index).isForced();
     }
 
@@ -521,7 +521,7 @@ public class SupXml implements SubtitleStream {
                         int n = ToolBox.getInt(at);
                         if (n > 0) {
                             /* number of subtitles read from the xml */
-                        	manager.setProgressMax(n);
+                            manager.setProgressMax(n);
                         }
                     }
                     break;

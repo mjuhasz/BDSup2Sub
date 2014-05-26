@@ -1,28 +1,28 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<artifactId>bdsup2sub-lib</artifactId>
-	<packaging>jar</packaging>
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>bdsup2sub-lib</artifactId>
+    <packaging>jar</packaging>
 
-	<parent>
-		<groupId>bdsup2sub</groupId>
-		<artifactId>bdsup2sub-parent</artifactId>
-		<version>5.2.0-SNAPSHOT</version>
-	</parent>
+    <parent>
+        <groupId>bdsup2sub</groupId>
+        <artifactId>bdsup2sub-parent</artifactId>
+        <version>5.2.0-SNAPSHOT</version>
+    </parent>
 
-	<dependencies>
-		<dependency>
-			<groupId>com.mortennobel</groupId>
-			<artifactId>java-image-scaling</artifactId>
-			<version>0.8.5</version>
-			<exclusions>
-				<exclusion>
-					<groupId>com.jhlabs</groupId>
-					<artifactId>filters</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-	</dependencies>
+    <dependencies>
+        <dependency>
+            <groupId>com.mortennobel</groupId>
+            <artifactId>java-image-scaling</artifactId>
+            <version>0.8.5</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.jhlabs</groupId>
+                    <artifactId>filters</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+    </dependencies>
 
 
 </project>

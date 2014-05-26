@@ -62,12 +62,12 @@ public class SupDvd implements DvdSubtitleStream {
 
     /** store last alpha values for invisible workaround */
     private static int[] lastAlpha = { 0, 0xf, 0xf, 0xf };
-	private final BDSup2SubManager manager;
+    private final BDSup2SubManager manager;
 
 
     public SupDvd(String supFile, String ifoFile, BDSup2SubManager manager) throws CoreException {
         this.manager = manager;
-		IfoParser ifoParser = new IfoParser(ifoFile);
+        IfoParser ifoParser = new IfoParser(ifoFile);
         this.screenHeight = ifoParser.getScreenHeight();
         this.screenWidth = ifoParser.getScreenWidth();
         this.languageIdx = ifoParser.getLanguageIdx();
