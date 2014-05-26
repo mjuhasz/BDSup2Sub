@@ -10,7 +10,6 @@ import org.fest.swing.fixture.DialogFixture;
 import org.fest.swing.fixture.JFileChooserFixture;
 import org.fest.swing.security.ExitCallHook;
 import org.fest.swing.security.NoExitSecurityManagerInstaller;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.swing.*;
@@ -19,7 +18,6 @@ import java.io.File;
 
 import static org.junit.Assert.assertTrue;
 
-@Ignore
 public class BDSup2SubMainWindowTest extends BDSup2SubAcceptanceTest {
 
     @GUITest
