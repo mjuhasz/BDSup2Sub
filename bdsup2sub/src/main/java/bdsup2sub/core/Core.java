@@ -19,7 +19,6 @@ import static bdsup2sub.core.Constants.*;
 import static bdsup2sub.utils.SubtitleUtils.*;
 import static bdsup2sub.utils.TimeUtils.*;
 import static com.mortennobel.imagescaling.ResampleFilters.*;
-
 import java.awt.image.BufferedImage;
 import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
@@ -32,9 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
-
 import javax.swing.*;
-
 import bdsup2sub.BDSup2SubManager;
 import bdsup2sub.bitmap.Bitmap;
 import bdsup2sub.bitmap.BitmapWithPalette;
@@ -59,7 +56,6 @@ import bdsup2sub.tools.EnhancedPngEncoder;
 import bdsup2sub.utils.FilenameUtils;
 import bdsup2sub.utils.SubtitleUtils;
 import bdsup2sub.utils.ToolBox;
-
 import com.mortennobel.imagescaling.ResampleFilter;
 
 /**

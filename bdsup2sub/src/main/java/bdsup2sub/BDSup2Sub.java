@@ -15,37 +15,20 @@
  */
 package bdsup2sub;
 
-import static bdsup2sub.gui.support.GuiUtils.applyGtkThemeWorkarounds;
-
-import java.awt.Color;
-import java.io.File;
-
-import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
-
+import bdsup2sub.cli.CommandLineParser;
+import bdsup2sub.core.*;
+import bdsup2sub.gui.main.MainFrame;
+import bdsup2sub.tools.Props;
+import bdsup2sub.utils.*;
 import org.apache.commons.cli.ParseException;
 import org.simplericity.macify.eawt.Application;
 import org.simplericity.macify.eawt.DefaultApplication;
 
-import bdsup2sub.cli.CommandLineParser;
-import bdsup2sub.core.CaptionMoveModeX;
-import bdsup2sub.core.CaptionMoveModeY;
-import bdsup2sub.core.Configuration;
-import bdsup2sub.core.Constants;
-import bdsup2sub.core.Core;
-import bdsup2sub.core.CoreException;
-import bdsup2sub.core.Framerate;
-import bdsup2sub.core.LibLogger;
-import bdsup2sub.core.Logger;
-import bdsup2sub.core.OutputMode;
-import bdsup2sub.core.StreamID;
-import bdsup2sub.gui.main.MainFrame;
-import bdsup2sub.tools.Props;
-import bdsup2sub.utils.FilenameUtils;
-import bdsup2sub.utils.PlatformUtils;
-import bdsup2sub.utils.StreamUtils;
-import bdsup2sub.utils.SubtitleUtils;
-import bdsup2sub.utils.ToolBox;
+import javax.swing.*;
+import java.awt.*;
+import java.io.File;
+
+import static bdsup2sub.gui.support.GuiUtils.applyGtkThemeWorkarounds;
 
 public class BDSup2Sub {
 

@@ -1,12 +1,5 @@
 package bdsup2sub.supstream.bd;
 
-import static bdsup2sub.utils.ByteUtils.setByte;
-import static bdsup2sub.utils.ByteUtils.setDWord;
-import static bdsup2sub.utils.ByteUtils.setWord;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-
 import bdsup2sub.bitmap.Bitmap;
 import bdsup2sub.bitmap.Palette;
 import bdsup2sub.core.Configuration;
@@ -14,6 +7,13 @@ import bdsup2sub.core.Framerate;
 import bdsup2sub.core.LibLogger;
 import bdsup2sub.supstream.SubPicture;
 import bdsup2sub.tools.QuantizeFilter;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+
+import static bdsup2sub.utils.ByteUtils.setByte;
+import static bdsup2sub.utils.ByteUtils.setDWord;
+import static bdsup2sub.utils.ByteUtils.setWord;
 
 public final class SupBDWriter {
 

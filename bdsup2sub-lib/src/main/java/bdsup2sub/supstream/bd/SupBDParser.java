@@ -1,12 +1,6 @@
 package bdsup2sub.supstream.bd;
 
-import static bdsup2sub.utils.TimeUtils.ptsToTimeStr;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import bdsup2sub.BDSup2SubManager;
-import bdsup2sub.core.Configuration;
 import bdsup2sub.core.CoreException;
 import bdsup2sub.core.LibLogger;
 import bdsup2sub.supstream.ImageObject;
@@ -16,9 +10,13 @@ import bdsup2sub.tools.FileBuffer;
 import bdsup2sub.tools.FileBufferException;
 import bdsup2sub.utils.ToolBox;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import static bdsup2sub.utils.TimeUtils.ptsToTimeStr;
+
 public class SupBDParser {
 
-    private static final Configuration configuration = Configuration.getInstance();
     private static final LibLogger logger = LibLogger.getInstance();
 
     private static final int PGSSUP_FILE_MAGIC = 0x5047;

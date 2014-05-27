@@ -15,9 +15,9 @@
  */
 package bdsup2sub.core;
 
-import javax.swing.SwingUtilities;
-
 import bdsup2sub.gui.main.MainFrameView;
+
+import javax.swing.*;
 
 public final class Logger implements LibLoggerObserver {
 

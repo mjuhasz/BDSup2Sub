@@ -15,9 +15,27 @@
  */
 package bdsup2sub.supstream.bdnxml;
 
-import static bdsup2sub.core.Constants.LANGUAGES;
-import static bdsup2sub.utils.TimeUtils.ptsToTimeStrXml;
-import static bdsup2sub.utils.TimeUtils.timeStrXmlToPTS;
+import bdsup2sub.BDSup2SubManager;
+import bdsup2sub.bitmap.Bitmap;
+import bdsup2sub.bitmap.BitmapBounds;
+import bdsup2sub.bitmap.Palette;
+import bdsup2sub.core.*;
+import bdsup2sub.supstream.SubPicture;
+import bdsup2sub.supstream.SubtitleStream;
+import bdsup2sub.tools.QuantizeFilter;
+import bdsup2sub.utils.FilenameUtils;
+import bdsup2sub.utils.SubtitleUtils;
+import bdsup2sub.utils.ToolBox;
+
+import org.xml.sax.Attributes;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.DefaultHandler;
+
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.IndexColorModel;
@@ -30,31 +48,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.SortedMap;
 
-import javax.imageio.ImageIO;
-import javax.swing.JOptionPane;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
+import static bdsup2sub.core.Constants.LANGUAGES;
+import static bdsup2sub.utils.TimeUtils.ptsToTimeStrXml;
+import static bdsup2sub.utils.TimeUtils.timeStrXmlToPTS;
 
-import org.xml.sax.Attributes;
-import org.xml.sax.SAXException;
-import org.xml.sax.helpers.DefaultHandler;
-
-import bdsup2sub.BDSup2SubManager;
-import bdsup2sub.bitmap.Bitmap;
-import bdsup2sub.bitmap.BitmapBounds;
-import bdsup2sub.bitmap.Palette;
-import bdsup2sub.core.Configuration;
-import bdsup2sub.core.CoreException;
-import bdsup2sub.core.Framerate;
-import bdsup2sub.core.LibLogger;
-import bdsup2sub.core.Resolution;
-import bdsup2sub.supstream.SubPicture;
-import bdsup2sub.supstream.SubtitleStream;
-import bdsup2sub.tools.QuantizeFilter;
-import bdsup2sub.utils.FilenameUtils;
-import bdsup2sub.utils.SubtitleUtils;
-import bdsup2sub.utils.ToolBox;
 
 /**
  * Reading and writing of Blu-Ray captions in Xml/Png format.

@@ -15,24 +15,18 @@
  */
 package bdsup2sub.supstream.bd;
 
-import java.awt.image.BufferedImage;
-import java.util.ArrayList;
-import java.util.List;
-
 import bdsup2sub.BDSup2SubManager;
 import bdsup2sub.bitmap.Bitmap;
 import bdsup2sub.bitmap.Palette;
-import bdsup2sub.core.Configuration;
-import bdsup2sub.core.CoreException;
-import bdsup2sub.core.Framerate;
-import bdsup2sub.core.LibLogger;
-import bdsup2sub.supstream.ImageObjectFragment;
-import bdsup2sub.supstream.PaletteInfo;
-import bdsup2sub.supstream.SubPicture;
-import bdsup2sub.supstream.SubtitleStream;
+import bdsup2sub.core.*;
+import bdsup2sub.supstream.*;
 import bdsup2sub.tools.FileBuffer;
 import bdsup2sub.tools.FileBufferException;
 import bdsup2sub.utils.ToolBox;
+
+import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Reading and writing of Blu-Ray captions demuxed from M2TS transport streams (BD-SUP).
