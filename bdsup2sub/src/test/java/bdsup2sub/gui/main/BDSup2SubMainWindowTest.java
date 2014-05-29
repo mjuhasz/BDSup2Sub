@@ -1,7 +1,6 @@
 package bdsup2sub.gui.main;
 
 import bdsup2sub.gui.BDSup2SubAcceptanceTest;
-
 import org.fest.swing.annotation.GUITest;
 import org.fest.swing.core.GenericTypeMatcher;
 import org.fest.swing.core.matcher.DialogMatcher;
@@ -13,7 +12,6 @@ import org.fest.swing.security.NoExitSecurityManagerInstaller;
 import org.junit.Test;
 
 import javax.swing.*;
-
 import java.io.File;
 
 import static org.junit.Assert.assertTrue;
