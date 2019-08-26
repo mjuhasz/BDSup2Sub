@@ -468,16 +468,20 @@ public class Core extends Thread {
 
         // try to detect source frame rate
         if (subtitleStream == supBD) {
-            configuration.setFpsSrc(supBD.getFps(0));
-            configuration.setFpsSrcCertain(true);
+            if (!configuration.isFpsSrcCertain()){
+                configuration.setFpsSrc(supBD.getFps(0));
+                configuration.setFpsSrcCertain(true);
+            }
             if (configuration.isKeepFps()) {
                 configuration.setFpsTrg(configuration.getFPSSrc());
             }
         } else {
             // for HD-DVD we need to guess
             useBT601 = false;
-            configuration.setFpsSrcCertain(false);
-            configuration.setFpsSrc(Framerate.FPS_23_976.getValue());
+            if (!configuration.isFpsSrcCertain()) {
+                configuration.setFpsSrcCertain(true);
+                configuration.setFpsSrc(Framerate.FPS_23_976.getValue());
+            }
         }
     }
 
@@ -525,9 +529,11 @@ public class Core extends Thread {
             }
         }
 
-        // set frame rate
-        configuration.setFpsSrc(supXml.getFps());
-        configuration.setFpsSrcCertain(true);
+        // set frame rate 
+        if (!configuration.isFpsSrcCertain()){
+            configuration.setFpsSrc(supXml.getFps());
+            configuration.setFpsSrcCertain(true);
+        }
         if (configuration.isKeepFps()) {
             configuration.setFpsTrg(configuration.getFPSSrc());
         }
@@ -633,19 +639,25 @@ public class Core extends Thread {
         int h = subtitleStream.getSubPicture(0).getHeight(); //subtitleStream.getBitmap().getHeight();
         switch (h) {
             case 480:
-                configuration.setFpsSrc(Framerate.NTSC.getValue());
-                useBT601 = true;
-                configuration.setFpsSrcCertain(true);
+                if (!configuration.isFpsSrcCertain()) {
+                    configuration.setFpsSrc(Framerate.NTSC.getValue());
+                    useBT601 = true;
+                    configuration.setFpsSrcCertain(true);
+                }
                 break;
             case 576:
-                configuration.setFpsSrc(Framerate.PAL.getValue());
-                useBT601 = true;
-                configuration.setFpsSrcCertain(true);
+                if (!configuration.isFpsSrcCertain()) {
+                    configuration.setFpsSrc(Framerate.PAL.getValue());
+                    useBT601 = true;
+                    configuration.setFpsSrcCertain(true);
+                }
                 break;
             default:
-                useBT601 = false;
-                configuration.setFpsSrc(Framerate.FPS_23_976.getValue());
-                configuration.setFpsSrcCertain(false);
+                if (!configuration.isFpsSrcCertain()) {
+                    useBT601 = false;
+                    configuration.setFpsSrc(Framerate.FPS_23_976.getValue());
+                    configuration.setFpsSrcCertain(true);
+                }
         }
     }
 
@@ -794,7 +806,7 @@ public class Core extends Thread {
         boolean convertFPS = configuration.getConvertFPS();
         subPictures = new SubPicture[subtitleStream.getFrameCount()];
         double factTS = convertFPS ? configuration.getFPSSrc() / configuration.getFpsTrg() : 1.0;
-
+        logger.info("Src FPS: " + configuration.getFPSSrc() + " | Trg FPS: " + configuration.getFpsTrg() + " | factTS: " + factTS);
         // change target resolution to source resolution if no conversion is needed
         if (!configuration.getConvertResolution() && getNumFrames() > 0) {
             configuration.setOutputResolution(getResolutionForDimension(getSubPictureSrc(0).getWidth(), getSubPictureSrc(0).getHeight()));

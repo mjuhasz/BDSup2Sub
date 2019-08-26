@@ -134,11 +134,15 @@ public class BDSup2Sub {
                 // leave default value
             } else {
                 configuration.setFpsSrc(options.getSourceFrameRate().get());
-                configuration.setFpsTrg(options.getTargetFrameRate().get());
+                configuration.setFpsSrcCertain(true);
             }
-            // convert framerate from <auto>/fpssrc to fpstrg
+            if (!options.getTargetFrameRate().isPresent()) {
+
+            } else {
+                configuration.setFpsTrg(options.getTargetFrameRate().get());
+                targetFramerateDefined = true;
+            }
             configuration.setConvertFPS(true);
-            targetFramerateDefined = true;
         } else if (options.isSynchronizeFpsMode()) {
             if (!options.getTargetFrameRate().isPresent()) { // was set to "keep"
                 configuration.setKeepFps(true);
@@ -158,7 +162,7 @@ public class BDSup2Sub {
                 case HD_1080: configuration.setFpsTrg(Framerate.FPS_23_976.getValue()); break;
             }
         }
-        if (!configuration.isKeepFps() && !targetFramerateDefined) {
+        if (!configuration.isKeepFps() && !configuration.getConvertFPS() && !targetFramerateDefined) {
             configuration.setFpsTrg(SubtitleUtils.getDefaultFramerateForResolution(configuration.getOutputResolution()));
         }
     }

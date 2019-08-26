@@ -192,19 +192,19 @@ public class CommandLineParser {
             if (line.getOptionValues(CONVERT_FRAMERATE).length != 2) {
                 throw new ParseException("2 arguments needed for framerate conversion.");
             }
-            String value = line.getOptionValues(CONVERT_FRAMERATE)[0];
-            if (value.equalsIgnoreCase("auto")) {
-                // keep undefined
-            } else {
-                sourceFrameRate = Optional.of(SubtitleUtils.getFps(value));
+            String SrcFpsStr = line.getOptionValues(CONVERT_FRAMERATE)[0];
+            String TrgFpsStr = line.getOptionValues(CONVERT_FRAMERATE)[1];
+            if (!SrcFpsStr.equalsIgnoreCase("auto")) {
+                sourceFrameRate = Optional.of(SubtitleUtils.getFps(SrcFpsStr));
                 if (sourceFrameRate.get() <= 0) {
-                    throw new ParseException("Invalid source framerate: " + value);
+                    throw new ParseException("Invalid source framerate: " + SrcFpsStr);
                 }
             }
-            value = line.getOptionValues(CONVERT_FRAMERATE)[1];
-            targetFrameRate = Optional.of(SubtitleUtils.getFps(value));
-            if (targetFrameRate.get() <= 0) {
-                throw new ParseException("Invalid target framerate: " + value);
+            if (!TrgFpsStr.equalsIgnoreCase("auto")) {
+                targetFrameRate = Optional.of(SubtitleUtils.getFps(TrgFpsStr));
+                if (targetFrameRate.get() <= 0) {
+                    throw new ParseException("Invalid target framerate: " + TrgFpsStr);
+                }
             }
         }
     }
