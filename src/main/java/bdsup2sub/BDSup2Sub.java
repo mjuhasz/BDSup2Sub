@@ -258,7 +258,10 @@ public class BDSup2Sub {
 
     private void runCliLoop() {
         String inputFile = options.getInputFile().getAbsolutePath();
-        String outputFile = options.getOutputFile().getAbsolutePath();
+        String outputFile = null;
+        if (!options.isTimestampsMode()) {
+            outputFile = options.getOutputFile().getAbsolutePath();
+        }
         try {
             boolean xml = FilenameUtils.getExtension(inputFile).equalsIgnoreCase("xml");
             boolean idx = FilenameUtils.getExtension(inputFile).equalsIgnoreCase("idx");
@@ -269,20 +272,22 @@ public class BDSup2Sub {
                 throw new CoreException("File '" + inputFile + "' is not a supported subtitle stream.");
             }
             configuration.setCurrentStreamID(sid);
-
-            // check output file(s)
-            File indexFile, subtitleFile;
-            if (configuration.getOutputMode() == OutputMode.VOBSUB) {
-                indexFile = new File(FilenameUtils.removeExtension(outputFile) + ".idx");
-                subtitleFile = new File(FilenameUtils.removeExtension(outputFile) + ".sub");
-            } else {
-                subtitleFile = new File(FilenameUtils.removeExtension(outputFile) + ".sup");
-                indexFile = null;
+            
+            if (!options.isTimestampsMode()){
+                // check output file(s)
+                File indexFile, subtitleFile;
+                if (configuration.getOutputMode() == OutputMode.VOBSUB) {
+                    indexFile = new File(FilenameUtils.removeExtension(outputFile) + ".idx");
+                    subtitleFile = new File(FilenameUtils.removeExtension(outputFile) + ".sub");
+                } else {
+                    subtitleFile = new File(FilenameUtils.removeExtension(outputFile) + ".sup");
+                    indexFile = null;
+                }
+                if ((indexFile != null && indexFile.exists() && !indexFile.canWrite()) || (subtitleFile.exists() && !subtitleFile.canWrite())) {
+                    throw new CoreException("Target file '" + outputFile + "' is write protected.");
+                }
             }
-            if ((indexFile != null && indexFile.exists() && !indexFile.canWrite()) || (subtitleFile.exists() && !subtitleFile.canWrite())) {
-                throw new CoreException("Target file '" + outputFile + "' is write protected.");
-            }
-
+            
             // read input file
             if (xml || sid == StreamID.XML) {
                 Core.readXml(inputFile);
@@ -293,20 +298,25 @@ public class BDSup2Sub {
             } else {
                 Core.readSup(inputFile);
             }
-
-            Core.scanSubtitles();
-            logger.printWarningsAndErrorsAndResetCounters();
-            // move captions
-            if (configuration.getMoveModeX() != CaptionMoveModeX.KEEP_POSITION || configuration.getMoveModeY() != CaptionMoveModeY.KEEP_POSITION) {
-                configuration.setCineBarFactor((1.0 - (16.0 / 9) / options.getScreenRatio()) / 2.0);
-                Core.moveAllToBounds();
+            // display timestamps for input file
+            if (options.isTimestampsMode()) {
+                System.out.print(Core.getStreamTimestamps());
             }
-            // set some values
-            if (configuration.isExportForced() && Core.getNumForcedFrames() == 0) {
-                throw new CoreException("No forced subtitles found.");
+            else{
+                Core.scanSubtitles();
+                logger.printWarningsAndErrorsAndResetCounters();
+                // move captions
+                if (configuration.getMoveModeX() != CaptionMoveModeX.KEEP_POSITION || configuration.getMoveModeY() != CaptionMoveModeY.KEEP_POSITION) {
+                    configuration.setCineBarFactor((1.0 - (16.0 / 9) / options.getScreenRatio()) / 2.0);
+                    Core.moveAllToBounds();
+                }
+                // set some values
+                if (configuration.isExportForced() && Core.getNumForcedFrames() == 0) {
+                    throw new CoreException("No forced subtitles found.");
+                }
+                // write output
+                Core.writeSub(outputFile);
             }
-            // write output
-            Core.writeSub(outputFile);
         } catch (CoreException ex) {
             logger.error(ex.getMessage());
         } catch (Exception ex) {
@@ -316,14 +326,15 @@ public class BDSup2Sub {
         // clean up
         logger.printWarningsAndErrorsAndResetCounters();
         Core.exit();
-
-        System.out.println("\nConversion finished.");
+        if (!options.isTimestampsMode()) {
+            System.err.println("\nConversion finished.");
+        }
         System.exit(0);
     }
 
     private static void fatalError(String message) {
         Core.exit();
-        System.out.println("ERROR: " + message);
+        System.err.println("ERROR: " + message);
         System.exit(1);
     }
 }

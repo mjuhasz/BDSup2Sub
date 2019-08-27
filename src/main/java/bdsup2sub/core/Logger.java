@@ -47,7 +47,7 @@ public final class Logger {
                 }
             });
         } else {
-            System.out.print(msg);
+            System.err.print(msg);
         }
     }
 
@@ -62,7 +62,7 @@ public final class Logger {
                 }
             });
         } else {
-            System.out.print(msg);
+            System.err.print(msg);
         }
     }
 
@@ -77,7 +77,7 @@ public final class Logger {
                     }
                 });
             } else {
-                System.out.print(msg);
+                System.err.print(msg);
             }
         }
     }
@@ -92,7 +92,7 @@ public final class Logger {
                 }
             });
         } else {
-            System.out.print(msg);
+            System.err.print(msg);
         }
     }
 
@@ -137,7 +137,7 @@ public final class Logger {
             } else {
                 message = "There were " + message;
             }
-            System.out.println(message);
+            System.err.println(message);
         }
         resetWarningCounter();
         resetErrorCounter();

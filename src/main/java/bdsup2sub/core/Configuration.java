@@ -27,8 +27,17 @@ import java.util.List;
 
 
 public final class Configuration {
-
-    public static final Color OK_BACKGROUND = new Color(0xffffffff);
+    public static final Color OK_BACKGROUND;
+    static {
+        Color ok_background = new Color(0xffffffff);
+        try {
+            ok_background = UIManager.getColor("TextField.background");
+        }
+        catch(Exception e){
+            //CLI Mode
+        }
+        OK_BACKGROUND = ok_background;
+    }
     public static final Color WARN_BACKGROUND = new Color(0xffffffc0);
     public static final Color ERROR_BACKGROUND = new Color(0xffe1acac);
 

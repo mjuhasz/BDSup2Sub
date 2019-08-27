@@ -1874,7 +1874,19 @@ public class Core extends Thread {
         text += "forced: "+((pic.isForced())?"yes":"no");
         return text;
     }
-
+    /**
+     * Get subtitlestream timestamps
+     * @return subtitlestream timestamps
+     */
+    public static String getStreamTimestamps() {
+        String timestamps = "";
+        int frameCount = getNumFrames();
+        for (int i = 0; i < frameCount; ++i) {
+                timestamps = timestamps + "start: " + ptsToTimeStr(subtitleStream.getStartTime(i)) + " end: " + ptsToTimeStr(subtitleStream.getEndTime(i)) + "\n";
+                //timestamps = timestamps + getSrcInfoStr(i) + "\n";
+        }
+        return timestamps;
+    }
     /**
      * Get current DVD palette.
      * @return DVD palette

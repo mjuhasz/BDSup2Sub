@@ -34,6 +34,7 @@ public class CommandLineParser {
 
     private boolean printHelpMode;
     private boolean printVersionMode;
+    private boolean printTimestampsMode;
     private boolean cliMode;
     private File inputFile;
     private File outputFile;
@@ -83,6 +84,10 @@ public class CommandLineParser {
             printHelpMode = true;
         } else if (line.hasOption(VERSION)) {
             printVersionMode = true;
+        } else if (line.hasOption(TIMESTAMPS)) {
+            printTimestampsMode = true;
+            parseInputFileOption(line);
+            cliMode = true;
         } else {
             parseInputFileOption(line);
             parseOutputFileOption(line);
@@ -115,7 +120,7 @@ public class CommandLineParser {
     }
 
     private void parseInputFileOption(CommandLine line) throws ParseException {
-        if (line.getArgList().isEmpty() && line.hasOption(OUTPUT_FILE)) {
+        if (line.getArgList().isEmpty() && (line.hasOption(OUTPUT_FILE) || line.hasOption(TIMESTAMPS))) {
             throw new ParseException("Missing input file.");
         } else if (line.getArgList().size() > 1) {
             throw new ParseException("Too many input files.");
@@ -443,6 +448,10 @@ public class CommandLineParser {
                 }
             }
         }
+    }
+
+    public boolean isTimestampsMode() {
+        return printTimestampsMode;
     }
 
     public boolean isPrintHelpMode() {

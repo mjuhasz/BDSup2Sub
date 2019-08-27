@@ -28,6 +28,7 @@ public class CommandLineOptions {
     static final String VERBOSE = "v";
     static final String LOAD_SETTINGS = "L";
 
+    static final String TIMESTAMPS = "s";
     static final String RESOLUTION = "r";
     static final String TARGET_FRAMERATE = "T";
     static final String CONVERT_FRAMERATE = "C";
@@ -54,7 +55,7 @@ public class CommandLineOptions {
     static final String LANGUAGE_CODE = "l";
     static final String PALETTE_FILE = "t";
 
-    static final List<String> OPTION_ORDER = Arrays.asList(HELP, LOAD_SETTINGS, RESOLUTION, TARGET_FRAMERATE,
+    static final List<String> OPTION_ORDER = Arrays.asList(HELP, LOAD_SETTINGS, TIMESTAMPS, RESOLUTION, TARGET_FRAMERATE,
             CONVERT_FRAMERATE, DELAY, SCALING_FILTER, PALETTE_MODE, MIN_DISPLAY_TIME, MAX_TIME_DIFF, MOVE_IN, MOVE_OUT,
             MOVE_X, CROP_LINES, ALPHA_CROP_THRESHOLD, SCALE, EXPORT_PALETTE, EXPORT_FORCED_SUBTITLES_ONLY, FORCED_FLAG,
             SWAP_CR_CB, FIX_INVISIBLE_FRAMES, ALPHA_THRESHOLD, LUM_LOW_MED_THRESHOLD, LUM_MED_HIGH_THRESHOLD,
@@ -82,6 +83,12 @@ public class CommandLineOptions {
                 .withDescription("Show version information and exit.")
                 .hasArg(false).create(VERSION);
         options.addOption(version);
+
+        Option timestamps = OptionBuilder
+                .withLongOpt("timestamps")
+                .withDescription("Show start & end timestamps and exit.")
+                .hasArg(false).create(TIMESTAMPS);
+        options.addOption(timestamps);
 
         Option output = OptionBuilder
                 .withLongOpt("output")
