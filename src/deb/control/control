@@ -3,7 +3,7 @@ Version: [[project.version]]
 Section: misc
 Priority: optional
 Architecture: all
-Depends: openjdk-7-jre
+Depends: openjdk-8-jre
 Maintainer: Miklos Juhasz <juhasz.miklos.1@gmail.com>
 Distribution: development
 Homepage: https://github.com/mjuhasz/BDSup2Sub/wiki
